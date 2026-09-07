@@ -1,8 +1,10 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { BLOCK_FRAMES } from 'modx-dsp';
 import { AUDIO_WORKER, AudioService } from '../../audio/audio-service';
 import { fakeBlock, heldNote } from '../../audio/fake-block';
 import { FakeAudioWorker } from '../../audio/fake-audio-worker';
+import { Clock } from '../../provenance/clock';
 import { BACKEND_GATEWAY, DumpView } from '../../backend/backend-gateway';
 import { FakeBackendGateway } from '../../backend/fake-backend-gateway';
 import { FiguresColumn } from './figures-column';
@@ -199,5 +201,53 @@ describe('FiguresColumn · la medida', () => {
     await hold(440, 10);
 
     expect(rows().map((row) => row.textContent)).toEqual(measured);
+  });
+});
+
+describe('FiguresColumn · la edad de la medida', () => {
+  it('envejece con el reloj sin que la tabla se toque', async () => {
+    const backend = new FakeBackendGateway();
+    backend.appInfoResult = { version: '0.1.0', dumpsFolder: FOLDER };
+    // El mismo reloj de 10 Hz que decide el `CADUCO`, movido a mano: en un test
+    // el tiempo se pone, no se espera.
+    const clock: Clock = { now: signal(0) };
+    TestBed.configureTestingModule({
+      imports: [FiguresColumn],
+      providers: [
+        { provide: BACKEND_GATEWAY, useValue: backend },
+        { provide: AUDIO_WORKER, useValue: () => new FakeAudioWorker() },
+        { provide: Clock, useValue: clock },
+      ],
+    });
+    const fixture = TestBed.createComponent(FiguresColumn);
+    const audio = TestBed.inject(AudioService);
+    audio.start();
+    backend.lowestLivePitch.set(60);
+    await fixture.whenStable();
+    for (let sequence = 0; sequence < BLOCKS_FOR_A_MEDIDA; sequence += 1) {
+      backend.emitBlock(
+        fakeBlock({
+          sequence,
+          sentAtMicros: sequence * 30_000,
+          mono: heldNote(261.626, sequence * BLOCK_FRAMES),
+        }),
+      );
+    }
+    await fixture.whenStable();
+
+    clock.now.set(performance.now());
+    await audio.measure();
+    await fixture.whenStable();
+    const host = fixture.nativeElement as HTMLElement;
+    const table = Array.from(host.querySelectorAll('.lines__row')).map((row) => row.textContent);
+
+    clock.now.set(performance.now() + 14_000);
+    await fixture.whenStable();
+
+    expect(host.textContent).toContain('MEDIDO · 65536 · hace 14 s');
+    // Catorce segundos después, la tabla es la misma tabla.
+    expect(Array.from(host.querySelectorAll('.lines__row')).map((row) => row.textContent)).toEqual(
+      table,
+    );
   });
 });
