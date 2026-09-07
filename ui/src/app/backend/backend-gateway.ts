@@ -48,10 +48,14 @@ export interface BackendGateway {
 
   /**
    * Raw f32 bloques straight off the device, one per three device callbacks.
-   * Returns the unsubscribe. The blocks carry no analysis: that is TypeScript's
-   * job in the worker (ADR-0001).
+   * Returns the unsubscribe.
+   *
+   * The buffer crosses untouched, exactly as `crates/modx-audio/src/block.rs`
+   * wrote it: this interface carries it and does not read it. Taking it apart is
+   * the worker's job and the format is the contract between the worker and Rust
+   * (ADR-0001), which is why it is documented in `audio/bridge.ts` and not here.
    */
-  subscribeBlocks(onBlock: (block: AudioBlock) => void): Promise<() => void>;
+  subscribeBlocks(onBlock: (block: ArrayBuffer) => void): Promise<() => void>;
 }
 
 export const BACKEND_GATEWAY = new InjectionToken<BackendGateway>('BackendGateway');
@@ -115,16 +119,4 @@ export interface AppInfo {
   readonly version: string;
   /** Full path of the `dumps` folder. A safety file you cannot find is not safety. */
   readonly dumpsFolder: string;
-}
-
-/**
- * The contract between Rust and the worker. One bloque is three device callbacks
- * of interleaved stereo f32 (1 323 frames), with the sender's monotonic timestamp
- * so delivery latency can be measured rather than guessed.
- */
-export interface AudioBlock {
-  readonly sequence: number;
-  readonly sentAtMicros: number;
-  readonly frames: number;
-  readonly samples: Float32Array;
 }

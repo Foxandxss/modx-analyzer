@@ -3,7 +3,6 @@ import { Channel, invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import {
   AppInfo,
-  AudioBlock,
   BackendGateway,
   ConnectionView,
   PanicOutcome,
@@ -58,8 +57,11 @@ export class TauriBackendGateway implements BackendGateway {
     return invoke<PanicOutcome>('panic_keyboard');
   }
 
-  async subscribeBlocks(onBlock: (block: AudioBlock) => void): Promise<() => void> {
-    const channel = new Channel<AudioBlock>();
+  async subscribeBlocks(onBlock: (block: ArrayBuffer) => void): Promise<() => void> {
+    // `InvokeResponseBody::Raw` on the Rust side reaches JavaScript as an
+    // `ArrayBuffer`. It is handed on without being read, so that the only copy
+    // between the audio thread and the analysis is the one the IPC makes.
+    const channel = new Channel<ArrayBuffer>();
     let subscribed = true;
     channel.onmessage = (block) => {
       if (subscribed) {

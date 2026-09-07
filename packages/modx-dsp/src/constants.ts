@@ -1,0 +1,45 @@
+/**
+ * The frozen parameters of every analysis in the app.
+ *
+ * **None of these change without a written note in `docs/results`.** A figure on
+ * screen says how it was obtained, and «Hann 4 096, salto 1 323» is part of how:
+ * change one and every number measured before the change stops comparing.
+ *
+ * The hop is chosen as an **integer number of device callbacks** (three of the
+ * 441-frame callbacks WASAPI hands over, fase 0 §4), so a trama never straddles a
+ * partial buffer and the live rate is exactly the bloque rate.
+ */
+
+/** The only rate `Line (MODX)` offers. */
+export const SAMPLE_RATE = 44100;
+
+/** Interleaved stereo, and the analysis reads channel 0. */
+export const CHANNELS = 2;
+
+/** Frames per device callback: 441, constant, exactly 10.000 ms. */
+export const CALLBACK_FRAMES = 441;
+
+/** Three callbacks per bloque: 1 323 frames, 30.0 ms. */
+export const BLOCK_FRAMES = CALLBACK_FRAMES * 3;
+
+/** Vista viva: one Hann window of 4 096 per hop of 1 323 — 68 % overlap. */
+export const LIVE_WINDOW = 4096;
+
+/** One hop per bloque, so the vista viva runs at the bloque rate: 33.3 fps. */
+export const LIVE_HOP = BLOCK_FRAMES;
+
+/** 10.77 Hz per bin at 4 096. */
+export const LIVE_BIN_HZ = SAMPLE_RATE / LIVE_WINDOW;
+
+/** Medida: one Hann window of 65 536, no overlap, taken when MEDIR is pressed. */
+export const MEASURE_WINDOW = 65536;
+
+/** The waterfall keeps the last 14 tramas: 462 ms. */
+export const WATERFALL_FRAMES = 14;
+
+/**
+ * The generator's comb: peaks at multiples of `44100 / 16` that are not harmonics
+ * of the note and sit around −72 dB in all four golden WAVs (fase 0 §7). Tied to
+ * the sample clock, not to the note, so it never counts as content.
+ */
+export const ARTEFACT_HZ = SAMPLE_RATE / 16;

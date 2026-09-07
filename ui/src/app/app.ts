@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { AudioService } from './audio/audio-service';
 import { FiguresColumn } from './panels/figures-column/figures-column';
 import { OperatorDiagram } from './panels/operator-diagram/operator-diagram';
 import { SignalViews } from './panels/signal-views/signal-views';
 import { TabPanel } from './panels/tab-panel/tab-panel';
+import { DevReadout } from './shell/dev-readout/dev-readout';
 import { Header } from './shell/header/header';
 import { PanicNotice } from './shell/panic/panic-notice';
 import { RereadStrip } from './shell/reread-strip/reread-strip';
@@ -25,6 +27,7 @@ import { RereadStrip } from './shell/reread-strip/reread-strip';
     SignalViews,
     FiguresColumn,
     TabPanel,
+    DevReadout,
   ],
   template: `
     <app-header />
@@ -37,6 +40,9 @@ import { RereadStrip } from './shell/reread-strip/reread-strip';
       <app-figures-column />
     </div>
     <app-tab-panel />
+    <!-- El instrumento con el que se mide la sesión, no parte del diseño: se va
+         cuando las cifras estén en docs/results. -->
+    <app-dev-readout />
   `,
   styles: `
     :host {
@@ -58,4 +64,10 @@ import { RereadStrip } from './shell/reread-strip/reread-strip';
     }
   `,
 })
-export class App {}
+export class App {
+  constructor() {
+    // The audio bridge is opened from the screen that draws it, once. Nothing
+    // spins up a worker in a test that did not ask for one.
+    inject(AudioService).start();
+  }
+}

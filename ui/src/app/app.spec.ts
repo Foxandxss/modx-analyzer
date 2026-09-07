@@ -1,18 +1,25 @@
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
+import { AUDIO_WORKER } from './audio/audio-service';
+import { FakeAudioWorker } from './audio/fake-audio-worker';
 import { BACKEND_GATEWAY } from './backend/backend-gateway';
 import { FakeBackendGateway } from './backend/fake-backend-gateway';
 import { DEAD_MARK, REREAD_TOTAL } from './provenance/provenance';
 
 async function renderApp() {
   const backend = new FakeBackendGateway();
+  const worker = new FakeAudioWorker();
   TestBed.configureTestingModule({
     imports: [App],
-    providers: [{ provide: BACKEND_GATEWAY, useValue: backend }],
+    providers: [
+      { provide: BACKEND_GATEWAY, useValue: backend },
+      // The bridge runs in place: a `Worker` needs a window and this suite has none.
+      { provide: AUDIO_WORKER, useValue: () => worker },
+    ],
   });
   const fixture = TestBed.createComponent(App);
   await fixture.whenStable();
-  return { backend, fixture, host: fixture.nativeElement as HTMLElement };
+  return { backend, worker, fixture, host: fixture.nativeElement as HTMLElement };
 }
 
 describe('App (4a)', () => {

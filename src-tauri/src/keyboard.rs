@@ -12,36 +12,10 @@ use modx_midi::owner::OwnerHandle;
 use modx_midi::port::{PortError, PORT_NAME};
 use tauri::{AppHandle, Emitter, Manager};
 
-/// The event the header's connection dot listens to.
-const EVENT_CONNECTION: &str = "modx://connection";
+use crate::connection::Connection;
+
 /// The event the pánico's live state listens to.
 const EVENT_LIVE_NOTES: &str = "modx://live-notes";
-
-#[derive(Clone, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ConnectionView {
-    /// `connected` or `disconnected`, matching the front's `PortState`.
-    port: &'static str,
-    port_name: Option<&'static str>,
-    /// Both stay `null` until the audio bridge exists; the header draws the dash.
-    audio_device: Option<String>,
-    sample_rate: Option<u32>,
-}
-
-impl ConnectionView {
-    fn of(connected: bool) -> Self {
-        Self {
-            port: if connected {
-                "connected"
-            } else {
-                "disconnected"
-            },
-            port_name: connected.then_some(PORT_NAME),
-            audio_device: None,
-            sample_rate: None,
-        }
-    }
-}
 
 /// What one press of the pánico did.
 #[derive(Clone, serde::Serialize)]
@@ -84,7 +58,7 @@ impl Keyboard {
             let _ = notify.emit(EVENT_LIVE_NOTES, live);
         }));
 
-        let _ = app.emit(EVENT_CONNECTION, ConnectionView::of(true));
+        Connection::set_port(app, Some(PORT_NAME.to_owned()));
         Ok(())
     }
 
@@ -125,7 +99,7 @@ pub fn start(app: &AppHandle) {
         Ok(()) => log::info!("{PORT_NAME} abierto"),
         Err(error) => {
             log::warn!("{PORT_NAME} no se pudo abrir: {error}");
-            let _ = app.emit(EVENT_CONNECTION, ConnectionView::of(false));
+            Connection::set_port(app, None);
         }
     }
 }

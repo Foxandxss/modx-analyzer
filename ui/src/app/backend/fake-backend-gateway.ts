@@ -1,7 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import {
   AppInfo,
-  AudioBlock,
   BackendGateway,
   ConnectionView,
   PanicOutcome,
@@ -47,7 +46,7 @@ export class FakeBackendGateway implements BackendGateway {
   /** How many times the pánico has been pressed. A second press is a bug, not a habit. */
   panicPresses = 0;
 
-  private readonly blockListeners = new Set<(block: AudioBlock) => void>();
+  private readonly blockListeners = new Set<(block: ArrayBuffer) => void>();
 
   appInfo(): Promise<AppInfo> {
     return Promise.resolve(this.appInfoResult);
@@ -60,13 +59,13 @@ export class FakeBackendGateway implements BackendGateway {
     return outcome;
   }
 
-  subscribeBlocks(onBlock: (block: AudioBlock) => void): Promise<() => void> {
+  subscribeBlocks(onBlock: (block: ArrayBuffer) => void): Promise<() => void> {
     this.blockListeners.add(onBlock);
     return Promise.resolve(() => this.blockListeners.delete(onBlock));
   }
 
   /** Test driver: hand every subscriber a bloque as if it came off the device. */
-  emitBlock(block: AudioBlock): void {
+  emitBlock(block: ArrayBuffer): void {
     for (const listener of this.blockListeners) {
       listener(block);
     }

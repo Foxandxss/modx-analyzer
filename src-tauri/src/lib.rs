@@ -1,5 +1,9 @@
+mod audio;
+mod connection;
 mod keyboard;
 
+use audio::Audio;
+use connection::Connection;
 use keyboard::Keyboard;
 use tauri::{LogicalSize, Manager};
 
@@ -38,8 +42,14 @@ fn app_info(app: tauri::AppHandle) -> Result<AppInfo, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(Connection::new())
         .manage(Keyboard::new())
-        .invoke_handler(tauri::generate_handler![app_info, keyboard::panic_keyboard])
+        .manage(Audio::new())
+        .invoke_handler(tauri::generate_handler![
+            app_info,
+            keyboard::panic_keyboard,
+            audio::subscribe_audio_blocks
+        ])
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -55,10 +65,11 @@ pub fn run() {
             window.set_min_size(Some(LogicalSize::new(MIN_CLIENT_WIDTH, MIN_CLIENT_HEIGHT)))?;
 
             // Startup order: the port first, so the pánico is live before anything
-            // else can make a note sound. The volcado de seguridad, the ancla, the
-            // relectura, the rings and the audio device slot in behind it as their
-            // own tickets land.
+            // else can make a note sound, and the audio device last. The volcado de
+            // seguridad, the ancla, the relectura and the rings slot in between as
+            // their own tickets land.
             keyboard::start(app.handle());
+            audio::start(app.handle());
 
             Ok(())
         })

@@ -145,6 +145,14 @@ del dispositivo. No lleva análisis.
 Un paquete de resultados de la vista viva, ya analizado y listo para dibujar. Presupuesto: 33 ms.
 _Avoid_: frame (en prosa), bloque
 
+**Puente**:
+El camino entero de un bloque, desde el callback del dispositivo hasta el worker: tres callbacks,
+un sello monótono, el IPC y la transferencia. Se mide, no se prueba.
+
+**Disparo**:
+El punto donde empieza la traza del scope: un cruce de cero ascendente alineado al periodo de la
+nota. Que la onda se quede quieta es una afirmación sobre el disparo, no sobre el sonido.
+
 **Artefacto**:
 Parcial que no es armónica y se conoce su origen (el comb de 2 756,25 Hz del generador). Se marca
 con su frecuencia; no se oculta y no cuenta como armónico.
