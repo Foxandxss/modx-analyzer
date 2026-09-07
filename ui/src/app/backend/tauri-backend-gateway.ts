@@ -14,8 +14,10 @@ import {
   PatchHeaderView,
   PolledValue,
   RereadProgress,
+  Topology,
   invalidated,
   noOperators,
+  sameTopology,
 } from './backend-gateway';
 
 /**
@@ -42,6 +44,17 @@ interface PatchWire {
   readonly algorithm: Aged<number> | null;
   readonly feedback: Aged<number> | null;
   readonly feedbackOperator: Aged<number> | null;
+  readonly topology: TopologyWire | null;
+}
+
+/**
+ * The topology as Rust sends it. It carries no age: the 88 are a table, not a
+ * reading, and a table entry does not go stale. What ages is the number that
+ * chose it, and that is `algorithm`.
+ */
+interface TopologyWire extends Omit<Topology, 'provenance'> {
+  /** ADR-0003's own two words, in Spanish, as the table spells them. */
+  readonly provenance: 'medido' | 'documentado';
 }
 
 /** `modx://operators`, before the ages become stamps. */
@@ -80,6 +93,14 @@ function polled<T>(aged: Aged<T> | null, arrivedAt: number): PolledValue<T> {
   return { value: aged.value, provenance: 'polled', readAt: arrivedAt - aged.ageMs };
 }
 
+/** The table's two words into the front's two, and nothing else touched. */
+function toTopology(wire: TopologyWire | null): Topology | null {
+  if (wire === null) {
+    return null;
+  }
+  return { ...wire, provenance: wire.provenance === 'medido' ? 'measured' : 'documented' };
+}
+
 /**
  * The real gateway. It knows the event names, the command names and the channel
  * payload, and nothing else: no keyboard vocabulary, no drawing.
@@ -111,6 +132,10 @@ export class TauriBackendGateway implements BackendGateway {
 
   readonly operators = signal<OperatorsView>(noOperators());
 
+  // The ring says the algorithm a dozen times a second and it is the same
+  // algorithm every time; the drawing is only rebuilt when the number changes.
+  readonly topology = signal<Topology | null>(null, { equal: sameTopology });
+
   readonly liveNotes = signal(0);
 
   readonly lowestLivePitch = signal<number | null>(null);
@@ -124,7 +149,10 @@ export class TauriBackendGateway implements BackendGateway {
 
     // The three the anillo ancho feeds. Each arrives with ages rather than
     // timestamps and is aligned to this side's clock on arrival.
-    this.listen<PatchWire>('modx://patch', (wire) => this.patch.set(this.toPatch(wire)));
+    this.listen<PatchWire>('modx://patch', (wire) => {
+      this.patch.set(this.toPatch(wire));
+      this.topology.set(toTopology(wire.topology));
+    });
     this.listen<OperatorsWire>('modx://operators', (wire) =>
       this.operators.set(this.toOperators(wire)),
     );

@@ -37,6 +37,20 @@ export interface BackendGateway {
    */
   readonly operators: Signal<OperatorsView>;
 
+  /**
+   * The drawing the read algorithm selects, or `null` when there is none.
+   *
+   * The 88 topologies live in Rust (ADR-0003) and the keyboard only ever answers
+   * a *number*, so what arrives here is the one entry that number picked. `null`
+   * has two meanings and the front tells them apart by looking at
+   * {@link PatchHeaderView.algorithm}: no number yet is a diagram that has not
+   * been read, and a number with no entry is `ALGORITMO SIN TABLA`.
+   *
+   * It only changes when the algorithm does, though the event that carries it
+   * arrives a dozen times a second: see {@link sameTopology}.
+   */
+  readonly topology: Signal<Topology | null>;
+
   /** Live notes counted by distinct pitch (Note On with velocity 0 is Note Off). */
   readonly liveNotes: Signal<number>;
 
@@ -137,6 +151,52 @@ export interface PatchHeaderView {
   readonly feedback: PolledValue<number>;
   /** The operator the feedback loop sits on, e.g. 5 for `FB 3 · OP5`. */
   readonly feedbackOperator: PolledValue<number>;
+}
+
+/** One line of the drawing: `from` modulates `into`. */
+export interface Route {
+  readonly from: number;
+  readonly into: number;
+}
+
+/**
+ * One of the 88 algorithms, as transcribed from the Data List's Algorithm Chart.
+ *
+ * Nothing here was polled: the keyboard says a number and never says who
+ * modulates whom, so every route is paper until somebody compares the drawing
+ * with the MODX's own screen. Which is what {@link Topology.provenance} says out
+ * loud, per entry.
+ */
+export interface Topology {
+  /** 1-88, as the keyboard's own screen numbers it. */
+  readonly number: number;
+  readonly routes: readonly Route[];
+  /** The operators hanging off the output bus, ascending. */
+  readonly carriers: readonly number[];
+  /** The loop the chart draws as a rectangle. `from === into` for all but two. */
+  readonly feedback: Route;
+  /** Chain depth by operator, indexed `operator - 1`. A portadora is 0. */
+  readonly depth: readonly number[];
+  /** `documentado` until the drawing has been checked against the keyboard. */
+  readonly provenance: TableProvenance;
+}
+
+/**
+ * ADR-0003's two grades, which are not the five stamps of a figure: a route is
+ * not a cifra and cannot go `CADUCO`. Promotion is per entry.
+ */
+export type TableProvenance = 'measured' | 'documented';
+
+/**
+ * Whether two topologies are the same drawing.
+ *
+ * The event that carries the topology is the anillo ancho's, so it arrives a
+ * dozen times a second saying the same thing. Comparing by number is enough
+ * because the 88 are a static table: the same number is the same drawing, and
+ * without this the whole diagram would be rebuilt on every pass.
+ */
+export function sameTopology(a: Topology | null, b: Topology | null): boolean {
+  return a === b || (a !== null && b !== null && a.number === b.number);
 }
 
 export interface RereadProgress {

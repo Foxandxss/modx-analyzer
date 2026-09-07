@@ -40,20 +40,113 @@
   color: var(--ink-inert);
 }
 
-.nodes {
+// El grado de la entrada de la tabla, no un sello de procedencia: una ruta no es
+// una cifra y no puede caducar.
+.zone__table {
+  padding-right: var(--space-2);
+  border-right: var(--rule-min) solid var(--rule-color);
+  color: var(--ink-tertiary);
+}
+
+// El lienzo: el SVG de rutas y los nodos ocupan exactamente la misma caja, uno
+// en unidades del viewBox y otros en porcentajes. Nada se mide en JavaScript.
+.canvas {
+  position: relative;
   flex: 1;
   min-height: 0;
-  display: grid;
-  grid-template-columns: repeat(3, var(--op-node-w));
-  grid-auto-rows: var(--op-node-h);
-  gap: var(--op-row-gap) var(--op-col-gap);
-  align-content: center;
-  justify-content: center;
+  margin: var(--space-1) 0;
+}
+
+.routes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+// El trazo no engorda al estirar el viewBox: es para lo que existe esa propiedad.
+.route,
+.bus,
+.feedback {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+
+.route {
+  stroke: var(--modulator);
+  stroke-width: 2;
+}
+
+// Una ruta que sale de un operador a cero está cortada: se ve, y se ve cortada.
+.route--inert {
+  stroke: var(--inert);
+  stroke-width: 1.5;
+  stroke-dasharray: var(--dash-inactive);
+}
+
+.bus {
+  stroke: var(--signal-primary);
+  stroke-width: 2;
+}
+
+.bus--inert {
+  stroke: var(--inert);
+  stroke-width: 1.5;
+  stroke-dasharray: var(--dash-inactive);
+}
+
+.feedback {
+  stroke: var(--carrier);
+  stroke-width: 2;
+}
+
+.arrow {
+  fill: var(--modulator);
+}
+
+.label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.label--feedback {
+  color: var(--carrier);
+}
+
+.label--out {
+  right: 0;
+  transform: translateY(-50%);
+  color: var(--signal-primary);
+}
+
+// Un número que no está en las 88 no se dibuja: se dice.
+.no-table {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 5px 12px;
+  border: var(--rule-min) solid var(--alert);
+  border-radius: var(--radius-pill);
+  background: var(--panic-live-bg);
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-label);
+  color: var(--alert);
 }
 
 // Sin algoritmo leído no hay rol: contorno neutro, forma conservada, cifra perdida.
 .node {
-  position: relative;
+  position: absolute;
+  box-sizing: border-box;
   box-sizing: border-box;
   overflow: hidden;
   border: var(--rule-min) solid var(--dead-border);

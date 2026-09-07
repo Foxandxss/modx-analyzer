@@ -10,8 +10,10 @@ import {
   PanicOutcome,
   PatchHeaderView,
   RereadProgress,
+  Topology,
   invalidated,
   noOperators,
+  sameTopology,
 } from './backend-gateway';
 
 /**
@@ -41,6 +43,9 @@ export class FakeBackendGateway implements BackendGateway {
   readonly reread = signal<RereadProgress | null>(null);
 
   readonly operators = signal<OperatorsView>(noOperators());
+
+  /** No algorithm read, so no drawing: the same silence the real one opens in. */
+  readonly topology = signal<Topology | null>(null, { equal: sameTopology });
 
   readonly liveNotes = signal(0);
 

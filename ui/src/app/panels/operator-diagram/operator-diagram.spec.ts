@@ -7,6 +7,7 @@ import {
   OperatorView,
   OperatorsView,
   PolledValue,
+  Topology,
   invalidated,
   noOperators,
 } from '../../backend/backend-gateway';
@@ -93,6 +94,37 @@ function nodes(host: HTMLElement): HTMLElement[] {
   return Array.from(host.querySelectorAll<HTMLElement>('.node'));
 }
 
+function routes(host: HTMLElement): SVGPathElement[] {
+  return Array.from(host.querySelectorAll<SVGPathElement>('.route'));
+}
+
+/** The two algorithms the tests below draw, as the table sends them. */
+const ALGORITHM_2: Topology = {
+  number: 2,
+  routes: [
+    { from: 1, into: 2 },
+    { from: 2, into: 3 },
+    { from: 3, into: 4 },
+  ],
+  carriers: [4, 5, 6, 7, 8],
+  feedback: { from: 1, into: 1 },
+  depth: [3, 2, 1, 0, 0, 0, 0, 0],
+  provenance: 'documented',
+};
+
+/** Algorithm 6, the one fase 0c ran on: two pairs, six portadoras, loop on Op1. */
+const ALGORITHM_6: Topology = {
+  number: 6,
+  routes: [
+    { from: 1, into: 2 },
+    { from: 3, into: 4 },
+  ],
+  carriers: [2, 4, 5, 6, 7, 8],
+  feedback: { from: 1, into: 1 },
+  depth: [1, 0, 1, 0, 0, 0, 0, 0],
+  provenance: 'documented',
+};
+
 describe('OperatorDiagram', () => {
   it('opens with eight nodes that have no role and no figure', async () => {
     const { host } = await renderDiagram();
@@ -107,6 +139,103 @@ describe('OperatorDiagram', () => {
     }
     // And the cadence is not invented either: nothing has completed a pass.
     expect(host.querySelector('.zone__cadence')?.textContent).toContain(DEAD_MARK);
+  });
+
+  it('draws no line at all until an algorithm has been read', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.operators.set(eight(NOW, IDLE_PASS_MS));
+    await fixture.whenStable();
+
+    // Eight nodes and nothing between them: a diagram with no algorithm is not
+    // a diagram of algorithm 1.
+    expect(routes(host)).toHaveLength(0);
+    expect(host.querySelectorAll('.bus')).toHaveLength(0);
+    expect(host.querySelector('.feedback')).toBeNull();
+    expect(host.querySelector('.no-table')).toBeNull();
+  });
+
+  it('draws the routes of the algorithm it was given', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.operators.set(eight(NOW, IDLE_PASS_MS));
+    backend.topology.set(ALGORITHM_2);
+    await fixture.whenStable();
+
+    // Three modulations, five portadoras on the bus plus the bus itself, one loop.
+    expect(routes(host)).toHaveLength(3);
+    expect(host.querySelectorAll('.bus')).toHaveLength(6);
+    expect(host.querySelector('.feedback')).not.toBeNull();
+    expect(host.textContent).toContain('OUT L/R');
+    // The routes are paper until somebody compares them with the MODX's screen,
+    // and the zone says so.
+    expect(host.querySelector('.zone__table')?.textContent).toContain('DOCUMENTADO');
+  });
+
+  it('redraws the routes when the algorithm changes underneath', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.operators.set(eight(NOW, IDLE_PASS_MS));
+    backend.topology.set(ALGORITHM_2);
+    await fixture.whenStable();
+    const chain = routes(host).map((route) => route.getAttribute('d'));
+
+    backend.topology.set(ALGORITHM_6);
+    await fixture.whenStable();
+
+    const pairs = routes(host).map((route) => route.getAttribute('d'));
+    expect(pairs).toHaveLength(2);
+    expect(pairs).not.toEqual(chain);
+    // And the nodes moved with them: Op3 modulates in 6 and is a depth behind.
+    expect(nodes(host)[2].style.top).not.toBe('');
+  });
+
+  it('says there is no table instead of drawing a plausible diagram', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    // `48 0p 4F` answered a byte outside the 88. The number is a fact and it is
+    // shown; the drawing is not invented.
+    backend.patch.set({ ...backend.patch(), algorithm: polled(89, NOW) });
+    await fixture.whenStable();
+
+    expect(host.querySelector('.no-table')?.textContent).toContain('ALGORITMO SIN TABLA');
+    expect(host.querySelector('.no-table')?.textContent).toContain('89');
+    expect(routes(host)).toHaveLength(0);
+  });
+
+  it('cuts the route of an operator at zero instead of hiding it', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.topology.set(ALGORITHM_6);
+    backend.operators.set({
+      ...eight(NOW, IDLE_PASS_MS),
+      operators: [
+        // Op1 modulates Op2 and is at zero; Op3 modulates Op4 and is not.
+        reading(1, { role: 'inert', level: 0, ratio: 1 }, NOW),
+        reading(2, { role: 'carrier', level: 99, ratio: 1 }, NOW),
+        reading(3, { role: 'modulator', level: 80, ratio: 1 }, NOW),
+        ...eight(NOW, IDLE_PASS_MS).operators.slice(3),
+      ],
+    });
+    await fixture.whenStable();
+
+    const drawn = routes(host);
+    expect(drawn[0].classList.contains('route--inert')).toBe(true);
+    expect(drawn[1].classList.contains('route--inert')).toBe(false);
+  });
+
+  it('writes the feedback value beside its loop, or the dash', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.topology.set(ALGORITHM_2);
+    await fixture.whenStable();
+    // Nothing has read the Level of the loop yet: the arc is where the chart
+    // puts it, and the number is the dash rather than a zero.
+    expect(host.querySelector('.label--feedback')?.textContent?.trim()).toBe(`FB ${DEAD_MARK}`);
+
+    backend.patch.set({ ...backend.patch(), feedback: polled(3, NOW) });
+    await fixture.whenStable();
+    expect(host.querySelector('.label--feedback')?.textContent?.trim()).toBe('FB 3');
   });
 
   it('draws the role by shape from what the ring read', async () => {

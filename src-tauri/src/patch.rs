@@ -20,9 +20,10 @@
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
-use modx_midi::algorithms::{self, Role};
+use modx_midi::algorithms::{self, Role, Topology};
 use modx_midi::owner::Priority;
 use modx_midi::ring::{self, FrequencyMode, OperatorReadings, Reading, WideRing, OPERATORS};
+use modx_midi::table::Provenance;
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::keyboard::Keyboard;
@@ -77,6 +78,74 @@ impl<T> Aged<T> {
     }
 }
 
+/// One line of the algorithm's drawing: `from` modulates `into`. Also the shape
+/// the feedback loop takes, which is the same thing said about the loop the chart
+/// draws as a rectangle — a single operator when `from == into`, a whole chain
+/// when it does not.
+#[derive(Clone, Copy, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RouteView {
+    pub from: u8,
+    pub into: u8,
+}
+
+/// The drawing the read algorithm number selects.
+///
+/// It rides on the header event because it is a statement about the same reading:
+/// the keyboard answers a *number* and never says who modulates whom, and the 88
+/// topologies live in Rust (ADR-0003), so what crosses is the one entry that
+/// number picked. It is absent both before an algorithm has been read and when
+/// the byte falls outside the 88; the front tells the two apart by whether
+/// `algorithm` carries a number, and draws `ALGORITMO SIN TABLA` for the second.
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TopologyView {
+    /// 1-88, as the keyboard's own screen numbers it.
+    pub number: u8,
+    /// In the chart's reading order, so a route can be put next to its drawing.
+    pub routes: Vec<RouteView>,
+    /// The operators hanging off the output bus, ascending.
+    pub carriers: Vec<u8>,
+    pub feedback: RouteView,
+    /// Chain depth by operator, indexed `operator - 1`: a portadora is 0 and
+    /// everything else is one deeper than the deepest thing it modulates.
+    ///
+    /// It is computed here rather than in the front because the rule that lays
+    /// out any of the 88 without a hand-made sheet is part of the table, and two
+    /// copies of a rule are one copy too many.
+    pub depth: Vec<u8>,
+    /// `documentado` or `medido`, per entry (ADR-0003). All 88 are paper today:
+    /// promotion happens by changing the algorithm on the panel and comparing the
+    /// drawing with the MODX's own screen.
+    pub provenance: &'static str,
+}
+
+impl TopologyView {
+    fn of(topology: &'static Topology) -> Self {
+        Self {
+            number: topology.number,
+            routes: topology
+                .routes
+                .iter()
+                .map(|(from, into)| RouteView {
+                    from: *from,
+                    into: *into,
+                })
+                .collect(),
+            carriers: topology.carriers.to_vec(),
+            feedback: RouteView {
+                from: topology.feedback.from,
+                into: topology.feedback.into,
+            },
+            depth: topology.chain_depth().to_vec(),
+            provenance: match topology.provenance {
+                Provenance::Medido => "medido",
+                Provenance::Documentado => "documentado",
+            },
+        }
+    }
+}
+
 /// What the header says about the loaded patch.
 #[derive(Clone, Default, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -94,6 +163,8 @@ pub struct PatchView {
     /// wraps a chain (12 and 14) that is the head of the chain, not a single
     /// operator, and the header can only name one.
     pub feedback_operator: Option<Aged<u8>>,
+    /// The routes of the algorithm that was read, or nothing at all.
+    pub topology: Option<TopologyView>,
 }
 
 /// One node of the diagram, as the front draws it.
@@ -142,11 +213,13 @@ impl Patch {
         algorithm: Option<Aged<u32>>,
         feedback: Option<Aged<u32>>,
         feedback_operator: Option<Aged<u8>>,
+        topology: Option<TopologyView>,
     ) {
         Self::update(app, |view| {
             view.algorithm = algorithm;
             view.feedback = feedback;
             view.feedback_operator = feedback_operator;
+            view.topology = topology;
         });
     }
 
@@ -211,6 +284,7 @@ fn publish(app: &AppHandle, ring: &WideRing) {
         Aged::of(algorithm_read, now, |_| {
             topology.map(|topology| topology.feedback.into)
         }),
+        topology.map(TopologyView::of),
     );
 
     let operators = (1..=OPERATORS)
@@ -321,6 +395,102 @@ mod tests {
                 "inert"
             ]
         );
+    }
+
+    /// What the ring's algorithm byte turns into for the front: the number, and
+    /// the one entry of the 88 it picks, ready to be drawn.
+    fn drawing_of(read: Option<Reading>) -> Option<TopologyView> {
+        read.and_then(|read| algorithms::from_read_value(read.value as u8))
+            .map(TopologyView::of)
+    }
+
+    #[test]
+    fn the_read_algorithm_carries_its_drawing_across() {
+        let ring = read_once();
+        let drawn = drawing_of(ring.algorithm()).expect("algorithm 2 is one of the 88");
+
+        // `Init Normal (FM-X)` is algorithm 2: the 1-2-3-4 chain into the bus,
+        // with Op5-Op8 hanging off it and the loop on Op1.
+        assert_eq!(drawn.number, 2);
+        assert_eq!(
+            drawn
+                .routes
+                .iter()
+                .map(|route| (route.from, route.into))
+                .collect::<Vec<_>>(),
+            vec![(1, 2), (2, 3), (3, 4)]
+        );
+        assert_eq!(drawn.carriers, vec![4, 5, 6, 7, 8]);
+        assert_eq!((drawn.feedback.from, drawn.feedback.into), (1, 1));
+        // Depth is what lays the nodes out: Op1 is three modulations from the
+        // output, and the five portadoras are on it.
+        assert_eq!(drawn.depth, vec![3, 2, 1, 0, 0, 0, 0, 0]);
+        assert_eq!(drawn.provenance, "documentado");
+    }
+
+    #[test]
+    fn an_algorithm_changed_underneath_redraws_the_roles_and_the_routes() {
+        let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
+        let mut ring = WideRing::new(PART);
+        let turn = |owner: &mut PortOwner<FakeModx>, ring: &mut WideRing| {
+            ring.pass(&mut |address| -> Result<Option<Vec<u8>>, PortError> {
+                match owner.serve(Request::Read(address))? {
+                    Served::Read { data, .. } => Ok(data),
+                    other => unreachable!("a read answers with data, not {other:?}"),
+                }
+            })
+            .unwrap();
+        };
+
+        turn(&mut owner, &mut ring);
+        let role_of_three = |ring: &WideRing| {
+            node(3, ring.operator(3), ring.algorithm(), Instant::now())
+                .role
+                .expect("both halves were read")
+                .value
+        };
+        assert_eq!(role_of_three(&ring), "modulator");
+
+        // Somebody turns the panel to algorithm 1, where every operator hangs off
+        // the output bus. Nothing announces it: the ring finds out by asking.
+        owner
+            .port_mut()
+            .set(Address::new(0x48, 0x00, 0x4F), &[0x00]);
+        turn(&mut owner, &mut ring);
+
+        assert_eq!(role_of_three(&ring), "carrier");
+        let drawn = drawing_of(ring.algorithm()).expect("algorithm 1");
+        assert_eq!(drawn.number, 1);
+        assert!(drawn.routes.is_empty(), "algorithm 1 modulates nothing");
+        assert_eq!(drawn.carriers, vec![1, 2, 3, 4, 5, 6, 7, 8]);
+    }
+
+    #[test]
+    fn a_byte_outside_the_eighty_eight_has_no_drawing() {
+        // `48 0p 4F` runs 00-57. One past the end is not algorithm 89: it is a
+        // number with no table, which is what draws `ALGORITMO SIN TABLA`.
+        let read = Reading {
+            value: 88,
+            at: Instant::now(),
+        };
+
+        assert!(drawing_of(Some(read)).is_none());
+        // And the number the keyboard said still crosses: it is a fact.
+        assert_eq!(
+            Aged::of(Some(read), Instant::now(), |value| value.checked_add(1))
+                .expect("the byte was read")
+                .value,
+            89
+        );
+    }
+
+    #[test]
+    fn the_two_algorithms_whose_loop_wraps_a_chain_cross_as_a_chain() {
+        let twelve = TopologyView::of(algorithms::topology(12).expect("algorithm 12"));
+
+        // Op5's output back into Op3, which the arc has to draw around three
+        // nodes rather than one.
+        assert_eq!((twelve.feedback.from, twelve.feedback.into), (5, 3));
     }
 
     #[test]
