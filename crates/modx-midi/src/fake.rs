@@ -12,7 +12,10 @@
 //! - a write of the wrong data length as a **silent no-op**: no error, no change,
 //!   no complaint. The worst failure mode there is, and the reason every write is
 //!   verified by rereading;
-//! - values saturating at the maximum instead of being rejected;
+//! - values saturating at the maximum instead of being rejected, at the ceilings
+//!   [`crate::table`] gives rather than at ceilings set by hand here;
+//! - a write landing on a parameter nobody named: `48 0p 52` puts `48 0p 48` to
+//!   zero, which is how the fase 0c restore lost a value it had never touched;
 //! - timeouts on demand;
 //! - Note On with velocity 0, and one Note On per Part in Multi mode;
 //! - a **silent Performance change**: the Part 1 name changes underneath with zero
@@ -26,6 +29,7 @@ use std::time::{Duration, Instant};
 
 use crate::port::{MidiPort, PortError};
 use crate::sysex::{self, Address};
+use crate::table;
 
 /// Median round trip with the port already open and the keyboard idle (fase 0c).
 pub const LATENCY_IDLE: Duration = Duration::from_micros(2_000);
@@ -115,27 +119,77 @@ impl FakeModx {
     }
 
     /// The keyboard the session actually starts from: `Init Normal (FM-X)` on
-    /// Part 1, `MIDI I/O Mode = Single`, with the addresses this ticket needs.
+    /// Part 1, `MIDI I/O Mode = Single`.
+    ///
+    /// The addresses, their lengths and the values they saturate at come from
+    /// [`crate::table`], so the fake answers what the Data List says the keyboard
+    /// answers instead of what the tests happen to need.
     pub fn init_normal_fmx() -> Self {
         let mut fake = Self::new();
         fake.load_performance("Init Normal (FM-X)");
 
+        for operator in 1..=8 {
+            fake.load_block(&table::OPERATOR, 1, operator);
+        }
+        fake.load_block(&table::PART_FMX, 1, 1);
+        fake.load_block(&table::PERFORMANCE_COMMON, 1, 1);
+        for entry in table::PART.entries {
+            if !entry.name.starts_with(table::PART_NAME) {
+                fake.load_entry(&table::PART, entry, 1, 1);
+            }
+        }
+
+        // What the fase 0c session actually had loaded, over the defaults. Only the
+        // values: the lengths and the ceilings stay the table's.
         // Algorithm, base zero: `01` is algorithm 2 on the screen.
-        fake.put_max(Address::new(0x48, 0x00, 0x4F), &[0x01], 87);
-        // The eight operator Levels of Part 1, the patch fase 0c had loaded.
+        fake.set(Address::new(0x48, 0x00, 0x4F), &[0x01]);
+        // The eight operator Levels of Part 1.
         for (operator, level) in [0x00, 0x00, 0x4B, 0x63, 0x00, 0x00, 0x00, 0x00]
             .into_iter()
             .enumerate()
         {
-            fake.put_max(Address::operator(operator as u8 + 1, 1, 0x1A), &[level], 99);
+            fake.set(Address::operator(operator as u8 + 1, 1, 0x1A), &[level]);
         }
-        // Two bytes, `(b1 << 7) | b2`: the Performance Tempo, 5-300.
-        fake.put_max(Address::new(0x30, 0x40, 0x2C), &[0x00, 0x78], 300);
-        // Reads, may even emit, never accepts a write.
+        // Two bytes, `(b1 << 7) | b2`: the Performance Tempo at 120.
+        fake.set(Address::new(0x30, 0x40, 0x2C), &[0x00, 0x78]);
+        // Reads, may even emit, never accepts a write. It is not in the table:
+        // the app learns a read-only address by measuring and remembers it.
         fake.put(Address::new(0x30, 0x4B, 0x00), &[0x00]);
         fake.set_read_only(Address::new(0x30, 0x4B, 0x00));
 
         fake
+    }
+
+    /// Load a whole block at its documented defaults, with the table's ranges as
+    /// the ceilings it saturates at. `operator` is ignored outside the operator
+    /// block.
+    ///
+    /// Reserved offsets are loaded like any other: **answering a read as if it
+    /// were real is the measured behaviour**, and it is the reason the refusal has
+    /// to live in the table and not in anything that can hear the keyboard.
+    pub fn load_block(&mut self, block: &'static table::Block, part: u8, operator: u8) {
+        for entry in block.entries {
+            self.load_entry(block, entry, part, operator);
+        }
+    }
+
+    /// One entry of a block, at its documented default or at zero.
+    pub fn load_entry(
+        &mut self,
+        block: &'static table::Block,
+        entry: &table::Entry,
+        part: u8,
+        operator: u8,
+    ) {
+        let address = block.address(entry.al, part, operator);
+        let data = entry
+            .default_bytes()
+            .unwrap_or_else(|| vec![0x00; usize::from(entry.length)]);
+
+        match entry.range {
+            Some((_, high)) => self.put_max(address, &data, high),
+            None => self.put(address, &data),
+        }
     }
 
     /// Put a value at an address, with no ceiling.
@@ -155,6 +209,15 @@ impl FakeModx {
         self.put(address, data);
         if let Some(parameter) = self.values.get_mut(&address) {
             parameter.max = Some(max);
+        }
+    }
+
+    /// Change what an address holds, keeping the ceiling it was loaded with. For
+    /// putting a patch on top of the defaults without restating the table.
+    pub fn set(&mut self, address: Address, data: &[u8]) {
+        match self.values.get_mut(&address) {
+            Some(parameter) => parameter.data = data.to_vec(),
+            None => self.put(address, data),
         }
     }
 
@@ -304,6 +367,25 @@ impl FakeModx {
             let shift = 7 * (width - 1 - offset);
             *byte = ((value >> shift) & 0x7F) as u8;
         }
+
+        self.collateral(address);
+    }
+
+    /// What a write did to something it was never told about.
+    ///
+    /// One case, measured 6 times out of 6: writing the reserved `48 0p 52` puts
+    /// `48 0p 48` (2nd LFO Speed) to zero. The exact condition that fires it was
+    /// never determined — one repetition with another precondition did not lose
+    /// the value — so the fake fires it always: a test that passes here has
+    /// survived the worse of the two keyboards.
+    fn collateral(&mut self, written: Address) {
+        if written.ah != sysex::AH_PART_FMX || written.al != 0x52 {
+            return;
+        }
+        let victim = Address::new(written.ah, written.am, 0x48);
+        if let Some(parameter) = self.values.get_mut(&victim) {
+            parameter.data.iter_mut().for_each(|byte| *byte = 0x00);
+        }
     }
 }
 
@@ -420,6 +502,65 @@ mod tests {
         fake.send(&sysex::parameter_change(tempo, &[0x02, 0x2D]))
             .unwrap();
         assert_eq!(fake.value(tempo), Some([0x02, 0x2C].as_slice()));
+    }
+
+    #[test]
+    fn answers_a_reserved_address_as_if_it_were_real() {
+        let mut fake = FakeModx::init_normal_fmx();
+        // A read cannot tell a reserved address from a parameter. This is the
+        // measured behaviour and the reason the reserved list comes from paper.
+        assert_eq!(
+            read(&mut fake, Address::new(0x48, 0x00, 0x52)),
+            Some(vec![0x00])
+        );
+        assert_eq!(
+            read(&mut fake, Address::operator(3, 1, 0x00)),
+            Some(vec![0x00])
+        );
+    }
+
+    #[test]
+    fn a_write_to_the_reserved_52_takes_the_2nd_lfo_speed_with_it() {
+        let mut fake = FakeModx::init_normal_fmx();
+        let speed = Address::new(0x48, 0x00, 0x48);
+        assert_eq!(fake.value(speed), Some([0x1E].as_slice()));
+
+        fake.send(&sysex::parameter_change(
+            Address::new(0x48, 0x00, 0x52),
+            &[0x01],
+        ))
+        .unwrap();
+
+        assert_eq!(fake.value(speed), Some([0x00].as_slice()));
+    }
+
+    #[test]
+    fn loads_the_block_at_the_documented_defaults() {
+        let mut fake = FakeModx::init_normal_fmx();
+
+        // The five bytes of the Controller Set, as the spike read them back.
+        assert_eq!(
+            read(&mut fake, Address::operator(3, 1, 0x25)),
+            Some(vec![0x00, 0x00, 0x03, 0x7F, 0x7F])
+        );
+        // The AEG Release Time of every operator, at the Data List's `28`.
+        for operator in 1..=8 {
+            assert_eq!(
+                read(&mut fake, Address::operator(operator, 1, 0x17)),
+                Some(vec![0x28]),
+                "Op{operator}"
+            );
+        }
+        // And the ceiling now comes from the table: Feedback is 0-7.
+        fake.send(&sysex::parameter_change(
+            Address::new(0x48, 0x00, 0x50),
+            &[0x7F],
+        ))
+        .unwrap();
+        assert_eq!(
+            fake.value(Address::new(0x48, 0x00, 0x50)),
+            Some([0x07].as_slice())
+        );
     }
 
     #[test]

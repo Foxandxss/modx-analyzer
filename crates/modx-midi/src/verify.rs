@@ -16,12 +16,19 @@ use std::time::Duration;
 use crate::port::{MidiPort, PortError};
 use crate::read::read_parameter;
 use crate::sysex::{self, Address};
+use crate::table;
 
 /// Where one write has got to.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum WriteState {
     /// Built, not yet on the wire.
     Pending,
+    /// Built and **never sent**: the address is on the Data List's reserved list
+    /// (ADR-0003). A reserved address reads like any other, so nothing downstream
+    /// could tell it apart; the only place this can be caught is here, before the
+    /// bytes reach the port. Writing one is undefined behaviour with a measured
+    /// example — `48 00 52` puts `48 00 48` to zero.
+    Refused,
     /// On the wire, waiting for the reread that will say whether it landed.
     Reread,
     /// Reread, and the keyboard holds what was asked for.
@@ -68,7 +75,15 @@ impl VerifiedWrite {
 
     /// Put the Parameter Change on the wire. `pendiente → releída`: the name says
     /// what is owed next, not what has happened.
+    ///
+    /// A write to a reserved address never gets that far: it ends `rechazada` with
+    /// nothing sent, which is the whole of the crate's refusal because this is the
+    /// only path a parameter write takes.
     pub fn send(&mut self, port: &mut impl MidiPort) -> Result<(), PortError> {
+        if table::is_reserved(self.address) {
+            self.state = WriteState::Refused;
+            return Ok(());
+        }
         port.send(&sysex::parameter_change(self.address, &self.expected))?;
         self.state = WriteState::Reread;
         Ok(())
@@ -84,6 +99,12 @@ impl VerifiedWrite {
         timeout: Duration,
         traffic: &mut dyn FnMut(&[u8]),
     ) -> Result<&WriteState, PortError> {
+        // A refused write has nothing to reread, and rereading it would put a
+        // request for a reserved address on the wire for no reason.
+        if self.state == WriteState::Refused {
+            return Ok(&self.state);
+        }
+
         let found = read_parameter(port, self.address, timeout, traffic)?;
         self.state = if found.as_deref() == Some(self.expected.as_slice()) {
             WriteState::Confirmed
@@ -105,6 +126,8 @@ mod tests {
 
     const ALGORITHM: Address = Address::new(0x48, 0x00, 0x4F);
     const SUPER_KNOB: Address = Address::new(0x30, 0x4B, 0x00);
+    const RESERVED: Address = Address::new(0x48, 0x00, 0x52);
+    const SPEED: Address = Address::new(0x48, 0x00, 0x48);
 
     fn run(fake: &mut FakeModx, write: &mut VerifiedWrite) -> WriteState {
         assert_eq!(write.state(), &WriteState::Pending);
@@ -171,6 +194,41 @@ mod tests {
                 found: None,
             }
         );
+    }
+
+    #[test]
+    fn refuses_a_reserved_address_before_a_byte_reaches_the_port() {
+        let mut fake = FakeModx::init_normal_fmx();
+        // The measured one: writing it puts `48 00 48` (2nd LFO Speed) to zero,
+        // and the fake answers it as if it were an ordinary parameter — which is
+        // precisely why the refusal cannot live in the port.
+        let mut write = VerifiedWrite::new(RESERVED, &[0x01]);
+
+        write.send(&mut fake).expect("nothing goes out");
+        assert_eq!(write.state(), &WriteState::Refused);
+        assert!(fake.sent().is_empty(), "{:?}", fake.sent());
+
+        // Resolving it does not go asking either.
+        assert_eq!(
+            write
+                .resolve(&mut fake, REPLY_TIMEOUT, &mut |_| {})
+                .unwrap(),
+            &WriteState::Refused
+        );
+        assert!(fake.sent().is_empty(), "{:?}", fake.sent());
+        assert_eq!(fake.value(SPEED), Some([0x1E].as_slice()));
+    }
+
+    #[test]
+    fn refuses_a_byte_swallowed_by_a_reserved_block_too() {
+        let mut fake = FakeModx::init_normal_fmx();
+        // `2B` is inside the five reserved bytes of `49 op 2A`.
+        let mut write = VerifiedWrite::new(Address::operator(3, 1, 0x2B), &[0x01]);
+
+        write.send(&mut fake).unwrap();
+
+        assert_eq!(write.state(), &WriteState::Refused);
+        assert!(fake.sent().is_empty());
     }
 
     #[test]

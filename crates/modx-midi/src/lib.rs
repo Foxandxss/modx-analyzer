@@ -5,7 +5,9 @@
 //! estrecho (ADR-0004). Everything above [`port::MidiPort`] is tested against
 //! [`fake::FakeModx`], which reproduces the quirks that were measured on the real
 //! keyboard; the one thing not covered is [`hardware::HardwarePort`], which is
-//! verified by measurement.
+//! verified by measurement. What the keyboard's addresses *are* is not measured at
+//! all but transcribed, so [`table`] carries the procedencia of every entry and is
+//! the only thing allowed to say that an address exists (ADR-0003).
 //!
 //! ```no_run
 //! use modx_midi::{hardware::HardwarePort, owner::OwnerHandle};
@@ -24,10 +26,12 @@ pub mod panic;
 pub mod port;
 pub mod read;
 pub mod sysex;
+pub mod table;
 pub mod verify;
 
 pub use notes::NoteTracker;
 pub use owner::{OwnerHandle, PortOwner, Priority, Request, RequestQueue, Served};
 pub use port::{MidiPort, PortError, PORT_NAME, REPLY_TIMEOUT};
 pub use sysex::Address;
+pub use table::{Access, Entry, Provenance};
 pub use verify::{VerifiedWrite, WriteState};
