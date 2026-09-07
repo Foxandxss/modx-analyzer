@@ -203,6 +203,24 @@ impl WideRing {
         }
     }
 
+    /// Throw every reading away and start the pass again.
+    ///
+    /// It is what the ancla asks for when the Performance changed underneath:
+    /// these forty-two numbers belong to a patch that is gone, and a figure from
+    /// another sound is not stale, it is `INVALIDADO`. Everything empties at
+    /// once, so the front draws the dash **before** the first number of the new
+    /// patch arrives — a number that replaced another without passing through the
+    /// dash could not be told from one somebody had just turned by hand.
+    ///
+    /// The cadence survives: `last_pass` is what `CADUCO` and `LOS OCHO · N Hz`
+    /// are computed from, and how fast the port answers has nothing to do with
+    /// which Performance is loaded.
+    pub fn forget(&mut self) {
+        self.readings.iter_mut().for_each(|reading| *reading = None);
+        self.next = 0;
+        self.pass_started = Instant::now();
+    }
+
     /// The five figures of one operator, 1-8.
     pub fn operator(&self, operator: u8) -> OperatorReadings {
         OperatorReadings {
@@ -391,6 +409,33 @@ mod tests {
         assert_eq!(spectral_form(7), None);
         assert_eq!(FrequencyMode::from_value(0), Some(FrequencyMode::Ratio));
         assert_eq!(FrequencyMode::from_value(2), None);
+    }
+
+    #[test]
+    fn forgetting_empties_every_figure_at_once_and_keeps_the_cadence() {
+        let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
+        let mut ring = WideRing::new(1);
+        ring.pass(&mut asking(&mut owner)).unwrap();
+        assert!(ring.algorithm().is_some());
+        let cadence = ring.last_pass().expect("one pass closed");
+
+        ring.forget();
+
+        // Not one number survives, so nothing of the previous patch can be
+        // replaced by a number of the new one without a dash in between.
+        assert!(ring.algorithm().is_none());
+        assert!(ring.feedback().is_none());
+        for operator in 1..=OPERATORS {
+            let read = ring.operator(operator);
+            assert!(read.level.is_none(), "OP{operator} kept its Level");
+            assert!(read.coarse.is_none());
+            assert!(read.fine.is_none());
+            assert!(read.frequency_mode.is_none());
+            assert!(read.spectral_form.is_none());
+        }
+        // How fast the port answers has nothing to do with which sound is loaded.
+        assert_eq!(ring.last_pass(), Some(cadence));
+        assert_eq!(ring.next_address(), ring.addresses()[0].address);
     }
 
     #[test]

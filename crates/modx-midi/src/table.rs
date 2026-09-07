@@ -679,6 +679,41 @@ pub fn wide_ring(part: u8) -> Vec<Polled> {
     ring
 }
 
+/// Every address of one Part's patch: the FM-X common block and the eight
+/// operators, one read per **parameter** and not per byte.
+///
+/// This is what the relectura goes through, and its length is the total the strip
+/// counts against. It is deliberately not the design's 416: that figure is the
+/// fase 0c sweep, which asked every `al` of `ah` 48 and 49 one byte at a time,
+/// and a two-byte parameter answers its whole data field from its first address —
+/// so asking its second byte separately asks for something that is not a
+/// parameter. The rest of the difference is the table's one unresolved
+/// contradiction (`49 op 2A`: five reserved bytes, or five loose offsets), which
+/// is written down in `docs/results` rather than rounded away to match the sheet.
+///
+/// Reserved addresses are in the list. A read cannot tell them apart from a real
+/// one anyway, and leaving them out would make the count say the patch is smaller
+/// than it is; nothing here writes.
+///
+/// The Part's own block goes first so the algorithm and the feedback are among a
+/// relectura's earliest answers rather than its last.
+pub fn patch_addresses(part: u8) -> Vec<Address> {
+    let mut addresses: Vec<Address> = PART_FMX
+        .entries
+        .iter()
+        .map(|entry| PART_FMX.address(entry.al, part, 1))
+        .collect();
+    for operator in 1..=8 {
+        addresses.extend(
+            OPERATOR
+                .entries
+                .iter()
+                .map(|entry| OPERATOR.address(entry.al, part, operator)),
+        );
+    }
+    addresses
+}
+
 /// The 20 addresses of the ancla: the Part name, one byte per address.
 ///
 /// It is the only signal there is that the Performance changed underneath, and it
@@ -940,6 +975,41 @@ mod tests {
         // Part 2 is the read-only sweep of #16: same offsets, `am` one higher.
         assert_eq!(wide_ring(2)[0].address, Address::new(0x49, 0x01, 0x1A));
         assert_eq!(wide_ring(2)[40].address, Address::new(0x48, 0x01, 0x4F));
+    }
+
+    #[test]
+    fn the_patch_is_the_fmx_block_and_the_eight_operators_and_says_how_many() {
+        let patch = patch_addresses(1);
+
+        // One read per parameter: 72 of `48 00`, then the eight `49 op`.
+        assert_eq!(
+            patch.len(),
+            PART_FMX.entries.len() + 8 * OPERATOR.entries.len()
+        );
+        // 72 + 39 × 8 = 384, and the number is written out because the design's
+        // sheet says 416. The 32 of the difference are `49 op 2B`-`2E`, which the
+        // Data List swallows into the five reserved bytes of `2A` and the fase 0c
+        // sweep counted as answering: the one unresolved contradiction of this
+        // table (`docs/results`), closed by four reads with the keyboard in front
+        // of you. The strip says what was actually asked for.
+        assert_eq!(patch.len(), 384);
+        assert_eq!(patch.first(), Some(&Address::new(0x48, 0x00, 0x00)));
+        assert_eq!(patch[PART_FMX.entries.len()], Address::operator(1, 1, 0x00));
+        assert_eq!(
+            patch.last(),
+            Some(&OPERATOR.address(OPERATOR.entries.last().unwrap().al, 1, 8))
+        );
+
+        // No address twice: the relectura's count would otherwise say the patch
+        // is bigger than it is.
+        let distinct: BTreeSet<Address> = patch.iter().copied().collect();
+        assert_eq!(distinct.len(), patch.len());
+
+        // The Part is a parameter, the way the ring's and the ancla's are.
+        assert_eq!(
+            patch_addresses(2).first(),
+            Some(&Address::new(0x48, 0x01, 0x00))
+        );
     }
 
     #[test]

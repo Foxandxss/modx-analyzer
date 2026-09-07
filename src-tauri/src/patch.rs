@@ -17,6 +17,7 @@
 //! and for the same reason: two unrelated clocks cannot be subtracted, but an
 //! elapsed time can be carried across.
 
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
@@ -150,10 +151,20 @@ impl TopologyView {
 #[derive(Clone, Default, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PatchView {
-    /// The ancla. Nothing polls the Part name yet (#13), so it stays empty and the
-    /// header keeps drawing the dash it opens with.
+    /// The ancla: the Part 1 name, polled at 1 Hz. Empty until the first whole
+    /// pass, and never assembled out of a pass with a hole in it.
     pub performance_name: Option<Aged<String>>,
+    /// The name it had before it changed, drawn struck through beside the new
+    /// one. It stays set for the rest of the session, so it is not what says a
+    /// change just happened — [`PatchView::changes`] is.
     pub previous_performance_name: Option<String>,
+    /// How many times the Performance has changed underneath since launch.
+    ///
+    /// The first name of the session does **not** count: a launch invalidates
+    /// nothing, and the front watches this number to know when to throw away the
+    /// medida and start the 2 200 ms flash. It is a counter and not a flag
+    /// because two changes in a row have to be two of them.
+    pub changes: u32,
     /// 1-88 as the keyboard's own screen numbers it: the byte at `48 0p 4F` plus
     /// one. A byte outside the 88 crosses as it came, because what the keyboard
     /// said is a fact and inventing a topology for it is #12's refusal to make.
@@ -200,6 +211,15 @@ pub struct OperatorsView {
 #[derive(Default)]
 pub struct Patch {
     view: Mutex<PatchView>,
+    /// When the ancla last answered, so the name's age is computed at the moment
+    /// the payload is built and not frozen at the moment it was read. The ring
+    /// re-emits this event a dozen times a second and a stored age would make the
+    /// name look as if it had just been read every one of them.
+    name_read_at: Mutex<Option<Instant>>,
+    /// Bumped once per ancla change. The anillo ancho compares it with its own
+    /// copy between steps and empties itself when they differ: the readings live
+    /// in the ring, so that is where they are thrown away.
+    generation: AtomicU64,
 }
 
 impl Patch {
@@ -223,15 +243,68 @@ impl Patch {
         });
     }
 
+    /// Say what the ancla read, leaving the ring's fields as they were — unless
+    /// the Performance changed, in which case they belong to a patch that is gone
+    /// and go out in the same event as the new name.
+    ///
+    /// Clearing them here rather than waiting for the ring's own pass is what
+    /// keeps the header from drawing the new name beside the old algorithm for
+    /// the tens of milliseconds it takes the ring to notice. The ring empties
+    /// itself as well, off [`Patch::generation`]; the two are idempotent.
+    pub fn set_anchor(
+        app: &AppHandle,
+        name: String,
+        previous: Option<String>,
+        changes: u32,
+        read_at: Instant,
+    ) {
+        let state = app.state::<Patch>();
+        *state
+            .name_read_at
+            .lock()
+            .expect("the patch lock is not held across a panic") = Some(read_at);
+        if previous.is_some() {
+            state.generation.fetch_add(1, Ordering::Release);
+        }
+
+        Self::update(app, |view| {
+            view.performance_name = Some(Aged {
+                value: name,
+                age_ms: 0,
+            });
+            if let Some(previous) = previous {
+                view.previous_performance_name = Some(previous);
+                view.algorithm = None;
+                view.feedback = None;
+                view.feedback_operator = None;
+                view.topology = None;
+            }
+            view.changes = changes;
+        });
+    }
+
+    /// How many ancla changes the app has seen. The ring reads it between steps.
+    pub fn generation(app: &AppHandle) -> u64 {
+        app.state::<Patch>().generation.load(Ordering::Acquire)
+    }
+
     fn update(app: &AppHandle, change: impl FnOnce(&mut PatchView)) {
         let state = app.state::<Patch>();
+        let read_at = *state
+            .name_read_at
+            .lock()
+            .expect("the patch lock is not held across a panic");
         let view = {
             let mut view = state
                 .view
                 .lock()
                 .expect("the patch lock is not held across a panic");
             change(&mut view);
-            view.clone()
+            let mut view = view.clone();
+            if let (Some(name), Some(read_at)) = (view.performance_name.as_mut(), read_at) {
+                name.age_ms = Instant::now().duration_since(read_at).as_millis() as u64;
+            }
+            view
         };
         let _ = app.emit(EVENT_PATCH, view);
     }
@@ -250,8 +323,21 @@ pub fn start(app: &AppHandle) {
 
 fn run(app: &AppHandle) {
     let mut ring = WideRing::new(PART);
+    let mut generation = Patch::generation(app);
 
     loop {
+        // Between two steps and never inside one: an address already handed to
+        // the port is served to the end, and its answer belongs to whichever
+        // patch was loaded when the keyboard answered it. Forgetting is checked
+        // here so that the whole diagram empties in one go rather than filling
+        // with a mixture of two sounds.
+        let now = Patch::generation(app);
+        if now != generation {
+            generation = now;
+            ring.forget();
+            publish(app, &ring);
+        }
+
         let Some(owner) = app.state::<Keyboard>().owner() else {
             // No port: nothing to ask and nothing new to draw. What is on screen
             // keeps ageing on its own, which is the whole point of the stamps.
@@ -491,6 +577,38 @@ mod tests {
         // Op5's output back into Op3, which the arc has to draw around three
         // nodes rather than one.
         assert_eq!((twelve.feedback.from, twelve.feedback.into), (5, 3));
+    }
+
+    /// What the ancla asks the ring for when the Performance changed underneath.
+    /// The event goes out with the whole diagram already empty, which is the
+    /// rule: a number never replaces another without passing through the dash.
+    #[test]
+    fn a_performance_changed_underneath_takes_every_figure_with_it() {
+        let mut ring = read_once();
+        let now = Instant::now();
+        assert_eq!(
+            node(3, ring.operator(3), ring.algorithm(), now)
+                .level
+                .unwrap()
+                .value,
+            75
+        );
+
+        ring.forget();
+
+        let drawn = node(3, ring.operator(3), ring.algorithm(), now);
+        assert!(drawn.level.is_none(), "a Level of the old patch survived");
+        assert!(drawn.role.is_none());
+        assert!(drawn.ratio.is_none());
+        assert!(drawn.spectral_form.is_none());
+        // The header's two figures go with them, and so does the drawing: the
+        // algorithm that chose it belonged to the sound that is gone.
+        assert!(Aged::of(ring.algorithm(), now, |value| value.checked_add(1)).is_none());
+        assert!(Aged::of(ring.feedback(), now, Some).is_none());
+        assert!(drawing_of(ring.algorithm()).is_none());
+        // The cadence is not a figure of the patch and stays: how fast the port
+        // answers has nothing to do with which sound is loaded.
+        assert!(ring.last_pass().is_some());
     }
 
     #[test]

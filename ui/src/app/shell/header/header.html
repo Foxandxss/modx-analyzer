@@ -6,12 +6,21 @@
 
   <div class="gap" aria-hidden="true"></div>
 
-  <!-- El ancla: el nombre de la Part 1. Sin toque: la pantalla de chequeo no existe aún. -->
-  <div class="anchor">
-    <span class="anchor__eyebrow">ANCLA</span>
+  <!-- El ancla: el nombre de la Part 1, sondeado a 1 Hz. Sin toque: la pantalla de
+       chequeo no existe aún. Tres estados: reposo, acaba de cambiar (nombre nuevo
+       con el viejo tachado al lado y el destello de 2 200 ms) y releído, que no
+       vuelve al reposo — se queda pidiendo medida. -->
+  <div class="anchor" [class.anchor--changed]="justChanged()">
+    <span class="anchor__eyebrow">ANCLA · 1 Hz · 31 00 00</span>
     <span class="anchor__name">
       <app-figure [value]="patch().performanceName" />
+      @if (previousName(); as old) {
+        <s class="anchor__old">{{ old }}</s>
+      }
     </span>
+    @if (unmeasured()) {
+      <span class="anchor__unmeasured">SIN MEDIR EN ESTE SONIDO</span>
+    }
   </div>
 
   <div class="pill pill--algorithm">

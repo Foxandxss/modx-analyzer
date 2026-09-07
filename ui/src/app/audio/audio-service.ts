@@ -83,6 +83,17 @@ export interface LiveView {
   trama: LiveTrama;
   /** The last 14 curves, oldest first: 462 ms of the attack fading. */
   waterfall: Float32Array[];
+  /**
+   * Ridgelines pushed since launch. `waterfall[i]` is row `rows - length + i`,
+   * which is what lets a cut keep its place while the window scrolls past it.
+   */
+  rows: number;
+  /**
+   * Where the sound changed underneath, as row numbers. The waterfall draws a
+   * dashed line above each of them: the vista viva never dies, but it does stop
+   * being the same sound, and that is a fact about the picture.
+   */
+  cuts: number[];
   version: number;
 }
 
@@ -110,7 +121,14 @@ export class AudioService {
   private readonly destroyRef = inject(DestroyRef);
 
   /** The newest trama. Mutated 33 times a second and never watched by Angular. */
-  readonly live: LiveView = { trace: null, trama: NO_TRAMA, waterfall: [], version: 0 };
+  readonly live: LiveView = {
+    trace: null,
+    trama: NO_TRAMA,
+    waterfall: [],
+    rows: 0,
+    cuts: [],
+    version: 0,
+  };
 
   /** The frequency the trace was triggered at, or `null` with no note. Tenths. */
   readonly frequencyHz = signal<number | null>(null);
@@ -170,6 +188,9 @@ export class AudioService {
   private sinceReadout = 0;
   private readoutAt: number | null = null;
 
+  /** Ancla changes already acted on, so the effect below fires once per change. */
+  private anchorChanges = 0;
+
   constructor() {
     // The note the espectro's axis is drawn against. It crosses to the worker
     // when it changes and not with every bloque: somebody playing is hundreds of
@@ -178,6 +199,39 @@ export class AudioService {
       const pitch = this.backend.lowestLivePitch();
       this.postNote(pitch === null ? null : equalTemperamentHz(pitch));
     });
+
+    // The medida dies with the patch it was taken on, and it is **not**
+    // recovered: nobody is going to press MEDIR on the owner's behalf, and a
+    // table that came back on its own would be a measurement that happened
+    // rather than one somebody did. The vista viva goes on untouched — it is
+    // audio entering now and it belongs to no patch at all.
+    effect(() => {
+      const changes = this.backend.patch().changes;
+      const changed = changes > this.anchorChanges;
+      this.anchorChanges = changes;
+      // Zero is the launch — the ancla read a name for the first time — and
+      // there is nothing of a previous sound to throw away.
+      if (changed && changes > 0) {
+        this.onPatchChanged();
+      }
+    });
+  }
+
+  /**
+   * The sound was changed underneath: the medida dies and the waterfall keeps
+   * the cut.
+   *
+   * The medida is **not** recovered, here or later. Nobody is going to press
+   * MEDIR on the owner's behalf, and a table that came back on its own would be
+   * a measurement that happened rather than one somebody did. What stays is the
+   * cut: above the line and below it are two different sounds, and the
+   * ridgelines below are still worth looking at.
+   */
+  private onPatchChanged(): void {
+    this.medida.set(null);
+    this.measureMs.set(null);
+    this.measureNote.set('la medida era de otro sonido');
+    this.live.cuts.push(this.live.rows);
   }
 
   /**
@@ -279,8 +333,16 @@ export class AudioService {
     // waterfall from filling with the floor.
     if (frame.trama.curve !== null) {
       this.live.waterfall.push(frame.trama.curve);
+      this.live.rows += 1;
       if (this.live.waterfall.length > WATERFALL_FRAMES) {
         this.live.waterfall.shift();
+      }
+      // A cut that has scrolled off the top of the window is gone with the
+      // ridgelines it separated: keeping it would draw a line between two
+      // sounds that are both no longer on screen.
+      const oldest = this.live.rows - this.live.waterfall.length;
+      while (this.live.cuts.length > 0 && this.live.cuts[0] < oldest) {
+        this.live.cuts.shift();
       }
     }
 

@@ -26,7 +26,7 @@ export interface BackendGateway {
   readonly patch: Signal<PatchHeaderView>;
 
   /**
-   * The relectura of the 416 addresses, or `null` when no relectura is running.
+   * The relectura of the whole patch, or `null` before the first one has begun.
    * The count is visible on purpose — the app is not hiding what it costs.
    */
   readonly reread: Signal<RereadProgress | null>;
@@ -147,10 +147,32 @@ export interface PatchHeaderView {
   readonly performanceName: PolledValue<string>;
   /** The name the ancla had before it changed, drawn struck through beside it. */
   readonly previousPerformanceName: string | null;
+  /**
+   * How many times the Performance has changed underneath since launch.
+   *
+   * The first name of the session does not count: a launch invalidates nothing.
+   * This is the number to watch — not {@link previousPerformanceName}, which
+   * stays set for the rest of the session, and not the name itself, which two
+   * different Performances can share. It is a counter and not a flag because two
+   * changes in a row have to be two of them.
+   */
+  readonly changes: number;
   readonly algorithm: PolledValue<number>;
   readonly feedback: PolledValue<number>;
   /** The operator the feedback loop sits on, e.g. 5 for `FB 3 · OP5`. */
   readonly feedbackOperator: PolledValue<number>;
+}
+
+/** The header before the keyboard has answered: shape kept, figures lost. */
+export function noPatch(): PatchHeaderView {
+  return {
+    performanceName: invalidated<string>(),
+    previousPerformanceName: null,
+    changes: 0,
+    algorithm: invalidated<number>(),
+    feedback: invalidated<number>(),
+    feedbackOperator: invalidated<number>(),
+  };
 }
 
 /** One line of the drawing: `from` modulates `into`. */
@@ -199,9 +221,22 @@ export function sameTopology(a: Topology | null, b: Topology | null): boolean {
   return a === b || (a !== null && b !== null && a.number === b.number);
 }
 
+/**
+ * The relectura, running or finished.
+ *
+ * `total` comes from the native side rather than being a constant here, and it
+ * is **not** the design sheet's 416: that figure is the fase 0c sweep, which
+ * asked every `al` of `ah` 48 and 49 one byte at a time. The app reads one
+ * address per parameter, which is 384 of them, and the strip says what was
+ * actually asked for. See `crates/modx-midi/src/table.rs`.
+ */
 export interface RereadProgress {
   readonly done: number;
   readonly total: number;
+  /** How many of `done` came back with a value. 415 of 416 in the fase 0c sweep. */
+  readonly answered: number;
+  /** `null` while it is running, and the whole pass once it is over. */
+  readonly tookMs: number | null;
 }
 
 /**

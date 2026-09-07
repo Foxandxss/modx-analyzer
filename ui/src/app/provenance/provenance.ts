@@ -14,6 +14,3 @@ export const PROVENANCE_LABEL: Readonly<Record<Provenance, string>> = {
   stale: 'CADUCO',
   invalidated: 'INVALIDADO',
 };
-
-/** The count of a relectura, fixed by the patch: `118 DE 416`. */
-export const REREAD_TOTAL = 416;

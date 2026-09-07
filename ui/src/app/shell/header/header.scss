@@ -55,6 +55,19 @@
   justify-content: center;
   gap: 2px;
   min-width: 160px;
+  /* El destello vive en el borde y el fondo, nunca en la opacidad: el nombre
+     nuevo es una cifra viva y bajarle la tinta lo diría muerto. Padding e
+     `inset` constantes para que el estado no mueva nada de la barra. */
+  padding: 4px 8px;
+  margin: -4px -8px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-modulator);
+  transition: border-color var(--anchor-flash) ease-out;
+}
+
+.anchor--changed {
+  border-color: var(--anchor-changed-border);
+  background: var(--anchor-changed-bg);
 }
 
 .anchor__eyebrow {
@@ -64,10 +77,26 @@
 }
 
 .anchor__name {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
   font-size: 17px;
   line-height: 1;
   color: var(--anchor-ink);
   white-space: nowrap;
+}
+
+/* El nombre viejo, al lado y tachado. Se queda toda la sesión: es lo que
+   explica de dónde venían las cifras que ya no están. */
+.anchor__old {
+  font-size: var(--text-micro);
+  color: var(--anchor-old-ink);
+}
+
+.anchor__unmeasured {
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--carrier);
 }
 
 .pill {

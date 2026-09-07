@@ -6,6 +6,8 @@ import { FakeAudioWorker } from '../../audio/fake-audio-worker';
 import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
 import { FakeBackendGateway } from '../../backend/fake-backend-gateway';
 import { DEAD_MARK } from '../../provenance/provenance';
+import { ANCHOR_FLASH_MS } from '../../provenance/anchor';
+import { Clock } from '../../provenance/clock';
 import { PANIC_ACK_MS, PanicService } from '../panic/panic-service';
 import { Header } from './header';
 
@@ -263,6 +265,7 @@ async function renderWithAudio() {
       await fixture.whenStable();
     },
     settle: () => fixture.whenStable(),
+    backend,
   };
 }
 
@@ -323,5 +326,51 @@ describe('Header · el obturador', () => {
     await settle();
 
     expect(audio.medida()).toBeNull();
+  });
+});
+
+describe('Header · el ancla', () => {
+  it('dibuja el nombre nuevo con el viejo tachado al lado y el destello', async () => {
+    const { host, settle, backend } = await renderWithAudio();
+    backend.anchorReads('Init Normal (FM-X)');
+    await settle();
+
+    const anchor = () => host.querySelector('.anchor')!;
+    expect(anchor().textContent).toContain('Init Normal (FM-X)');
+    expect(anchor().querySelector('.anchor__old')).toBeNull();
+    expect(anchor().classList.contains('anchor--changed')).toBe(false);
+
+    backend.loadPerformance('Bright FM Keys');
+    await settle();
+
+    expect(anchor().querySelector('.anchor__name')?.textContent).toContain('Bright FM Keys');
+    expect(anchor().querySelector('.anchor__old')?.textContent).toBe('Init Normal (FM-X)');
+    expect(anchor().classList.contains('anchor--changed')).toBe(true);
+    // La procedencia va al lado del nombre, con peso bajo: 1 Hz y la dirección.
+    expect(anchor().querySelector('.anchor__eyebrow')?.textContent).toBe('ANCLA · 1 Hz · 31 00 00');
+  });
+
+  it('se queda en SIN MEDIR EN ESTE SONIDO hasta que haya otra medida', async () => {
+    const { host, hold, settle, backend } = await renderWithAudio();
+    await hold(261.626, 50);
+    const anchor = () => host.querySelector('.anchor')!;
+
+    // Al arrancar no lo dice: nunca se ha medido nada y eso no es una noticia.
+    expect(anchor().textContent).not.toContain('SIN MEDIR EN ESTE SONIDO');
+
+    backend.loadPerformance('Bright FM Keys');
+    await settle();
+    expect(anchor().textContent).toContain('SIN MEDIR EN ESTE SONIDO');
+
+    // El destello se va solo a los 2 200 ms; la petición de medida no.
+    TestBed.inject(Clock).now.set(performance.now() + ANCHOR_FLASH_MS);
+    await settle();
+    expect(anchor().classList.contains('anchor--changed')).toBe(false);
+    expect(anchor().textContent).toContain('SIN MEDIR EN ESTE SONIDO');
+
+    // Y se va cuando alguien vuelve a pulsar el obturador, y sólo entonces.
+    host.querySelector<HTMLButtonElement>('.measure')!.click();
+    await settle();
+    expect(anchor().textContent).not.toContain('SIN MEDIR EN ESTE SONIDO');
   });
 });

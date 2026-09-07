@@ -1,3 +1,4 @@
+mod anchor;
 mod audio;
 mod connection;
 mod dumps;
@@ -68,20 +69,22 @@ pub fn run() {
 
             // Startup order: the port first, so the pánico is live before anything
             // else can make a note sound; then the volcado de seguridad, which is
-            // the first thing that touches the keyboard; then the anillo ancho;
-            // then the audio device last. The ancla and the relectura slot between
-            // the volcado and the ring when #13 lands.
+            // the first thing that touches the keyboard; then the ancla, which
+            // reads the name and takes the relectura of the whole patch with it;
+            // then the anillo ancho; then the audio device last.
             //
-            // The volcado and the ring each run on a thread of their own — this
-            // function has to return for the window to appear, and the volcado
-            // holds the port for seconds while the ring never lets go of it at all
-            // — so the order here is the order they *ask* in, not the order they
-            // finish in. That the volcado still goes first is the port owner's
-            // doing: `Priority::Dump` is served ahead of `Priority::WideRing`, so
-            // the ring's first pass waits behind the safety copy rather than
-            // interleaving with it.
+            // Each of these runs on a thread of its own — this function has to
+            // return for the window to appear, and the volcado holds the port for
+            // seconds while the rings never let go of it at all — so the order
+            // here is the order they *ask* in, not the order they finish in. That
+            // the order **holds** is the port owner's doing and not this line's:
+            // `Dump` is served ahead of `Anchor` and `Anchor` ahead of
+            // `WideRing` (ADR-0004), so the volcado goes out whole, the relectura
+            // runs at full speed behind it, and the ring's first pass waits for
+            // both rather than interleaving with them.
             keyboard::start(app.handle());
             dumps::start(app.handle());
+            anchor::start(app.handle());
             patch::start(app.handle());
             audio::start(app.handle());
 

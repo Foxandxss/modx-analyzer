@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject } from '@angular/core';
 import { MEASURE_WINDOW } from 'modx-dsp';
 import { BACKEND_GATEWAY, invalidated } from '../../backend/backend-gateway';
+import { Anchor } from '../../provenance/anchor';
 import { Figure } from '../../provenance/figure';
 import { RingFreshness } from '../../provenance/freshness';
 import { AudioService } from '../../audio/audio-service';
@@ -31,6 +32,7 @@ export class Header {
   private readonly panic = inject(PanicService);
   private readonly audio = inject(AudioService);
   private readonly freshness = inject(RingFreshness);
+  private readonly anchor = inject(Anchor);
 
   /** The pointer that went down on the pánico, until it comes up again. */
   private pressing: number | null = null;
@@ -89,6 +91,23 @@ export class Header {
   protected readonly connection = this.backend.connection;
   protected readonly patch = this.backend.patch;
   protected readonly liveNotes = this.backend.liveNotes;
+
+  /** The 2 200 ms after the Performance was changed underneath. */
+  protected readonly justChanged = this.anchor.justChanged;
+
+  /** The name it had before, struck through beside the new one. */
+  protected readonly previousName = this.anchor.previousName;
+
+  /**
+   * The ancla's third state. After a change the header **does not go back to
+   * rest**: it stays saying that this sound has not been measured, because the
+   * medida it had was of another one and nothing is going to press MEDIR on the
+   * owner's behalf. It is not shown before the first change — at launch nothing
+   * has ever been measured and saying so would be noise, not news.
+   */
+  protected readonly unmeasured = computed(
+    () => this.anchor.everChanged() && this.audio.medida() === null,
+  );
 
   /**
    * The algorithm and the feedback come off the anillo ancho like everything else

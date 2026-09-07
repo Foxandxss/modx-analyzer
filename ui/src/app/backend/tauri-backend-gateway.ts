@@ -17,6 +17,7 @@ import {
   Topology,
   invalidated,
   noOperators,
+  noPatch,
   sameTopology,
 } from './backend-gateway';
 
@@ -41,6 +42,7 @@ interface Aged<T> {
 interface PatchWire {
   readonly performanceName: Aged<string> | null;
   readonly previousPerformanceName: string | null;
+  readonly changes: number;
   readonly algorithm: Aged<number> | null;
   readonly feedback: Aged<number> | null;
   readonly feedbackOperator: Aged<number> | null;
@@ -105,9 +107,8 @@ function toTopology(wire: TopologyWire | null): Topology | null {
  * The real gateway. It knows the event names, the command names and the channel
  * payload, and nothing else: no keyboard vocabulary, no drawing.
  *
- * Nothing emits these events yet — the port owner and the audio bridge are their
- * own tickets — so on the laptop every slot stays invalidated, which is the state
- * this screen is specified to open in.
+ * With no `MODX-1` to open, nothing emits any of these and every slot stays
+ * invalidated, which is the state this screen is specified to open in.
  */
 @Injectable()
 export class TauriBackendGateway implements BackendGateway {
@@ -120,13 +121,7 @@ export class TauriBackendGateway implements BackendGateway {
     sampleRate: null,
   });
 
-  readonly patch = signal<PatchHeaderView>({
-    performanceName: invalidated<string>(),
-    previousPerformanceName: null,
-    algorithm: invalidated<number>(),
-    feedback: invalidated<number>(),
-    feedbackOperator: invalidated<number>(),
-  });
+  readonly patch = signal<PatchHeaderView>(noPatch());
 
   readonly reread = signal<RereadProgress | null>(null);
 
@@ -216,6 +211,7 @@ export class TauriBackendGateway implements BackendGateway {
     return {
       performanceName: polled(wire.performanceName, arrivedAt),
       previousPerformanceName: wire.previousPerformanceName,
+      changes: wire.changes,
       algorithm: polled(wire.algorithm, arrivedAt),
       feedback: polled(wire.feedback, arrivedAt),
       feedbackOperator: polled(wire.feedbackOperator, arrivedAt),

@@ -19,6 +19,7 @@
 #![forbid(unsafe_code)]
 
 pub mod algorithms;
+pub mod anchor;
 pub mod dump;
 pub mod fake;
 pub mod hardware;
@@ -33,6 +34,7 @@ pub mod table;
 pub mod verify;
 
 pub use algorithms::{Feedback, Role, Topology};
+pub use anchor::{Anchor, Beat, Progress, Reread};
 pub use dump::Dump;
 pub use notes::NoteTracker;
 pub use owner::{LiveNotes, OwnerHandle, PortOwner, Priority, Request, RequestQueue, Served};

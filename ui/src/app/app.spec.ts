@@ -2,9 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { AUDIO_WORKER } from './audio/audio-service';
 import { FakeAudioWorker } from './audio/fake-audio-worker';
-import { BACKEND_GATEWAY } from './backend/backend-gateway';
+import { BACKEND_GATEWAY, noOperators } from './backend/backend-gateway';
 import { FakeBackendGateway } from './backend/fake-backend-gateway';
-import { DEAD_MARK, REREAD_TOTAL } from './provenance/provenance';
+import { DEAD_MARK } from './provenance/provenance';
 
 async function renderApp() {
   const backend = new FakeBackendGateway();
@@ -61,17 +61,66 @@ describe('App (4a)', () => {
     expect(column?.textContent).toContain(DEAD_MARK);
   });
 
-  it('counts the relectura against the 416 addresses of the patch', async () => {
+  it('counts the relectura against the addresses the app actually asks for', async () => {
     const { backend, fixture, host } = await renderApp();
 
-    expect(host.querySelector('.strip__text')?.textContent).toBe(
-      `RELECTURA · ${DEAD_MARK} DE ${REREAD_TOTAL}`,
-    );
+    // No relectura has begun, so there is no strip. A strip claiming a relectura
+    // that is not running would be the one kind of lie this screen avoids.
+    expect(host.querySelector('.strip__text')).toBeNull();
 
-    backend.reread.set({ done: 118, total: REREAD_TOTAL });
+    backend.reread.set({ done: 118, total: 384, answered: 118, tookMs: null });
+    await fixture.whenStable();
+    expect(host.querySelector('.strip__text')?.textContent).toBe('RELECTURA · 118 DE 384');
+
+    // A pass that carries how long it took is a pass that finished: the strip
+    // comes down, and the count moves to the dev readout where it is written from.
+    backend.reread.set({ done: 384, total: 384, answered: 383, tookMs: 912 });
+    await fixture.whenStable();
+    expect(host.querySelector('.strip__text')).toBeNull();
+    expect(host.querySelector('app-dev-readout')?.textContent).toContain('383 DE 384 · 0.91 s');
+  });
+
+  it('takes every polled figure to the dash when the Performance changes underneath', async () => {
+    const { backend, fixture, host } = await renderApp();
+    backend.anchorReads('Init Normal (FM-X)');
+    backend.patch.update((patch) => ({
+      ...patch,
+      algorithm: { value: 2, provenance: 'polled', readAt: performance.now() },
+    }));
+    backend.operators.set({
+      operators: noOperators().operators.map((node) => ({
+        ...node,
+        level: { value: 75, provenance: 'polled', readAt: performance.now() },
+      })),
+      passMs: 84,
+      passes: 3,
+    });
+    await fixture.whenStable();
+    expect(host.querySelector('.pill--algorithm')?.textContent).toContain('02');
+
+    // Somebody loads another sound on the panel. Not one byte announces it.
+    backend.loadPerformance('Bright FM Keys');
     await fixture.whenStable();
 
-    expect(host.querySelector('.strip__text')?.textContent).toBe('RELECTURA · 118 DE 416');
+    // The new name, with the old one struck through beside it.
+    const anchor = host.querySelector('.anchor');
+    expect(anchor?.textContent).toContain('Bright FM Keys');
+    expect(anchor?.querySelector('.anchor__old')?.textContent).toBe('Init Normal (FM-X)');
+    expect(anchor?.classList.contains('anchor--changed')).toBe(true);
+    expect(anchor?.textContent).toContain('SIN MEDIR EN ESTE SONIDO');
+
+    // Every polled figure keeps its shape and loses its number. Not one of them
+    // was replaced by a figure of the new patch without passing through the dash.
+    expect(host.querySelector('.pill--algorithm')?.textContent).toContain(DEAD_MARK);
+    for (const node of host.querySelectorAll('.node')) {
+      expect(node.querySelector('.node__level')?.textContent?.trim()).toBe(DEAD_MARK);
+    }
+
+    // And the one thing that never dies says so, because it is the only figure
+    // left standing on a screen that just went to dashes.
+    expect(host.querySelector('app-signal-views')?.textContent).toContain(
+      'ESTO NO HA MUERTO · ES AUDIO',
+    );
   });
 
   it('opens on the waterfall, the default the moment a note is live', async () => {

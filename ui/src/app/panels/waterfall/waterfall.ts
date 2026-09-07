@@ -43,7 +43,12 @@ const RIDGE_HEIGHT = 2.2;
 export class Waterfall extends LiveCanvas {
   private readonly audio = inject(AudioService);
 
-  protected override paint(context: CanvasRenderingContext2D, width: number, height: number): void {
+  protected override paint(
+    context: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    styles: CSSStyleDeclaration,
+  ): void {
     const rows = this.audio.live.waterfall;
     if (rows.length === 0) {
       return;
@@ -76,8 +81,54 @@ export class Waterfall extends LiveCanvas {
       }
       context.stroke();
     }
+
+    this.drawCuts(context, width, height, ridge, rows.length, styles);
+  }
+
+  /**
+   * The line where the sound changed underneath.
+   *
+   * Dashed and in `--cut-line`, which is the benign cut: nothing broke, the
+   * vista viva did not die — what is below the line is simply another
+   * Performance. It is drawn last so it sits over the ridgelines it separates.
+   */
+  private drawCuts(
+    context: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    ridge: number,
+    shown: number,
+    styles: CSSStyleDeclaration,
+  ): void {
+    const { rows, cuts } = this.audio.live;
+    if (cuts.length === 0) {
+      return;
+    }
+
+    context.save();
+    context.strokeStyle = this.token(styles, '--cut-line', '#58c8f5');
+    context.lineWidth = 1.4 * this.ratio;
+    context.setLineDash(CUT_DASH.map((step) => step * this.ratio));
+    for (const cut of cuts) {
+      // `waterfall[index]` is row `rows - shown + index`, so the cut sits on the
+      // baseline of the first ridgeline that belongs to the new sound.
+      const index = cut - (rows - shown);
+      if (index < 0 || index >= shown) {
+        continue;
+      }
+      const age = (shown - 1 - index) / Math.max(1, WATERFALL_FRAMES - 1);
+      const y = ridge + age * (height - ridge);
+      context.beginPath();
+      context.moveTo(0, y);
+      context.lineTo(width, y);
+      context.stroke();
+    }
+    context.restore();
   }
 }
+
+/** `--dash-cut`, in CSS pixels before the DPR scale. */
+const CUT_DASH = [7, 5];
 
 /**
  * From `#eafff4` when the trama has just arrived to `#1e7351` when it is 462 ms

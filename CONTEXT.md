@@ -67,11 +67,16 @@ abierto. Comparten canal, así que abrir un operador ralentiza el ancho.
 
 **Ancla**:
 El nombre de la Part 1 (`31 00 00`–`13`), sondeado a 1 Hz. Su cambio es la única señal de que la
-Performance cambió por debajo.
+Performance cambió por debajo. Una pasada a la que le falte una letra no es un nombre nuevo: se
+descarta entera, porque un blanco por un timeout invalidaría toda la pantalla. Su agujero conocido:
+dos Performances cuyo nombre de Part 1 coincida son, para el ancla, la misma.
 
 **Relectura**:
-La lectura completa de las 416 direcciones del patch, al arrancar y después de cada cambio de
-ancla. Se ve ocurrir (`118 DE 416`); después toma el relevo el anillo.
+La lectura completa del patch —una petición por parámetro de `48 0p` y de los ocho `49 op`— al
+arrancar y después de cada cambio de ancla. Se ve ocurrir (`118 DE 384`); después toma el relevo el
+anillo. Son 384 y no las 416 del diseño porque el barrido de la fase 0c pedía byte a byte y un
+parámetro de dos bytes contesta entero desde su primera dirección, y porque la contradicción de
+`49 op 2A` sigue sin resolver (`docs/results`).
 
 **Desconectado**:
 El puerto `MODX-1` ha desaparecido de la enumeración, o el ancla lleva tres timeouts seguidos. Un
@@ -96,7 +101,7 @@ La forma de Copia que es un bulk dump del buffer de edición (`0E 25 00`, 7 669 
 arrancar y antes de que la app escriba nada, y se restaura byte a byte con un solo envío.
 
 **Snapshot**:
-La forma de Copia que es parámetro a parámetro (las 416 direcciones). Restaurarlo es verificar y
+La forma de Copia que es parámetro a parámetro (las mismas direcciones que la relectura). Restaurarlo es verificar y
 reparar, no escribir en orden, porque escribir un parámetro puede modificar otro.
 
 **Pánico**:

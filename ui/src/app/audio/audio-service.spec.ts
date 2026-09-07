@@ -88,4 +88,75 @@ describe('AudioService', () => {
     expect(audio.live.waterfall.length).toBe(drawn);
     expect(audio.live.trama.curve).toBeNull();
   });
+
+  it('throws the medida away when the sound changes and does not bring it back', async () => {
+    const { audio, backend, hold } = setUp();
+    // 50 bloques of 1 323 frames: 66 150 samples, the first window with room.
+    hold(50);
+    backend.lowestLivePitch.set(60);
+    TestBed.tick();
+    await audio.measure();
+    expect(audio.medida()).not.toBeNull();
+
+    backend.loadPerformance('Bright FM Keys');
+    TestBed.tick();
+
+    expect(audio.medida()).toBeNull();
+    expect(audio.measureNote()).toBe('la medida era de otro sonido');
+
+    // And it stays gone. Nothing is going to press MEDIR on the owner's behalf,
+    // and a table that came back on its own would be a measurement that happened
+    // rather than one somebody did.
+    hold(60);
+    TestBed.tick();
+    expect(audio.medida()).toBeNull();
+  });
+
+  it('keeps the vista viva running through the change and cuts the waterfall', () => {
+    const { audio, backend, hold } = setUp();
+    hold(8);
+    const before = audio.live.waterfall.length;
+
+    backend.loadPerformance('Bright FM Keys');
+    TestBed.tick();
+
+    // The vista viva is audio entering now: it belongs to no patch and it is not
+    // invalidated by anything the ancla says. What it gains is a line where the
+    // sound changed, drawn above the first ridgeline of the new one.
+    expect(audio.live.cuts).toEqual([audio.live.rows]);
+    hold(4);
+    expect(audio.live.waterfall.length).toBeGreaterThan(before);
+    expect(audio.live.trama.curve).not.toBeNull();
+  });
+
+  it('forgets a cut once the ridgelines it separated have scrolled away', () => {
+    const { audio, backend, hold } = setUp();
+    hold(4);
+    backend.loadPerformance('Bright FM Keys');
+    TestBed.tick();
+    expect(audio.live.cuts).toHaveLength(1);
+
+    hold(WATERFALL_FRAMES * 2);
+
+    // A line between two sounds that are both off the top of the frame is a line
+    // about nothing on screen.
+    expect(audio.live.cuts).toHaveLength(0);
+  });
+
+  it('does not call the first name the ancla reads a change', async () => {
+    const { audio, backend, hold } = setUp();
+    // 50 bloques of 1 323 frames: 66 150 samples, the first window with room.
+    hold(50);
+    backend.lowestLivePitch.set(60);
+    TestBed.tick();
+    await audio.measure();
+
+    // The launch: the ancla answers for the first time. Nothing preceded it, so
+    // there is nothing of a previous patch to throw away.
+    backend.anchorReads('Init Normal (FM-X)');
+    TestBed.tick();
+
+    expect(audio.medida()).not.toBeNull();
+    expect(audio.live.cuts).toHaveLength(0);
+  });
 });

@@ -1,22 +1,29 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
-import { DEAD_MARK, REREAD_TOTAL } from '../../provenance/provenance';
 
 /**
  * The relectura, seen happening.
  *
- * The count is the point: `118 DE 416` says the keyboard is answering and at what
- * rate, which a spinner does not. Placeholder for now — the ancla ticket makes it
- * count real addresses at startup and after every change of patch.
+ * The count is the point: `118 DE 384` says the keyboard is answering and at
+ * what rate, which a spinner does not. It runs at startup and after every change
+ * of ancla, and there is **no «releer» button**: the app recovers on its own and
+ * shows what that costs instead of hiding it.
+ *
+ * It is drawn only while a relectura is running. A strip permanently claiming a
+ * relectura would be the one kind of lie this screen is built to avoid — and it
+ * draws **under** the header, like every other notice, so the pánico is never
+ * covered.
  */
 @Component({
   selector: 'app-reread-strip',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="strip">
-      <span class="strip__mark" aria-hidden="true"></span>
-      <span class="strip__text">RELECTURA · {{ count() }} DE {{ total }}</span>
-    </div>
+    @if (running(); as pass) {
+      <div class="strip" role="status">
+        <span class="strip__mark" aria-hidden="true"></span>
+        <span class="strip__text">RELECTURA · {{ pass.done }} DE {{ pass.total }}</span>
+      </div>
+    }
   `,
   styles: `
     .strip {
@@ -43,7 +50,13 @@ import { DEAD_MARK, REREAD_TOTAL } from '../../provenance/provenance';
 export class RereadStrip {
   private readonly backend = inject(BACKEND_GATEWAY);
 
-  protected readonly total = REREAD_TOTAL;
-
-  protected readonly count = computed(() => this.backend.reread()?.done ?? DEAD_MARK);
+  /**
+   * The pass in progress, or nothing. A relectura that has finished carries how
+   * long it took, which is what takes the strip down: the count stops climbing
+   * because it arrived, not because it stalled.
+   */
+  protected readonly running = computed(() => {
+    const pass = this.backend.reread();
+    return pass === null || pass.tookMs !== null ? null : pass;
+  });
 }

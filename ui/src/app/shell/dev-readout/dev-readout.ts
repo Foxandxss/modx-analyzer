@@ -30,6 +30,8 @@ import { DEAD_MARK } from '../../provenance/provenance';
       <span>{{ medidaLine() }}</span>
       <span class="dev__label">VOLCADO</span>
       <span>{{ dumpLine() }}</span>
+      <span class="dev__label">RELECTURA</span>
+      <span>{{ rereadLine() }}</span>
     </div>
   `,
   styles: `
@@ -100,6 +102,21 @@ export class DevReadout {
   protected readonly medidaLine = computed(() => {
     const cost = this.audio.measureMs();
     return cost === null ? `${DEAD_MARK} · sin medir` : `65536 · ${cost.toFixed(1)} ms`;
+  });
+
+  /**
+   * The last relectura: how many of the addresses answered and what the whole
+   * pass cost. Both are figures #13 asks for with the keyboard in front of you —
+   * the design expects ~0,9 s idle and ~5,5 s while somebody plays, and the fase
+   * 0c sweep put the answers at 415 of 416 on the first try.
+   */
+  protected readonly rereadLine = computed(() => {
+    const pass = this.backend.reread();
+    if (pass === null) {
+      return `${DEAD_MARK} · sin releer`;
+    }
+    const cost = pass.tookMs === null ? 'en curso' : `${(pass.tookMs / 1000).toFixed(2)} s`;
+    return `${pass.answered} DE ${pass.total} · ${cost}`;
   });
 
   protected readonly line = computed(() => {

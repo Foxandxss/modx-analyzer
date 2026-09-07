@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { AXIS_HIGH_MULTIPLE, AXIS_LOW_MULTIPLE } from 'modx-dsp';
 import { AudioService } from '../../audio/audio-service';
+import { Anchor } from '../../provenance/anchor';
 import { DEAD_MARK } from '../../provenance/provenance';
 import { Harmonics } from '../harmonics/harmonics';
 import { Spectrum } from '../spectrum/spectrum';
@@ -26,6 +27,9 @@ import { Spectrum } from '../spectrum/spectrum';
       <div class="view__head">
         <h2 class="view__title">ESPECTRO</h2>
         <span class="view__live">VIVO · {{ fps() }}</span>
+        @if (patchChanged()) {
+          <span class="view__alive">ESTO NO HA MUERTO · ES AUDIO</span>
+        }
         <span class="view__readout"> LOG {{ axis }} · SUELO {{ floor() }} </span>
         @if (artefact(); as hz) {
           <span class="view__artefact">ARTEFACTO {{ hz }} Hz</span>
@@ -40,6 +44,9 @@ import { Spectrum } from '../spectrum/spectrum';
       <div class="view__head">
         <h2 class="view__title">ARMÓNICOS</h2>
         <span class="view__live">VIVO · {{ fps() }}</span>
+        @if (patchChanged()) {
+          <span class="view__alive">ESTO NO HA MUERTO · ES AUDIO</span>
+        }
         <span class="view__readout">n1 … n16</span>
       </div>
       <div class="view__frame">
@@ -51,6 +58,16 @@ import { Spectrum } from '../spectrum/spectrum';
 })
 export class SignalViews {
   private readonly audio = inject(AudioService);
+
+  /**
+   * The chip that says out loud what these panels are, at the one moment the
+   * rest of the screen has just gone to dashes.
+   *
+   * It is up for the 2 200 ms of the flash and no longer: the sentence is about
+   * the change, not about the panel. Everything the ancla touched lost its
+   * number and this did not, which without a word beside it looks like a bug.
+   */
+  protected readonly patchChanged = inject(Anchor).justChanged;
 
   /** `LOG 1×–32×`: the axis is multiples of the note, and it never changes. */
   protected readonly axis = `${AXIS_LOW_MULTIPLE}×–${AXIS_HIGH_MULTIPLE}×`;

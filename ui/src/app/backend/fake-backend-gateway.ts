@@ -13,6 +13,7 @@ import {
   Topology,
   invalidated,
   noOperators,
+  noPatch,
   sameTopology,
 } from './backend-gateway';
 
@@ -32,13 +33,7 @@ export class FakeBackendGateway implements BackendGateway {
     sampleRate: null,
   });
 
-  readonly patch = signal<PatchHeaderView>({
-    performanceName: invalidated<string>(),
-    previousPerformanceName: null,
-    algorithm: invalidated<number>(),
-    feedback: invalidated<number>(),
-    feedbackOperator: invalidated<number>(),
-  });
+  readonly patch = signal<PatchHeaderView>(noPatch());
 
   readonly reread = signal<RereadProgress | null>(null);
 
@@ -97,6 +92,49 @@ export class FakeBackendGateway implements BackendGateway {
       return Promise.resolve(null);
     }
     return Promise.resolve(this.ring.slice(this.ring.length - samples).buffer as ArrayBuffer);
+  }
+
+  /**
+   * Test driver: the ancla answers with a name for the first time.
+   *
+   * A launch is **not** a change — nothing of a previous patch is on screen —
+   * so nothing is invalidated and `changes` stays at zero, exactly as the native
+   * side does it.
+   */
+  anchorReads(name: string): void {
+    this.patch.update((patch) => ({
+      ...patch,
+      performanceName: { value: name, provenance: 'polled', readAt: performance.now() },
+    }));
+  }
+
+  /**
+   * Test driver: somebody loads another Performance on the panel.
+   *
+   * It does here exactly what the native side does, in the same one step, which
+   * is the point of driving it through the gateway: the new name arrives with
+   * the old one beside it, `changes` goes up, and **everything polled loses its
+   * number in the same breath**. No figure of the old patch is ever replaced by
+   * a figure of the new one without passing through the dash, because the
+   * dashes go out first and the anillo ancho refills afterwards.
+   */
+  loadPerformance(name: string): void {
+    const previous = this.patch().performanceName.value;
+    this.patch.update((patch) => ({
+      ...patch,
+      performanceName: { value: name, provenance: 'polled', readAt: performance.now() },
+      previousPerformanceName: previous,
+      changes: patch.changes + 1,
+      algorithm: invalidated<number>(),
+      feedback: invalidated<number>(),
+      feedbackOperator: invalidated<number>(),
+    }));
+    this.topology.set(null);
+    this.operators.update((view) => ({
+      ...noOperators(),
+      passMs: view.passMs,
+      passes: view.passes,
+    }));
   }
 
   /** Test driver: hand every subscriber a bloque as if it came off the device. */
