@@ -1,0 +1,74 @@
+import { DestroyRef, Injectable, inject, signal } from '@angular/core';
+import { Channel, invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import {
+  AppInfo,
+  AudioBlock,
+  BackendGateway,
+  ConnectionView,
+  PatchHeaderView,
+  RereadProgress,
+  invalidated,
+} from './backend-gateway';
+
+/**
+ * The real gateway. It knows the event names, the command names and the channel
+ * payload, and nothing else: no keyboard vocabulary, no drawing.
+ *
+ * Nothing emits these events yet — the port owner and the audio bridge are their
+ * own tickets — so on the laptop every slot stays invalidated, which is the state
+ * this screen is specified to open in.
+ */
+@Injectable()
+export class TauriBackendGateway implements BackendGateway {
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly connection = signal<ConnectionView>({
+    port: 'disconnected',
+    portName: null,
+    audioDevice: null,
+    sampleRate: null,
+  });
+
+  readonly patch = signal<PatchHeaderView>({
+    performanceName: invalidated<string>(),
+    previousPerformanceName: null,
+    algorithm: invalidated<number>(),
+    feedback: invalidated<number>(),
+    feedbackOperator: invalidated<number>(),
+  });
+
+  readonly reread = signal<RereadProgress | null>(null);
+
+  readonly liveNotes = signal(0);
+
+  constructor() {
+    this.listenInto('modx://connection', this.connection);
+    this.listenInto('modx://patch', this.patch);
+    this.listenInto('modx://reread', this.reread);
+    this.listenInto('modx://live-notes', this.liveNotes);
+  }
+
+  appInfo(): Promise<AppInfo> {
+    return invoke<AppInfo>('app_info');
+  }
+
+  async subscribeBlocks(onBlock: (block: AudioBlock) => void): Promise<() => void> {
+    const channel = new Channel<AudioBlock>();
+    let subscribed = true;
+    channel.onmessage = (block) => {
+      if (subscribed) {
+        onBlock(block);
+      }
+    };
+    await invoke('subscribe_audio_blocks', { channel });
+    return () => {
+      subscribed = false;
+    };
+  }
+
+  private listenInto<T>(event: string, target: { set(value: T): void }): void {
+    const unlisten = listen<T>(event, ({ payload }) => target.set(payload));
+    this.destroyRef.onDestroy(() => void unlisten.then((stop) => stop()));
+  }
+}

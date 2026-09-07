@@ -1,0 +1,59 @@
+import { Injectable, signal } from '@angular/core';
+import {
+  AppInfo,
+  AudioBlock,
+  BackendGateway,
+  ConnectionView,
+  PatchHeaderView,
+  RereadProgress,
+  invalidated,
+} from './backend-gateway';
+
+/**
+ * The gateway a test drives by hand: it pushes connection states, patch headers,
+ * relectura progress and bloques, and nothing crosses Tauri.
+ *
+ * Its starting point is the app's starting point — everything invalidated, so a
+ * test that pushes nothing sees exactly the screen the laptop shows on launch.
+ */
+@Injectable()
+export class FakeBackendGateway implements BackendGateway {
+  readonly connection = signal<ConnectionView>({
+    port: 'disconnected',
+    portName: null,
+    audioDevice: null,
+    sampleRate: null,
+  });
+
+  readonly patch = signal<PatchHeaderView>({
+    performanceName: invalidated<string>(),
+    previousPerformanceName: null,
+    algorithm: invalidated<number>(),
+    feedback: invalidated<number>(),
+    feedbackOperator: invalidated<number>(),
+  });
+
+  readonly reread = signal<RereadProgress | null>(null);
+
+  readonly liveNotes = signal(0);
+
+  appInfoResult: AppInfo = { version: '0.0.0-fake', dumpsFolder: '' };
+
+  private readonly blockListeners = new Set<(block: AudioBlock) => void>();
+
+  appInfo(): Promise<AppInfo> {
+    return Promise.resolve(this.appInfoResult);
+  }
+
+  subscribeBlocks(onBlock: (block: AudioBlock) => void): Promise<() => void> {
+    this.blockListeners.add(onBlock);
+    return Promise.resolve(() => this.blockListeners.delete(onBlock));
+  }
+
+  /** Test driver: hand every subscriber a bloque as if it came off the device. */
+  emitBlock(block: AudioBlock): void {
+    for (const listener of this.blockListeners) {
+      listener(block);
+    }
+  }
+}

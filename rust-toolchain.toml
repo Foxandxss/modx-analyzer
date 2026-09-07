@@ -1,0 +1,7 @@
+# The GNU toolchain is also installed on the target laptop and is rustup's default
+# host there, so `stable` alone resolves to `stable-x86_64-pc-windows-gnu` and the
+# build dies looking for `dlltool.exe`. The full triple is the point: the app is
+# built with MSVC.
+[toolchain]
+channel = "stable-x86_64-pc-windows-msvc"
+components = ["rustfmt", "clippy"]

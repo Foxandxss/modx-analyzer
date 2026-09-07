@@ -1,0 +1,24 @@
+// Global layout and the base surface. Values come from design-tokens.css, which
+// is loaded before this file and kept verbatim from the design package.
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--surface-base);
+  color: var(--ink-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-body);
+  // Táctil de base: nada de selección accidental al arrastrar sobre el diagrama.
+  -webkit-user-select: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+app-root {
+  display: block;
+  height: 100%;
+}

@@ -1,0 +1,64 @@
+// Layout only.
+
+:host {
+  flex: 0 0 156px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 18px 12px;
+  box-sizing: border-box;
+  border-top: var(--rule-min) solid var(--rule-color);
+  background: var(--surface-base);
+}
+
+.tabs {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 9px 0 8px;
+}
+
+.tabs__tab {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-height: var(--hit-tab);
+  padding: 11px 20px;
+  cursor: pointer;
+  border: var(--rule-min) solid var(--rule-color);
+  border-radius: 11px;
+  font-family: var(--font-num);
+  font-size: 11px;
+  letter-spacing: var(--tracking-label);
+  color: var(--ink-tertiary);
+
+  &--on {
+    border-color: var(--signal-primary-dim);
+    background: var(--signal-fill);
+    color: var(--signal-primary);
+  }
+}
+
+.tabs__note {
+  margin-left: 14px;
+  font-size: 13px;
+  color: var(--ink-tertiary);
+}
+
+.tabs__axes {
+  margin-left: auto;
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  letter-spacing: 0.08em;
+  color: var(--ink-inert);
+}
+
+.frame {
+  flex: 1;
+  min-height: 0;
+  border: var(--rule-min) solid var(--rule-color);
+  border-radius: var(--radius-view);
+  background: var(--surface-sunken);
+}

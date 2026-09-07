@@ -1,0 +1,26 @@
+# Node
+node_modules/
+.pnpm-store/
+
+# Angular
+/ui/dist/
+/ui/.angular/
+/ui/out-tsc/
+
+# TypeScript packages
+packages/*/dist/
+
+# Rust
+/target/
+**/*.rs.bk
+
+# Tauri
+/src-tauri/target/
+/src-tauri/gen/
+
+# The Data List PDF is a transcription source and never lives in the repository
+# (ADR-0003). Ignored here so a stray copy cannot be committed by mistake.
+*.pdf
+
+# Scratch
+err.txt

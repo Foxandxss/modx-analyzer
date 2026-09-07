@@ -1,0 +1,15 @@
+design_handoff/
+ui/dist/
+ui/.angular/
+target/
+src-tauri/target/
+src-tauri/gen/
+src-tauri/icons/
+pnpm-lock.yaml
+
+# Kept verbatim from the design package: it is the source of truth for values,
+# and a reflow would make the diff against the handoff unreadable.
+ui/src/styles/design-tokens.css
+
+# Prose in Spanish, hand-wrapped. Prettier would reflow it.
+**/*.md

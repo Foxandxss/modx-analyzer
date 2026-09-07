@@ -1,0 +1,77 @@
+<header class="bar">
+  <div class="port">
+    <span class="dot" [class.dot--on]="connected()" aria-hidden="true"></span>
+    <span class="port__name">{{ portName() ?? 'MODX-1' }}</span>
+  </div>
+
+  <div class="gap" aria-hidden="true"></div>
+
+  <!-- El ancla: el nombre de la Part 1. Sin toque: la pantalla de chequeo no existe aún. -->
+  <div class="anchor">
+    <span class="anchor__eyebrow">ANCLA</span>
+    <span class="anchor__name">
+      <app-figure [value]="patch().performanceName" />
+    </span>
+  </div>
+
+  <div class="pill pill--algorithm">
+    <span class="pill__eyebrow">ALG</span>
+    <app-figure [value]="patch().algorithm" [pad]="2" />
+  </div>
+
+  <div class="feedback">
+    FB <app-figure [value]="patch().feedback" /> · OP
+    <app-figure [value]="patch().feedbackOperator" />
+  </div>
+
+  <div class="audio">
+    @if (audioLine(); as line) {
+      {{ line }}
+    } @else {
+      <app-figure [value]="dead" />
+    }
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="modes" role="group" aria-label="Modo">
+    @for (mode of modes; track mode) {
+      <button
+        type="button"
+        class="modes__item"
+        [class.modes__item--on]="mode === selectedMode"
+        [disabled]="mode !== selectedMode"
+        [attr.aria-pressed]="mode === selectedMode"
+      >
+        {{ mode }}
+      </button>
+    }
+  </div>
+
+  <!-- Transporte. Mirar late y medir es un obturador: dos actos distintos, y aquí
+       los dos son ranuras — laten y disparan cuando llegue el audio. -->
+  <div class="look">
+    <span class="look__dot" aria-hidden="true"></span>
+    <span class="look__text">MIRAR · <app-figure [value]="deadFps" [unit]="' fps'" /></span>
+  </div>
+
+  <button type="button" class="measure" disabled>
+    <span class="measure__shutter" aria-hidden="true"></span>
+    <span class="measure__label">MEDIR</span>
+    <span class="measure__hint">65536<br />NOTA SOST.</span>
+  </button>
+
+  <!-- Aislamiento en vez de confirmación: filete de 2 px y 16 px de aire, y nada
+       accionable dentro de esa franja. -->
+  <div class="isolate" aria-hidden="true"></div>
+
+  <button
+    type="button"
+    class="panic"
+    [class.panic--live]="panicLive()"
+    aria-label="Pánico: silenciar el teclado"
+  >
+    <span class="panic__mark" aria-hidden="true"></span>
+    <span class="panic__label">CALLA</span>
+  </button>
+</header>

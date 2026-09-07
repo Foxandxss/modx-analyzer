@@ -1,0 +1,25 @@
+[package]
+name = "modx-analyzer-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "MODX Analyzer: the desktop app that draws what the MODX is doing"
+
+[lib]
+# Distinct from the bin target: `modx-analyzer-app` normalises to the same file
+# name and Cargo warns about the collision.
+name = "modx_analyzer_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+modx-audio = { path = "../crates/modx-audio" }
+modx-midi = { path = "../crates/modx-midi" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+log = "0.4"
+tauri = { version = "2", features = [] }
+tauri-plugin-log = "2"

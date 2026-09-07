@@ -1,0 +1,134 @@
+// Layout only; the node's semantic radii and colours live in design-tokens.css.
+
+:host {
+  display: block;
+  min-height: 0;
+  background: var(--surface-base);
+}
+
+.zone {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 12px 18px 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.zone__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-1);
+}
+
+.zone__title {
+  margin: 0;
+  font-size: var(--text-label);
+  font-weight: 400;
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--ink-secondary);
+}
+
+.zone__cadence {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  letter-spacing: 0.08em;
+  color: var(--ink-inert);
+}
+
+.nodes {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, var(--op-node-w));
+  grid-auto-rows: var(--op-node-h);
+  gap: var(--op-row-gap) var(--op-col-gap);
+  align-content: center;
+  justify-content: center;
+}
+
+// Sin algoritmo leído no hay rol: contorno neutro, forma conservada, cifra perdida.
+.node {
+  box-sizing: border-box;
+  padding: 8px 11px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: var(--rule-min) solid var(--dead-border);
+  border-radius: 8px;
+  background: var(--surface-raised);
+}
+
+.node__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.node__id {
+  font-family: var(--font-num);
+  font-size: var(--text-label);
+  color: var(--ink-tertiary);
+}
+
+.node__role {
+  font-size: 8px;
+  letter-spacing: var(--tracking-label);
+  color: var(--dead-ink);
+}
+
+.node__level {
+  font-size: var(--text-node);
+  line-height: 1;
+  color: var(--dead-ink);
+}
+
+.node__ratio,
+.node__form {
+  font-size: var(--text-micro);
+  color: var(--dead-ink);
+}
+
+.legend {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  padding: 9px 0 11px;
+  border-top: var(--rule-min) solid var(--rule-color);
+  font-size: var(--text-micro);
+  letter-spacing: 0.12em;
+  color: var(--ink-secondary);
+}
+
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.legend__swatch {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 14px;
+
+  &--carrier {
+    border: var(--rule-min) solid var(--carrier);
+    border-radius: 8px;
+  }
+
+  &--modulator {
+    border: var(--rule-min) solid var(--modulator);
+    border-radius: var(--radius-modulator);
+  }
+
+  &--inert {
+    border: var(--rule-min) dashed var(--inert);
+    border-radius: var(--radius-modulator);
+  }
+}

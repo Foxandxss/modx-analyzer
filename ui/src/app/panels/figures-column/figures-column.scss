@@ -1,0 +1,61 @@
+// Layout only.
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rule-min);
+  padding: 12px 13px;
+  min-height: 0;
+  box-sizing: border-box;
+  background: var(--surface-base);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: 11px 12px;
+  background: var(--surface-panel);
+
+  &:first-child {
+    border-radius: 11px 11px 0 0;
+  }
+
+  &:last-child {
+    border-radius: 0 0 11px 11px;
+  }
+
+  &--grow {
+    flex: 1;
+    justify-content: flex-end;
+  }
+}
+
+.cell__eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--ink-inert);
+}
+
+.cell__value {
+  font-size: var(--text-readout);
+  line-height: 1.1;
+  color: var(--dead-ink);
+
+  &--xl {
+    font-size: var(--text-readout-xl);
+  }
+}
+
+.cell__note {
+  font-size: var(--text-micro);
+  color: var(--dead-note-ink);
+}
+
+.cell__path {
+  font-family: var(--font-num);
+  font-size: 9px;
+  line-height: 1.4;
+  color: var(--ink-tertiary);
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,33 @@
+<div class="zone">
+  <div class="zone__head">
+    <h2 class="zone__title">DIAGRAMA DE OPERADORES</h2>
+    <!-- La cadencia se rotula por zona, no por cifra. Aún no hay anillo. -->
+    <span class="zone__cadence">LOS OCHO · <app-figure [value]="deadHz" [unit]="' Hz'" /></span>
+  </div>
+
+  <div class="nodes">
+    @for (op of operators; track op) {
+      <div class="node">
+        <div class="node__head">
+          <span class="node__id">OP{{ op }}</span>
+          <span class="node__role"><app-figure [value]="dead" /></span>
+        </div>
+        <div class="node__level"><app-figure [value]="dead" /></div>
+        <div class="node__ratio"><app-figure [value]="dead" /></div>
+        <div class="node__form"><app-figure [value]="dead" /></div>
+      </div>
+    }
+  </div>
+
+  <div class="legend">
+    <span class="legend__item">
+      <span class="legend__swatch legend__swatch--carrier" aria-hidden="true"></span>PORTADORA
+    </span>
+    <span class="legend__item">
+      <span class="legend__swatch legend__swatch--modulator" aria-hidden="true"></span>MODULADOR
+    </span>
+    <span class="legend__item">
+      <span class="legend__swatch legend__swatch--inert" aria-hidden="true"></span>LEVEL 0
+    </span>
+  </div>
+</div>

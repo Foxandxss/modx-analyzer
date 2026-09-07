@@ -1,0 +1,33 @@
+<div class="cell">
+  <span class="cell__eyebrow">RATIO MEDIDO</span>
+  <span class="cell__value cell__value--xl"><app-figure [value]="dead" /></span>
+  <span class="cell__note">hay que volver a medir</span>
+</div>
+
+<div class="cell">
+  <span class="cell__eyebrow">fc / fm</span>
+  <span class="cell__value"><app-figure [value]="dead" [unit]="' Hz'" /></span>
+  <span class="cell__value"><app-figure [value]="dead" [unit]="' Hz'" /></span>
+  <span class="cell__note">los ajustes no entran en esta sesión</span>
+</div>
+
+<div class="cell">
+  <span class="cell__eyebrow">ÍNDICE I</span>
+  <span class="cell__value"><app-figure [value]="dead" /></span>
+  <span class="cell__note">los ajustes no entran en esta sesión</span>
+</div>
+
+<div class="cell cell--grow">
+  <span class="cell__eyebrow">ÚLTIMA MEDIDA</span>
+  <span class="cell__value"><app-figure [value]="dead" /></span>
+  <span class="cell__note">hay que volver a medir</span>
+</div>
+
+<div class="cell">
+  <span class="cell__eyebrow">VOLCADOS</span>
+  @if (dumpsFolder.value(); as folder) {
+    <span class="cell__path">{{ folder }}</span>
+  } @else {
+    <span class="cell__value"><app-figure [value]="dead" /></span>
+  }
+</div>
