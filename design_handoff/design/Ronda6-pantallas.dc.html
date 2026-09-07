@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  html,body{margin:0;background:#0b0e0f}
+  @keyframes livePulse{0%,100%{opacity:.35}50%{opacity:1}}
+  @keyframes anchorFlash{0%,100%{box-shadow:0 0 0 1px rgba(88,200,245,.5),0 0 30px -8px rgba(88,200,245,.4)}50%{box-shadow:0 0 0 1px rgba(88,200,245,.9),0 0 46px -6px rgba(88,200,245,.8)}}
+  a{color:#7df0b0}a:hover{color:#a9f7cd}
+</style>
+</helmet>
+
+<section style="padding:40px 40px 0;display:flex;flex-direction:column;gap:14px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:1280px">
+    <div style="font-size:32px;color:#d6e2dd">Ronda 6 — el patch cambia debajo</div>
+    <div style="font-size:15px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Cargar otra Performance <span style="color:#d6e2dd">no emite un solo byte</span> (medido dos veces, en crudo, con ancla dentro de la ventana). Así que la app no tiene evento: sondea el nombre de la Part 1 a 1 Hz y con eso construye todo lo que hay aquí. <a href="#6a">6a</a> el ancla · <a href="#6b">6b</a> el momento del cambio · <a href="#6c">6c</a> lo que se rompe · <a href="#6d">6d</a> sólo lectura · <a href="#6e">6e</a> grados de confianza.</div>
+  </div>
+
+  <div id="6a" style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(88,200,245,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#58c8f5">6a</span>
+      <span style="font-size:26px;color:#d6e2dd">El ancla — el nombre de la Performance, con su procedencia</span>
+      <span style="font-size:15px;color:#8fa39d">cabecera, 1280×58 · tres estados</span>
+    </div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1100px;text-wrap:pretty">El ancla <span style="color:#d6e2dd">no es mobiliario nuevo</span>: es el nombre del patch que ya estaba en la cabecera, ascendido a dato con sello. Sigue ocupando el mismo hueco y no le quita sitio a nada. Lo que cambia es que ahora dice <span style="color:#d6e2dd">de dónde sale y cada cuánto se comprueba</span> — porque si no, el aviso del cambio llega sin nada a lo que agarrarse.</div>
+
+    <div style="display:flex;flex-direction:column;gap:22px">
+
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#5d6d69">1 · REPOSO — EL NOMBRE ES ESTABLE</div>
+        <div style="width:1280px;box-sizing:border-box;height:58px;display:flex;align-items:center;gap:14px;padding:0 14px;border:1px solid rgba(255,255,255,.12);border-bottom:2px solid rgba(255,255,255,.09);background:linear-gradient(#0b0f11,#080b0d)">
+          <span style="flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#7df0b0;box-shadow:0 0 10px #7df0b0;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c;white-space:nowrap">MODX-1 · 44 100 Hz · MAIN L/R</span>
+          <div style="flex:0 0 auto;width:1px;height:30px;background:rgba(255,255,255,.1)"></div>
+          <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:1px;min-width:0">
+            <div style="display:flex;align-items:center;gap:7px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.2em;color:#5d6d69">PERFORMANCE</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#4f8f70">ANCLA · 1 Hz · 31 00 00</span>
+            </div>
+            <span style="font-size:17px;color:#d6e2dd;white-space:nowrap">FM 2OP CHAIN</span>
+          </div>
+          <span style="flex:0 0 auto;padding:6px 12px;border:1px solid rgba(243,177,63,.4);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#f3b13f;white-space:nowrap">ALGORITMO 06</span>
+          <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c;white-space:nowrap">FB 3 · OP5</span>
+          <span style="flex:0 0 auto;padding:6px 11px;border-radius:999px;border:1px solid rgba(125,240,176,.28);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#7df0b0;white-space:nowrap">CADENA LIMPIA</span>
+          <span style="flex:0 0 auto;padding:6px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.14);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">SysEx</span>
+          <div style="flex:1"></div>
+          <div style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid rgba(125,240,176,.28);background:rgba(125,240,176,.06)">
+            <span style="width:7px;height:7px;border-radius:50%;background:#7df0b0;animation:livePulse 1.4s ease-in-out infinite;display:block"></span>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#7df0b0;white-space:nowrap">MIRAR · 30 fps</span>
+          </div>
+          <div style="flex:0 0 auto;width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:10px"></div>
+          <span style="flex:0 0 auto;width:56px;height:56px;margin-left:16px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,122,92,.55);background:#140a08;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
+            <span style="width:15px;height:15px;border:2.4px solid #ff7a5c;display:block"></span>
+          </span>
+        </div>
+        <div style="font-size:13px;color:#6f817c;line-height:1.5;max-width:1100px">Peso deliberadamente bajo: 17 px de tinta primaria, y el sello en 8 px. <span style="color:#d6e2dd">No compite con el algoritmo ni con el transporte</span> — sólo tiene que estar ahí para que el estado 2 se entienda sin explicación.</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#c69445">2 · EL ANCLA ACABA DE CAMBIAR — LA APP SABE QUE MIENTE</div>
+        <div style="width:1280px;box-sizing:border-box;height:58px;display:flex;align-items:center;gap:14px;padding:0 14px;border:1px solid rgba(255,255,255,.12);border-bottom:2px solid rgba(88,200,245,.35);background:linear-gradient(#0b1114,#080b0d)">
+          <span style="flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#7df0b0;box-shadow:0 0 10px #7df0b0;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c;white-space:nowrap">MODX-1 · 44 100 Hz · MAIN L/R</span>
+          <div style="flex:0 0 auto;width:1px;height:30px;background:rgba(255,255,255,.1)"></div>
+          <div style="flex:0 0 auto;display:flex;align-items:center;gap:11px;padding:5px 11px;border-radius:9px;border:1.5px solid #58c8f5;background:rgba(88,200,245,.1);animation:anchorFlash 2.2s ease-in-out infinite">
+            <div style="display:flex;flex-direction:column;gap:1px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.18em;color:#7fa7b6">CARGASTE OTRO SONIDO</span>
+              <span style="font-size:17px;color:#eaf7fd;white-space:nowrap">CFX + FM EP 2</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px;padding-left:11px;border-left:1px solid rgba(88,200,245,.3)">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;text-decoration:line-through">FM 2OP CHAIN</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#7fa7b6">hace 0.4 s</span>
+            </div>
+          </div>
+          <span style="flex:0 0 auto;padding:6px 12px;border:1px dashed rgba(255,255,255,.16);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#5d6d69;white-space:nowrap">ALGORITMO —</span>
+          <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#4f5f5b;white-space:nowrap">FB — · —</span>
+          <span style="flex:0 0 auto;padding:6px 11px;border-radius:999px;border:1px dashed rgba(255,255,255,.16);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#5d6d69;white-space:nowrap">CADENA —</span>
+          <div style="flex:1"></div>
+          <div style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid rgba(125,240,176,.28);background:rgba(125,240,176,.06)">
+            <span style="width:7px;height:7px;border-radius:50%;background:#7df0b0;animation:livePulse 1.4s ease-in-out infinite;display:block"></span>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#7df0b0;white-space:nowrap">MIRAR · 30 fps</span>
+          </div>
+          <div style="flex:0 0 auto;width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:10px"></div>
+          <span style="flex:0 0 auto;width:56px;height:56px;margin-left:16px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,122,92,.55);background:#140a08;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
+            <span style="width:15px;height:15px;border:2.4px solid #ff7a5c;display:block"></span>
+          </span>
+        </div>
+        <div style="font-size:13px;color:#6f817c;line-height:1.5;max-width:1100px">Tres cosas a la vez, y ninguna es un diálogo: el nombre nuevo <span style="color:#d6e2dd">con el viejo tachado al lado</span> (para que se entienda qué pasó), el destello de escritura que ya se usa cuando el tutor toca el teclado, y <span style="color:#d6e2dd">todo lo sondeado puesto a raya</span> — algoritmo, feedback, cadena. Lo que está en pantalla no está caduco: <span style="color:#d6e2dd">está muerto</span>.</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#4f8f70">3 · RELEÍDO — Y ESTA LÍNEA SE VA SOLA</div>
+        <div style="width:1280px;box-sizing:border-box;height:58px;display:flex;align-items:center;gap:14px;padding:0 14px;border:1px solid rgba(255,255,255,.12);border-bottom:2px solid rgba(255,255,255,.09);background:linear-gradient(#0b0f11,#080b0d)">
+          <span style="flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#7df0b0;box-shadow:0 0 10px #7df0b0;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c;white-space:nowrap">MODX-1 · 44 100 Hz · MAIN L/R</span>
+          <div style="flex:0 0 auto;width:1px;height:30px;background:rgba(255,255,255,.1)"></div>
+          <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:1px;min-width:0">
+            <div style="display:flex;align-items:center;gap:7px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.2em;color:#5d6d69">PERFORMANCE</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#4f8f70">RELEÍDO · hace 1 s · 416 de 416</span>
+            </div>
+            <span style="font-size:17px;color:#d6e2dd;white-space:nowrap">CFX + FM EP 2</span>
+          </div>
+          <span style="flex:0 0 auto;padding:6px 12px;border:1px solid rgba(243,177,63,.4);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#f3b13f;white-space:nowrap">ALGORITMO 43</span>
+          <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c;white-space:nowrap">FB 0 · —</span>
+          <span style="flex:0 0 auto;padding:6px 11px;border-radius:999px;border:2px solid rgba(255,122,92,.5);background:rgba(255,122,92,.1);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#ff9d85;white-space:nowrap">CADENA SUCIA</span>
+          <div style="flex:1"></div>
+          <span style="flex:0 0 auto;padding:9px 14px;border-radius:999px;border:1.5px solid rgba(243,177,63,.55);background:rgba(243,177,63,.08);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#ffd08a;white-space:nowrap">SIN MEDIR EN ESTE SONIDO</span>
+          <div style="flex:0 0 auto;width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:10px"></div>
+          <span style="flex:0 0 auto;width:56px;height:56px;margin-left:16px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,122,92,.55);background:#140a08;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
+            <span style="width:15px;height:15px;border:2.4px solid #ff7a5c;display:block"></span>
+          </span>
+        </div>
+        <div style="font-size:13px;color:#6f817c;line-height:1.5;max-width:1100px">El sondeo se recupera solo; <span style="color:#d6e2dd">la medida no</span>, porque nadie puede volver a medir sin que suene una nota. Así que la cabecera <span style="color:#d6e2dd">no vuelve a su estado de reposo</span>: se queda pidiendo una medida en el sonido nuevo, y el chip de cadena dice ya la verdad del patch cargado. Los dos avisos que sí se van solos son el nombre tachado y la cuenta de relectura.</div>
+      </div>
+
+      <div style="display:flex;gap:2px;background:rgba(255,255,255,.07);width:1280px;box-sizing:border-box;border:1px solid rgba(255,255,255,.12)">
+        <div style="flex:1;background:#080b0d;padding:15px 17px;box-sizing:border-box;min-width:0">
+          <div style="font-size:11px;letter-spacing:.2em;color:#8fa39d;margin-bottom:9px">TOCAR EL ANCLA ABRE EL CHEQUEO</div>
+          <div style="font-size:14px;color:#8fa39d;line-height:1.55;text-wrap:pretty">El ancla es un objetivo de 44 px y lleva al mismo sitio que el chip de cadena: <a href="#4e">4e</a>. Ahí es donde vive lo que es <span style="color:#d6e2dd">propiedad del sonido cargado</span> y no del teclado.</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+            <div style="display:flex;align-items:baseline;gap:10px;padding:9px 12px;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:#0a0f10">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#5d6d69;flex:0 0 150px">TEMPO DE LA PERF.</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:20px;color:#7df0b0">90 BPM</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c">fondo 40 msg/s · clock 24 ppq</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:10px;padding:9px 12px;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:#0a0f10">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#5d6d69;flex:0 0 150px">SONDEO EFECTIVO</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:20px;color:#7df0b0">12.22 Hz</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c">0 perdidas de 4 000 · p99 3.3 ms</span>
+            </div>
+          </div>
+        </div>
+        <div style="flex:0 0 520px;background:#080b0d;padding:15px 17px;box-sizing:border-box;min-width:0">
+          <div style="font-size:11px;letter-spacing:.2em;color:#c69445;margin-bottom:9px">EL TEMPO NO VA EN EL BADGE — Y ESTO ES UNA DECISIÓN</div>
+          <div style="font-size:14px;color:#8fa39d;line-height:1.55;text-wrap:pretty">El tráfico de fondo escala con el tempo, así que <span style="color:#d6e2dd">la misma app irá más suave con un patch que con otro</span>. Pero el badge de sondeo no es el sitio: ahí sólo caben dos valores estables (12 Hz / 2 Hz) y meterle una tercera causa lo convierte en un contador.</div>
+          <div style="font-size:14px;color:#8fa39d;line-height:1.55;margin-top:10px;text-wrap:pretty">Su sitio es <span style="color:#d6e2dd">al lado del ancla</span>, porque es una propiedad del sonido cargado — igual que el algoritmo o la cadena. Se dice una vez, donde se puede relacionar con la causa, y no se repite en cada frame.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="6b" style="display:flex;flex-direction:column;gap:12px;margin-top:34px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(88,200,245,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#58c8f5">6b</span>
+      <span style="font-size:26px;color:#d6e2dd">El momento del cambio — la ventana en la que la app sabe que miente</span>
+      <span style="font-size:15px;color:#8fa39d">1280×800 · caso benigno, sin nada en curso</span>
+    </div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1100px;text-wrap:pretty">Lo que se ve aquí es <span style="color:#d6e2dd">medio segundo después</span> de cargar otro sonido desde el panel. Nada bloquea, nada pregunta: no había nada en curso. La regla que ordena la pantalla es <span style="color:#d6e2dd">qué muere y qué no</span> — muere el mapa (sondeado) y muere la medida (era de otro sonido); <span style="color:#d6e2dd">la vista viva no muere nunca</span>, porque es audio que entra ahora mismo.</div>
+
+    <div style="width:1280px;height:800px;box-sizing:border-box;overflow:hidden;background:#06080a;color:#d6e2dd;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.12)">
+
+      <div style="flex:0 0 58px;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:2px solid rgba(88,200,245,.35);background:linear-gradient(#0b1114,#080b0d)">
+        <span style="flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#7df0b0;box-shadow:0 0 10px #7df0b0;display:block"></span>
+        <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c;white-space:nowrap">MODX-1 · 44 100 Hz</span>
+        <div style="flex:0 0 auto;width:1px;height:30px;background:rgba(255,255,255,.1)"></div>
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:11px;padding:5px 11px;border-radius:9px;border:1.5px solid #58c8f5;background:rgba(88,200,245,.1);animation:anchorFlash 2.2s ease-in-out infinite">
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.18em;color:#7fa7b6">CARGASTE OTRO SONIDO</span>
+            <span style="font-size:17px;color:#eaf7fd;white-space:nowrap">CFX + FM EP 2</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px;padding-left:11px;border-left:1px solid rgba(88,200,245,.3)">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;text-decoration:line-through">FM 2OP CHAIN</span>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#7fa7b6">hace 0.4 s</span>
+          </div>
+        </div>
+        <span style="flex:0 0 auto;padding:6px 12px;border:1px dashed rgba(255,255,255,.16);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#5d6d69;white-space:nowrap">ALGORITMO —</span>
+        <span style="flex:0 0 auto;padding:6px 11px;border-radius:999px;border:1px dashed rgba(255,255,255,.16);font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;white-space:nowrap">CADENA —</span>
+        <div style="flex:1"></div>
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid rgba(125,240,176,.28);background:rgba(125,240,176,.06)">
+          <span style="width:7px;height:7px;border-radius:50%;background:#7df0b0;animation:livePulse 1.4s ease-in-out infinite;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#7df0b0;white-space:nowrap">MIRAR · 30 fps</span>
+        </div>
+        <button style="all:unset;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;gap:9px;padding:11px 17px 11px 13px;border-radius:999px 8px 8px 999px;border:1.5px dashed rgba(243,177,63,.6);background:rgba(243,177,63,.06)">
+          <span style="width:20px;height:20px;border-radius:50%;border:2px dashed #c69445;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.16em;color:#c69445">MEDIR</span>
+        </button>
+        <div style="flex:0 0 auto;width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:10px"></div>
+        <span style="flex:0 0 auto;width:56px;height:56px;margin-left:16px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,122,92,.55);background:#140a08;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
+          <span style="width:15px;height:15px;border:2.4px solid #ff7a5c;display:block"></span>
+        </span>
+      </div>
+
+      <div style="flex:0 0 auto;box-sizing:border-box;display:flex;align-items:center;gap:16px;padding:10px 20px;background:rgba(88,200,245,.09);border-bottom:1px solid rgba(88,200,245,.35)">
+        <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#bfe9fb;white-space:nowrap">RELEYENDO EL PATCH · 118 DE 416</span>
+        <div style="flex:1;min-width:0;height:8px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden">
+          <div style="width:28%;height:100%;background:linear-gradient(90deg,rgba(88,200,245,.35),#58c8f5);box-shadow:0 0 14px -2px rgba(88,200,245,.9)"></div>
+        </div>
+        <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#7fa7b6;white-space:nowrap">~0.9 s en silencio · ~5.5 s sonando</span>
+        <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c;white-space:nowrap">el diagrama vuelve primero</span>
+      </div>
+
+      <div style="flex:1;min-height:0;box-sizing:border-box;display:grid;grid-template-columns:700px 1fr 214px;gap:2px;background:rgba(255,255,255,.07)">
+
+        <div style="background:#080b0d;padding:12px 16px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">DIAGRAMA DE OPERADORES</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7fa7b6">RELEYENDO · 4 DE 8 OPERADORES</div>
+          </div>
+          <div style="flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:16px 30px">
+            <div style="box-sizing:border-box;border:2px solid #f3b13f;border-radius:26px;background:#0d1214;box-shadow:0 0 30px -8px rgba(243,177,63,.7);padding:11px 13px;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#ffe0b0">OP1</span><span style="font-size:8px;letter-spacing:.14em;color:#c69445">PORT</span></div>
+              <div><div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;color:#ffe0b0">99</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445">×1.00 · Sine</div></div>
+            </div>
+            <div style="box-sizing:border-box;border:1.5px solid #58c8f5;border-radius:5px;background:#0a1013;box-shadow:0 0 26px -7px rgba(88,200,245,.75);padding:11px 13px;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#eaf7fd">OP2</span><span style="font-size:8px;letter-spacing:.14em;color:#7fa7b6">MOD</span></div>
+              <div><div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;color:#eaf7fd">64</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7fa7b6">×1.00 · All 1</div></div>
+            </div>
+            <div style="box-sizing:border-box;border:1.5px solid rgba(255,255,255,.1);border-radius:14px;background:#070a0b;padding:11px 13px;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#4f5f5b">OP3</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#4f5f5b">LEYENDO</span></div>
+              <div><div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;color:#3f4d4a">—</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#3f4d4a">— · —</div></div>
+            </div>
+            <div style="box-sizing:border-box;border:2px solid #f3b13f;border-radius:26px;background:#0d1214;box-shadow:0 0 30px -8px rgba(243,177,63,.7);padding:11px 13px;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#ffe0b0">OP4</span><span style="font-size:8px;letter-spacing:.14em;color:#c69445">PORT</span></div>
+              <div><div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;color:#ffe0b0">88</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445">×2.00 · Sine</div></div>
+            </div>
+            <div style="box-sizing:border-box;border:1.5px dashed #3d4a48;border-radius:5px;background:#070a0b;padding:11px 13px;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#4f5f5b">OP5</span><span style="font-size:8px;letter-spacing:.14em;color:#4f5f5b">INACTIVO</span></div>
+              <div><div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;color:#3f4d4a">0</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#3f4d4a">×1.00</div></div>
+            </div>
+            <div style="box-sizing:border-box;border:1.5px solid rgba(255,255,255,.1);border-radius:14px;background:#070a0b;padding:11px 13px;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#4f5f5b">OP6</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#4f5f5b">LEYENDO</span></div>
+              <div><div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;color:#3f4d4a">—</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#3f4d4a">— · —</div></div>
+            </div>
+            <div style="box-sizing:border-box;border:1.5px solid rgba(255,255,255,.1);border-radius:14px;background:#070a0b;padding:11px 13px;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#4f5f5b">OP7</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#4f5f5b">LEYENDO</span></div>
+              <div><div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;color:#3f4d4a">—</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#3f4d4a">— · —</div></div>
+            </div>
+            <div style="box-sizing:border-box;border:1.5px solid rgba(255,255,255,.1);border-radius:14px;background:#070a0b;padding:11px 13px;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#4f5f5b">OP8</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#4f5f5b">LEYENDO</span></div>
+              <div><div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;color:#3f4d4a">—</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#3f4d4a">— · —</div></div>
+            </div>
+            <div style="box-sizing:border-box;border:1px dashed rgba(255,255,255,.12);border-radius:14px;background:#070a0b;padding:11px 13px;display:flex;flex-direction:column;justify-content:center;gap:5px">
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.14em;color:#5d6d69">LAS RUTAS VUELVEN</div>
+              <div style="font-size:12px;color:#6f817c;line-height:1.4">con el algoritmo, que es una sola dirección: <span style="font-family:ui-monospace,Consolas,monospace">48 00 4F</span></div>
+            </div>
+          </div>
+          <div style="flex:0 0 auto;margin-top:10px;padding-top:9px;border-top:2px solid rgba(255,255,255,.08);font-size:12px;color:#6f817c;line-height:1.45">Un operador releído se enciende <span style="color:#d6e2dd">a su valor real</span>; uno pendiente se queda con su forma y una raya. <span style="color:#d6e2dd">Nada se apaga con opacidad</span> — el contorno neutro y la raya son el estado.</div>
+        </div>
+
+        <div style="background:#080b0d;box-sizing:border-box;min-width:0;display:flex;flex-direction:column">
+          <div style="flex:1;min-height:0;padding:12px 14px;box-sizing:border-box;border-bottom:2px solid rgba(255,255,255,.09);display:flex;flex-direction:column">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+              <div style="font-size:12px;letter-spacing:.2em;color:#8fa39d">SCOPE</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="padding:5px 10px;border-radius:999px;border:1px solid rgba(125,240,176,.35);background:rgba(125,240,176,.07);font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#7df0b0;white-space:nowrap">ESTO NO HA MUERTO · ES AUDIO</span>
+              </div>
+            </div>
+            <div style="flex:1;min-height:0;position:relative;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:linear-gradient(#0a0f10,#070a0b);overflow:hidden">
+              <svg viewBox="0 0 560 200" preserveAspectRatio="none" style="display:block;position:absolute;inset:0;width:100%;height:100%">
+                <path d="M0 100H560" stroke="rgba(255,255,255,.08)" stroke-width="1"></path>
+                <path d="M0 100C20 40 34 168 50 96S84 22 104 104 140 178 158 100 190 30 212 102 250 176 268 100 300 34 322 104 358 176 378 100 412 32 432 102 468 176 488 100 522 38 542 104 556 130 560 118" fill="none" stroke="#7df0b0" stroke-width="2" vector-effect="non-scaling-stroke" style="filter:drop-shadow(0 0 6px rgba(125,240,176,.65))"></path>
+              </svg>
+            </div>
+          </div>
+          <div style="flex:1;min-height:0;padding:12px 14px;box-sizing:border-box;display:flex;flex-direction:column">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+              <div style="font-size:12px;letter-spacing:.2em;color:#8fa39d">ESPECTRO</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">LOG 1×–32× · SUELO −104 dB</div>
+            </div>
+            <div style="flex:1;min-height:0;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:linear-gradient(#0a0f10,#070a0b);overflow:hidden;position:relative">
+              <svg viewBox="0 0 560 200" preserveAspectRatio="none" style="display:block;position:absolute;inset:0;width:100%;height:100%">
+                <path d="M0 190H560" stroke="rgba(255,255,255,.08)"></path>
+                <g stroke="#7df0b0" stroke-width="3" vector-effect="non-scaling-stroke" style="filter:drop-shadow(0 0 5px rgba(125,240,176,.6))">
+                  <path d="M40 190V44"></path><path d="M96 190V96"></path><path d="M150 190V70"></path><path d="M206 190V126"></path><path d="M262 190V88"></path><path d="M318 190V150"></path><path d="M374 190V116"></path><path d="M430 190V162"></path><path d="M486 190V140"></path>
+                </g>
+              </svg>
+              <div style="position:absolute;left:12px;bottom:10px;padding:4px 8px;border-radius:999px;background:rgba(6,8,10,.88);font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c;white-space:nowrap">sin medida no hay I: <span style="color:#c69445">no hay Bessel</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#080b0d;padding:12px 13px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;gap:10px">
+          <div style="flex:0 0 auto;border:1.5px solid rgba(243,177,63,.5);border-radius:13px;background:rgba(243,177,63,.06);padding:11px 12px">
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#c69445;line-height:1.5">LA MEDIDA ERA DE OTRO SONIDO</div>
+            <div style="font-size:13px;color:#8fa39d;line-height:1.45;margin-top:5px">El sondeo se recupera solo. Esto <span style="color:#d6e2dd">no</span>: hace falta una nota.</div>
+            <button style="all:unset;cursor:pointer;display:block;margin-top:10px;padding:12px 14px;min-height:44px;box-sizing:border-box;text-align:center;border-radius:999px;border:1.5px solid #f3b13f;background:linear-gradient(180deg,rgba(243,177,63,.22),rgba(243,177,63,.06));font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;color:#ffd08a;width:100%">MEDIR ESTE SONIDO</button>
+          </div>
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,.05)">
+            <div style="flex:1;background:#0a0f10;padding:9px 11px;box-sizing:border-box">
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#5d6d69">RATIO MEDIDO</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:29px;color:#3f4d4a;line-height:1.2">—</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">1.4103 era de FM 2OP CHAIN</div>
+            </div>
+            <div style="flex:1;background:#0a0f10;padding:9px 11px;box-sizing:border-box">
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#5d6d69">fc / fm</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:18px;color:#3f4d4a;line-height:1.35">— / —</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">Hz</div>
+            </div>
+            <div style="flex:1;background:#0a0f10;padding:9px 11px;box-sizing:border-box">
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#5d6d69">ÍNDICE I (Bessel)</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:20px;color:#3f4d4a;line-height:1.3">—</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">se calcula sobre la medida</div>
+            </div>
+            <div style="flex:1;background:#0a0f10;padding:9px 11px;box-sizing:border-box">
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#5d6d69">ÚLTIMA MEDIDA</div>
+              <div style="font-size:13px;color:#c69445;line-height:1.35;margin-top:2px">hay que volver a medir</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">la de hace 14 s no vale</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:0 0 156px;min-height:0;overflow:hidden;box-sizing:border-box;border-top:2px solid rgba(255,255,255,.09);padding:10px 18px 12px;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+          <div style="display:flex;align-items:baseline;gap:12px">
+            <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">WATERFALL</div>
+            <div style="font-size:12px;color:#6f817c">el corte se queda dibujado: arriba, otro sonido</div>
+          </div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">TIEMPO ↓ · FRECUENCIA →</div>
+        </div>
+        <div style="flex:1;min-height:0;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:linear-gradient(#0a0f10,#070a0b);overflow:hidden;position:relative">
+          <svg viewBox="0 0 400 210" preserveAspectRatio="none" style="display:block;position:absolute;inset:0;width:100%;height:100%">
+            <g fill="none" vector-effect="non-scaling-stroke">
+              <path d="M0 26C40 20 60 6 84 24S130 16 160 26 210 12 240 26 300 18 330 26 380 22 400 26" stroke="#1e7351" stroke-width="1" transform="translate(0,0) scale(1,1.55)"></path>
+              <path d="M0 26C40 18 62 4 86 22S132 14 162 26 212 10 242 26 302 16 332 26 382 20 400 26" stroke="#2b8a60" stroke-width="1" transform="translate(0,13) scale(1,1.55)"></path>
+              <path d="M0 26C40 20 60 8 84 24S130 18 160 26 210 14 240 26 300 20 330 26 380 24 400 26" stroke="#39a06f" stroke-width="1.1" transform="translate(0,26) scale(1,1.55)"></path>
+              <path d="M0 26C40 24 60 18 84 25S130 22 160 26 210 20 240 26 300 24 330 26 380 25 400 26" stroke="#46b57d" stroke-width="1.1" transform="translate(0,39) scale(1,1.55)"></path>
+              <path d="M0 26C40 22 60 2 84 22S130 12 160 26 210 8 240 26 300 14 330 26 380 20 400 26" stroke="#7de0aa" stroke-width="1.3" transform="translate(0,65) scale(1,1.55)"></path>
+              <path d="M0 26C40 20 60 0 84 20S130 10 160 26 210 6 240 26 300 12 330 26 380 18 400 26" stroke="#a9f0c8" stroke-width="1.3" transform="translate(0,78) scale(1,1.55)"></path>
+              <path d="M0 26C40 18 60 0 84 18S130 8 160 26 210 4 240 26 300 10 330 26 380 16 400 26" stroke="#eafff4" stroke-width="1.4" transform="translate(0,91) scale(1,1.55)"></path>
+            </g>
+            <path d="M0 84H400" stroke="#58c8f5" stroke-width="1.6" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"></path>
+          </svg>
+          <div style="position:absolute;right:14px;top:56px;font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#bfe9fb;background:rgba(6,8,10,.8);padding:3px 8px;border-radius:999px;border:1px solid rgba(88,200,245,.4)">AQUÍ CAMBIÓ EL SONIDO</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:2px;background:rgba(255,255,255,.07);width:1280px;box-sizing:border-box;border:1px solid rgba(255,255,255,.12)">
+      <div style="flex:1;background:#080b0d;padding:15px 17px;box-sizing:border-box;min-width:0">
+        <div style="font-size:11px;letter-spacing:.2em;color:#7df0b0;margin-bottom:9px">POR QUÉ ESTO NO BLOQUEA</div>
+        <div style="font-size:14px;color:#8fa39d;line-height:1.55;text-wrap:pretty">Trastear sonidos es lo normal. Si la app riñe cada vez que Jesús gira el dial de Performances, la app está estorbando en la única cosa que él iba a hacer de todas formas. <span style="color:#d6e2dd">Sin nada en curso, el cambio no es un incidente: es una relectura.</span></div>
+      </div>
+      <div style="flex:1;background:#080b0d;padding:15px 17px;box-sizing:border-box;min-width:0">
+        <div style="font-size:11px;letter-spacing:.2em;color:#c69445;margin-bottom:9px">LO QUE NO SE HACE</div>
+        <div style="font-size:14px;color:#8fa39d;line-height:1.55;text-wrap:pretty">Los números <span style="color:#d6e2dd">no se sustituyen sin más</span> — pasan por la raya. Un valor que salta de 90 a 64 sin ese paso intermedio es indistinguible de un valor que cambió porque el usuario giró un mando, y eso es justo la confusión que hay que evitar.</div>
+      </div>
+      <div style="flex:1;background:#080b0d;padding:15px 17px;box-sizing:border-box;min-width:0">
+        <div style="font-size:11px;letter-spacing:.2em;color:#8fa39d;margin-bottom:9px">Y NO HAY BOTÓN DE «RELEER»</div>
+        <div style="font-size:14px;color:#8fa39d;line-height:1.55;text-wrap:pretty">Se releen los 416 solos, en cuanto el ancla cambia. Un botón de refresco manual sería pedirle al usuario que sepa una cosa que la app ya sabe. <span style="color:#d6e2dd">La cuenta se muestra porque cuesta casi un segundo</span>, no porque haya que decidir nada.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="6c" style="display:flex;flex-direction:column;gap:12px;margin-top:34px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(255,122,92,.55);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#ff9d85">6c</span>
+      <span style="font-size:26px;color:#d6e2dd">El caso feo — cambió a mitad de algo, y ese algo no está pausado: está invalidado</span>
+      <span style="font-size:15px;color:#8fa39d">1280×800 · con estado vivo</span>
+    </div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty"><span style="color:#d6e2dd">Bloqueante sí, pero sólo lo que se rompió.</span> El aviso se ancla <span style="color:#d6e2dd">a la cosa invalidada</span> y le quita sus acciones normales; el resto de la app sigue viva — se puede mirar, se puede medir, y el pánico está donde siempre. Un modal centrado que se apropia de la pantalla sería peor: apaga hasta lo que sí sigue siendo verdad. Y hay una asimetría que manda en todo esto: <span style="color:#d6e2dd">la app puede escribir parámetros pero no puede cargar Performances</span>, así que la recuperación nunca es «lo arreglo yo».</div>
+
+    <div style="width:1280px;height:800px;box-sizing:border-box;overflow:hidden;background:#06080a;color:#d6e2dd;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.12)">
+
+      <div style="flex:0 0 58px;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:2px solid rgba(255,122,92,.4);background:linear-gradient(#140c0a,#080b0d)">
+        <button style="all:unset;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 13px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1px solid rgba(255,255,255,.14)">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">← LA PRINCIPAL</span>
+        </button>
+        <div style="flex:0 0 auto;width:1px;height:30px;background:rgba(255,255,255,.1)"></div>
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:11px;padding:5px 11px;border-radius:9px;border:1.5px solid #ff7a5c;background:rgba(255,122,92,.1)">
+          <div style="display:flex;flex-direction:column;gap:1px">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.18em;color:#ff9d85">EL SONIDO CAMBIÓ A MITAD</span>
+            <span style="font-size:17px;color:#ffd9cf;white-space:nowrap">CFX + FM EP 2</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px;padding-left:11px;border-left:1px solid rgba(255,122,92,.3)">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#8fa39d;text-decoration:line-through">FM 2OP CHAIN</span>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#ff9d85">en el paso 6 de 8</span>
+          </div>
+        </div>
+        <span style="flex:0 0 auto;padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">4 COSAS INVALIDADAS</span>
+        <div style="flex:1"></div>
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid rgba(125,240,176,.28);background:rgba(125,240,176,.06)">
+          <span style="width:7px;height:7px;border-radius:50%;background:#7df0b0;animation:livePulse 1.4s ease-in-out infinite;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#7df0b0;white-space:nowrap">MIRAR · 30 fps</span>
+        </div>
+        <div style="flex:0 0 auto;width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:10px"></div>
+        <span style="flex:0 0 auto;width:56px;height:56px;margin-left:16px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:2px solid #ff7a5c;background:#1d0c08;box-shadow:0 0 24px -6px rgba(255,122,92,.8);clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
+          <span style="width:15px;height:15px;border:2.4px solid #ff7a5c;display:block"></span>
+        </span>
+      </div>
+
+      <div style="flex:0 0 292px;box-sizing:border-box;border-bottom:2px solid rgba(255,255,255,.09);padding:13px 18px;display:flex;flex-direction:column;min-height:0">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px">
+          <div style="display:flex;align-items:baseline;gap:13px">
+            <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">EL BARRIDO QUE ESTABA CORRIENDO</div>
+            <div style="font-size:13px;color:#6f817c">5 pasos medidos en <span style="font-family:ui-monospace,Consolas,monospace;color:#8fa39d">FM 2OP CHAIN</span> · 3 sin medir</div>
+          </div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#ff9d85">NO SE PUEDE REANUDAR · NO SON COMPARABLES</div>
+        </div>
+        <div style="flex:1;min-height:0;display:flex;gap:14px">
+          <div style="flex:1;min-width:0;border:1.5px solid rgba(255,122,92,.4);border-radius:15px;background:linear-gradient(180deg,rgba(255,122,92,.07),rgba(255,122,92,.02));overflow:hidden;position:relative">
+            <svg viewBox="0 0 820 220" preserveAspectRatio="none" style="display:block;position:absolute;inset:0;width:100%;height:100%">
+              <path d="M0 110H820" stroke="rgba(255,255,255,.1)" stroke-width="1"></path>
+              <g fill="none" vector-effect="non-scaling-stroke">
+                <path d="M20 40L120 62 220 96 320 138 420 176" stroke="#eafff4" stroke-width="2.6" style="filter:drop-shadow(0 0 6px rgba(234,255,244,.5))"></path>
+                <path d="M20 186L120 160 220 122 320 88 420 62" stroke="#7de0aa" stroke-width="2"></path>
+                <path d="M20 200L120 188 220 158 320 120 420 92" stroke="#46b57d" stroke-width="1.7"></path>
+                <path d="M20 206L120 200 220 182 320 150 420 116" stroke="#2b8a60" stroke-width="1.5"></path>
+                <path d="M20 40C120 62 220 96 320 138 420 176" stroke="#f3b13f" stroke-width="1.6" stroke-dasharray="5 4"></path>
+              </g>
+              <path d="M470 6V214" stroke="#ff7a5c" stroke-width="2" stroke-dasharray="7 5" vector-effect="non-scaling-stroke"></path>
+              <g fill="none" stroke="#3d4a48" stroke-width="1.5" stroke-dasharray="4 5" vector-effect="non-scaling-stroke">
+                <path d="M520 110H800"></path>
+              </g>
+              <g fill="#5d6d69" font-family="ui-monospace,Consolas,monospace" font-size="11">
+                <text x="20" y="18">n0</text><text x="600" y="102">los pasos 6, 7 y 8 no existen</text>
+              </g>
+            </svg>
+            <div style="position:absolute;left:calc(57.3% + 8px);top:12px;font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#ff9d85;background:rgba(6,8,10,.85);padding:4px 9px;border-radius:999px;border:1px solid rgba(255,122,92,.5)">AQUÍ CAMBIÓ EL SONIDO</div>
+            <div style="position:absolute;left:14px;bottom:12px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">LEVEL 0 → 99 · el mapa se queda dibujado con el corte, no se borra</div>
+          </div>
+          <div style="flex:0 0 336px;display:flex;flex-direction:column;gap:9px;min-width:0">
+            <div style="font-size:13px;color:#8fa39d;line-height:1.5;text-wrap:pretty">Los pasos de antes y de después <span style="color:#d6e2dd">no son el mismo experimento</span>. Reanudar produciría un mapa de Bessel que parece bueno y no lo es — la peor clase de dato en toda la app.</div>
+            <button style="all:unset;cursor:pointer;padding:12px 15px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1.5px solid rgba(243,177,63,.6);background:rgba(243,177,63,.09);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#ffd08a">QUEDARME CON LOS 5 · marcados de otro sonido</button>
+            <button style="all:unset;cursor:pointer;padding:12px 15px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1.5px solid rgba(125,240,176,.5);background:rgba(125,240,176,.08);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#7df0b0">EMPEZAR DE CERO EN CFX + FM EP 2 · ~25 s</button>
+            <button style="all:unset;cursor:pointer;padding:12px 15px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1px solid rgba(255,255,255,.16);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d">DESCARTAR EL BARRIDO</button>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#4f8f70;line-height:1.5;margin-top:2px">EL LEVEL YA VOLVIÓ A 90 · el barrido guardó copia antes del primer paso</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1;min-height:0;box-sizing:border-box;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:rgba(255,255,255,.07)">
+
+        <div style="background:#080b0d;padding:14px 16px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="flex:0 0 auto;width:22px;height:22px;border-radius:5px;border:2px solid #58c8f5;background:rgba(88,200,245,.14);display:block"></span>
+            <div style="font-size:12px;letter-spacing:.18em;color:#bfe9fb">EL A/B QUE ESTABA EN BUCLE</div>
+          </div>
+          <div style="font-size:14px;color:#8fa39d;line-height:1.5;text-wrap:pretty">A se midió en un sonido y B en otro. <span style="color:#d6e2dd">La premisa entera del A/B era «el mismo patch con un parámetro distinto»</span>, y ya no se cumple.</div>
+          <div style="display:flex;gap:10px">
+            <div style="flex:1;min-width:0;border:1px dashed rgba(255,255,255,.16);border-radius:12px;background:#0a0f10;padding:10px 11px">
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.14em;color:#c69445">A · LEVEL 20</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c;margin-top:4px;line-height:1.5">FM 2OP CHAIN<br>I 0.62 · 3 parciales</div>
+            </div>
+            <div style="flex:1;min-width:0;border:1.5px solid rgba(255,122,92,.5);border-radius:12px;background:rgba(255,122,92,.06);padding:10px 11px">
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.14em;color:#ff9d85">B · LEVEL 90</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#ffd9cf;margin-top:4px;line-height:1.5">CFX + FM EP 2<br>otro sonido</div>
+            </div>
+          </div>
+          <div style="font-size:13px;color:#6f817c;line-height:1.5">Repetir A es barato: es <span style="color:#d6e2dd">una escritura y una vuelta del reproductor</span>, ~3 s. Por eso la primera acción no es descartar.</div>
+          <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
+            <button style="all:unset;cursor:pointer;padding:12px 15px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1.5px solid rgba(125,240,176,.5);background:rgba(125,240,176,.08);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#7df0b0;text-align:center">REPETIR A EN EL SONIDO NUEVO · ~3 s</button>
+            <button style="all:unset;cursor:pointer;padding:12px 15px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1px solid rgba(255,255,255,.16);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d;text-align:center">DESCARTAR LA COMPARACIÓN</button>
+          </div>
+        </div>
+
+        <div style="background:#080b0d;padding:14px 16px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;border:2px solid #f3b13f;display:block"></span>
+            <div style="font-size:12px;letter-spacing:.18em;color:#ffd08a">LA LECCIÓN 2, EN EL PASO 3 DE 5</div>
+          </div>
+          <div style="font-size:14px;color:#8fa39d;line-height:1.5;text-wrap:pretty">Los dos pasos que ya hiciste <span style="color:#d6e2dd">describen un sonido que ya no está cargado</span>. Y esto la app no lo puede arreglar: <span style="color:#d6e2dd">no sabe cargar Performances</span>.</div>
+          <div style="border:1.5px solid rgba(243,177,63,.45);border-radius:13px;background:rgba(243,177,63,.06);padding:11px 12px">
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#c69445">ESTO SÓLO PUEDES HACERLO TÚ, EN EL TECLADO</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#8fa39d;line-height:1.9;margin-top:7px">[PERFORMANCE]<br>&nbsp;&nbsp;→ [Category Search]<br>&nbsp;&nbsp;&nbsp;&nbsp;→ <span style="color:#7df0b0">Init Normal (FM-X)</span></div>
+            <div style="font-size:12px;color:#6f817c;line-height:1.45;margin-top:7px">Es el sonido con el que empezó la lección. En cuanto el ancla lo vea, <span style="color:#d6e2dd">la lección sigue donde estaba</span>.</div>
+          </div>
+          <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
+            <button style="all:unset;cursor:pointer;padding:12px 15px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1.5px solid rgba(88,200,245,.55);background:rgba(88,200,245,.09);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#bfe9fb;text-align:center">SEGUIR AQUÍ · REHACER LOS 2 PASOS</button>
+            <button style="all:unset;cursor:pointer;padding:12px 15px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1px solid rgba(255,255,255,.16);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d;text-align:center">DEJAR LA LECCIÓN PARA LUEGO</button>
+          </div>
+        </div>
+
+        <div style="background:#080b0d;padding:14px 16px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="flex:0 0 auto;width:22px;height:22px;border-radius:5px;border:1.5px dashed #ff7a5c;display:block"></span>
+            <div style="font-size:12px;letter-spacing:.18em;color:#ff9d85">LAS COPIAS SON DE OTRO SONIDO</div>
+          </div>
+          <div style="font-size:14px;color:#8fa39d;line-height:1.5;text-wrap:pretty">«Devolverte tu patch» <span style="color:#d6e2dd">pasa de útil a peligroso</span>: restaurar ahora escribiría un patch viejo encima del sonido que acabas de cargar.</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="border:1.5px dashed rgba(255,122,92,.5);border-radius:12px;background:rgba(255,122,92,.05);padding:10px 11px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                <div style="font-size:13px;color:#ffd9cf">antes de que la app tocara nada</div>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#ff9d85;white-space:nowrap">hace 6 min</div>
+              </div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-top:3px">bulk 7 669 B · <span style="color:#ff9d85">DE FM 2OP CHAIN</span></div>
+              <button style="all:unset;cursor:pointer;display:block;width:100%;box-sizing:border-box;margin-top:9px;padding:11px 12px;min-height:44px;text-align:center;border-radius:999px;border:1.5px solid rgba(255,122,92,.55);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.08em;color:#ff9d85">RESTAURAR AQUÍ · PISARÍA CFX + FM EP 2</button>
+            </div>
+            <div style="border:1px solid rgba(255,255,255,.1);border-radius:12px;background:#0a0f10;padding:10px 11px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                <div style="font-size:13px;color:#8fa39d">paso 2 · lección 2</div>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;white-space:nowrap">hace 2 min</div>
+              </div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c;margin-top:3px">416 parámetros · <span style="color:#ff9d85">DE FM 2OP CHAIN</span></div>
+            </div>
+          </div>
+          <div style="font-size:13px;color:#6f817c;line-height:1.5;margin-top:auto">El botón <span style="color:#d6e2dd">no se desactiva</span>: cambia de texto y dice qué pisaría. Desactivarlo sería esconder la única salida que hay si de verdad quieres ese patch de vuelta.</div>
+        </div>
+      </div>
+
+      <div style="flex:0 0 auto;box-sizing:border-box;border-top:2px solid rgba(255,255,255,.09);padding:12px 18px;display:flex;align-items:center;gap:18px">
+        <div style="flex:1;min-width:0;font-size:13px;color:#6f817c;line-height:1.5"><span style="color:#d6e2dd">Bloqueante con estado vivo, no bloqueante sin él.</span> Sin nada en curso, el cambio es una relectura y punto (<a href="#6b">6b</a>). Con algo en curso, seguir en silencio produciría una lección falsa — y una medida inválida que parece válida es el único fallo que esta app no se puede permitir.</div>
+        <button style="all:unset;cursor:pointer;flex:0 0 auto;padding:13px 18px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1.5px solid rgba(125,240,176,.5);background:rgba(125,240,176,.08);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#7df0b0">DECIDIR LAS 4 Y SEGUIR</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="6d" style="display:flex;flex-direction:column;gap:12px;margin-top:34px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(88,200,245,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#58c8f5">6d</span>
+      <span style="font-size:26px;color:#d6e2dd">Sólo lectura — el tercer modo de fallo, y el que rompía un botón</span>
+      <span style="font-size:15px;color:#8fa39d">cajón de <a href="#5c">5c</a> · 1280×560</span>
+    </div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty"><span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">REPARAR Y VERIFICAR</span> sobre una dirección que nunca acepta escritura es un botón que promete algo imposible, y una app que reintente sola es un bucle. Como el Data List no las marca y el teclado <span style="color:#d6e2dd">no se puede preguntar</span> —las reservadas contestan igual que las reales— este estado <span style="color:#d6e2dd">se alcanza por experiencia, no por catálogo</span>. Así que la app lo aprende y lo escribe.</div>
+
+    <div style="width:1280px;height:560px;box-sizing:border-box;overflow:hidden;background:#06080a;color:#d6e2dd;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.12);border-top:2px solid rgba(125,240,176,.28);box-shadow:0 -24px 60px -24px rgba(0,0,0,.9)">
+      <div style="flex:0 0 auto;display:flex;justify-content:center;padding:9px 0 4px"><span style="width:52px;height:5px;border-radius:3px;background:rgba(255,255,255,.18);display:block"></span></div>
+
+      <div style="flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:4px 18px 12px;border-bottom:2px solid rgba(255,255,255,.09)">
+        <span style="padding:9px 14px;min-height:44px;box-sizing:border-box;display:flex;align-items:center;border-radius:999px;border:2px solid rgba(255,122,92,.6);background:rgba(255,122,92,.1);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#ff9d85">SIN CONFIRMAR · 2</span>
+        <span style="padding:9px 14px;min-height:44px;box-sizing:border-box;display:flex;align-items:center;border-radius:999px;border:2px solid rgba(243,177,63,.55);background:rgba(243,177,63,.08);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#ffd08a">SÓLO LECTURA · 1 APRENDIDA</span>
+        <span style="padding:9px 14px;min-height:44px;box-sizing:border-box;display:flex;align-items:center;border-radius:999px;border:1px solid rgba(255,255,255,.14);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#8fa39d;white-space:nowrap">TODO EL TRÁFICO · 1 216</span>
+        <div style="flex:1"></div>
+        <div style="display:flex;gap:16px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">
+          <span>MEDIANA <span style="color:#7df0b0">2.0 ms</span></span>
+          <span>p99 <span style="color:#7df0b0">3.3 ms</span></span>
+          <span>PERDIDAS <span style="color:#7df0b0">0</span></span>
+        </div>
+      </div>
+
+      <div style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 392px;gap:2px;background:rgba(255,255,255,.07)">
+        <div style="background:#080b0d;padding:14px 18px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;gap:11px;overflow:hidden">
+
+          <div style="flex:0 0 auto;border:1.5px dashed rgba(243,177,63,.6);border-radius:15px;background:rgba(243,177,63,.05);padding:14px 16px">
+            <div style="display:flex;align-items:flex-start;gap:13px">
+              <span style="flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:2px solid #f3b13f;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#ffd08a">i</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#c69445">SÓLO LECTURA · SE MIRA, NO SE TOCA</div>
+                <div style="font-size:16px;color:#eaf7fd;margin-top:5px">Super Knob · esta dirección no acepta escritura</div>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#8fa39d;margin-top:6px;line-height:1.7">escribí <span style="color:#ffd08a">20</span> → releído <span style="color:#eafff4">3F</span> &nbsp;·&nbsp; escribí <span style="color:#ffd08a">60</span> → releído <span style="color:#eafff4">3F</span><br>→ F0 43 10 7F 1C 07 <span style="color:#eafff4">30 4B 00</span> 20 F7 &nbsp;·&nbsp; sin error, sin queja</div>
+                <div style="font-size:13px;color:#6f817c;line-height:1.5;margin-top:8px;text-wrap:pretty">No está roto y no hay nada que reparar: <span style="color:#d6e2dd">reintentar no va a funcionar nunca</span>. Por eso este aviso va en ámbar didáctico y no en alerta — es lo mismo que hace el aviso de Freq Mode.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+              <button style="all:unset;cursor:pointer;padding:12px 16px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1.5px solid rgba(243,177,63,.6);background:rgba(243,177,63,.1);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#ffd08a">NO VOLVER A ESCRIBIR AQUÍ</button>
+              <button style="all:unset;cursor:pointer;padding:12px 16px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1px solid rgba(255,255,255,.16);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d">VER LOS 4 INTENTOS</button>
+              <div style="display:flex;align-items:center;padding:0 4px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;line-height:1.5">no hay <span style="color:#c69445">&nbsp;REPARAR Y VERIFICAR&nbsp;</span> aquí: sería mentira</div>
+            </div>
+          </div>
+
+          <div style="flex:1;min-height:0;border:1px solid rgba(255,255,255,.09);border-radius:15px;background:#0a0f10;padding:13px 15px;box-sizing:border-box;display:flex;flex-direction:column;gap:9px;overflow:hidden">
+            <div style="display:flex;align-items:baseline;justify-content:space-between">
+              <div style="font-size:11px;letter-spacing:.2em;color:#8fa39d">LO QUE LA APP HA APRENDIDO</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69">se conserva entre sesiones</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid rgba(243,177,63,.3);border-radius:11px;background:rgba(243,177,63,.05)">
+              <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:14px;color:#ffd08a">30 4B 00</span>
+              <span style="flex:1;min-width:0;font-size:13px;color:#8fa39d">Super Knob — se lee, emite, no acepta escritura</span>
+              <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69">2 intentos · aprendida hoy</span>
+            </div>
+            <div style="font-size:13px;color:#6f817c;line-height:1.5;margin-bottom:auto;text-wrap:pretty">Dos intentos y para. <span style="color:#d6e2dd">Nunca un tercero automático</span>, nunca en bucle. Si el usuario insiste a mano, se intenta una vez más y se vuelve a anotar — la lista es una observación, no una ley.</div>
+          </div>
+
+          <div style="flex:0 0 auto;border:1px dashed rgba(243,177,63,.35);border-radius:15px;background:rgba(243,177,63,.03);padding:11px 14px;box-sizing:border-box;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c;line-height:1.7">LAS RESERVADAS DEL PAPEL, QUE NO SE TOCAN NUNCA<br><span style="color:#8fa39d">48 0p 51 · 52 · 53 · 54 · 55</span> &nbsp;—&nbsp; contestan a una lectura (<span style="color:#8fa39d">00</span>, y <span style="color:#8fa39d">53</span> con dos bytes), así que <span style="color:#c69445">no son descubribles preguntando</span>: la lista viene del papel</div>
+        </div>
+
+        <div style="background:#080b0d;padding:14px 16px;box-sizing:border-box;min-width:0;display:flex;flex-direction:column;gap:12px;overflow:hidden">
+          <div style="font-size:11px;letter-spacing:.2em;color:#8fa39d">SI EL SUPER KNOB APARECE EN PANTALLA</div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <svg viewBox="0 0 130 130" width="130" height="130" style="display:block;flex:0 0 auto">
+              <circle cx="65" cy="65" r="50" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="10"></circle>
+              <circle cx="65" cy="65" r="50" fill="none" stroke="#7df0b0" stroke-width="10" stroke-linecap="round" stroke-dasharray="118 314" transform="rotate(135 65 65)" style="filter:drop-shadow(0 0 8px rgba(125,240,176,.7))"></circle>
+              <circle cx="65" cy="65" r="34" fill="#0d1416" stroke="rgba(255,255,255,.1)"></circle>
+              <text x="65" y="70" text-anchor="middle" fill="#eafff4" font-family="ui-monospace,Consolas,monospace" font-size="24">63</text>
+              <text x="65" y="88" text-anchor="middle" fill="#5d6d69" font-family="ui-monospace,Consolas,monospace" font-size="9">0 – 127</text>
+            </svg>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+              <span style="align-self:flex-start;padding:6px 12px;border-radius:999px;border:1.5px solid rgba(125,240,176,.45);background:rgba(125,240,176,.07);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#7df0b0">EMITE · NO ACEPTA</span>
+              <div style="font-size:13px;color:#8fa39d;line-height:1.5;text-wrap:pretty">Mismo mando de siempre, con <span style="color:#d6e2dd">una diferencia visible: no tiene marca de agarre</span>. El arco y la cifra siguen ahí porque el valor es verdad y llega solo; lo que falta es la manija, y su ausencia es el estado.</div>
+            </div>
+          </div>
+          <div style="border:1px solid rgba(125,240,176,.25);border-radius:13px;background:rgba(125,240,176,.04);padding:12px 13px">
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#4f8f70">Y ES LA ÚNICA COSA QUE EL MODX NOTIFICA</div>
+            <div style="font-size:13px;color:#8fa39d;line-height:1.5;margin-top:5px;text-wrap:pretty">Con <span style="font-family:ui-monospace,Consolas,monospace">Super Knob CC = off</span>, moverlo emite <span style="color:#d6e2dd">635 mensajes SysEx en 25 s</span> en esa dirección. El emisor de Parameter Change del teclado existe y funciona: Yamaha sólo lo cableó a este control.</div>
+            <div style="font-size:13px;color:#6f817c;line-height:1.5;margin-top:7px">Por eso el cero del cambio de Performance <span style="color:#d6e2dd">no es una limitación del teclado</span>, es una decisión de Yamaha. Cambia la explicación, no la arquitectura: hay que sondear igual.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="6e" style="display:flex;flex-direction:column;gap:12px;margin-top:34px;padding-bottom:64px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(88,200,245,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#58c8f5">6e</span>
+      <span style="font-size:26px;color:#d6e2dd">Grados de confianza en el barrido — una medida por paso, y afinar sólo lo dudoso</span>
+      <span style="font-size:15px;color:#8fa39d">delta sobre <a href="#5b">5b</a> · 1280×560</span>
+    </div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty">Decidido: <span style="color:#d6e2dd">una medida por paso</span> (~25 s los ocho) y una segunda pasada <span style="color:#d6e2dd">sólo donde la primera sale dudosa</span>. El barrido deja de ser «corre o no corre» y entra en el vocabulario de procedencia que ya usa el resto de la app: no es «medido» contra «no medido», es <span style="color:#d6e2dd">medido con cuánta confianza</span>.</div>
+
+    <div style="width:1280px;height:560px;box-sizing:border-box;overflow:hidden;background:#06080a;color:#d6e2dd;display:flex;border:1px solid rgba(255,255,255,.12)">
+      <div style="flex:1;min-width:0;padding:14px 18px;box-sizing:border-box;display:flex;flex-direction:column;gap:9px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px">
+          <div style="display:flex;align-items:baseline;gap:13px;min-width:0;flex-wrap:wrap">
+            <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d;white-space:nowrap">TRAYECTORIA POR ARMÓNICO · LEVEL 0 → 99</div>
+            <div style="font-size:13px;color:#6f817c;white-space:nowrap">8 pasos · 1 medida cada uno · 24.8 s</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:flex-end;min-width:0;font-family:ui-monospace,Consolas,monospace;font-size:10px">
+            <span style="display:flex;align-items:center;gap:6px;color:#7df0b0;white-space:nowrap"><span style="flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#7df0b0;display:block"></span>FIABLE · 6</span>
+            <span style="display:flex;align-items:center;gap:6px;color:#c69445;white-space:nowrap"><span style="flex:0 0 auto;width:11px;height:11px;border-radius:50%;border:1.5px dashed #f3b13f;display:block"></span>CERCA DE UN CERO · 2</span>
+            <span style="display:flex;align-items:center;gap:6px;color:#c69445;white-space:nowrap"><span style="flex:0 0 auto;width:14px;height:2px;background:#f3b13f;display:block"></span>TEORÍA |Jₙ(I)|</span>
+          </div>
+        </div>
+
+        <div style="flex:1;min-height:0;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:linear-gradient(#0a0f10,#070a0b);overflow:hidden;position:relative">
+          <svg viewBox="0 0 880 380" preserveAspectRatio="none" style="display:block;position:absolute;inset:0;width:100%;height:100%">
+            <path d="M0 190H880" stroke="rgba(255,255,255,.12)" stroke-width="1"></path>
+            <g fill="none" vector-effect="non-scaling-stroke">
+              <path d="M40 60L150 84 260 120 370 158 480 196 590 224 700 214 810 186" stroke="#f3b13f" stroke-width="1.6" stroke-dasharray="5 4"></path>
+              <path d="M40 62L150 86 260 118 370 160 480 200 590 228 700 210 810 182" stroke="#eafff4" stroke-width="2.8" style="filter:drop-shadow(0 0 7px rgba(234,255,244,.45))"></path>
+              <path d="M40 320L150 292 260 250 370 206 480 168 590 148 700 156 810 176" stroke="#7de0aa" stroke-width="2"></path>
+              <path d="M40 344L150 330 260 300 370 258 480 216 590 186 700 172 810 168" stroke="#46b57d" stroke-width="1.7"></path>
+              <path d="M40 356L150 350 260 332 370 300 480 262 590 226 700 200 810 184" stroke="#2b8a60" stroke-width="1.5"></path>
+              <path d="M40 366L150 362 260 352 370 332 480 302 590 266 700 232 810 204" stroke="#1e7351" stroke-width="1.3"></path>
+            </g>
+            <g fill="none" stroke="#eafff4" stroke-width="2">
+              <circle cx="40" cy="62" r="5" fill="#eafff4"></circle>
+              <circle cx="150" cy="86" r="5" fill="#eafff4"></circle>
+              <circle cx="260" cy="118" r="5" fill="#eafff4"></circle>
+              <circle cx="370" cy="160" r="5" fill="#eafff4"></circle>
+              <circle cx="480" cy="200" r="5" fill="#eafff4"></circle>
+              <circle cx="810" cy="182" r="5" fill="#eafff4"></circle>
+            </g>
+            <g fill="#0a0f10" stroke="#f3b13f" stroke-width="2">
+              <circle cx="590" cy="228" r="7"></circle>
+              <circle cx="700" cy="210" r="7"></circle>
+            </g>
+            <g fill="none" stroke="#f3b13f" stroke-width="1.4" stroke-dasharray="3 4">
+              <circle cx="590" cy="228" r="15"></circle>
+              <circle cx="700" cy="210" r="15"></circle>
+            </g>
+            <path d="M545 190H745" stroke="#ff7a5c" stroke-width="1.4" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"></path>
+            <g font-family="ui-monospace,Consolas,monospace" font-size="12">
+              <text x="20" y="46" fill="#eafff4">n0</text>
+              <text x="20" y="330" fill="#7de0aa">n1</text>
+              <text x="836" y="196" fill="#5d6d69">0</text>
+              <text x="556" y="176" fill="#ff9d85">el primer cero de J₀ · I ≈ 2.405</text>
+            </g>
+            <g font-family="ui-monospace,Consolas,monospace" font-size="11" fill="#5d6d69">
+              <text x="30" y="374">0</text><text x="248" y="374">28</text><text x="470" y="374">56</text><text x="580" y="374">70</text><text x="690" y="374">84</text><text x="800" y="374">99</text>
+            </g>
+          </svg>
+          <div style="position:absolute;left:60%;top:12px;font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.08em;color:#ffd08a;background:rgba(6,8,10,.85);padding:4px 9px;border-radius:999px;border:1px solid rgba(243,177,63,.5)">2 PUNTOS CERCA DEL CERO · MANDA EL SUELO DE RUIDO</div>
+        </div>
+
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:14px">
+          <div style="flex:1;min-width:0;font-size:13px;color:#6f817c;line-height:1.5;text-wrap:pretty">El mapa se dibuja <span style="color:#d6e2dd">completo</span>. Un punto dudoso no es un hueco: es un círculo hueco con halo, en el mismo ámbar que la teoría, <span style="color:#d6e2dd">y está en la curva</span>. Promediar los ocho por sistema sería pagar tres veces por seis pasos que ya estaban bien.</div>
+          <button style="all:unset;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;gap:11px;padding:13px 18px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1.5px solid #f3b13f;background:linear-gradient(180deg,rgba(243,177,63,.2),rgba(243,177,63,.05));box-shadow:0 0 26px -8px rgba(243,177,63,.7)">
+            <span style="width:20px;height:20px;border-radius:50%;border:2px solid #f3b13f;background:radial-gradient(circle,#f3b13f 34%,transparent 36%);display:block"></span>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#ffd08a">AFINAR LOS 2 DUDOSOS · ~19 s</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="flex:0 0 372px;box-sizing:border-box;border-left:2px solid rgba(255,255,255,.09);padding:14px 16px;display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div style="font-size:11px;letter-spacing:.2em;color:#8fa39d">EL PASO 6, ANTES Y DESPUÉS DE AFINAR</div>
+
+        <div style="border:1.5px dashed rgba(243,177,63,.55);border-radius:14px;background:rgba(243,177,63,.05);padding:12px 13px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between">
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.14em;color:#c69445">CERCA DE UN CERO</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8a7038">1 MEDIDA</div>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:9px;margin-top:6px">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#ffd08a">−41.2</span>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#8fa39d">dB · n0 en Level 70</span>
+          </div>
+          <div style="font-size:12px;color:#8fa39d;line-height:1.5;margin-top:6px">A 63 dB del suelo la parcial casi no está: <span style="color:#d6e2dd">una sola ventana no distingue la señal del suelo</span>.</div>
+        </div>
+
+        <div style="border:1.5px solid rgba(125,240,176,.45);border-radius:14px;background:rgba(125,240,176,.05);padding:12px 13px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between">
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.14em;color:#7df0b0">AFINADO</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#4f8f70">×3 PROMEDIADAS</div>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:9px;margin-top:6px">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#eafff4">−43.8</span>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#7df0b0">dB &nbsp;±0.6</span>
+          </div>
+          <div style="font-size:12px;color:#8fa39d;line-height:1.5;margin-top:6px">La dispersión <span style="color:#d6e2dd">se dice, no se esconde</span>: es la única forma de saber que ahora sí se puede comparar con la teoría.</div>
+        </div>
+
+        <div style="border:1px solid rgba(255,255,255,.09);border-radius:14px;background:#0a0f10;padding:12px 13px">
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#5d6d69">CUÁNDO UN PASO SALE DUDOSO</div>
+          <div style="font-size:13px;color:#8fa39d;line-height:1.6;margin-top:6px;text-wrap:pretty">Cuando la parcial queda a menos de <span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">12 dB</span> del suelo, o cuando cae <span style="color:#d6e2dd">a menos de un paso</span> de un cero de la <span style="font-family:ui-monospace,Consolas,monospace">|Jₙ|</span> ajustada. Es un criterio calculado, no un umbral que el usuario tenga que poner.</div>
+        </div>
+
+        <div style="margin-top:auto;font-size:13px;color:#6f817c;line-height:1.5;text-wrap:pretty">Y si se cancela a mitad sigue valiendo lo de <a href="#5b">5b</a>: los pasos medidos se quedan, el mapa se dibuja incompleto y marcado, y <span style="color:#d6e2dd">el Level vuelve a donde estaba</span>.</div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+</body>
+</html>

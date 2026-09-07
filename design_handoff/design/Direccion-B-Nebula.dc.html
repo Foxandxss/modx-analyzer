@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  html,body{margin:0;background:#00000000}
+  @keyframes bPulse{0%,100%{opacity:.3}50%{opacity:.9}}
+  a{color:#37e0d8}a:hover{color:#7ff0ea}
+</style>
+</helmet>
+<div style="width:1280px;height:800px;box-sizing:border-box;overflow:hidden;background:#0a0714;color:#e6e0f5;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:flex;flex-direction:column;background-image:radial-gradient(66% 60% at 28% 42%,rgba(139,124,255,.17),transparent 70%),radial-gradient(50% 50% at 92% 8%,rgba(255,92,176,.12),transparent 70%)">
+
+  <div style="flex:0 0 60px;display:flex;align-items:center;gap:18px;padding:0 22px;border-bottom:2px solid rgba(255,255,255,.08)">
+    <div style="font-size:19px;white-space:nowrap">FM 2OP CHAIN</div>
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:rgba(255,92,176,.12);border:1px solid rgba(255,92,176,.35)">
+      <span style="font-size:9px;letter-spacing:.2em;color:#ff9dd2">ALG</span>
+      <span style="font-family:ui-monospace,Consolas,monospace;font-size:16px;color:#ff5cb0">06</span>
+      <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c77ba6;border-left:1px solid rgba(255,92,176,.3);padding-left:10px">FB 3</span>
+    </div>
+    <div style="flex:1"></div>
+    <div style="display:flex;align-items:center;gap:10px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8a80a8;white-space:nowrap">
+      <span style="width:7px;height:7px;border-radius:50%;background:#37e0d8;box-shadow:0 0 12px #37e0d8;animation:bPulse 1.6s ease-in-out infinite;display:block"></span>
+      MODX-1 · MAIN L/R · 44 100 Hz
+    </div>
+  </div>
+
+  <div style="flex:1;min-height:0;display:flex">
+
+    <div style="flex:0 0 720px;position:relative">
+      <svg viewBox="0 0 720 740" width="720" height="740" style="display:block;position:absolute;inset:0">
+        <defs>
+          <radialGradient id="bCar" cx="38%" cy="32%" r="72%">
+            <stop offset="0" stop-color="#ffd0ea"></stop><stop offset="42%" stop-color="#ff5cb0"></stop><stop offset="100%" stop-color="#6b1147"></stop>
+          </radialGradient>
+          <radialGradient id="bCore" cx="50%" cy="45%" r="70%">
+            <stop offset="0" stop-color="#efeaff"></stop><stop offset="45%" stop-color="#8b7cff"></stop><stop offset="100%" stop-color="#241a52"></stop>
+          </radialGradient>
+          <radialGradient id="bMod" cx="40%" cy="30%" r="80%">
+            <stop offset="0" stop-color="rgba(55,224,216,.28)"></stop><stop offset="100%" stop-color="rgba(12,28,36,.15)"></stop>
+          </radialGradient>
+        </defs>
+
+        <circle cx="350" cy="330" r="150" fill="none" stroke="rgba(255,255,255,.05)"></circle>
+        <circle cx="350" cy="330" r="260" fill="none" stroke="rgba(255,255,255,.04)"></circle>
+        <circle cx="350" cy="330" r="310" fill="none" stroke="rgba(255,255,255,.03)"></circle>
+
+        <g fill="none" stroke-linecap="round">
+          <path d="M54 308Q100 285 125 200" stroke="#37e0d8" stroke-width="2.4" style="filter:drop-shadow(0 0 6px rgba(55,224,216,.8))"></path>
+          <path d="M125 200Q180 205 220 255" stroke="#37e0d8" stroke-width="3.4" style="filter:drop-shadow(0 0 8px rgba(55,224,216,.9))"></path>
+          <path d="M220 255Q290 275 350 330" stroke="#ff5cb0" stroke-width="3.2" style="filter:drop-shadow(0 0 8px rgba(255,92,176,.8))"></path>
+          <path d="M644 308Q598 285 575 200" stroke="rgba(126,136,158,.4)" stroke-width="1.8" stroke-dasharray="3 6"></path>
+          <path d="M575 200Q520 205 480 255" stroke="rgba(126,136,158,.4)" stroke-width="1.8" stroke-dasharray="3 6"></path>
+          <path d="M480 255Q410 275 350 330" stroke="#ff5cb0" stroke-width="3.2" style="filter:drop-shadow(0 0 8px rgba(255,92,176,.8))"></path>
+          <path d="M350 630Q374 570 350 515" stroke="rgba(126,136,158,.4)" stroke-width="1.8" stroke-dasharray="3 6"></path>
+          <path d="M350 515V400" stroke="#ff5cb0" stroke-width="2.2" opacity=".7" style="filter:drop-shadow(0 0 6px rgba(255,92,176,.6))"></path>
+          <path d="M27 340C22 384 76 398 93 358" stroke="#37e0d8" stroke-width="2.2" style="filter:drop-shadow(0 0 6px rgba(55,224,216,.7))"></path>
+        </g>
+        <text x="101" y="386" fill="#37e0d8" font-family="ui-monospace,Consolas,monospace" font-size="11" letter-spacing="1.2">FB 3</text>
+
+        <circle cx="350" cy="330" r="66" fill="url(#bCore)" style="filter:drop-shadow(0 0 44px rgba(139,124,255,.85))"></circle>
+        <circle cx="350" cy="330" r="80" fill="none" stroke="rgba(139,124,255,.35)" stroke-width="1"></circle>
+        <text x="350" y="324" text-anchor="middle" fill="#160f2e" font-family="ui-monospace,Consolas,monospace" font-size="13" letter-spacing="1.6">SALIDA</text>
+        <text x="350" y="344" text-anchor="middle" fill="#2c1f57" font-family="ui-monospace,Consolas,monospace" font-size="11" letter-spacing="1.2">L / R</text>
+
+        <g>
+          <circle cx="220" cy="255" r="40" fill="url(#bCar)" style="filter:drop-shadow(0 0 26px rgba(255,92,176,.75))"></circle>
+          <circle cx="220" cy="255" r="50" fill="none" stroke="rgba(255,92,176,.16)" stroke-width="6"></circle>
+          <circle cx="220" cy="255" r="50" fill="none" stroke="#ff8ecb" stroke-width="6" stroke-dasharray="311 314" stroke-linecap="round" transform="rotate(-90 220 255)" style="filter:drop-shadow(0 0 8px rgba(255,142,203,.9))"></circle>
+          <text x="220" y="248" text-anchor="middle" fill="#2a0518" font-family="ui-monospace,Consolas,monospace" font-size="28" font-weight="700">99</text>
+          <text x="220" y="266" text-anchor="middle" fill="#57102f" font-family="ui-monospace,Consolas,monospace" font-size="11">×1.00</text>
+          <text x="220" y="280" text-anchor="middle" fill="#7a1c42" font-family="ui-monospace,Consolas,monospace" font-size="9">Sine</text>
+          <text x="212" y="327" text-anchor="middle" fill="#ff9dd2" font-family="ui-monospace,Consolas,monospace" font-size="12" letter-spacing="1.4">OP1 · PORT</text>
+        </g>
+        <g>
+          <circle cx="480" cy="255" r="40" fill="url(#bCar)" style="filter:drop-shadow(0 0 26px rgba(255,92,176,.75))"></circle>
+          <circle cx="480" cy="255" r="50" fill="none" stroke="rgba(255,92,176,.16)" stroke-width="6"></circle>
+          <circle cx="480" cy="255" r="50" fill="none" stroke="#ff8ecb" stroke-width="6" stroke-dasharray="311 314" stroke-linecap="round" transform="rotate(-90 480 255)" style="filter:drop-shadow(0 0 8px rgba(255,142,203,.9))"></circle>
+          <text x="480" y="248" text-anchor="middle" fill="#2a0518" font-family="ui-monospace,Consolas,monospace" font-size="28" font-weight="700">99</text>
+          <text x="480" y="266" text-anchor="middle" fill="#57102f" font-family="ui-monospace,Consolas,monospace" font-size="11">×2.00</text>
+          <text x="480" y="280" text-anchor="middle" fill="#7a1c42" font-family="ui-monospace,Consolas,monospace" font-size="9">Sine</text>
+          <text x="490" y="327" text-anchor="middle" fill="#ff9dd2" font-family="ui-monospace,Consolas,monospace" font-size="12" letter-spacing="1.4">OP4 · PORT</text>
+        </g>
+        <g>
+          <circle cx="350" cy="515" r="37" fill="url(#bCar)" opacity=".72" style="filter:drop-shadow(0 0 18px rgba(255,92,176,.45))"></circle>
+          <circle cx="350" cy="515" r="47" fill="none" stroke="rgba(255,92,176,.14)" stroke-width="6"></circle>
+          <circle cx="350" cy="515" r="47" fill="none" stroke="#ff8ecb" stroke-width="6" stroke-dasharray="164 295" stroke-linecap="round" transform="rotate(-90 350 515)" opacity=".85"></circle>
+          <text x="350" y="510" text-anchor="middle" fill="#2a0518" font-family="ui-monospace,Consolas,monospace" font-size="25" font-weight="700">55</text>
+          <text x="350" y="527" text-anchor="middle" fill="#57102f" font-family="ui-monospace,Consolas,monospace" font-size="11">×0.50</text>
+          <text x="350" y="581" text-anchor="middle" fill="#ff9dd2" font-family="ui-monospace,Consolas,monospace" font-size="12" letter-spacing="1.4">OP8 · PORT · All 1</text>
+        </g>
+
+        <g>
+          <circle cx="125" cy="200" r="38" fill="url(#bMod)" stroke="#37e0d8" stroke-width="1.6" style="filter:drop-shadow(0 0 22px rgba(55,224,216,.55))"></circle>
+          <circle cx="125" cy="200" r="48" fill="none" stroke="rgba(55,224,216,.14)" stroke-width="5"></circle>
+          <circle cx="125" cy="200" r="48" fill="none" stroke="#37e0d8" stroke-width="5" stroke-dasharray="272 302" stroke-linecap="round" transform="rotate(-90 125 200)" style="filter:drop-shadow(0 0 7px rgba(55,224,216,.9))"></circle>
+          <text x="125" y="194" text-anchor="middle" fill="#dffbf9" font-family="ui-monospace,Consolas,monospace" font-size="26">90</text>
+          <text x="125" y="212" text-anchor="middle" fill="#8fd8d4" font-family="ui-monospace,Consolas,monospace" font-size="11">×1.41</text>
+          <text x="125" y="226" text-anchor="middle" fill="#63c9c3" font-family="ui-monospace,Consolas,monospace" font-size="9">Odd 1</text>
+          <text x="125" y="140" text-anchor="middle" fill="#63c9c3" font-family="ui-monospace,Consolas,monospace" font-size="12" letter-spacing="1.4">OP3 · MOD</text>
+        </g>
+        <g>
+          <circle cx="54" cy="308" r="34" fill="url(#bMod)" stroke="#37e0d8" stroke-width="1.4" style="filter:drop-shadow(0 0 18px rgba(55,224,216,.4))"></circle>
+          <circle cx="54" cy="308" r="44" fill="none" stroke="rgba(55,224,216,.12)" stroke-width="5"></circle>
+          <circle cx="54" cy="308" r="44" fill="none" stroke="#37e0d8" stroke-width="5" stroke-dasharray="201 277" stroke-linecap="round" transform="rotate(-90 54 308)" opacity=".9"></circle>
+          <text x="54" y="303" text-anchor="middle" fill="#dffbf9" font-family="ui-monospace,Consolas,monospace" font-size="23">72</text>
+          <text x="54" y="320" text-anchor="middle" fill="#8fd8d4" font-family="ui-monospace,Consolas,monospace" font-size="10">×2.00</text>
+          <text x="8" y="252" fill="#63c9c3" font-family="ui-monospace,Consolas,monospace" font-size="12" letter-spacing="1.4">OP5 · MOD</text>
+          <text x="8" y="266" fill="#4f9e99" font-family="ui-monospace,Consolas,monospace" font-size="9">Res 1</text>
+        </g>
+        <g opacity=".6">
+          <circle cx="575" cy="200" r="38" fill="none" stroke="rgba(150,158,180,.5)" stroke-width="1.4" stroke-dasharray="2 5"></circle>
+          <circle cx="575" cy="200" r="48" fill="none" stroke="rgba(150,158,180,.12)" stroke-width="5"></circle>
+          <circle cx="575" cy="200" r="48" fill="none" stroke="rgba(180,188,210,.55)" stroke-width="5" stroke-dasharray="195 302" stroke-linecap="round" transform="rotate(-90 575 200)"></circle>
+          <text x="575" y="194" text-anchor="middle" fill="#c3c9da" font-family="ui-monospace,Consolas,monospace" font-size="26">64</text>
+          <text x="575" y="212" text-anchor="middle" fill="#8a90a4" font-family="ui-monospace,Consolas,monospace" font-size="11">×7.00</text>
+          <text x="575" y="140" text-anchor="middle" fill="#8a90a4" font-family="ui-monospace,Consolas,monospace" font-size="12" letter-spacing="1.4">OP6 · MOD</text>
+          <text x="575" y="154" text-anchor="middle" fill="#6d7385" font-family="ui-monospace,Consolas,monospace" font-size="9">sin ruta útil</text>
+        </g>
+        <g opacity=".45">
+          <circle cx="644" cy="308" r="34" fill="none" stroke="rgba(150,158,180,.45)" stroke-width="1.2" stroke-dasharray="2 5"></circle>
+          <text x="644" y="315" text-anchor="middle" fill="#7b8194" font-family="ui-monospace,Consolas,monospace" font-size="23">0</text>
+          <text x="714" y="252" text-anchor="end" fill="#6d7385" font-family="ui-monospace,Consolas,monospace" font-size="12" letter-spacing="1.4">OP2 · INACTIVO</text>
+        </g>
+        <g opacity=".45">
+          <circle cx="350" cy="630" r="34" fill="none" stroke="rgba(150,158,180,.45)" stroke-width="1.2" stroke-dasharray="2 5"></circle>
+          <text x="350" y="637" text-anchor="middle" fill="#7b8194" font-family="ui-monospace,Consolas,monospace" font-size="23">0</text>
+          <text x="350" y="686" text-anchor="middle" fill="#6d7385" font-family="ui-monospace,Consolas,monospace" font-size="12" letter-spacing="1.4">OP7 · INACTIVO</text>
+        </g>
+
+        <text x="22" y="40" fill="#8a80a8" font-family="ui-monospace,Consolas,monospace" font-size="11" letter-spacing="2.2">DIAGRAMA DE OPERADORES · SONDEADO 12 Hz</text>
+        <text x="22" y="60" fill="#5d5578" font-family="'Helvetica Neue',Helvetica,Arial,sans-serif" font-size="12">cuanto más fuera, más profundo en la cadena · el anillo es el Level · toca un operador para editarlo</text>
+      </svg>
+
+      <div style="position:absolute;left:22px;bottom:20px;display:flex;flex-direction:column;gap:12px;width:250px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;line-height:1.85;color:#8a80a8;letter-spacing:.06em">
+          <div style="color:#37e0d8">MIRAR · 30 fps · FFT 4096</div>
+          <div>MEDIR · nota sostenida · 65536</div>
+          <div style="color:#5d5578">última medida hace 14 s · C4</div>
+        </div>
+        <button style="all:unset;cursor:pointer;width:124px;height:124px;border-radius:50%;border:2px solid rgba(255,92,176,.55);background:radial-gradient(circle at 50% 38%,rgba(255,92,176,.35),rgba(28,10,26,.9) 70%);box-shadow:0 0 50px -10px rgba(255,92,176,.85),inset 0 0 24px rgba(255,92,176,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px">
+          <span style="width:18px;height:18px;border-radius:50%;background:#ff5cb0;box-shadow:0 0 18px #ff5cb0;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;letter-spacing:.22em;color:#ffc4e4">MEDIR</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#c77ba6">65536</span>
+        </button>
+      </div>
+    </div>
+
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;padding:14px 18px 16px;border-left:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.012)">
+
+      <div style="flex:1;min-height:0;border-radius:22px;border:1px solid rgba(255,255,255,.09);background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.015));padding:11px 14px;display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <span style="font-size:11px;letter-spacing:.2em;color:#a49cc2">FORMA DE ONDA</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6e6690">261.763 Hz · TRIGGER ↑0</span>
+        </div>
+        <svg viewBox="0 0 400 120" preserveAspectRatio="none" width="100%" height="100%" style="display:block;flex:1;min-height:0">
+          <path d="M0 60H400" stroke="rgba(139,124,255,.18)" vector-effect="non-scaling-stroke"></path>
+          <polyline points="0,60 4,21 8,8 13,24 17,50 21,71 25,82 29,84 33,77 38,61 42,38 46,17 50,8 54,17 58,38 63,61 67,77 71,84 75,82 79,71 83,50 88,24 92,8 96,21 100,60 104,99 108,112 113,96 117,70 121,49 125,38 129,36 133,43 138,59 142,82 146,103 150,112 154,103 158,82 163,59 167,43 171,36 175,38 179,49 183,70 188,96 192,112 196,99 200,60 204,21 208,8 213,24 217,50 221,71 225,82 229,84 233,77 238,61 242,38 246,17 250,8 254,17 258,38 263,61 267,77 271,84 275,82 279,71 283,50 288,24 292,8 296,21 300,60 304,99 308,112 313,96 317,70 321,49 325,38 329,36 333,43 338,59 342,82 346,103 350,112 354,103 358,82 363,59 367,43 371,36 375,38 379,49 383,70 388,96 392,112 396,99 400,60" fill="none" stroke="#b7a8ff" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round" style="filter:drop-shadow(0 0 8px rgba(139,124,255,.9))"></polyline>
+        </svg>
+      </div>
+
+      <div style="flex:1;min-height:0;border-radius:22px;border:1px solid rgba(255,255,255,.09);background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.015));padding:11px 14px;display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <span style="font-size:11px;letter-spacing:.2em;color:#a49cc2">ESPECTRO</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6e6690">I = 2.81 · suelo −104 dB</span>
+        </div>
+        <div style="position:relative;flex:1;min-height:0">
+          <svg viewBox="0 0 400 120" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+            <path d="M0 118H400" stroke="rgba(255,255,255,.12)" vector-effect="non-scaling-stroke"></path>
+            <path d="M0 118V97M80 118V80M102 118V72M155 118V64M191 118V87M218 118V106M241 118V114M254 118V70M259 118V117M320 118V96M362 118V112" stroke="#37e0d8" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round" style="filter:drop-shadow(0 0 9px rgba(55,224,216,.85))"></path>
+            <path d="M254 70V54" stroke="#ff5cb0" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round" style="filter:drop-shadow(0 0 10px rgba(255,92,176,.9))"></path>
+            <path d="M320 118V96M362 118V112" stroke="#ffb27a" stroke-width="4" vector-effect="non-scaling-stroke" stroke-dasharray="4 4"></path>
+          </svg>
+          <div style="position:absolute;right:4px;top:0;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#ffb27a;white-space:nowrap">— artefacto 2756 Hz</div>
+          <div style="position:absolute;left:2px;top:0;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#ff9dd2;white-space:nowrap">9.º armónico · pico</div>
+        </div>
+      </div>
+
+      <div style="flex:1.35;min-height:0;border-radius:22px;border:1px solid rgba(255,255,255,.09);background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.01));padding:11px 14px;display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <span style="font-size:11px;letter-spacing:.2em;color:#a49cc2">WATERFALL</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6e6690">0 → 460 ms ↓</span>
+        </div>
+        <svg viewBox="0 0 400 210" preserveAspectRatio="none" width="100%" height="100%" style="display:block;flex:1;min-height:0">
+          <g transform="translate(0,26) scale(1,1.5)"><polyline points="0,-10.3 7,-3.9 14,-0.2 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-2.9 79,-11.6 86,-6.6 93,-4.6 100,-16.5 107,-9.4 114,-0.7 121,0 129,0 136,0 143,-1.5 150,-14.6 157,-19.8 164,-3.8 171,-0.1 179,-0.7 186,-7.9 193,-12.5 200,-2.8 207,-0.5 214,-3.9 221,-4.6 229,-0.9 236,-1.1 243,-3.6 250,-15 257,-15 264,-2.3 271,-0.1 279,-0.1 286,0 293,0 300,0 307,-0.4 314,-5 321,-9 329,-2.3 336,-0.1 343,0 350,-0.2 357,-1.9 364,-2.6 371,-0.5 379,0 386,0 393,0 400,0" fill="none" stroke="#f2ecff" stroke-width="1.5" vector-effect="non-scaling-stroke" style="filter:drop-shadow(0 0 6px rgba(183,168,255,.9))"></polyline></g>
+          <g transform="translate(0,39) scale(1,1.5)"><polyline points="0,-1.8 7,-0.7 14,0 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-3.7 79,-14.7 86,-8.3 93,-5.6 100,-20.2 107,-11.5 114,-0.9 121,0 129,0 136,0 143,-1.3 150,-12.3 157,-16.7 164,-3.2 171,-0.1 179,-0.5 186,-5.3 193,-8.4 200,-1.9 207,-0.3 214,-2.2 221,-2.6 229,-0.5 236,-0.5 243,-2.5 250,-13 257,-13.1 264,-1.9 271,-0.1 279,0 286,0 293,0 300,0 307,-0.3 314,-3.6 321,-6.5 329,-1.6 336,-0.1 343,0 350,-0.1 357,-1.2 364,-1.6 371,-0.3 379,0 386,0 393,0 400,0" fill="none" stroke="#d9cfff" stroke-width="1.4" vector-effect="non-scaling-stroke" style="filter:drop-shadow(0 0 5px rgba(160,140,255,.7))"></polyline></g>
+          <g transform="translate(0,52) scale(1,1.5)"><polyline points="0,-5.8 7,-2.2 14,-0.1 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-4.2 79,-16.5 86,-9.3 93,-5.9 100,-21 107,-11.9 114,-0.9 121,0 129,0 136,0 143,-1 150,-9.7 157,-13.2 164,-2.5 171,-0.1 179,-0.3 186,-3.5 193,-5.5 200,-1.2 207,-0.2 214,-1.2 221,-1.4 229,-0.3 236,-0.3 243,-1.9 250,-11 257,-11.1 264,-1.6 271,0 279,0 286,0 293,0 300,0 307,-0.2 314,-2.6 321,-4.7 329,-1.2 336,0 343,0 350,-0.1 357,-0.7 364,-1 371,-0.2 379,0 386,0 393,0 400,0" fill="none" stroke="#c2b4ff" stroke-width="1.3" vector-effect="non-scaling-stroke"></polyline></g>
+          <g transform="translate(0,65) scale(1,1.5)"><polyline points="0,-11.6 7,-4.3 14,-0.2 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.2 71,-4.4 79,-17.3 86,-9.8 93,-5.6 100,-19.9 107,-11.3 114,-0.9 121,0 129,0 136,0 143,-0.8 150,-7.3 157,-9.9 164,-1.9 171,-0.1 179,-0.2 186,-2.2 193,-3.4 200,-0.8 207,-0.1 214,-0.6 221,-0.7 229,-0.1 236,-0.1 243,-1.4 250,-9.2 257,-9.2 264,-1.3 271,0 279,0 286,0 293,0 300,0 307,-0.1 314,-1.8 321,-3.3 329,-0.8 336,0 343,0 350,0 357,-0.4 364,-0.6 371,-0.1 379,0 386,0 393,0 400,0" fill="none" stroke="#ab9bfa" stroke-width="1.3" vector-effect="non-scaling-stroke"></polyline></g>
+          <g transform="translate(0,78) scale(1,1.5)"><polyline points="0,-15.5 7,-5.8 14,-0.3 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.2 71,-4.4 79,-17.5 86,-9.8 93,-5.1 100,-17.8 107,-10.1 114,-0.8 121,0 129,0 136,0 143,-0.5 150,-5.3 157,-7.3 164,-1.4 171,0 179,-0.1 186,-1.3 193,-2.1 200,-0.5 207,-0.1 214,-0.3 221,-0.4 229,-0.1 236,-0.1 243,-1.1 250,-7.5 257,-7.6 264,-1.1 271,0 279,0 286,0 293,0 300,0 307,-0.1 314,-1.3 321,-2.3 329,-0.6 336,0 343,0 350,0 357,-0.2 364,-0.3 371,-0.1 379,0 386,0 393,0 400,0" fill="none" stroke="#9a89f0" stroke-width="1.2" vector-effect="non-scaling-stroke"></polyline></g>
+          <g transform="translate(0,91) scale(1,1.5)"><polyline points="0,-18 7,-6.7 14,-0.4 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.2 71,-4.3 79,-17.1 86,-9.6 93,-4.5 100,-15.3 107,-8.7 114,-0.7 121,0 129,0 136,0 143,-0.4 150,-3.8 157,-5.2 164,-1 171,0 179,-0.1 186,-0.8 193,-1.3 200,-0.3 207,0 214,-0.2 221,-0.2 229,0 236,0 243,-0.9 250,-6.1 257,-6.1 264,-0.9 271,0 279,0 286,0 293,0 300,0 307,-0.1 314,-0.9 321,-1.6 329,-0.4 336,0 343,0 350,0 357,-0.1 364,-0.2 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#8b7ce6" stroke-width="1.2" vector-effect="non-scaling-stroke"></polyline></g>
+          <g transform="translate(0,104) scale(1,1.5)"><polyline points="0,-19.2 7,-7.2 14,-0.4 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-4.2 79,-16.5 86,-9.2 93,-3.9 100,-12.9 107,-7.3 114,-0.6 121,0 129,0 136,0 143,-0.3 150,-2.7 157,-3.7 164,-0.7 171,0 179,0 186,-0.5 193,-0.8 200,-0.2 207,0 214,-0.1 221,-0.1 229,0 236,0 243,-0.7 250,-4.9 257,-4.9 264,-0.7 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.6 321,-1.1 329,-0.3 336,0 343,0 350,0 357,-0.1 364,-0.1 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#7c6ddb" stroke-width="1.1" vector-effect="non-scaling-stroke"></polyline></g>
+          <g transform="translate(0,117) scale(1,1.5)"><polyline points="0,-19.6 7,-7.3 14,-0.4 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-3.9 79,-15.7 86,-8.8 93,-3.3 100,-10.6 107,-6 114,-0.5 121,0 129,0 136,0 143,-0.2 150,-1.9 157,-2.5 164,-0.5 171,0 179,0 186,-0.3 193,-0.4 200,-0.1 207,0 214,0 221,-0.1 229,0 236,0 243,-0.6 250,-3.9 257,-4 264,-0.6 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.4 321,-0.7 329,-0.2 336,0 343,0 350,0 357,0 364,-0.1 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#6d5fce" stroke-width="1.1" vector-effect="non-scaling-stroke"></polyline></g>
+          <g transform="translate(0,130) scale(1,1.5)"><polyline points="0,-19.4 7,-7.2 14,-0.4 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-3.7 79,-14.7 86,-8.2 93,-2.8 100,-8.6 107,-4.9 114,-0.4 121,0 129,0 136,0 143,-0.1 150,-1.3 157,-1.8 164,-0.3 171,0 179,0 186,-0.2 193,-0.3 200,-0.1 207,0 214,0 221,0 229,0 236,0 243,-0.4 250,-3.1 257,-3.2 264,-0.4 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.3 321,-0.5 329,-0.1 336,0 343,0 350,0 357,0 364,0 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#6055bd" stroke-width="1.1" vector-effect="non-scaling-stroke"></polyline></g>
+          <g transform="translate(0,143) scale(1,1.5)"><polyline points="0,-18.7 7,-7 14,-0.4 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-3.5 79,-13.8 86,-7.7 93,-2.3 100,-7 107,-4 114,-0.3 121,0 129,0 136,0 143,-0.1 150,-0.9 157,-1.2 164,-0.2 171,0 179,0 186,-0.1 193,-0.2 200,0 207,0 214,0 221,0 229,0 236,0 243,-0.3 250,-2.5 257,-2.5 264,-0.4 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.2 321,-0.3 329,-0.1 336,0 343,0 350,0 357,0 364,0 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#544aa8" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+          <g transform="translate(0,156) scale(1,1.5)"><polyline points="0,-17.9 7,-6.7 14,-0.3 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-3.2 79,-12.8 86,-7.2 93,-1.9 100,-5.6 107,-3.2 114,-0.3 121,0 129,0 136,0 143,-0.1 150,-0.6 157,-0.8 164,-0.2 171,0 179,0 186,-0.1 193,-0.1 200,0 207,0 214,0 221,0 229,0 236,0 243,-0.3 250,-2 257,-2 264,-0.3 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.1 321,-0.2 329,-0.1 336,0 343,0 350,0 357,0 364,0 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#493f93" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+          <g transform="translate(0,169) scale(1,1.5)"><polyline points="0,-16.9 7,-6.3 14,-0.3 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-3 79,-11.9 86,-6.6 93,-1.6 100,-4.5 107,-2.5 114,-0.2 121,0 129,0 136,0 143,0 150,-0.4 157,-0.6 164,-0.1 171,0 179,0 186,0 193,-0.1 200,0 207,0 214,0 221,0 229,0 236,0 243,-0.2 250,-1.6 257,-1.6 264,-0.2 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.1 321,-0.2 329,0 336,0 343,0 350,0 357,0 364,0 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#3e357e" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+          <g transform="translate(0,182) scale(1,1.5)"><polyline points="0,-15.8 7,-5.9 14,-0.3 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-2.8 79,-11 86,-6.1 93,-1.3 100,-3.6 107,-2 114,-0.2 121,0 129,0 136,0 143,0 150,-0.3 157,-0.4 164,-0.1 171,0 179,0 186,0 193,0 200,0 207,0 214,0 221,0 229,0 236,0 243,-0.2 250,-1.2 257,-1.2 264,-0.2 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.1 321,-0.1 329,0 336,0 343,0 350,0 357,0 364,0 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#342c6b" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+          <g transform="translate(0,195) scale(1,1.5)"><polyline points="0,-14.7 7,-5.5 14,-0.3 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-2.6 79,-10.2 86,-5.7 93,-1.1 100,-2.8 107,-1.6 114,-0.1 121,0 129,0 136,0 143,0 150,-0.2 157,-0.3 164,0 171,0 179,0 186,0 193,0 200,0 207,0 214,0 221,0 229,0 236,0 243,-0.1 250,-1 257,-1 264,-0.1 271,0 279,0 286,0 293,0 300,0 307,0 314,0 321,-0.1 329,0 336,0 343,0 350,0 357,0 364,0 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#2b2459" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+        </svg>
+      </div>
+
+      <div style="flex:0 0 auto;display:flex;gap:10px">
+        <div style="flex:1;border-radius:16px;border:1px solid rgba(55,224,216,.25);background:rgba(55,224,216,.06);padding:9px 12px">
+          <div style="font-size:9px;letter-spacing:.16em;color:#63c9c3">RATIO MEDIDO</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:23px;color:#7ff0ea;line-height:1.2">1.4103</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5f8d8a">pantalla 1.41 · Δ0.4¢</div>
+        </div>
+        <div style="flex:1;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);padding:9px 12px">
+          <div style="font-size:9px;letter-spacing:.16em;color:#8a80a8">fc · fm</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:14px;color:#e6e0f5;line-height:1.45">261.763<br>369.175</div>
+        </div>
+        <div style="flex:1;border-radius:16px;border:1px solid rgba(255,92,176,.25);background:rgba(255,92,176,.06);padding:9px 12px">
+          <div style="font-size:9px;letter-spacing:.16em;color:#c77ba6">11 PARCIALES</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:23px;color:#ff9dd2;line-height:1.2">±0.005</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#96637f">Hz · inarmónico</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800}}"></script>
+</body>
+</html>

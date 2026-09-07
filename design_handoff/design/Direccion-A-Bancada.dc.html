@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  html,body{margin:0;background:#04060700;}
+  @keyframes livePulse{0%,100%{opacity:.35}50%{opacity:1}}
+  a{color:#7df0b0}a:hover{color:#a9f7cd}
+</style>
+</helmet>
+<div style="width:1280px;height:800px;box-sizing:border-box;background:#06080a;color:#d6e2dd;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;display:flex;flex-direction:column;overflow:hidden;background-image:radial-gradient(120% 90% at 12% 0%,rgba(125,240,176,.045),transparent 60%)">
+
+  <div style="height:58px;flex:0 0 auto;display:flex;align-items:center;gap:18px;padding:0 16px;border-bottom:2px solid rgba(255,255,255,.09);background:linear-gradient(#0b0f11,#080b0d)">
+    <div style="display:flex;align-items:center;gap:9px">
+      <div style="width:9px;height:9px;border-radius:50%;background:#7df0b0;box-shadow:0 0 10px #7df0b0"></div>
+      <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;color:#8fa39d;white-space:nowrap">MODX-1 · 44 100 Hz · MAIN L/R</div>
+    </div>
+    <div style="width:1px;height:30px;background:rgba(255,255,255,.08)"></div>
+    <div style="display:flex;align-items:baseline;gap:16px">
+      <div style="font-size:17px;letter-spacing:.02em;white-space:nowrap">FM 2OP CHAIN</div>
+      <div style="display:flex;align-items:center;gap:7px;padding:4px 11px;border:1px solid rgba(243,177,63,.4);border-radius:999px;background:rgba(243,177,63,.07)">
+        <span style="font-size:9px;letter-spacing:.18em;color:#c69445">ALGORITMO</span>
+        <span style="font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#f3b13f">06</span>
+      </div>
+      <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c;letter-spacing:.1em;white-space:nowrap">FB 3 · OP5</div>
+    </div>
+    <div style="flex:1"></div>
+    <div style="display:flex;align-items:center;gap:9px;padding:12px 16px;border-radius:999px;border:1px solid rgba(125,240,176,.28);background:rgba(125,240,176,.06)">
+      <div style="width:7px;height:7px;border-radius:50%;background:#7df0b0;animation:livePulse 1.4s ease-in-out infinite"></div>
+      <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;color:#7df0b0;white-space:nowrap">MIRAR · 30 fps</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:0">
+      <button style="all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;padding:13px 22px 13px 16px;border-radius:999px 8px 8px 999px;border:1.5px solid #f3b13f;background:linear-gradient(180deg,rgba(243,177,63,.22),rgba(243,177,63,.06));box-shadow:0 0 28px -8px rgba(243,177,63,.7),inset 0 1px 0 rgba(255,255,255,.12)">
+        <span style="width:26px;height:26px;border-radius:50%;border:2px solid #f3b13f;background:radial-gradient(circle,#f3b13f 34%,transparent 36%);box-shadow:0 0 14px -2px rgba(243,177,63,.8)"></span>
+        <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;letter-spacing:.2em;color:#ffd08a">MEDIR</span>
+        <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#c69445;border-left:1px solid rgba(243,177,63,.35);padding-left:11px;line-height:1.25">65536<br>NOTA SOST.</span>
+      </button>
+    </div>
+  </div>
+
+  <sc-if value="{{ aviso }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:10px 22px;background:rgba(255,122,92,.1);border-bottom:1px solid rgba(255,122,92,.35)">
+      <span style="width:20px;height:20px;border-radius:6px;border:1.5px solid #ff7a5c;display:block;box-shadow:0 0 14px -3px rgba(255,122,92,.8)"></span>
+      <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.1em;color:#ffb9a6">{{ avisoTexto }}</span>
+    </div>
+  </sc-if>
+
+  <div style="flex:1;min-height:0;display:grid;grid-template-columns:556px 1fr 214px;gap:2px;background:rgba(255,255,255,.07)">
+
+    <div style="background:#080b0d;padding:12px 16px 0;display:flex;flex-direction:column;min-height:0">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">DIAGRAMA DE OPERADORES</div>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;letter-spacing:.08em">SONDEADO · SysEx 49 op 1A · 12 Hz</div>
+      </div>
+
+      <div style="position:relative;flex:1;min-height:0;transform:scale(0.935);transform-origin:0 0">
+        <svg viewBox="0 0 552 452" width="552" height="452" style="position:absolute;inset:0;overflow:visible">
+          <defs>
+            <marker id="aArrow" markerWidth="7" markerHeight="7" refX="4" refY="3" orient="auto"><path d="M0 0L6 3L0 6z" fill="#58c8f5"></path></marker>
+            <marker id="aArrowDim" markerWidth="7" markerHeight="7" refX="4" refY="3" orient="auto"><path d="M0 0L6 3L0 6z" fill="#3d4a48"></path></marker>
+            <marker id="aArrowOut" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto"><path d="M0 0L7 4L0 8z" fill="#7df0b0"></path></marker>
+          </defs>
+          <path d="M100 112C100 132 100 130 100 148" stroke="#58c8f5" stroke-width="2" fill="none" marker-end="url(#aArrow)"></path>
+          <path d="M100 242C100 262 100 260 100 278" stroke="#58c8f5" stroke-width="2.6" fill="none" marker-end="url(#aArrow)"></path>
+          <path d="M270 112C270 132 270 130 270 148" stroke="#3d4a48" stroke-width="1.5" fill="none" stroke-dasharray="4 5" marker-end="url(#aArrowDim)"></path>
+          <path d="M270 242C270 262 270 260 270 278" stroke="#3d4a48" stroke-width="1.5" fill="none" stroke-dasharray="4 5" marker-end="url(#aArrowDim)"></path>
+          <path d="M440 242C440 262 440 260 440 278" stroke="#3d4a48" stroke-width="1.5" fill="none" stroke-dasharray="4 5" marker-end="url(#aArrowDim)"></path>
+          <path d="M150 78C186 78 186 32 154 32" stroke="#58c8f5" stroke-width="2" fill="none" marker-end="url(#aArrow)"></path>
+          <text x="196" y="60" fill="#58c8f5" font-family="ui-monospace,Consolas,monospace" font-size="10" letter-spacing="1">FB 3</text>
+          <path d="M100 370V398" stroke="#7df0b0" stroke-width="2" fill="none"></path>
+          <path d="M270 370V398" stroke="#7df0b0" stroke-width="2" fill="none"></path>
+          <path d="M440 370V398" stroke="#7df0b0" stroke-width="1.4" fill="none" opacity=".55"></path>
+          <path d="M100 398H492" stroke="#7df0b0" stroke-width="2" fill="none" marker-end="url(#aArrowOut)"></path>
+          <text x="404" y="420" fill="#7df0b0" font-family="ui-monospace,Consolas,monospace" font-size="10" letter-spacing="1.4">OUT L/R</text>
+        </svg>
+
+        <div style="position:absolute;left:50px;top:20px;width:100px;height:92px;border:1.5px solid #58c8f5;border-radius:5px;background:#0a1013;overflow:hidden;box-shadow:0 0 22px -8px rgba(88,200,245,.6)">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:72%;background:linear-gradient(to top,rgba(88,200,245,.34),rgba(88,200,245,.03))"></div>
+          <div style="position:relative;height:100%;box-sizing:border-box;padding:7px 9px;display:flex;flex-direction:column;justify-content:space-between">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#bfe9fb">OP5</span>
+              <span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+            </div>
+            <div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#eaf7fd">72</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7fa7b6;letter-spacing:.06em">×2.00 · Res 1</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute;left:50px;top:148px;width:100px;height:92px;border:1.5px solid #58c8f5;border-radius:5px;background:#0a1013;overflow:hidden;box-shadow:0 0 26px -7px rgba(88,200,245,.75)">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:90%;background:linear-gradient(to top,rgba(88,200,245,.46),rgba(88,200,245,.05))"></div>
+          <div style="position:relative;height:100%;box-sizing:border-box;padding:7px 9px;display:flex;flex-direction:column;justify-content:space-between">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#bfe9fb">OP3</span>
+              <span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+            </div>
+            <div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#eaf7fd">90</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7fa7b6;letter-spacing:.06em">×1.41 · Odd 1</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute;left:50px;top:278px;width:100px;height:92px;border:2px solid #f3b13f;border-radius:26px;background:#0d1214;overflow:hidden;box-shadow:0 0 30px -8px rgba(243,177,63,.7),inset 0 0 0 1px rgba(243,177,63,.16)">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:99%;background:linear-gradient(to top,rgba(243,177,63,.5),rgba(243,177,63,.04))"></div>
+          <div style="position:relative;height:100%;box-sizing:border-box;padding:8px 11px;display:flex;flex-direction:column;justify-content:space-between">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#ffe0b0">OP1</span>
+              <span style="font-size:8px;letter-spacing:.14em;color:#f3b13f">PORT</span>
+            </div>
+            <div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#fff3e0">99</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445;letter-spacing:.06em">×1.00 · Sine</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute;left:220px;top:20px;width:100px;height:92px;border:1.5px solid #58c8f5;border-radius:5px;background:#0a1013;overflow:hidden;box-shadow:0 0 20px -9px rgba(88,200,245,.5)">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:64%;background:linear-gradient(to top,rgba(88,200,245,.3),rgba(88,200,245,.03))"></div>
+          <div style="position:relative;height:100%;box-sizing:border-box;padding:7px 9px;display:flex;flex-direction:column;justify-content:space-between">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#bfe9fb">OP6</span>
+              <span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+            </div>
+            <div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#eaf7fd">64</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7fa7b6;letter-spacing:.06em">×7.00 · Sine</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute;left:220px;top:148px;width:100px;height:92px;border:1.5px dashed #3d4a48;border-radius:5px;background:#070a0b;overflow:hidden">
+          <div style="position:relative;height:100%;box-sizing:border-box;padding:7px 9px;display:flex;flex-direction:column;justify-content:space-between">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#5d6d69">OP2</span>
+              <span style="font-size:8px;letter-spacing:.14em;color:#4b5a57">INACTIVO</span>
+            </div>
+            <div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#3f4d4a">0</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#3f4d4a;letter-spacing:.06em">×3.00 · corta</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute;left:220px;top:278px;width:100px;height:92px;border:2px solid #f3b13f;border-radius:26px;background:#0d1214;overflow:hidden;box-shadow:0 0 30px -8px rgba(243,177,63,.7),inset 0 0 0 1px rgba(243,177,63,.16)">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:99%;background:linear-gradient(to top,rgba(243,177,63,.5),rgba(243,177,63,.04))"></div>
+          <div style="position:relative;height:100%;box-sizing:border-box;padding:8px 11px;display:flex;flex-direction:column;justify-content:space-between">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#ffe0b0">OP4</span>
+              <span style="font-size:8px;letter-spacing:.14em;color:#f3b13f">PORT</span>
+            </div>
+            <div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#fff3e0">99</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445;letter-spacing:.06em">×2.00 · Sine</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute;left:390px;top:148px;width:100px;height:92px;border:1.5px dashed #3d4a48;border-radius:5px;background:#070a0b;overflow:hidden">
+          <div style="position:relative;height:100%;box-sizing:border-box;padding:7px 9px;display:flex;flex-direction:column;justify-content:space-between">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#5d6d69">OP7</span>
+              <span style="font-size:8px;letter-spacing:.14em;color:#4b5a57">INACTIVO</span>
+            </div>
+            <div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#3f4d4a">0</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#3f4d4a;letter-spacing:.06em">×1.00 · corta</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute;left:390px;top:278px;width:100px;height:92px;border:2px solid rgba(243,177,63,.6);border-radius:26px;background:#0d1214;overflow:hidden;box-shadow:0 0 22px -10px rgba(243,177,63,.5)">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(to top,rgba(243,177,63,.32),rgba(243,177,63,.03))"></div>
+          <div style="position:relative;height:100%;box-sizing:border-box;padding:8px 11px;display:flex;flex-direction:column;justify-content:space-between">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#ffe0b0">OP8</span>
+              <span style="font-size:8px;letter-spacing:.14em;color:#c69445">PORT</span>
+            </div>
+            <div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#f7e3c4">55</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445;letter-spacing:.06em;white-space:nowrap">×0.50 · All1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:0 0 auto;display:flex;gap:18px;align-items:center;padding:8px 0 10px;border-top:2px solid rgba(255,255,255,.08)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="width:22px;height:14px;border:2px solid #f3b13f;border-radius:8px;display:block"></span>
+          <span style="font-size:10px;letter-spacing:.12em;color:#8fa39d">PORTADORA · curva</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="width:22px;height:14px;border:1.5px solid #58c8f5;border-radius:3px;display:block"></span>
+          <span style="font-size:10px;letter-spacing:.12em;color:#8fa39d">MODULADOR · esquina viva</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="width:22px;height:14px;border:1.5px dashed #3d4a48;border-radius:3px;display:block"></span>
+          <span style="font-size:10px;letter-spacing:.12em;color:#8fa39d">LEVEL 0</span>
+        </div>
+        <div style="font-size:10px;letter-spacing:.1em;color:#5d6d69;margin-left:auto;text-align:right">toca un operador<br>para editarlo</div>
+      </div>
+    </div>
+
+    <div style="background:#080b0d;display:flex;flex-direction:column;min-height:0">
+      <div style="flex:1;min-height:0;padding:12px 14px;display:flex;flex-direction:column;border-bottom:2px solid rgba(255,255,255,.09)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+          <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">SCOPE</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;letter-spacing:.08em">TRIGGER ↑0 · 2 CICLOS · 261.763 Hz</div>
+        </div>
+        <div style="flex:1;min-height:0;position:relative;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:linear-gradient(#0a0f10,#070a0b);overflow:hidden">
+          <svg viewBox="0 0 400 120" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+            <path d="M0 60H400" stroke="rgba(125,240,176,.14)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+            <path d="M100 0V120M200 0V120M300 0V120" stroke="rgba(255,255,255,.05)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+            <polyline points="0,60 4,21 8,8 13,24 17,50 21,71 25,82 29,84 33,77 38,61 42,38 46,17 50,8 54,17 58,38 63,61 67,77 71,84 75,82 79,71 83,50 88,24 92,8 96,21 100,60 104,99 108,112 113,96 117,70 121,49 125,38 129,36 133,43 138,59 142,82 146,103 150,112 154,103 158,82 163,59 167,43 171,36 175,38 179,49 183,70 188,96 192,112 196,99 200,60 204,21 208,8 213,24 217,50 221,71 225,82 229,84 233,77 238,61 242,38 246,17 250,8 254,17 258,38 263,61 267,77 271,84 275,82 279,71 283,50 288,24 292,8 296,21 300,60 304,99 308,112 313,96 317,70 321,49 325,38 329,36 333,43 338,59 342,82 346,103 350,112 354,103 358,82 363,59 367,43 371,36 375,38 379,49 383,70 388,96 392,112 396,99 400,60" fill="none" stroke="#7df0b0" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" style="filter:drop-shadow(0 0 5px rgba(125,240,176,.55))"></polyline>
+          </svg>
+        </div>
+      </div>
+
+      <div style="flex:1;min-height:0;padding:12px 14px;display:flex;flex-direction:column">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+          <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">ESPECTRO</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;letter-spacing:.08em">LOG 1×–32× · SUELO −104 dB</div>
+        </div>
+        <div style="flex:1;min-height:0;position:relative;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:linear-gradient(#0a0f10,#070a0b);overflow:hidden">
+          <svg viewBox="0 0 400 120" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+            <path d="M0 118H400" stroke="rgba(255,255,255,.1)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+            <path d="M80 0V118M155 0V118M254 0V118" stroke="rgba(255,255,255,.04)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+            <path d="M0 118V97M80 118V80M102 118V72M155 118V64M191 118V87M218 118V106M241 118V114M254 118V70M259 118V117M275 118V118M320 118V96M362 118V112" stroke="#7df0b0" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linecap="round" style="filter:drop-shadow(0 0 6px rgba(125,240,176,.5))"></path>
+            <path d="M254 70V56" stroke="#f3b13f" stroke-width="3" vector-effect="non-scaling-stroke"></path>
+            <sc-if value="{{ verArtefactos }}" hint-placeholder-val="{{ true }}">
+              <g>
+                <path d="M320 118V96M362 118V112" stroke="#ff7a5c" stroke-width="3" vector-effect="non-scaling-stroke" stroke-dasharray="3 3"></path>
+                <path d="M320 90V84M362 106V100" stroke="#ff7a5c" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+              </g>
+            </sc-if>
+          </svg>
+          <div style="position:absolute;left:10px;top:6px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#f3b13f;letter-spacing:.06em;white-space:nowrap">9.º ARMÓNICO · PICO</div>
+          <sc-if value="{{ verArtefactos }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute;right:8px;top:8px;display:flex;align-items:center;gap:7px;padding:3px 9px;border:1px solid rgba(255,122,92,.4);border-radius:999px;background:rgba(255,122,92,.1)">
+              <span style="width:6px;height:6px;background:#ff7a5c;display:block"></span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#ffb9a6;letter-spacing:.1em;white-space:nowrap">ARTEFACTO 2756 Hz</span>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#080b0d;padding:12px 13px;display:flex;flex-direction:column;gap:10px;min-height:0">
+      <div>
+        <div style="font-size:11px;letter-spacing:.2em;color:#8fa39d;margin-bottom:8px">ARMÓNICOS</div>
+        <div style="border:1px solid rgba(255,255,255,.07);border-radius:12px;background:#0a0f10;padding:8px 6px">
+          <svg viewBox="0 0 200 100" preserveAspectRatio="none" width="100%" height="96" style="display:block">
+            <path d="M0 96H200" stroke="rgba(255,255,255,.1)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+            <path d="M6.0 96V79M18.4 96V58M30.8 96V52M43.2 96V71M55.6 96V86M68.0 96V93M80.4 96V95M92.8 96V96M105.2 96V96M117.6 96V96M130.0 96V96M142.4 96V96M154.8 96V96M167.2 96V96M179.6 96V96M192.0 96V96" stroke="#7df0b0" stroke-width="7" vector-effect="non-scaling-stroke" stroke-linecap="butt" opacity=".9"></path>
+          </svg>
+          <div style="display:flex;justify-content:space-between;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b;padding:4px 4px 0">
+            <span>n1</span><span>n4</span><span>n8</span><span>n12</span><span>n16</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:1px;border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;background:rgba(255,255,255,.05)">
+        <div style="background:#0a0f10;padding:11px 12px">
+          <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">RATIO MEDIDO</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:29px;color:#7df0b0;line-height:1.1">1.4103</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">pantalla 1.41 · Δ 0.4 ¢</div>
+        </div>
+        <div style="background:#0a0f10;padding:11px 12px">
+          <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">fc / fm</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#d6e2dd">261.763 Hz</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#d6e2dd">369.175 Hz</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">±0.005 · 11 parciales</div>
+        </div>
+        <div style="background:#0a0f10;padding:11px 12px">
+          <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">ÍNDICE I (Bessel)</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:20px;color:#f3b13f">2.81</div>
+        </div>
+        <div style="background:#0a0f10;padding:11px 12px;flex:1;display:flex;flex-direction:column;justify-content:flex-end">
+          <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69;margin-bottom:6px">ÚLTIMA MEDIDA</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#8fa39d">65536 · hace 14 s</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69">C4 sostenida · pico −18 dBFS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex:0 0 194px;background:#080b0d;border-top:2px solid rgba(255,255,255,.09);padding:10px 18px 12px;display:flex;flex-direction:column;min-height:0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+      <div style="display:flex;align-items:baseline;gap:14px">
+        <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">WATERFALL</div>
+        <div style="font-size:11px;color:#6f817c">el ataque brillante apagándose · 14 tramas · 0 → 460 ms</div>
+      </div>
+      <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;letter-spacing:.08em">TIEMPO ↓ · FRECUENCIA →</div>
+    </div>
+    <div style="flex:1;min-height:0;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:linear-gradient(#0a0f10,#06090a);overflow:hidden;position:relative">
+      <svg viewBox="0 0 400 210" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+        <g transform="translate(0,26) scale(1,1.55)"><polyline points="0,-10.3 7,-3.9 14,-0.2 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-2.9 79,-11.6 86,-6.6 93,-4.6 100,-16.5 107,-9.4 114,-0.7 121,0 129,0 136,0 143,-1.5 150,-14.6 157,-19.8 164,-3.8 171,-0.1 179,-0.7 186,-7.9 193,-12.5 200,-2.8 207,-0.5 214,-3.9 221,-4.6 229,-0.9 236,-1.1 243,-3.6 250,-15 257,-15 264,-2.3 271,-0.1 279,-0.1 286,0 293,0 300,0 307,-0.4 314,-5 321,-9 329,-2.3 336,-0.1 343,0 350,-0.2 357,-1.9 364,-2.6 371,-0.5 379,0 386,0 393,0 400,0" fill="none" stroke="#eafff4" stroke-width="1.4" vector-effect="non-scaling-stroke" style="filter:drop-shadow(0 0 4px rgba(234,255,244,.7))"></polyline></g>
+        <g transform="translate(0,39) scale(1,1.55)"><polyline points="0,-1.8 7,-0.7 14,0 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-3.7 79,-14.7 86,-8.3 93,-5.6 100,-20.2 107,-11.5 114,-0.9 121,0 129,0 136,0 143,-1.3 150,-12.3 157,-16.7 164,-3.2 171,-0.1 179,-0.5 186,-5.3 193,-8.4 200,-1.9 207,-0.3 214,-2.2 221,-2.6 229,-0.5 236,-0.5 243,-2.5 250,-13 257,-13.1 264,-1.9 271,-0.1 279,0 286,0 293,0 300,0 307,-0.3 314,-3.6 321,-6.5 329,-1.6 336,-0.1 343,0 350,-0.1 357,-1.2 364,-1.6 371,-0.3 379,0 386,0 393,0 400,0" fill="none" stroke="#c8fbe0" stroke-width="1.3" vector-effect="non-scaling-stroke" style="filter:drop-shadow(0 0 3px rgba(200,251,224,.5))"></polyline></g>
+        <g transform="translate(0,52) scale(1,1.55)"><polyline points="0,-5.8 7,-2.2 14,-0.1 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-4.2 79,-16.5 86,-9.3 93,-5.9 100,-21 107,-11.9 114,-0.9 121,0 129,0 136,0 143,-1 150,-9.7 157,-13.2 164,-2.5 171,-0.1 179,-0.3 186,-3.5 193,-5.5 200,-1.2 207,-0.2 214,-1.2 221,-1.4 229,-0.3 236,-0.3 243,-1.9 250,-11 257,-11.1 264,-1.6 271,0 279,0 286,0 293,0 300,0 307,-0.2 314,-2.6 321,-4.7 329,-1.2 336,0 343,0 350,-0.1 357,-0.7 364,-1 371,-0.2 379,0 386,0 393,0 400,0" fill="none" stroke="#a8f5cf" stroke-width="1.2" vector-effect="non-scaling-stroke"></polyline></g>
+        <g transform="translate(0,65) scale(1,1.55)"><polyline points="0,-11.6 7,-4.3 14,-0.2 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.2 71,-4.4 79,-17.3 86,-9.8 93,-5.6 100,-19.9 107,-11.3 114,-0.9 121,0 129,0 136,0 143,-0.8 150,-7.3 157,-9.9 164,-1.9 171,-0.1 179,-0.2 186,-2.2 193,-3.4 200,-0.8 207,-0.1 214,-0.6 221,-0.7 229,-0.1 236,-0.1 243,-1.4 250,-9.2 257,-9.2 264,-1.3 271,0 279,0 286,0 293,0 300,0 307,-0.1 314,-1.8 321,-3.3 329,-0.8 336,0 343,0 350,0 357,-0.4 364,-0.6 371,-0.1 379,0 386,0 393,0 400,0" fill="none" stroke="#8fefc0" stroke-width="1.2" vector-effect="non-scaling-stroke"></polyline></g>
+        <g transform="translate(0,78) scale(1,1.55)"><polyline points="0,-15.5 7,-5.8 14,-0.3 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.2 71,-4.4 79,-17.5 86,-9.8 93,-5.1 100,-17.8 107,-10.1 114,-0.8 121,0 129,0 136,0 143,-0.5 150,-5.3 157,-7.3 164,-1.4 171,0 179,-0.1 186,-1.3 193,-2.1 200,-0.5 207,-0.1 214,-0.3 221,-0.4 229,-0.1 236,-0.1 243,-1.1 250,-7.5 257,-7.6 264,-1.1 271,0 279,0 286,0 293,0 300,0 307,-0.1 314,-1.3 321,-2.3 329,-0.6 336,0 343,0 350,0 357,-0.2 364,-0.3 371,-0.1 379,0 386,0 393,0 400,0" fill="none" stroke="#7ce9b3" stroke-width="1.1" vector-effect="non-scaling-stroke"></polyline></g>
+        <g transform="translate(0,91) scale(1,1.55)"><polyline points="0,-18 7,-6.7 14,-0.4 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.2 71,-4.3 79,-17.1 86,-9.6 93,-4.5 100,-15.3 107,-8.7 114,-0.7 121,0 129,0 136,0 143,-0.4 150,-3.8 157,-5.2 164,-1 171,0 179,-0.1 186,-0.8 193,-1.3 200,-0.3 207,0 214,-0.2 221,-0.2 229,0 236,0 243,-0.9 250,-6.1 257,-6.1 264,-0.9 271,0 279,0 286,0 293,0 300,0 307,-0.1 314,-0.9 321,-1.6 329,-0.4 336,0 343,0 350,0 357,-0.1 364,-0.2 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#6be2a8" stroke-width="1.1" vector-effect="non-scaling-stroke"></polyline></g>
+        <g transform="translate(0,104) scale(1,1.55)"><polyline points="0,-19.2 7,-7.2 14,-0.4 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-4.2 79,-16.5 86,-9.2 93,-3.9 100,-12.9 107,-7.3 114,-0.6 121,0 129,0 136,0 143,-0.3 150,-2.7 157,-3.7 164,-0.7 171,0 179,0 186,-0.5 193,-0.8 200,-0.2 207,0 214,-0.1 221,-0.1 229,0 236,0 243,-0.7 250,-4.9 257,-4.9 264,-0.7 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.6 321,-1.1 329,-0.3 336,0 343,0 350,0 357,-0.1 364,-0.1 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#5cd99c" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+        <g transform="translate(0,117) scale(1,1.55)"><polyline points="0,-19.6 7,-7.3 14,-0.4 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-3.9 79,-15.7 86,-8.8 93,-3.3 100,-10.6 107,-6 114,-0.5 121,0 129,0 136,0 143,-0.2 150,-1.9 157,-2.5 164,-0.5 171,0 179,0 186,-0.3 193,-0.4 200,-0.1 207,0 214,0 221,-0.1 229,0 236,0 243,-0.6 250,-3.9 257,-4 264,-0.6 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.4 321,-0.7 329,-0.2 336,0 343,0 350,0 357,0 364,-0.1 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#4ecb90" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+        <g transform="translate(0,130) scale(1,1.55)"><polyline points="0,-19.4 7,-7.2 14,-0.4 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-3.7 79,-14.7 86,-8.2 93,-2.8 100,-8.6 107,-4.9 114,-0.4 121,0 129,0 136,0 143,-0.1 150,-1.3 157,-1.8 164,-0.3 171,0 179,0 186,-0.2 193,-0.3 200,-0.1 207,0 214,0 221,0 229,0 236,0 243,-0.4 250,-3.1 257,-3.2 264,-0.4 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.3 321,-0.5 329,-0.1 336,0 343,0 350,0 357,0 364,0 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#43bd85" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+        <g transform="translate(0,143) scale(1,1.55)"><polyline points="0,-18.7 7,-7 14,-0.4 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-3.5 79,-13.8 86,-7.7 93,-2.3 100,-7 107,-4 114,-0.3 121,0 129,0 136,0 143,-0.1 150,-0.9 157,-1.2 164,-0.2 171,0 179,0 186,-0.1 193,-0.2 200,0 207,0 214,0 221,0 229,0 236,0 243,-0.3 250,-2.5 257,-2.5 264,-0.4 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.2 321,-0.3 329,-0.1 336,0 343,0 350,0 357,0 364,0 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#3aae7a" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+        <g transform="translate(0,156) scale(1,1.55)"><polyline points="0,-17.9 7,-6.7 14,-0.3 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-3.2 79,-12.8 86,-7.2 93,-1.9 100,-5.6 107,-3.2 114,-0.3 121,0 129,0 136,0 143,-0.1 150,-0.6 157,-0.8 164,-0.2 171,0 179,0 186,-0.1 193,-0.1 200,0 207,0 214,0 221,0 229,0 236,0 243,-0.3 250,-2 257,-2 264,-0.3 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.1 321,-0.2 329,-0.1 336,0 343,0 350,0 357,0 364,0 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#32a06f" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+        <g transform="translate(0,169) scale(1,1.55)"><polyline points="0,-16.9 7,-6.3 14,-0.3 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-3 79,-11.9 86,-6.6 93,-1.6 100,-4.5 107,-2.5 114,-0.2 121,0 129,0 136,0 143,0 150,-0.4 157,-0.6 164,-0.1 171,0 179,0 186,0 193,-0.1 200,0 207,0 214,0 221,0 229,0 236,0 243,-0.2 250,-1.6 257,-1.6 264,-0.2 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.1 321,-0.2 329,0 336,0 343,0 350,0 357,0 364,0 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#2b9163" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+        <g transform="translate(0,182) scale(1,1.55)"><polyline points="0,-15.8 7,-5.9 14,-0.3 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-2.8 79,-11 86,-6.1 93,-1.3 100,-3.6 107,-2 114,-0.2 121,0 129,0 136,0 143,0 150,-0.3 157,-0.4 164,-0.1 171,0 179,0 186,0 193,0 200,0 207,0 214,0 221,0 229,0 236,0 243,-0.2 250,-1.2 257,-1.2 264,-0.2 271,0 279,0 286,0 293,0 300,0 307,0 314,-0.1 321,-0.1 329,0 336,0 343,0 350,0 357,0 364,0 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#24825a" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+        <g transform="translate(0,195) scale(1,1.55)"><polyline points="0,-14.7 7,-5.5 14,-0.3 21,0 29,0 36,0 43,0 50,0 57,0 64,-0.1 71,-2.6 79,-10.2 86,-5.7 93,-1.1 100,-2.8 107,-1.6 114,-0.1 121,0 129,0 136,0 143,0 150,-0.2 157,-0.3 164,0 171,0 179,0 186,0 193,0 200,0 207,0 214,0 221,0 229,0 236,0 243,-0.1 250,-1 257,-1 264,-0.1 271,0 279,0 286,0 293,0 300,0 307,0 314,0 321,-0.1 329,0 336,0 343,0 350,0 357,0 364,0 371,0 379,0 386,0 393,0 400,0" fill="none" stroke="#1e7351" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+      </svg>
+      <div style="position:absolute;left:14px;top:10px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;letter-spacing:.1em">ATAQUE</div>
+      <div style="position:absolute;left:14px;bottom:8px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#3a6b57;letter-spacing:.1em">460 ms</div>
+      <div style="position:absolute;right:14px;bottom:8px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#3a6b57;letter-spacing:.1em">32×</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;estado&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;vivo&quot;,&quot;sin-audio&quot;,&quot;desconectado&quot;,&quot;patch-sucio&quot;],&quot;default&quot;:&quot;vivo&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Estado&quot;},&quot;marcarArtefactos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Estado&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const estado = this.props.estado ?? "vivo";
+    const avisos = {
+      "sin-audio": "SIN SEÑAL · el dispositivo entrega ceros digitales exactos. Comprueba Part Output = Main L/R (USB1&2 no existe fuera de ASIO).",
+      "desconectado": "MODX-1 NO RESPONDE · el diagrama es el último sondeo válido, hace 4 s. Los parámetros mostrados pueden no ser los del teclado.",
+      "patch-sucio": "SE VA A PISAR TU BUFFER DE EDICIÓN · snapshot de 0E 25 00 guardado antes de escribir. Se puede volver."
+    };
+    return {
+      verArtefactos: this.props.marcarArtefactos ?? true,
+      aviso: estado in avisos,
+      avisoTexto: avisos[estado] || ""
+    };
+  }
+}
+</script>
+</body>
+</html>

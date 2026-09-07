@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  html,body{margin:0;background:#0b0e0f}
+  @keyframes livePulse{0%,100%{opacity:.35}50%{opacity:1}}
+  @keyframes stepGlow{0%,100%{box-shadow:0 0 24px -8px rgba(243,177,63,.6)}50%{box-shadow:0 0 40px -6px rgba(243,177,63,.95)}}
+  a{color:#7df0b0}a:hover{color:#a9f7cd}
+</style>
+</helmet>
+
+<section style="padding:40px 40px 0;display:flex;flex-direction:column;gap:14px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+  <div id="5a" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(88,200,245,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#58c8f5">5a</span>
+      <span style="font-size:26px;color:#d6e2dd">El editor de operador — donde se vive cuando se hace un sonido a mano</span>
+      <span style="font-size:15px;color:#8fa39d">1280×800</span>
+    </div>
+
+    <div style="width:1280px;height:800px;box-sizing:border-box;overflow:hidden;background:#06080a;color:#d6e2dd;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.12);background-image:radial-gradient(110% 80% at 8% 0%,rgba(88,200,245,.045),transparent 60%)">
+
+      <div style="flex:0 0 58px;box-sizing:border-box;display:flex;align-items:center;gap:11px;padding:0 14px;border-bottom:2px solid rgba(255,255,255,.09);background:linear-gradient(#0b0f11,#080b0d)">
+        <button style="all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 13px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1px solid rgba(255,255,255,.14)">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">← LOS OCHO</span>
+        </button>
+        <div style="width:1px;height:28px;background:rgba(255,255,255,.1)"></div>
+        <span style="font-size:17px;white-space:nowrap">OP3</span>
+        <span style="padding:5px 11px;border-radius:5px;border:1.5px solid #58c8f5;background:rgba(88,200,245,.1);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.14em;color:#bfe9fb;white-space:nowrap">MODULADOR</span>
+
+        <div style="display:flex;gap:5px;margin-left:6px">
+          <span style="width:32px;height:32px;border-radius:16px;border:1.5px solid rgba(243,177,63,.5);display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445">1</span>
+          <span style="width:32px;height:32px;border-radius:4px;border:1.5px dashed #3d4a48;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#4f5f5b">2</span>
+          <span style="width:32px;height:32px;border-radius:4px;border:2px solid #58c8f5;background:rgba(88,200,245,.18);display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#eaf7fd;box-shadow:0 0 16px -4px rgba(88,200,245,.9)">3</span>
+          <span style="width:32px;height:32px;border-radius:16px;border:1.5px solid rgba(243,177,63,.5);display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445">4</span>
+          <span style="width:32px;height:32px;border-radius:4px;border:1.5px solid rgba(88,200,245,.4);display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7fa7b6">5</span>
+          <span style="width:32px;height:32px;border-radius:4px;border:1.5px solid rgba(88,200,245,.4);display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7fa7b6">6</span>
+          <span style="width:32px;height:32px;border-radius:4px;border:1.5px dashed #3d4a48;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#4f5f5b">7</span>
+          <span style="width:32px;height:32px;border-radius:16px;border:1.5px solid rgba(243,177,63,.35);display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8a7038">8</span>
+        </div>
+
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:9px;padding:11px 15px;border-radius:999px;border:1px solid rgba(125,240,176,.28);background:rgba(125,240,176,.06)">
+          <span style="width:7px;height:7px;border-radius:50%;background:#7df0b0;animation:livePulse 1.4s ease-in-out infinite;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#7df0b0;white-space:nowrap">MIRAR · 30 fps</span>
+        </div>
+        <button style="all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 18px 12px 14px;border-radius:999px 8px 8px 999px;border:1.5px solid #f3b13f;background:linear-gradient(180deg,rgba(243,177,63,.22),rgba(243,177,63,.06));box-shadow:0 0 26px -8px rgba(243,177,63,.7)">
+          <span style="width:22px;height:22px;border-radius:50%;border:2px solid #f3b13f;background:radial-gradient(circle,#f3b13f 34%,transparent 36%);display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:13px;letter-spacing:.18em;color:#ffd08a">MEDIR</span>
+        </button>
+        <div style="width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:12px"></div>
+        <button style="all:unset;cursor:pointer;flex:0 0 auto;width:56px;height:56px;margin-left:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:2px solid #ff7a5c;background:#140a08;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
+          <span style="width:15px;height:15px;border:2.4px solid #ff7a5c;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.08em;color:#ff9d85">CALLA</span>
+        </button>
+      </div>
+
+      <div style="flex:1;min-height:0;box-sizing:border-box;display:grid;grid-template-columns:296px 1fr 316px;gap:2px;background:rgba(255,255,255,.07)">
+
+        <div style="background:#080b0d;padding:13px 15px;display:flex;flex-direction:column;gap:12px;min-height:0;box-sizing:border-box;overflow:hidden">
+          <div style="flex:0 0 auto">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px">
+              <div style="font-size:11px;letter-spacing:.2em;color:#8fa39d">DÓNDE ESTÁS</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69">ALG 06</div>
+            </div>
+            <div style="position:relative;height:186px;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:linear-gradient(#0a0f10,#070a0b);overflow:hidden">
+              <svg viewBox="0 0 264 186" width="100%" height="100%" style="display:block">
+                <path d="M132 44V64" stroke="#58c8f5" stroke-width="2" fill="none"></path>
+                <path d="M132 64L127 55H137Z" fill="#58c8f5"></path>
+                <path d="M132 122V142" stroke="#58c8f5" stroke-width="2.6" fill="none"></path>
+                <path d="M132 142L127 133H137Z" fill="#58c8f5"></path>
+                <rect x="86" y="10" width="92" height="34" rx="4" fill="#0a1013" stroke="rgba(88,200,245,.45)" stroke-width="1.4"></rect>
+                <text x="98" y="32" fill="#7fa7b6" font-family="ui-monospace,Consolas,monospace" font-size="13">OP5 · 72</text>
+                <rect x="76" y="64" width="112" height="58" rx="5" fill="#0d1a20" stroke="#58c8f5" stroke-width="2.4"></rect>
+                <text x="132" y="90" text-anchor="middle" fill="#eaf7fd" font-family="ui-monospace,Consolas,monospace" font-size="17">OP3 · 90</text>
+                <text x="132" y="108" text-anchor="middle" fill="#7fa7b6" font-family="ui-monospace,Consolas,monospace" font-size="11">×1.41 · Odd 1</text>
+                <rect x="82" y="142" width="100" height="34" rx="17" fill="#0d1214" stroke="#f3b13f" stroke-width="1.8"></rect>
+                <text x="132" y="164" text-anchor="middle" fill="#ffe0b0" font-family="ui-monospace,Consolas,monospace" font-size="13">OP1 · 99</text>
+                <text x="16" y="86" fill="#5d6d69" font-family="ui-monospace,Consolas,monospace" font-size="9">te modula</text>
+                <text x="16" y="99" fill="#5d6d69" font-family="ui-monospace,Consolas,monospace" font-size="9">OP5</text>
+                <text x="196" y="86" fill="#5d6d69" font-family="ui-monospace,Consolas,monospace" font-size="9">modulas</text>
+                <text x="196" y="99" fill="#5d6d69" font-family="ui-monospace,Consolas,monospace" font-size="9">a OP1</text>
+                <path d="M8 176H68" stroke="#3d4a48" stroke-width="1.4" stroke-dasharray="3 4"></path>
+                <text x="8" y="170" fill="#4f5f5b" font-family="ui-monospace,Consolas,monospace" font-size="9">y OP1 sale</text>
+              </svg>
+            </div>
+            <div style="font-size:12px;color:#6f817c;line-height:1.45;margin-top:8px">Sólo tu rama: quién te modula y a quién modulas. El resto del algoritmo sigue vivo, pero <span style="color:#d6e2dd">aquí no estorba</span>.</div>
+          </div>
+
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#7fa7b6;align-self:flex-start">LEVEL · 49 20 1A</div>
+            <svg viewBox="0 0 200 190" width="100%" height="190" style="display:block">
+              <circle cx="100" cy="96" r="76" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="13"></circle>
+              <circle cx="100" cy="96" r="76" fill="none" stroke="#58c8f5" stroke-width="13" stroke-linecap="round" stroke-dasharray="391 478" transform="rotate(135 100 96)" style="filter:drop-shadow(0 0 9px rgba(88,200,245,.85))"></circle>
+              <circle cx="100" cy="96" r="55" fill="#0d1416" stroke="rgba(255,255,255,.1)"></circle>
+              <path d="M100 52V72" stroke="#bfe9fb" stroke-width="3.4" stroke-linecap="round" transform="rotate(97 100 96)"></path>
+              <text x="100" y="104" text-anchor="middle" fill="#eaf7fd" font-family="ui-monospace,Consolas,monospace" font-size="40">90</text>
+              <text x="100" y="126" text-anchor="middle" fill="#7fa7b6" font-family="ui-monospace,Consolas,monospace" font-size="11">0 – 99</text>
+            </svg>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#4f7d8c;line-height:1.5;text-align:center">arrastre vertical · rueda ±1<br>el valor vive en el centro, no bajo la mano</div>
+          </div>
+        </div>
+
+        <div style="background:#080b0d;padding:13px 16px;display:flex;flex-direction:column;gap:11px;min-height:0;box-sizing:border-box;overflow:hidden">
+
+          <div style="flex:1.15;min-height:0;border:2px solid rgba(88,200,245,.3);border-radius:15px;background:linear-gradient(#0a0f10,#070a0b);padding:12px 15px;display:flex;flex-direction:column;box-sizing:border-box">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+              <div style="display:flex;align-items:baseline;gap:12px">
+                <div style="font-size:12px;letter-spacing:.2em;color:#bfe9fb">AEG · LA ENVOLVENTE DEL BRILLO</div>
+                <div style="font-size:13px;color:#6f817c">en un modulador, esto <em>es</em> la envolvente del timbre</div>
+              </div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69">49 20 10–18</div>
+            </div>
+            <div style="flex:1;min-height:0;position:relative">
+              <svg viewBox="0 0 620 200" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+                <path d="M0 186H620" stroke="rgba(255,255,255,.14)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+                <path d="M0 30H620M0 82H620M0 134H620" stroke="rgba(255,255,255,.04)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+                <polyline points="0,186 40,18 190,122 350,150 430,150 520,186" fill="rgba(88,200,245,.09)" stroke="none"></polyline>
+                <polyline points="0,186 40,18 190,122 350,150 430,150 520,186" fill="none" stroke="#58c8f5" stroke-width="2.8" vector-effect="non-scaling-stroke" stroke-linejoin="round" style="filter:drop-shadow(0 0 6px rgba(88,200,245,.6))"></polyline>
+                <path d="M430 10V196" stroke="rgba(243,177,63,.5)" stroke-width="1.6" stroke-dasharray="4 5" vector-effect="non-scaling-stroke"></path>
+                <circle cx="40" cy="18" r="34" fill="none" stroke="rgba(88,200,245,.28)" stroke-width="1" stroke-dasharray="3 3"></circle>
+                <circle cx="40" cy="18" r="13" fill="#0a0f10" stroke="#58c8f5" stroke-width="3"></circle>
+                <circle cx="190" cy="122" r="13" fill="#0a0f10" stroke="#58c8f5" stroke-width="2.6"></circle>
+                <circle cx="350" cy="150" r="13" fill="#0a0f10" stroke="#58c8f5" stroke-width="2.6"></circle>
+                <circle cx="520" cy="186" r="13" fill="#58c8f5" stroke="#0a0f10" stroke-width="2.4"></circle>
+              </svg>
+              <div style="position:absolute;left:1.5%;top:0;padding:4px 10px;border-radius:9px;background:#0a0f10;border:1.5px solid #58c8f5;font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#eaf7fd;white-space:nowrap">ATK · nivel 99 · tiempo 18</div>
+              <div style="position:absolute;left:28%;top:44%;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#7fa7b6">72</div>
+              <div style="position:absolute;left:54%;top:58%;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#7fa7b6">58</div>
+              <div style="position:absolute;left:66%;top:0;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445">key off</div>
+            </div>
+            <div style="display:flex;gap:14px;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c;margin-top:5px">
+              <span>ATK 18</span><span>DEC1 42</span><span>DEC2 55</span><span>REL 30</span><span style="color:#4f5f5b">HOLD 0</span>
+              <span style="margin-left:auto;color:#4f7d8c">el valor del punto activo sale ARRIBA, fuera de la mano</span>
+            </div>
+          </div>
+
+          <div style="flex:1;min-height:0;border:1px solid rgba(255,255,255,.08);border-radius:15px;background:linear-gradient(#0a0f10,#070a0b);padding:12px 15px;display:flex;flex-direction:column;box-sizing:border-box">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+              <div style="display:flex;align-items:baseline;gap:12px">
+                <div style="font-size:12px;letter-spacing:.2em;color:#8fa39d">PEG · FORM/FREQ</div>
+                <div style="font-size:13px;color:#6f817c">bipolar, centro 50 — mueve la afinación del operador</div>
+              </div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69">49 20 0C–0F</div>
+            </div>
+            <div style="flex:1;min-height:0;position:relative">
+              <svg viewBox="0 0 620 150" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+                <path d="M0 78H620" stroke="rgba(255,255,255,.22)" stroke-width="1" stroke-dasharray="2 4" vector-effect="non-scaling-stroke"></path>
+                <path d="M0 24H620M0 132H620" stroke="rgba(255,255,255,.04)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+                <polyline points="0,50 90,20 270,74 620,78" fill="none" stroke="#8fa39d" stroke-width="2.6" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>
+                <circle cx="0" cy="50" r="12" fill="#0a0f10" stroke="#8fa39d" stroke-width="2.4"></circle>
+                <circle cx="90" cy="20" r="12" fill="#0a0f10" stroke="#8fa39d" stroke-width="2.4"></circle>
+                <circle cx="270" cy="74" r="12" fill="#0a0f10" stroke="#8fa39d" stroke-width="2.4"></circle>
+              </svg>
+              <div style="position:absolute;left:11%;top:0;font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#d6e2dd">+34</div>
+              <div style="position:absolute;left:1%;top:48%;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">centro 50 · sin efecto</div>
+            </div>
+            <div style="display:flex;gap:14px;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c;margin-top:5px">
+              <span>INIT 62</span><span>ATK +34</span><span>T-ATK 12</span><span>T-DEC 40</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#080b0d;padding:13px 15px;display:flex;flex-direction:column;gap:10px;min-height:0;box-sizing:border-box;overflow:hidden">
+
+          <div style="flex:0 0 auto">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px">
+              <div style="font-size:11px;letter-spacing:.2em;color:#8fa39d">SPECTRAL FORM</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69">49 20 09</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+              <div style="border:1px solid rgba(255,255,255,.09);border-radius:10px;background:#0a1013;padding:7px 4px"><svg viewBox="0 0 44 30" width="100%" height="24" style="display:block"><path d="M6 27V8" stroke="#6f817c" stroke-width="2.4" stroke-linecap="round"></path><path d="M2 27H42" stroke="rgba(255,255,255,.12)"></path></svg><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#6f817c;text-align:center;margin-top:3px">Sine</div></div>
+              <div style="border:1px solid rgba(255,255,255,.09);border-radius:10px;background:#0a1013;padding:7px 4px"><svg viewBox="0 0 44 30" width="100%" height="24" style="display:block"><path d="M5 27V8M13 27V12M21 27V16M29 27V19M37 27V22M43 27V24" stroke="#6f817c" stroke-width="2.2" stroke-linecap="round"></path><path d="M2 27H42" stroke="rgba(255,255,255,.12)"></path></svg><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#6f817c;text-align:center;margin-top:3px">All 1</div></div>
+              <div style="border:1px solid rgba(255,255,255,.09);border-radius:10px;background:#0a1013;padding:7px 4px"><svg viewBox="0 0 44 30" width="100%" height="24" style="display:block"><path d="M5 27V10M13 27V19M21 27V23M29 27V25M37 27V26M43 27V26" stroke="#6f817c" stroke-width="2.2" stroke-linecap="round"></path><path d="M2 27H42" stroke="rgba(255,255,255,.12)"></path></svg><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#6f817c;text-align:center;margin-top:3px">All 2</div></div>
+              <div style="border:2px solid #58c8f5;border-radius:10px;background:linear-gradient(180deg,rgba(88,200,245,.18),rgba(88,200,245,.04));padding:6px 3px;box-shadow:0 0 24px -8px rgba(88,200,245,.9)"><svg viewBox="0 0 44 30" width="100%" height="24" style="display:block"><path d="M6 27V6M18 27V14M30 27V20M42 27V24" stroke="#58c8f5" stroke-width="2.8" stroke-linecap="round" style="filter:drop-shadow(0 0 4px rgba(88,200,245,.9))"></path><path d="M2 27H42" stroke="rgba(88,200,245,.35)"></path></svg><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#bfe9fb;text-align:center;margin-top:3px">Odd 1</div></div>
+              <div style="border:1px solid rgba(255,255,255,.09);border-radius:10px;background:#0a1013;padding:7px 4px"><svg viewBox="0 0 44 30" width="100%" height="24" style="display:block"><path d="M6 27V9M18 27V21M30 27V24M42 27V26" stroke="#6f817c" stroke-width="2.4" stroke-linecap="round"></path><path d="M2 27H42" stroke="rgba(255,255,255,.12)"></path></svg><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#6f817c;text-align:center;margin-top:3px">Odd 2</div></div>
+              <div style="border:1px solid rgba(255,255,255,.09);border-radius:10px;background:#0a1013;padding:7px 4px"><svg viewBox="0 0 44 30" width="100%" height="24" style="display:block"><path d="M5 27V22M13 27V19M21 27V9M29 27V17M37 27V23M43 27V25" stroke="#6f817c" stroke-width="2.2" stroke-linecap="round"></path><path d="M2 27H42" stroke="rgba(255,255,255,.12)"></path></svg><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#6f817c;text-align:center;margin-top:3px">Res 1</div></div>
+              <div style="border:1px solid rgba(255,255,255,.09);border-radius:10px;background:#0a1013;padding:7px 4px"><svg viewBox="0 0 44 30" width="100%" height="24" style="display:block"><path d="M5 27V25M13 27V24M21 27V6M29 27V23M37 27V25M43 27V26" stroke="#6f817c" stroke-width="2.2" stroke-linecap="round"></path><path d="M2 27H42" stroke="rgba(255,255,255,.12)"></path></svg><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#6f817c;text-align:center;margin-top:3px">Res 2</div></div>
+              <div style="border:1px dashed rgba(255,255,255,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;padding:7px 4px"><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b;text-align:center;line-height:1.4">se elige<br>el dibujo</div></div>
+            </div>
+          </div>
+
+          <div style="flex:0 0 auto;border:1.5px dashed #3d4a48;border-radius:13px;background:#070a0b;padding:10px 13px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#5d6d69">SKIRT · 0–7</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#6f817c">SÓLO CON Res 1 / Res 2</div>
+            </div>
+            <div style="display:flex;gap:4px;align-items:flex-end;height:26px">
+              <span style="flex:1;height:34%;border-radius:3px 3px 0 0;background:#3d4a48;display:block"></span>
+              <span style="flex:1;height:43%;border-radius:3px 3px 0 0;background:#3d4a48;display:block"></span>
+              <span style="flex:1;height:52%;border-radius:3px 3px 0 0;background:#3d4a48;display:block"></span>
+              <span style="flex:1;height:61%;border-radius:3px 3px 0 0;background:#3d4a48;display:block"></span>
+              <span style="flex:1;height:70%;border-radius:3px 3px 0 0;background:#3d4a48;display:block"></span>
+              <span style="flex:1;height:79%;border-radius:3px 3px 0 0;background:#3d4a48;display:block"></span>
+              <span style="flex:1;height:88%;border-radius:3px 3px 0 0;background:#3d4a48;display:block"></span>
+              <span style="flex:1;height:100%;border-radius:3px 3px 0 0;background:#3d4a48;display:block"></span>
+            </div>
+            <div style="font-size:11px;color:#8fa39d;line-height:1.4;margin-top:7px">Ocho anchos de falda, <span style="color:#d6e2dd">no un mando</span>: el rango es 0–7. Apagado porque la forma es Odd 1.</div>
+          </div>
+
+          <div style="flex:1;min-height:0;border:2px solid rgba(243,177,63,.4);border-radius:13px;background:rgba(243,177,63,.05);padding:11px 13px;display:flex;flex-direction:column;box-sizing:border-box">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#c69445">FREQ MODE · Y EL RATIO</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8a7038">49 20 03–05</div>
+            </div>
+            <div style="flex:0 0 auto;display:flex;gap:8px">
+              <div style="flex:1;border:2px solid #f3b13f;border-radius:12px;background:linear-gradient(180deg,rgba(243,177,63,.18),rgba(243,177,63,.03));padding:8px 8px 6px;box-shadow:0 0 24px -10px rgba(243,177,63,.9)">
+                <svg viewBox="0 0 120 44" width="100%" height="34" style="display:block">
+                  <path d="M4 40H116" stroke="rgba(243,177,63,.4)" stroke-width="1"></path>
+                  <path d="M8 40V18M26 40V24M44 40V13M62 40V27M80 40V21M98 40V31M114 40V34" stroke="#f3b13f" stroke-width="2.8" stroke-linecap="round" style="filter:drop-shadow(0 0 4px rgba(243,177,63,.9))"></path>
+                  <path d="M8 9C40 3 92 3 114 9" stroke="#ffd08a" stroke-width="1.3" fill="none" stroke-dasharray="3 3"></path>
+                </svg>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#ffd08a;letter-spacing:.14em;margin-top:4px">RATIO</div>
+              </div>
+              <div style="flex:1;border:1.5px solid #2b3436;border-radius:12px;background:#080c0d;padding:8px 8px 6px">
+                <svg viewBox="0 0 120 44" width="100%" height="34" style="display:block">
+                  <path d="M4 40H116" stroke="rgba(255,255,255,.12)" stroke-width="1"></path>
+                  <path d="M44 40V8" stroke="#4b5a57" stroke-width="2.8" stroke-linecap="round"></path>
+                  <circle cx="44" cy="8" r="4" fill="none" stroke="#4b5a57" stroke-width="1.4"></circle>
+                  <text x="76" y="24" text-anchor="middle" fill="#4b5a57" font-family="ui-monospace,Consolas,monospace" font-size="9">Hz fijos</text>
+                </svg>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#5d6d69;letter-spacing:.14em;margin-top:4px">FIXED</div>
+              </div>
+            </div>
+            <div style="flex:0 0 auto;display:flex;align-items:flex-end;gap:12px;margin-top:6px">
+              <div>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.14em;color:#8a7038">COARSE</div>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:23px;color:#ffd08a;line-height:1.1">1</div>
+              </div>
+              <div>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.14em;color:#8a7038">FINE</div>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:23px;color:#ffd08a;line-height:1.1">41</div>
+              </div>
+              <div style="margin-left:auto;text-align:right">
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.14em;color:#5d6d69">MEDIDO</div>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:20px;color:#7df0b0;line-height:1.1">×1.4103</div>
+              </div>
+            </div>
+            <div style="flex:0 0 auto;display:flex;align-items:flex-end;margin-top:6px">
+              <div style="display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border-radius:11px;border:1.5px dashed rgba(243,177,63,.5);background:rgba(243,177,63,.06)">
+                <span style="flex:0 0 auto;width:13px;height:13px;border:1.5px solid #f3b13f;border-radius:50%;display:block;margin-top:2px"></span>
+                <div style="flex:1;min-width:0;font-size:11px;color:#c69445;line-height:1.35">Con <span style="color:#ffd08a">Fixed</span>, Coarse y Fine <span style="color:#fff">no cambian de valor: cambian de significado</span> — de múltiplo a hercios. Y el teclado <span style="color:#ffd08a">te moverá el Coarse</span>. Medido.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:0 0 172px;box-sizing:border-box;background:#080b0d;border-top:2px solid rgba(255,255,255,.09);padding:12px 16px;display:flex;gap:14px">
+
+        <div style="flex:0 0 auto;display:flex;flex-direction:column;justify-content:center;gap:3px;padding-right:14px;border-right:1px solid rgba(255,255,255,.08)">
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#5d6d69">SE PONE</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#5d6d69">UNA VEZ</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#5d6d69">Y SE OLVIDA</div>
+        </div>
+
+        <div style="flex:1.7;min-width:0;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:#0a0f10;padding:10px 13px;display:flex;flex-direction:column;box-sizing:border-box">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#8fa39d">LEVEL SCALING · SOBRE EL TECLADO</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69">49 20 1B–1F · base A-1</div>
+          </div>
+          <div style="flex:1;min-height:0;position:relative">
+            <svg viewBox="0 0 420 108" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+              <path d="M0 82H420" stroke="rgba(255,255,255,.14)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+              <path d="M0 62C60 58 130 44 172 36" fill="none" stroke="#f3b13f" stroke-width="2.2" vector-effect="non-scaling-stroke"></path>
+              <path d="M172 36L420 10" fill="none" stroke="#f3b13f" stroke-width="2.2" vector-effect="non-scaling-stroke"></path>
+              <path d="M172 4V90" stroke="#7df0b0" stroke-width="1.6" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"></path>
+              <circle cx="172" cy="36" r="7" fill="#0a0f10" stroke="#f3b13f" stroke-width="2.4"></circle>
+              <rect x="0" y="88" width="420" height="16" fill="#0e1416" stroke="rgba(255,255,255,.1)"></rect>
+              <path d="M17 88V104M34 88V104M69 88V104M86 88V104M103 88V104M138 88V104M155 88V104M190 88V104M207 88V104M224 88V104M259 88V104M276 88V104M311 88V104M328 88V104M345 88V104M380 88V104M397 88V104" stroke="rgba(255,255,255,.14)"></path>
+              <rect x="10" y="88" width="9" height="10" fill="#1b2426"></rect><rect x="27" y="88" width="9" height="10" fill="#1b2426"></rect>
+              <rect x="62" y="88" width="9" height="10" fill="#1b2426"></rect><rect x="79" y="88" width="9" height="10" fill="#1b2426"></rect><rect x="96" y="88" width="9" height="10" fill="#1b2426"></rect>
+              <rect x="131" y="88" width="9" height="10" fill="#1b2426"></rect><rect x="148" y="88" width="9" height="10" fill="#1b2426"></rect>
+              <rect x="183" y="88" width="9" height="10" fill="#1b2426"></rect><rect x="200" y="88" width="9" height="10" fill="#1b2426"></rect><rect x="217" y="88" width="9" height="10" fill="#1b2426"></rect>
+              <rect x="252" y="88" width="9" height="10" fill="#1b2426"></rect><rect x="269" y="88" width="9" height="10" fill="#1b2426"></rect>
+              <rect x="304" y="88" width="9" height="10" fill="#1b2426"></rect><rect x="321" y="88" width="9" height="10" fill="#1b2426"></rect><rect x="338" y="88" width="9" height="10" fill="#1b2426"></rect>
+              <rect x="373" y="88" width="9" height="10" fill="#1b2426"></rect><rect x="390" y="88" width="9" height="10" fill="#1b2426"></rect>
+            </svg>
+            <div style="position:absolute;left:41%;top:0;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7df0b0;white-space:nowrap">BREAK B3</div>
+            <div style="position:absolute;left:1%;top:34%;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445;white-space:nowrap">−Exp 32</div>
+            <div style="position:absolute;right:1%;top:2%;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445;white-space:nowrap">+Lin 48</div>
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:0;display:flex;gap:8px">
+          <div style="flex:1;min-width:0;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:#0a0f10;padding:10px 11px;display:flex;flex-direction:column;box-sizing:border-box">
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#8fa39d">DETUNE · CENTRO 15</div>
+            <div style="flex:1;min-height:0;position:relative;margin-top:6px;border-radius:9px;background:#080c0d;border:1px solid rgba(255,255,255,.08);overflow:hidden">
+              <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.28)"></div>
+              <div style="position:absolute;left:50%;top:9px;bottom:9px;width:23%;background:linear-gradient(90deg,rgba(88,200,245,.15),rgba(88,200,245,.55));border-radius:0 6px 6px 0"></div>
+              <div style="position:absolute;left:73%;top:4px;bottom:4px;width:3px;background:#58c8f5;box-shadow:0 0 10px #58c8f5"></div>
+              <div style="position:absolute;left:0;right:0;top:5px;text-align:center;font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#bfe9fb">+7</div>
+            </div>
+          </div>
+          <div style="flex:1;min-width:0;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:#0a0f10;padding:10px 11px;display:flex;flex-direction:column;gap:7px;box-sizing:border-box">
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#8fa39d">Y LOS QUE CASI NO SE TOCAN</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px">
+              <span style="padding:6px 9px;border-radius:8px;border:1px solid rgba(255,255,255,.1);font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#8fa39d;white-space:nowrap">Time/Key 0</span>
+              <span style="padding:6px 9px;border-radius:8px;border:1px solid rgba(255,255,255,.1);font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#8fa39d;white-space:nowrap">Lvl/Vel +0</span>
+              <span style="padding:6px 9px;border-radius:8px;border:1px solid rgba(255,255,255,.1);font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#8fa39d;white-space:nowrap">Pitch/Vel +0</span>
+              <span style="padding:6px 9px;border-radius:8px;border:2px solid rgba(125,240,176,.4);background:rgba(125,240,176,.07);font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#7df0b0;white-space:nowrap">Key On Reset ON</span>
+            </div>
+            <div style="font-size:11px;color:#5d6d69;line-height:1.4;margin-top:auto">Presentes y tocables. Pequeños porque lo son, <span style="color:#8fa39d">no escondidos en una pestaña</span>.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:1280px;display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:6px">
+      <div>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.2em;color:#5d6d69;margin-bottom:8px">LA DECISIÓN INTERESANTE: EL CONTEXTO</div>
+        <div style="font-size:15px;line-height:1.65;color:#8fa39d">Tenías razón en que ahí estaba el problema. Descarté dos opciones: el diagrama de ocho nodos completo <span style="color:#d6e2dd">no cabe</span> junto a dos envolventes, y una miga de pan (<span style="font-family:ui-monospace,Consolas,monospace">Part 1 › OP3</span>) pierde justo lo que importa — la topología.<br><br>Lo que hay es <span style="color:#d6e2dd">tu rama, y sólo tu rama</span>: quién te modula, tú, y a quién modulas, con las flechas del algoritmo real. Más el <span style="color:#d6e2dd">rail de los ocho en la cabecera</span>, que es contexto y navegación a la vez: se ve de un golpe quién es portadora, quién modulador y quién está a cero, y se salta con un toque de 32 px.</div>
+      </div>
+      <div>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.2em;color:#5d6d69;margin-bottom:8px">JERARQUÍA SIN PESTAÑAS</div>
+        <div style="font-size:15px;line-height:1.65;color:#8fa39d">Lo que se toca cada minuto se lleva el 78 % del alto: Level como mando de 190 px, las <span style="color:#d6e2dd">dos envolventes a lo ancho</span> con puntos de 26 px, y la forma espectral como siete dibujos.<br><br>Lo que se pone una vez vive en una <span style="color:#d6e2dd">franja inferior de 172 px</span>, con su rótulo diciéndolo: Level Scaling sobre el teclado, el bipolar de Detune, y cuatro chips para Time/Key, Lvl/Vel, Pitch/Vel y Key On Reset. <strong style="font-weight:400;color:#d6e2dd">Presentes y tocables, pequeños porque lo son</strong> — cero pestañas, y ni una lista de <span style="font-family:ui-monospace,Consolas,monospace">etiqueta: campo</span> en toda la pantalla.<br><br>Skirt aparece <span style="color:#d6e2dd">apagado, no ausente</span>: la forma es Odd 1 y sólo Res 1/Res 2 lo habilitan. Y son ocho barras, porque el rango es 0–7.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding:44px 40px 0;display:flex;flex-direction:column;gap:14px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+  <div id="5b" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(243,177,63,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#f3b13f">5b</span>
+      <span style="font-size:26px;color:#d6e2dd">El barrido — las funciones de Bessel, medidas</span>
+      <span style="font-size:15px;color:#8fa39d">resultado de <a href="#4b">4b</a> · 1280×800</span>
+    </div>
+
+    <div style="width:1280px;height:800px;box-sizing:border-box;overflow:hidden;background:#06080a;color:#d6e2dd;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.12);background-image:radial-gradient(110% 80% at 88% 0%,rgba(243,177,63,.05),transparent 60%)">
+
+      <div style="flex:0 0 58px;box-sizing:border-box;display:flex;align-items:center;gap:11px;padding:0 14px;border-bottom:2px solid rgba(255,255,255,.09);background:linear-gradient(#0b0f11,#080b0d)">
+        <span style="font-size:17px;white-space:nowrap">BARRIDO</span>
+        <div style="width:1px;height:28px;background:rgba(255,255,255,.1)"></div>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">OP3 · LEVEL 0 → 99 · 8 PASOS</div>
+        <div style="display:flex;align-items:center;gap:9px;padding:5px 12px;border-radius:999px;border:2px solid rgba(243,177,63,.55);background:rgba(243,177,63,.12);box-shadow:0 0 24px -10px rgba(243,177,63,.9)">
+          <span style="width:14px;height:14px;border-radius:50%;background:#f3b13f;box-shadow:0 0 10px #f3b13f;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#ffd08a;white-space:nowrap">PASO 6 DE 8 · MIDIENDO</span>
+        </div>
+        <div style="flex:1"></div>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">QUEDAN ~8 s</div>
+        <button style="all:unset;cursor:pointer;padding:12px 16px;min-height:44px;box-sizing:border-box;border:1.5px solid rgba(255,255,255,.16);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#8fa39d;white-space:nowrap">CANCELAR</button>
+        <div style="width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:12px"></div>
+        <button style="all:unset;cursor:pointer;flex:0 0 auto;width:56px;height:56px;margin-left:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:2px solid #ff7a5c;background:#1c0d0a;box-shadow:0 0 26px -8px rgba(255,122,92,.8);clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
+          <span style="width:15px;height:15px;background:#ff7a5c;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.08em;color:#ffb9a6">CALLA</span>
+        </button>
+      </div>
+
+      <div style="flex:0 0 64px;box-sizing:border-box;padding:11px 16px;display:flex;align-items:center;gap:6px;border-bottom:2px solid rgba(255,255,255,.08)">
+        <div style="flex:1;min-width:0;display:flex;gap:5px;align-items:stretch">
+          <div style="flex:1;min-width:0;padding:6px 8px;border-radius:9px;border:1px solid rgba(125,240,176,.3);background:rgba(125,240,176,.06)"><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#63c99a">0</div><div style="height:4px;border-radius:2px;background:#7df0b0;margin-top:4px"></div></div>
+          <div style="flex:1;min-width:0;padding:6px 8px;border-radius:9px;border:1px solid rgba(125,240,176,.3);background:rgba(125,240,176,.06)"><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#63c99a">14</div><div style="height:4px;border-radius:2px;background:#7df0b0;margin-top:4px"></div></div>
+          <div style="flex:1;min-width:0;padding:6px 8px;border-radius:9px;border:1px solid rgba(125,240,176,.3);background:rgba(125,240,176,.06)"><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#63c99a">28</div><div style="height:4px;border-radius:2px;background:#7df0b0;margin-top:4px"></div></div>
+          <div style="flex:1;min-width:0;padding:6px 8px;border-radius:9px;border:1px solid rgba(125,240,176,.3);background:rgba(125,240,176,.06)"><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#63c99a">42</div><div style="height:4px;border-radius:2px;background:#7df0b0;margin-top:4px"></div></div>
+          <div style="flex:1;min-width:0;padding:6px 8px;border-radius:9px;border:1px solid rgba(125,240,176,.3);background:rgba(125,240,176,.06)"><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#63c99a">57</div><div style="height:4px;border-radius:2px;background:#7df0b0;margin-top:4px"></div></div>
+          <div style="flex:1.6;min-width:0;padding:6px 9px;border-radius:9px;border:2px solid #f3b13f;background:rgba(243,177,63,.12);animation:stepGlow 1.5s ease-in-out infinite">
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#ffd08a">71</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.1em;color:#c69445">MIDIENDO · 65536</span></div>
+            <div style="height:4px;border-radius:2px;background:rgba(243,177,63,.2);margin-top:4px;position:relative;overflow:hidden"><div style="position:absolute;left:0;top:0;bottom:0;width:62%;background:#f3b13f;box-shadow:0 0 8px #f3b13f"></div></div>
+          </div>
+          <div style="flex:1;min-width:0;padding:6px 8px;border-radius:9px;border:1px dashed #3d4a48"><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">85</div><div style="height:4px;border-radius:2px;background:rgba(255,255,255,.07);margin-top:4px"></div></div>
+          <div style="flex:1;min-width:0;padding:6px 8px;border-radius:9px;border:1px dashed #3d4a48"><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">99</div><div style="height:4px;border-radius:2px;background:rgba(255,255,255,.07);margin-top:4px"></div></div>
+        </div>
+        <div style="flex:0 0 auto;display:flex;gap:14px;padding-left:14px;border-left:1px solid rgba(255,255,255,.08);font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c;line-height:1.6">
+          <div>escribir ✓<br>verificar ✓</div>
+          <div>sostener 1.4 s<br>medir 1.5 s</div>
+          <div style="color:#5d6d69">soltar 0.46 s<br>pausa 0.4 s</div>
+        </div>
+      </div>
+
+      <div style="flex:1;min-height:0;box-sizing:border-box;display:grid;grid-template-columns:1fr 300px;gap:2px;background:rgba(255,255,255,.07)">
+
+        <div style="background:#080b0d;padding:13px 16px;display:flex;flex-direction:column;min-height:0;box-sizing:border-box;overflow:hidden">
+          <div style="flex:0 0 auto;display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+            <div style="display:flex;align-items:baseline;gap:14px">
+              <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">LA TRAYECTORIA DE CADA ARMÓNICO</div>
+              <div style="font-size:14px;color:#6f817c">sube, baja y cruza el cero — eso <em>es</em> una función de Bessel</div>
+            </div>
+            <div style="display:flex;gap:16px">
+              <span style="display:flex;align-items:center;gap:6px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7df0b0"><svg width="20" height="8"><path d="M0 4H20" stroke="#7df0b0" stroke-width="2.6"></path></svg>MEDIDO</span>
+              <span style="display:flex;align-items:center;gap:6px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445"><svg width="20" height="8"><path d="M0 4H20" stroke="#f3b13f" stroke-width="2" stroke-dasharray="4 3"></path></svg>|J<span style="font-size:8px">n</span>(I)|</span>
+            </div>
+          </div>
+
+          <div style="flex:1;min-height:0;position:relative;border:1px solid rgba(255,255,255,.08);border-radius:15px;background:linear-gradient(#0a0f10,#070a0b);overflow:hidden">
+            <svg viewBox="0 0 900 340" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+              <path d="M0 250H900" stroke="rgba(255,255,255,.22)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+              <path d="M0 30H900M0 140H900M0 316H900" stroke="rgba(255,255,255,.04)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+              <path d="M40 10V330M157 10V330M274 10V330M391 10V330M508 10V330M625 10V330M742 10V330M859 10V330" stroke="rgba(255,255,255,.05)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+              <path d="M625 6V334" stroke="rgba(243,177,63,.5)" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+
+              <polyline points="40,30 157,41 274,70 391,115 508,175 625,228 742,276 859,314" fill="none" stroke="#f3b13f" stroke-width="2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke" opacity=".75"></polyline>
+              <polyline points="40,250 157,203 274,163 391,133 508,122 625,128 742,148 859,183" fill="none" stroke="#f3b13f" stroke-width="2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke" opacity=".55"></polyline>
+              <polyline points="40,250 157,245 274,230 391,208 508,184 625,163 742,148 859,143" fill="none" stroke="#f3b13f" stroke-width="2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke" opacity=".45"></polyline>
+              <polyline points="40,250 157,250 274,247 391,241 508,228 625,215 742,198 859,182" fill="none" stroke="#f3b13f" stroke-width="2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke" opacity=".35"></polyline>
+
+              <polyline points="40,32 157,44 274,73 391,118 508,178 625,231 742,278 859,316" fill="none" stroke="#eafff4" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linejoin="round" style="filter:drop-shadow(0 0 6px rgba(234,255,244,.7))"></polyline>
+              <polyline points="40,250 157,206 274,166 391,136 508,125 625,131 742,151 859,186" fill="none" stroke="#7df0b0" stroke-width="2.6" vector-effect="non-scaling-stroke" stroke-linejoin="round" style="filter:drop-shadow(0 0 5px rgba(125,240,176,.6))"></polyline>
+              <polyline points="40,250 157,247 274,233 391,211 508,187 625,166 742,151 859,146" fill="none" stroke="#5cd99c" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>
+              <polyline points="40,250 157,250 274,249 391,243 508,231 625,218 742,201 859,185" fill="none" stroke="#43bd85" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>
+              <polyline points="40,250 157,250 274,250 391,249 508,244 625,236 742,224 859,210" fill="none" stroke="#32a06f" stroke-width="1.8" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>
+              <polyline points="40,250 157,250 274,250 391,250 508,249 625,246 742,240 859,231" fill="none" stroke="#24825a" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>
+
+              <circle cx="40" cy="32" r="5" fill="#eafff4"></circle><circle cx="157" cy="44" r="5" fill="#eafff4"></circle><circle cx="274" cy="73" r="5" fill="#eafff4"></circle><circle cx="391" cy="118" r="5" fill="#eafff4"></circle><circle cx="508" cy="178" r="5" fill="#eafff4"></circle><circle cx="625" cy="231" r="6" fill="#eafff4"></circle>
+              <circle cx="40" cy="250" r="4" fill="#7df0b0"></circle><circle cx="157" cy="206" r="4" fill="#7df0b0"></circle><circle cx="274" cy="166" r="4" fill="#7df0b0"></circle><circle cx="391" cy="136" r="4" fill="#7df0b0"></circle><circle cx="508" cy="125" r="4" fill="#7df0b0"></circle><circle cx="625" cy="131" r="5" fill="#7df0b0"></circle>
+
+              <rect x="700" y="256" width="66" height="34" rx="6" fill="none" stroke="#ff7a5c" stroke-width="1.6"></rect>
+              <path d="M766 266H812" stroke="#ff7a5c" stroke-width="1"></path>
+            </svg>
+
+            <div style="position:absolute;left:1%;top:2%;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#eafff4;white-space:nowrap">n0 · fundamental</div>
+            <div style="position:absolute;left:1%;top:70.5%;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#7df0b0;white-space:nowrap">n1</div>
+            <div style="position:absolute;left:70%;top:37%;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#5cd99c;white-space:nowrap">n2</div>
+            <div style="position:absolute;left:70%;top:52%;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#43bd85;white-space:nowrap">n3</div>
+            <div style="position:absolute;left:70%;top:62%;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#32a06f;white-space:nowrap">n4</div>
+
+            <div style="position:absolute;left:53%;top:2%;padding:4px 10px;border-radius:9px;background:#0a0f10;border:1px solid rgba(243,177,63,.5);font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#ffd08a;white-space:nowrap">midiendo · Level 71 · I 2.22</div>
+
+            <div style="position:absolute;left:57%;top:74%;padding:6px 11px;border-radius:10px;background:#0a0f10;border:1.5px solid #ff7a5c;max-width:290px">
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#ffb9a6">LA FUNDAMENTAL SE ANULA HACIA LEVEL 77</div>
+              <div style="font-size:12px;color:#c9705c;line-height:1.4;margin-top:2px">Primer cero de J₀, en I ≈ 2.405. No es un fallo de medida: es la lección.</div>
+            </div>
+
+            <div style="position:absolute;left:1%;bottom:2px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#4f5f5b">LEVEL 0 · I 0</div>
+            <div style="position:absolute;right:1%;bottom:2px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#4f5f5b">99 · I 3.09</div>
+            <div style="position:absolute;right:1%;top:70%;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">amplitud 0</div>
+          </div>
+
+          <div style="flex:0 0 auto;display:flex;align-items:center;gap:18px;padding-top:9px">
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#58c8f5">DEDO · arrastra la línea vertical para sacar el espectro de ese paso</div>
+            <div style="margin-left:auto;font-size:13px;color:#6f817c">ocho espectros no se leen a la vez — se lee <span style="color:#d6e2dd">la trayectoria</span>, y se saca uno cuando hace falta</div>
+          </div>
+        </div>
+
+        <div style="background:#080b0d;padding:13px 14px;display:flex;flex-direction:column;gap:11px;min-height:0;box-sizing:border-box;overflow:hidden">
+
+          <div style="flex:0 0 auto;border:2px solid rgba(243,177,63,.4);border-radius:13px;background:rgba(243,177,63,.05);padding:11px 12px;display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#c69445">EL PASO QUE SACAS</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#ffd08a">LEVEL 71</div>
+            </div>
+            <svg viewBox="0 0 260 96" preserveAspectRatio="none" width="100%" height="92" style="display:block">
+              <path d="M0 92H260" stroke="rgba(255,255,255,.12)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+              <path d="M6 92V38M38 92V22M70 92V16M102 92V32M134 92V52M166 92V70M198 92V82M230 92V88" stroke="#7df0b0" stroke-width="9" vector-effect="non-scaling-stroke" opacity=".85"></path>
+              <polyline points="6,36 38,20 70,15 102,31 134,50 166,69 198,81 230,87" fill="none" stroke="#f3b13f" stroke-width="1.8" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"></polyline>
+            </svg>
+            <div style="display:flex;justify-content:space-between;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;margin-top:3px"><span>n0</span><span>n3</span><span>n7</span></div>
+          </div>
+
+          <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:1px">
+            <div style="background:#0a0f10;border-radius:11px 11px 0 0;padding:10px 12px">
+              <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">ERROR MEDIO · 6 PASOS</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#7df0b0;line-height:1.1">0.6 dB</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">contra |J<span style="font-size:8px">n</span>(I)|</div>
+            </div>
+            <div style="background:#0a0f10;padding:10px 12px">
+              <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">PEOR DESVÍO</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:17px;color:#ff7a5c">n0 · Level 85</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">cerca del cero, el suelo manda</div>
+            </div>
+            <div style="background:#0a0f10;border-radius:0 0 11px 11px;padding:10px 12px">
+              <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">LO QUE NO CAMBIA</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#8fa39d;line-height:1.75">C4 · vel 100<br>ratio 1.4103<br>cadena limpia</div>
+            </div>
+          </div>
+
+          <div style="flex:1;min-height:0;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:#0a0f10;padding:11px 12px;display:flex;flex-direction:column;box-sizing:border-box;overflow:hidden">
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#5d6d69;margin-bottom:8px">SI CANCELAS A MITAD</div>
+            <div style="font-size:13px;color:#8fa39d;line-height:1.5">Los <span style="color:#d6e2dd">6 pasos medidos se quedan</span> y el mapa se dibuja con ellos, marcado como incompleto. Se puede reanudar desde el 7.</div>
+            <div style="display:flex;align-items:center;gap:9px;margin-top:10px;padding:9px 11px;border-radius:11px;border:1.5px solid rgba(125,240,176,.4);background:rgba(125,240,176,.07)">
+              <span style="flex:0 0 auto;width:14px;height:14px;border-radius:50%;background:#7df0b0;display:block"></span>
+              <div style="flex:1;min-width:0;font-size:12px;color:#7df0b0;line-height:1.4">Y el Level vuelve a <span style="font-family:ui-monospace,Consolas,monospace">90</span>, donde lo tenías. El barrido guarda copia antes del primer paso.</div>
+            </div>
+            <button style="all:unset;cursor:pointer;margin-top:auto;padding:12px 14px;min-height:48px;box-sizing:border-box;border:2px solid #7df0b0;border-radius:12px;background:rgba(125,240,176,.12);box-shadow:0 0 26px -10px rgba(125,240,176,.8);text-align:center">
+              <span style="display:block;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;color:#eafff5">GUARDAR EL MAPA</span>
+              <span style="display:block;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#63c99a;margin-top:2px">como lección de Bessel</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:1280px;display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:6px">
+      <div>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.2em;color:#5d6d69;margin-bottom:8px">TU INTUICIÓN ERA LA BUENA, Y LA LLEVO UN PASO MÁS</div>
+        <div style="font-size:15px;line-height:1.65;color:#8fa39d">El eje es la <span style="color:#d6e2dd">trayectoria por armónico</span>, no el espectro por paso. Y la consecuencia que la hace redonda: esas trayectorias <strong style="font-weight:400;color:#d6e2dd">no se parecen a las funciones de Bessel, son las funciones de Bessel</strong> — así que la teoría no se dibuja «al lado», va superpuesta sobre la misma curva y el ojo compara sin moverse.<br><br>Ocho espectros no se leen a la vez, y no lo intento: hay <span style="color:#d6e2dd">una línea vertical arrastrable</span> que saca el espectro de un paso al panel de la derecha. Del mapa se vuelve al detalle cuando hace falta, no siempre.<br><br>Y el regalo: en <span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">Level ≈ 77</span> la fundamental <span style="color:#d6e2dd">se anula</span> — el primer cero de J₀ en I ≈ 2.405. Se ve cruzar el eje. Eso no lo enseña ningún espectro suelto.</div>
+      </div>
+      <div>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.2em;color:#5d6d69;margin-bottom:8px">Y AQUÍ TE DISCUTO UN NÚMERO</div>
+        <div style="font-size:15px;line-height:1.65;color:#8fa39d">Dices «son minutos, no segundos». <span style="color:#d6e2dd">La aritmética de los spikes da ~25 s.</span> Por paso: escribir 416 direcciones son 0,03 s y verificar releyendo un parámetro son 2 ms; sostener 1,4 s; una ventana de 65536 a 44 100 Hz es <span style="font-family:ui-monospace,Consolas,monospace">1,486 s</span>; la cola de release 0,46 s; y la pausa 0,4 s. Eso es ~3,1 s × 8 ≈ <span style="color:#d6e2dd">25 s</span>.<br><br>Sube a minutos sólo si se promedian varias medidas por paso, que probablemente <em>quieras</em> cerca de los ceros — es justo donde el suelo de ruido manda y donde está el peor desvío. Así que el progreso está diseñado <span style="color:#d6e2dd">para aguantar las dos escalas</span>: ocho tarjetas con la subfase dentro, y la que corre se ensancha. Si acaba siendo un minuto por paso, el diseño no cambia; sólo el número de «quedan».</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding:44px 40px 0;display:flex;flex-direction:column;gap:14px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+  <div id="5c" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">5c</span>
+      <span style="font-size:26px;color:#d6e2dd">La consola SysEx — sí, pero como cajón, y por defecto sólo lo que hay que arreglar</span>
+    </div>
+
+    <div style="width:1280px;box-sizing:border-box;background:#06080a;color:#d6e2dd;border:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column">
+
+      <div style="flex:0 0 auto;padding:14px 18px;border-bottom:2px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:12px;background:linear-gradient(#0b0f11,#080b0d)">
+        <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.2em;color:#5d6d69">SE ABRE DESDE LA CABECERA</span>
+        <button style="all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;padding:6px 11px;min-height:36px;box-sizing:border-box;border-radius:999px;border:2px solid rgba(255,122,92,.5);background:rgba(255,122,92,.1)">
+          <span style="width:14px;height:14px;border:1.5px solid #ff7a5c;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#ffb9a6;white-space:nowrap">SysEx · 2 SIN CONFIRMAR</span>
+        </button>
+        <span style="font-size:14px;color:#6f817c">y así se ve cuando no hay nada pendiente:</span>
+        <button style="all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;padding:6px 11px;min-height:36px;box-sizing:border-box;border-radius:999px;border:1px solid rgba(255,255,255,.12)">
+          <span style="width:14px;height:14px;border:1.5px solid #6f817c;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">SysEx</span>
+        </button>
+      </div>
+
+      <div style="flex:0 0 auto;padding:0;display:flex;flex-direction:column;background:#06080a">
+        <div style="height:120px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:repeating-linear-gradient(135deg,rgba(255,255,255,.02) 0 12px,transparent 12px 24px);border-bottom:2px solid rgba(255,255,255,.09)">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.16em;color:#6f817c">LA PANTALLA QUE ESTABAS USANDO SIGUE AHÍ, SIN SUSTITUIRSE</span>
+        </div>
+
+        <div style="box-sizing:border-box;background:#080b0d;border-top:2px solid rgba(125,240,176,.28);box-shadow:0 -22px 44px -20px rgba(0,0,0,.9);padding:14px 18px 18px;display:flex;flex-direction:column;gap:12px">
+
+          <div style="flex:0 0 auto;display:flex;align-items:center;gap:12px">
+            <div style="width:52px;height:5px;border-radius:3px;background:rgba(255,255,255,.18)"></div>
+            <span style="font-size:17px;white-space:nowrap">TRÁFICO SysEx</span>
+            <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)">
+              <span style="padding:9px 15px;border-radius:999px;background:rgba(255,122,92,.14);border:1px solid rgba(255,122,92,.45);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#ffb9a6;white-space:nowrap">SIN CONFIRMAR · 2</span>
+              <span style="padding:9px 15px;border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#6f817c;white-space:nowrap">TODO EL TRÁFICO · 1 216</span>
+            </div>
+            <div style="flex:1"></div>
+            <div style="display:flex;gap:18px;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#8fa39d;line-height:1.5">
+              <div><span style="color:#5d6d69">MEDIANA</span> 2.0 ms</div>
+              <div><span style="color:#5d6d69">p99</span> 3.3 ms</div>
+              <div><span style="color:#5d6d69">PERDIDAS</span> <span style="color:#7df0b0">0</span></div>
+            </div>
+            <button style="all:unset;cursor:pointer;width:44px;height:44px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid rgba(255,255,255,.14);font-family:ui-monospace,Consolas,monospace;font-size:14px;color:#8fa39d">↓</button>
+          </div>
+
+          <div style="flex:0 0 auto;display:grid;grid-template-columns:1fr 372px;gap:16px">
+
+            <div style="min-width:0;display:flex;flex-direction:column;gap:8px">
+
+              <div style="border:2px solid rgba(255,122,92,.5);border-radius:13px;background:rgba(255,122,92,.07);padding:11px 14px;display:flex;align-items:center;gap:16px">
+                <span style="flex:0 0 auto;width:26px;height:26px;border:2px solid #ff7a5c;display:flex;align-items:center;justify-content:center;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)"><span style="width:9px;height:9px;background:#ff7a5c;display:block"></span></span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:16px;color:#ffb9a6">OP3 · Level = 90 <span style="font-size:13px;color:#c9705c">no volvió al releer</span></div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#8fa39d;margin-top:3px">→ F0 43 10 7F 1C 07 49 20 1A <span style="color:#eafff4">5A</span> F7 &nbsp;·&nbsp; ← devolvió <span style="color:#ff7a5c">4B</span> (75)</div>
+                </div>
+                <button style="flex:0 0 auto;all:unset;cursor:pointer;padding:11px 15px;min-height:44px;box-sizing:border-box;border:1.5px solid rgba(255,122,92,.6);border-radius:999px;background:rgba(255,122,92,.1);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#ffb9a6;white-space:nowrap">REPARAR Y VERIFICAR</button>
+              </div>
+
+              <div style="border:1.5px solid rgba(255,122,92,.4);border-radius:13px;background:rgba(255,122,92,.05);padding:11px 14px;display:flex;align-items:center;gap:16px">
+                <span style="flex:0 0 auto;width:26px;height:26px;border:2px solid rgba(255,122,92,.6);display:flex;align-items:center;justify-content:center;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)"><span style="width:9px;height:9px;background:rgba(255,122,92,.7);display:block"></span></span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:16px;color:#ffb9a6">Feedback = 3 <span style="font-size:13px;color:#c9705c">longitud equivocada · no-op silencioso</span></div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#8fa39d;margin-top:3px">→ 48 00 50 <span style="color:#ff7a5c">00 03</span> F7 &nbsp;·&nbsp; el parámetro es de <span style="color:#eafff4">1 byte</span>, no de 2</div>
+                </div>
+                <button style="flex:0 0 auto;all:unset;cursor:pointer;padding:11px 15px;min-height:44px;box-sizing:border-box;border:1.5px solid rgba(255,122,92,.6);border-radius:999px;background:rgba(255,122,92,.1);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#ffb9a6;white-space:nowrap">REPARAR Y VERIFICAR</button>
+              </div>
+
+              <div style="border:1px solid rgba(125,240,176,.3);border-radius:13px;background:rgba(125,240,176,.05);padding:11px 14px">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <span style="flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:#7df0b0;display:block"></span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:15px;color:#eafff5">La última pasada de reparar arregló 1 de 416</div>
+                    <div style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#63c99a;margin-top:3px">48 00 48 · 2.º LFO Speed · 00 → 1E &nbsp;<span style="color:#4f8f70">lo había puesto a cero escribir 48 00 52</span></div>
+                  </div>
+                  <div style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#4f8f70;text-align:right;line-height:1.6">1 pasada<br>0.03 s</div>
+                </div>
+                <div style="font-size:12px;color:#6f817c;line-height:1.45;margin-top:9px;padding-top:9px;border-top:1px solid rgba(125,240,176,.15)"><span style="color:#d6e2dd">Ya está explicado</span> (fase 0d): <span style="font-family:ui-monospace,Consolas,monospace">48 00 52</span> es una dirección <span style="color:#d6e2dd">reservada</span> y escribir en ella se llevó por delante al vecino, el 2.º LFO Speed en su default <span style="font-family:ui-monospace,Consolas,monospace">1E</span>. Lo que sigue vivo es peor: <span style="color:#d6e2dd">las reservadas contestan a una lectura como si fueran reales</span> — <span style="font-family:ui-monospace,Consolas,monospace">51→00 · 52→00 · 53→00 00 · 55→00</span>, sólo <span style="font-family:ui-monospace,Consolas,monospace">54</span> calla. La lista de reservadas <span style="color:#d6e2dd">viene del papel, no del teclado</span>: la app la lleva dentro. Y aquí es donde aparecerían los pares que falten — cada reparación deja escrito quién pisó a quién. Tercer modo de fallo en <a href="#6d">6d</a>.</div>
+              </div>
+            </div>
+
+            <div style="min-width:0;display:flex;flex-direction:column;gap:12px">
+              <div style="border:2px solid rgba(88,200,245,.35);border-radius:13px;background:rgba(88,200,245,.05);padding:12px 14px">
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#7fa7b6;margin-bottom:9px">Y ESTO, DE PROPINA, ENSEÑA QUÉ ES SysEx</div>
+                <div style="display:flex;gap:3px;flex-wrap:wrap">
+                  <div style="text-align:center"><div style="padding:6px 7px;border-radius:6px 6px 0 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#8fa39d">F0</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#5d6d69;margin-top:4px">inicio</div></div>
+                  <div style="text-align:center"><div style="padding:6px 7px;border-radius:6px 6px 0 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#8fa39d">43</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#5d6d69;margin-top:4px">Yamaha</div></div>
+                  <div style="text-align:center"><div style="padding:6px 7px;border-radius:6px 6px 0 0;background:rgba(243,177,63,.16);border:1px solid rgba(243,177,63,.5);font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#ffd08a">10</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#c69445;margin-top:4px">escribir</div></div>
+                  <div style="text-align:center"><div style="padding:6px 7px;border-radius:6px 6px 0 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#8fa39d">7F</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#5d6d69;margin-top:4px">a todos</div></div>
+                  <div style="text-align:center"><div style="padding:6px 7px;border-radius:6px 6px 0 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#8fa39d">1C 07</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#5d6d69;margin-top:4px">MODX</div></div>
+                  <div style="text-align:center"><div style="padding:6px 7px;border-radius:6px 6px 0 0;background:rgba(88,200,245,.16);border:1px solid rgba(88,200,245,.5);font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#bfe9fb">49</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#7fa7b6;margin-top:4px">operador</div></div>
+                  <div style="text-align:center"><div style="padding:6px 7px;border-radius:6px 6px 0 0;background:rgba(88,200,245,.16);border:1px solid rgba(88,200,245,.5);font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#bfe9fb">20</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#7fa7b6;margin-top:4px">op3·part1</div></div>
+                  <div style="text-align:center"><div style="padding:6px 7px;border-radius:6px 6px 0 0;background:rgba(88,200,245,.16);border:1px solid rgba(88,200,245,.5);font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#bfe9fb">1A</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#7fa7b6;margin-top:4px">Level</div></div>
+                  <div style="text-align:center"><div style="padding:6px 7px;border-radius:6px 6px 0 0;background:rgba(125,240,176,.18);border:2px solid rgba(125,240,176,.6);font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#eafff5">5A</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#7df0b0;margin-top:4px">= 90</div></div>
+                  <div style="text-align:center"><div style="padding:6px 7px;border-radius:6px 6px 0 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#8fa39d">F7</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#5d6d69;margin-top:4px">fin</div></div>
+                </div>
+                <div style="font-size:13px;color:#8fa39d;line-height:1.5;margin-top:11px">Los once bytes al lado de <span style="color:#d6e2dd">«OP3 · Level = 90»</span>. Para una app que existe para enseñar, esto no es un panel de debug: es una lección — y la única de las lecciones que enseña <span style="color:#d6e2dd">cómo habla</span> la app con el teclado.</div>
+              </div>
+
+              <div style="border:1px solid rgba(255,255,255,.08);border-radius:13px;background:#0a0f10;padding:12px 14px">
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#5d6d69;margin-bottom:8px">POR QUÉ CAJÓN Y NO PANTALLA</div>
+                <div style="font-size:13px;color:#8fa39d;line-height:1.5">Es el mismo argumento que ganó el A/B: <span style="color:#d6e2dd">hay que verlo mientras pasa</span>. Si te saco a otra pantalla para mirar la verificación, ya no puedes ver la causa — el mando que acabas de girar. El cajón se abre sobre la franja inferior y <span style="color:#d6e2dd">la pantalla de detrás sigue viva</span>.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:0 0 auto;padding:16px 18px;border-top:2px solid rgba(255,255,255,.08);display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
+        <div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.2em;color:#5d6d69;margin-bottom:8px">TE COMPRO EL MOTIVO, NO EL PANEL</div>
+          <div style="font-size:14px;color:#8fa39d;line-height:1.6">Tu argumento es el bueno y no es el de depurar: <strong style="font-weight:400;color:#d6e2dd">toda la disciplina de esta app es verificar releyendo, y no había ningún sitio donde ver esa verificación ocurrir.</strong> Una regla que no se puede mirar es una promesa.</div>
+        </div>
+        <div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.2em;color:#5d6d69;margin-bottom:8px">CÓMO EVITO QUE SEA UN PANEL DE DEBUG</div>
+          <div style="font-size:14px;color:#8fa39d;line-height:1.6">Por defecto <span style="color:#d6e2dd">no es un log</span>: abre mostrando sólo <span style="color:#d6e2dd">las escrituras sin confirmar</span> — dos líneas accionables, cada una con su botón. El tráfico completo está a un toque, pero nunca es lo primero.<br><br>Y el chip de la cabecera <span style="color:#d6e2dd">sólo llama la atención cuando hay algo</span>: neutro cuando no hay nada pendiente, en alerta con la cuenta cuando sí.</div>
+        </div>
+        <div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.2em;color:#5d6d69;margin-bottom:8px">LO QUE NO LLEVA</div>
+          <div style="font-size:14px;color:#8fa39d;line-height:1.6">Ni contador de mensajes por segundo, ni gráfica de latencia, ni volcado en vivo corriendo solo. Tres cifras estables (mediana, p99, perdidas) y se acabó: <span style="color:#d6e2dd">nada que se mueva compitiendo con la señal</span>.<br><br>Tampoco es el sitio del <span style="font-family:ui-monospace,Consolas,monospace">Receive Bulk</span>: eso es un fallo con consecuencia y vive en <a href="#4e">4e</a>. Aquí sólo lo que se puede reparar de un toque.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}"></script>
+</body>
+</html>

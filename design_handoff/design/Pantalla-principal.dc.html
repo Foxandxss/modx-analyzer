@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  html,body{margin:0;background:#0b0e0f}
+  @keyframes livePulse{0%,100%{opacity:.35}50%{opacity:1}}
+  a{color:#7df0b0}a:hover{color:#a9f7cd}
+</style>
+</helmet>
+
+<section style="padding:44px 40px 60px;display:flex;flex-direction:column;gap:14px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+  <div id="4a" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(243,177,63,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#f3b13f">4a</span>
+      <span style="font-size:26px;color:#d6e2dd">La pantalla principal — «el instrumento»</span>
+      <span style="font-size:15px;color:#8fa39d">promovida desde 3e · sustituye a la anterior · 1280×800</span>
+    </div>
+
+    <div style="width:1280px;height:800px;box-sizing:border-box;overflow:hidden;background:#06080a;color:#d6e2dd;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.12);background-image:radial-gradient(120% 90% at 12% 0%,rgba(125,240,176,.045),transparent 60%)">
+
+      <div style="flex:0 0 58px;display:flex;align-items:center;gap:11px;padding:0 14px;border-bottom:2px solid rgba(255,255,255,.09);background:linear-gradient(#0b0f11,#080b0d)">
+        <div style="display:flex;align-items:center;gap:9px">
+          <span style="width:9px;height:9px;border-radius:50%;background:#7df0b0;box-shadow:0 0 10px #7df0b0;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;color:#8fa39d;white-space:nowrap">MODX-1</span>
+        </div>
+        <div style="width:1px;height:28px;background:rgba(255,255,255,.1)"></div>
+        <span style="font-size:17px;white-space:nowrap">FM 2OP CHAIN</span>
+        <div style="display:flex;align-items:center;gap:7px;padding:4px 11px;border:1px solid rgba(243,177,63,.4);border-radius:999px;background:rgba(243,177,63,.07)">
+          <span style="font-size:9px;letter-spacing:.18em;color:#c69445">ALG</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#f3b13f">06</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 11px;border-radius:999px;border:1px solid rgba(125,240,176,.3);background:rgba(125,240,176,.05)">
+          <span style="width:14px;height:14px;border-radius:4px;border:1.5px solid #7df0b0;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#7df0b0;white-space:nowrap">CADENA LIMPIA</span>
+        </div>
+        <button style="all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;padding:5px 11px;min-height:36px;box-sizing:border-box;border-radius:999px;border:1px solid rgba(255,255,255,.12)">
+          <span style="width:14px;height:14px;border:1.5px solid #6f817c;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">SysEx</span>
+        </button>
+        <div style="flex:1"></div>
+        <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);margin-right:6px">
+          <span style="padding:9px 13px;border-radius:999px;background:rgba(125,240,176,.14);border:1px solid rgba(125,240,176,.4);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#7df0b0">CREAR</span>
+          <span style="padding:9px 13px;border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#6f817c">A/B</span>
+          <span style="padding:9px 13px;border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#6f817c">APRENDER</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;padding:12px 16px;border-radius:999px;border:1px solid rgba(125,240,176,.28);background:rgba(125,240,176,.06)">
+          <span style="width:7px;height:7px;border-radius:50%;background:#7df0b0;animation:livePulse 1.4s ease-in-out infinite;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;color:#7df0b0;white-space:nowrap">MIRAR · 30 fps</span>
+        </div>
+        <button style="all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;padding:13px 22px 13px 16px;border-radius:999px 8px 8px 999px;border:1.5px solid #f3b13f;background:linear-gradient(180deg,rgba(243,177,63,.22),rgba(243,177,63,.06));box-shadow:0 0 28px -8px rgba(243,177,63,.7),inset 0 1px 0 rgba(255,255,255,.12)">
+          <span style="width:26px;height:26px;border-radius:50%;border:2px solid #f3b13f;background:radial-gradient(circle,#f3b13f 34%,transparent 36%);box-shadow:0 0 14px -2px rgba(243,177,63,.8);display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;letter-spacing:.2em;color:#ffd08a">MEDIR</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#c69445;border-left:1px solid rgba(243,177,63,.35);padding-left:11px;line-height:1.25">65536<br>NOTA SOST.</span>
+        </button>
+        <div style="width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:12px"></div>
+        <button style="all:unset;cursor:pointer;flex:0 0 auto;width:56px;height:56px;margin-left:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:2px solid #ff7a5c;background:#140a08;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
+          <span style="width:15px;height:15px;border:2.4px solid #ff7a5c;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.08em;color:#ff9d85">CALLA</span>
+        </button>
+      </div>
+
+      <div style="flex:1;min-height:0;display:grid;grid-template-columns:700px 1fr 208px;gap:2px;background:rgba(255,255,255,.07)">
+
+        <div style="background:#080b0d;padding:12px 18px 0;display:flex;flex-direction:column;min-height:0">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
+            <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">DIAGRAMA DE OPERADORES</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;letter-spacing:.08em">SONDEADO · 49 op 1A · 12 Hz</div>
+          </div>
+
+          <div style="position:relative;flex:1;min-height:0">
+            <svg viewBox="0 0 664 470" width="664" height="470" style="position:absolute;inset:0;overflow:visible">
+              <defs>
+                <marker id="rArrow" markerWidth="7" markerHeight="7" refX="4" refY="3" orient="auto"><path d="M0 0L6 3L0 6z" fill="#58c8f5"></path></marker>
+                <marker id="rArrowDim" markerWidth="7" markerHeight="7" refX="4" refY="3" orient="auto"><path d="M0 0L6 3L0 6z" fill="#3d4a48"></path></marker>
+                <marker id="rArrowOut" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto"><path d="M0 0L7 4L0 8z" fill="#7df0b0"></path></marker>
+              </defs>
+              <path d="M118 130V158" stroke="#58c8f5" stroke-width="2.2" fill="none" marker-end="url(#rArrow)"></path>
+              <path d="M118 274V302" stroke="#58c8f5" stroke-width="2.8" fill="none" marker-end="url(#rArrow)"></path>
+              <path d="M318 130V158" stroke="#3d4a48" stroke-width="1.6" fill="none" stroke-dasharray="4 5" marker-end="url(#rArrowDim)"></path>
+              <path d="M318 274V302" stroke="#3d4a48" stroke-width="1.6" fill="none" stroke-dasharray="4 5" marker-end="url(#rArrowDim)"></path>
+              <path d="M518 274V302" stroke="#3d4a48" stroke-width="1.6" fill="none" stroke-dasharray="4 5" marker-end="url(#rArrowDim)"></path>
+              <path d="M177 90C219 90 219 38 182 38" stroke="#58c8f5" stroke-width="2.2" fill="none" marker-end="url(#rArrow)"></path>
+              <text x="230" y="70" fill="#58c8f5" font-family="ui-monospace,Consolas,monospace" font-size="11" letter-spacing="1.2">FB 3</text>
+              <path d="M118 410V440" stroke="#7df0b0" stroke-width="2.2" fill="none"></path>
+              <path d="M318 410V440M518 410V440" stroke="#7df0b0" stroke-width="2.2" fill="none"></path>
+              <path d="M118 440H596" stroke="#7df0b0" stroke-width="2.2" fill="none" marker-end="url(#rArrowOut)"></path>
+              <text x="500" y="464" fill="#7df0b0" font-family="ui-monospace,Consolas,monospace" font-size="11" letter-spacing="1.4">OUT L/R</text>
+            </svg>
+
+            <div style="position:absolute;left:59px;top:22px;width:118px;height:108px;border:1.5px solid #58c8f5;border-radius:5px;background:#0a1013;overflow:hidden;box-shadow:0 0 22px -8px rgba(88,200,245,.6)">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:72%;background:linear-gradient(to top,rgba(88,200,245,.34),rgba(88,200,245,.03))"></div>
+              <div style="position:relative;height:100%;box-sizing:border-box;padding:8px 11px;display:flex;flex-direction:column;justify-content:space-between">
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#bfe9fb">OP5</span><span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span></div>
+                <div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:28px;line-height:1;color:#eaf7fd">72</div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#7fa7b6">×2.00</div>
+                </div>
+                <svg viewBox="0 0 96 22" width="100%" height="22" style="display:block"><path d="M0 20H96" stroke="rgba(88,200,245,.25)"></path><path d="M3 20V16M15 20V13M27 20V4M39 20V11M51 20V15M63 20V17M75 20V18M87 20V19" stroke="#58c8f5" stroke-width="2" stroke-linecap="round"></path></svg>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f7d8c">Res 1 · sk 5</div>
+              </div>
+            </div>
+
+            <div style="position:absolute;left:59px;top:158px;width:118px;height:116px;border:1.5px solid #58c8f5;border-radius:5px;background:#0a1013;overflow:hidden;box-shadow:0 0 26px -7px rgba(88,200,245,.75)">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:90%;background:linear-gradient(to top,rgba(88,200,245,.46),rgba(88,200,245,.05))"></div>
+              <div style="position:relative;height:100%;box-sizing:border-box;padding:8px 11px;display:flex;flex-direction:column;justify-content:space-between">
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#bfe9fb">OP3</span><span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span></div>
+                <div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:28px;line-height:1;color:#eaf7fd">90</div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#7fa7b6">×1.41 · 1.4103 medido</div>
+                </div>
+                <svg viewBox="0 0 96 22" width="100%" height="22" style="display:block"><path d="M0 20H96" stroke="rgba(88,200,245,.25)"></path><path d="M3 20V3M27 20V11M51 20V15M75 20V17M91 20V18" stroke="#58c8f5" stroke-width="2.4" stroke-linecap="round"></path></svg>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f7d8c">Odd 1</div>
+              </div>
+            </div>
+
+            <div style="position:absolute;left:59px;top:302px;width:118px;height:108px;border:2px solid #f3b13f;border-radius:28px;background:#0d1214;overflow:hidden;box-shadow:0 0 30px -8px rgba(243,177,63,.7),inset 0 0 0 1px rgba(243,177,63,.16)">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:99%;background:linear-gradient(to top,rgba(243,177,63,.5),rgba(243,177,63,.04))"></div>
+              <div style="position:relative;height:100%;box-sizing:border-box;padding:9px 13px;display:flex;flex-direction:column;justify-content:space-between">
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#ffe0b0">OP1</span><span style="font-size:8px;letter-spacing:.14em;color:#f3b13f">PORT</span></div>
+                <div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:28px;line-height:1;color:#fff3e0">99</div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#c69445">×1.00 · 261.763 Hz</div>
+                </div>
+                <svg viewBox="0 0 92 22" width="100%" height="22" style="display:block"><path d="M0 20H92" stroke="rgba(243,177,63,.25)"></path><path d="M3 20V5" stroke="#f3b13f" stroke-width="2.4" stroke-linecap="round"></path></svg>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#8a7038">Sine</div>
+              </div>
+            </div>
+
+            <div style="position:absolute;left:259px;top:22px;width:118px;height:108px;border:1.5px solid #58c8f5;border-radius:5px;background:#0a1013;overflow:hidden;box-shadow:0 0 20px -9px rgba(88,200,245,.5)">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:64%;background:linear-gradient(to top,rgba(88,200,245,.3),rgba(88,200,245,.03))"></div>
+              <div style="position:relative;height:100%;box-sizing:border-box;padding:8px 11px;display:flex;flex-direction:column;justify-content:space-between">
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#bfe9fb">OP6</span><span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span></div>
+                <div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:28px;line-height:1;color:#eaf7fd">64</div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#7fa7b6">×7.00</div>
+                </div>
+                <svg viewBox="0 0 96 22" width="100%" height="22" style="display:block"><path d="M0 20H96" stroke="rgba(88,200,245,.25)"></path><path d="M3 20V5M15 20V10M27 20V13M39 20V15M51 20V17M63 20V18M75 20V19M87 20V19" stroke="#58c8f5" stroke-width="2" stroke-linecap="round"></path></svg>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f7d8c">Sine</div>
+              </div>
+            </div>
+
+            <div style="position:absolute;left:259px;top:158px;width:118px;height:116px;border:1.5px dashed #3d4a48;border-radius:5px;background:#070a0b;overflow:hidden">
+              <div style="position:relative;height:100%;box-sizing:border-box;padding:8px 11px;display:flex;flex-direction:column;justify-content:space-between">
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#5d6d69">OP2</span><span style="font-size:8px;letter-spacing:.14em;color:#4b5a57">INACTIVO</span></div>
+                <div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:28px;line-height:1;color:#3f4d4a">0</div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#3f4d4a">×3.00</div>
+                </div>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#3f4d4a">corta la cadena</div>
+              </div>
+            </div>
+
+            <div style="position:absolute;left:259px;top:302px;width:118px;height:108px;border:2px solid #f3b13f;border-radius:28px;background:#0d1214;overflow:hidden;box-shadow:0 0 30px -8px rgba(243,177,63,.7),inset 0 0 0 1px rgba(243,177,63,.16)">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:99%;background:linear-gradient(to top,rgba(243,177,63,.5),rgba(243,177,63,.04))"></div>
+              <div style="position:relative;height:100%;box-sizing:border-box;padding:9px 13px;display:flex;flex-direction:column;justify-content:space-between">
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#ffe0b0">OP4</span><span style="font-size:8px;letter-spacing:.14em;color:#f3b13f">PORT</span></div>
+                <div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:28px;line-height:1;color:#fff3e0">99</div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#c69445">×2.00 · 523.526 Hz</div>
+                </div>
+                <svg viewBox="0 0 92 22" width="100%" height="22" style="display:block"><path d="M0 20H92" stroke="rgba(243,177,63,.25)"></path><path d="M3 20V5" stroke="#f3b13f" stroke-width="2.4" stroke-linecap="round"></path></svg>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#8a7038">Sine</div>
+              </div>
+            </div>
+
+            <div style="position:absolute;left:459px;top:158px;width:118px;height:116px;border:1.5px dashed #3d4a48;border-radius:5px;background:#070a0b;overflow:hidden">
+              <div style="position:relative;height:100%;box-sizing:border-box;padding:8px 11px;display:flex;flex-direction:column;justify-content:space-between">
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#5d6d69">OP7</span><span style="font-size:8px;letter-spacing:.14em;color:#4b5a57">INACTIVO</span></div>
+                <div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:28px;line-height:1;color:#3f4d4a">0</div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#3f4d4a">×1.00</div>
+                </div>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#3f4d4a">corta la cadena</div>
+              </div>
+            </div>
+
+            <div style="position:absolute;left:459px;top:302px;width:118px;height:108px;border:2px solid rgba(243,177,63,.6);border-radius:28px;background:#0d1214;overflow:hidden;box-shadow:0 0 22px -10px rgba(243,177,63,.5)">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(to top,rgba(243,177,63,.32),rgba(243,177,63,.03))"></div>
+              <div style="position:relative;height:100%;box-sizing:border-box;padding:9px 13px;display:flex;flex-direction:column;justify-content:space-between">
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#ffe0b0">OP8</span><span style="font-size:8px;letter-spacing:.14em;color:#c69445">PORT</span></div>
+                <div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:28px;line-height:1;color:#f7e3c4">55</div>
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#c69445">×0.50 · 130.881 Hz</div>
+                </div>
+                <svg viewBox="0 0 92 22" width="100%" height="22" style="display:block"><path d="M0 20H92" stroke="rgba(243,177,63,.25)"></path><path d="M3 20V7M15 20V12M27 20V15M39 20V17M51 20V18M63 20V19M75 20V19M87 20V19" stroke="#c69445" stroke-width="2" stroke-linecap="round"></path></svg>
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#8a7038">All 1</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex:0 0 auto;display:flex;gap:18px;align-items:center;padding:9px 0 11px;border-top:2px solid rgba(255,255,255,.08)">
+            <span style="display:flex;align-items:center;gap:8px;white-space:nowrap"><span style="width:22px;height:14px;border:2px solid #f3b13f;border-radius:8px;display:block;flex:0 0 auto"></span><span style="font-size:10px;letter-spacing:.12em;color:#8fa39d">PORTADORA</span></span>
+            <span style="display:flex;align-items:center;gap:8px;white-space:nowrap"><span style="width:22px;height:14px;border:1.5px solid #58c8f5;border-radius:3px;display:block;flex:0 0 auto"></span><span style="font-size:10px;letter-spacing:.12em;color:#8fa39d">MODULADOR</span></span>
+            <span style="display:flex;align-items:center;gap:8px;white-space:nowrap"><span style="width:22px;height:14px;border:1.5px dashed #3d4a48;border-radius:3px;display:block;flex:0 0 auto"></span><span style="font-size:10px;letter-spacing:.12em;color:#8fa39d">LEVEL 0</span></span>
+            <span style="margin-left:auto;font-size:11px;color:#5d6d69;text-align:right">nodos 118×108 · cabe la forma espectral y el Hz real de cada operador</span>
+          </div>
+        </div>
+
+        <div style="background:#080b0d;display:flex;flex-direction:column;min-height:0">
+          <div style="flex:1.15;min-height:0;padding:12px 16px;display:flex;flex-direction:column;border-bottom:2px solid rgba(255,255,255,.09)">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px">
+              <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">ESPECTRO</div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;letter-spacing:.06em">LOG 1×–32×</div>
+            </div>
+            <div style="flex:1;min-height:0;position:relative;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:linear-gradient(#0a0f10,#070a0b);overflow:hidden">
+              <svg viewBox="0 0 400 140" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+                <path d="M0 136H400" stroke="rgba(255,255,255,.1)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+                <path d="M80 0V136M155 0V136M254 0V136" stroke="rgba(255,255,255,.04)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+                <path d="M0 136V112M80 136V92M102 136V83M155 136V74M191 136V100M218 136V122M241 136V131M254 136V81M259 136V135M320 136V111M362 136V129" stroke="#7df0b0" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linecap="round" style="filter:drop-shadow(0 0 6px rgba(125,240,176,.5))"></path>
+                <path d="M254 81V64" stroke="#f3b13f" stroke-width="3" vector-effect="non-scaling-stroke"></path>
+                <path d="M320 136V111M362 136V129" stroke="#ff7a5c" stroke-width="3" vector-effect="non-scaling-stroke" stroke-dasharray="3 3"></path>
+              </svg>
+              <div style="position:absolute;left:10px;top:6px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#f3b13f;white-space:nowrap">9.º ARMÓNICO · PICO</div>
+              <div style="position:absolute;right:8px;top:6px;display:flex;align-items:center;gap:6px;padding:3px 8px;border:1px solid rgba(255,122,92,.4);border-radius:999px;background:rgba(255,122,92,.1)">
+                <span style="width:6px;height:6px;background:#ff7a5c;display:block"></span>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#ffb9a6;white-space:nowrap">ARTEFACTO 2756 Hz</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex:1;min-height:0;padding:12px 16px;display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px">
+              <div style="display:flex;align-items:baseline;gap:12px">
+                <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">ARMÓNICOS</div>
+                <div style="font-size:12px;color:#6f817c">|J<span style="font-size:9px">n</span>(2.81)| medido contra teoría</div>
+              </div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69">ERROR 0.4 dB</div>
+            </div>
+            <div style="flex:1;min-height:0;position:relative;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:linear-gradient(#0a0f10,#070a0b);overflow:hidden">
+              <svg viewBox="0 0 400 150" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+                <path d="M0 132H400" stroke="rgba(255,255,255,.12)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+                <path d="M0 30H400M0 64H400M0 98H400" stroke="rgba(255,255,255,.04)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+                <path d="M12 132V107M45 132V78M78 132V70M111 132V101M144 132V122M177 132V130M210 132V132M243 132V132M276 132V131M309 132V129M342 132V132M375 132V132" stroke="#7df0b0" stroke-width="15" vector-effect="non-scaling-stroke" opacity=".8"></path>
+                <polyline points="12,107 45,77 78,68 111,99 144,121 177,129 210,131 243,132 276,132 309,132 342,132 375,132" fill="none" stroke="#f3b13f" stroke-width="2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"></polyline>
+                <circle cx="12" cy="107" r="4" fill="#0a0f10" stroke="#f3b13f" stroke-width="1.8"></circle>
+                <circle cx="45" cy="77" r="4" fill="#0a0f10" stroke="#f3b13f" stroke-width="1.8"></circle>
+                <circle cx="78" cy="68" r="4" fill="#0a0f10" stroke="#f3b13f" stroke-width="1.8"></circle>
+                <circle cx="111" cy="99" r="4" fill="#0a0f10" stroke="#f3b13f" stroke-width="1.8"></circle>
+                <circle cx="144" cy="121" r="4" fill="#0a0f10" stroke="#f3b13f" stroke-width="1.8"></circle>
+              </svg>
+              <div style="position:absolute;left:10px;top:5px;display:flex;gap:14px">
+                <span style="display:flex;align-items:center;gap:6px;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#7df0b0"><svg width="18" height="8"><path d="M0 4H18" stroke="#7df0b0" stroke-width="4"></path></svg>MEDIDO</span>
+                <span style="display:flex;align-items:center;gap:6px;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#c69445"><svg width="18" height="8"><path d="M0 4H18" stroke="#f3b13f" stroke-width="2" stroke-dasharray="4 3"></path></svg>TEORÍA</span>
+              </div>
+              <div style="position:absolute;left:10px;bottom:4px;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">n1</div>
+              <div style="position:absolute;left:36%;bottom:4px;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">n5</div>
+              <div style="position:absolute;right:10px;bottom:4px;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">n12</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#080b0d;padding:12px 13px;display:flex;flex-direction:column;gap:1px;min-height:0">
+          <div style="background:#0a0f10;border-radius:11px 11px 0 0;padding:11px 12px">
+            <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">RATIO MEDIDO</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:30px;color:#7df0b0;line-height:1.1">1.4103</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">pantalla 1.41 · Δ 0.4 ¢</div>
+          </div>
+          <div style="background:#0a0f10;padding:11px 12px">
+            <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">fc / fm</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#d6e2dd">261.763 Hz</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#d6e2dd">369.175 Hz</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">±0.005 · 11 parciales</div>
+          </div>
+          <div style="background:#0a0f10;padding:11px 12px">
+            <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">ÍNDICE I</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:22px;color:#f3b13f">2.81</div>
+          </div>
+          <div style="background:#0a0f10;padding:11px 12px">
+            <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">PEOR PARCIAL</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:17px;color:#7df0b0">n=2 · 0.9 dB</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">cadena limpia</div>
+          </div>
+          <div style="background:#0a0f10;border-radius:0 0 11px 11px;padding:11px 12px;flex:1;display:flex;flex-direction:column;justify-content:flex-end">
+            <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69;margin-bottom:6px">ÚLTIMA MEDIDA</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#8fa39d">65536 · hace 14 s</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69">C4 sost. · pico −18 dBFS</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:0 0 156px;background:#080b0d;border-top:2px solid rgba(255,255,255,.09);padding:0 18px 12px;display:flex;flex-direction:column;min-height:0">
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:2px;padding:9px 0 8px">
+          <span style="padding:11px 20px;min-height:44px;box-sizing:border-box;display:flex;align-items:center;border-radius:11px;background:rgba(125,240,176,.1);border:1px solid rgba(125,240,176,.35);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;color:#7df0b0">WATERFALL</span>
+          <span style="padding:11px 20px;min-height:44px;box-sizing:border-box;display:flex;align-items:center;border-radius:11px;border:1px solid rgba(255,255,255,.08);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;color:#6f817c">SCOPE</span>
+          <span style="margin-left:14px;font-size:13px;color:#6f817c">el ataque brillante apagándose · 14 tramas · 0 → 460 ms</span>
+          <span style="margin-left:auto;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;letter-spacing:.08em">TIEMPO ↓ · FRECUENCIA →</span>
+        </div>
+        <div style="flex:1;min-height:0;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:linear-gradient(#0a0f10,#06090a);overflow:hidden;position:relative">
+          <svg viewBox="0 0 400 200" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+            <g transform="translate(0,20) scale(1,1.35)"><polyline points="0,-10.3 7,-3.9 14,-0.2 21,0 36,0 50,0 64,-0.1 71,-2.9 79,-11.6 86,-6.6 93,-4.6 100,-16.5 107,-9.4 114,-0.7 129,0 143,-1.5 150,-14.6 157,-19.8 164,-3.8 179,-0.7 186,-7.9 193,-12.5 200,-2.8 214,-3.9 221,-4.6 236,-1.1 243,-3.6 250,-15 257,-15 264,-2.3 286,0 307,-0.4 314,-5 321,-9 329,-2.3 350,-0.2 357,-1.9 364,-2.6 371,-0.5 400,0" fill="none" stroke="#eafff4" stroke-width="1.4" vector-effect="non-scaling-stroke" style="filter:drop-shadow(0 0 4px rgba(234,255,244,.7))"></polyline></g>
+            <g transform="translate(0,40) scale(1,1.35)"><polyline points="0,-5.8 7,-2.2 14,-0.1 36,0 64,-0.1 71,-4.2 79,-16.5 86,-9.3 93,-5.9 100,-21 107,-11.9 114,-0.9 136,0 143,-1 150,-9.7 157,-13.2 164,-2.5 179,-0.3 186,-3.5 193,-5.5 200,-1.2 214,-1.2 221,-1.4 243,-1.9 250,-11 257,-11.1 264,-1.6 293,0 307,-0.2 314,-2.6 321,-4.7 329,-1.2 350,-0.1 357,-0.7 364,-1 371,-0.2 400,0" fill="none" stroke="#a8f5cf" stroke-width="1.3" vector-effect="non-scaling-stroke"></polyline></g>
+            <g transform="translate(0,60) scale(1,1.35)"><polyline points="0,-15.5 7,-5.8 14,-0.3 36,0 64,-0.2 71,-4.4 79,-17.5 86,-9.8 93,-5.1 100,-17.8 107,-10.1 114,-0.8 136,0 143,-0.5 150,-5.3 157,-7.3 164,-1.4 186,-1.3 193,-2.1 200,-0.5 221,-0.4 243,-1.1 250,-7.5 257,-7.6 264,-1.1 293,0 314,-1.3 321,-2.3 329,-0.6 357,-0.2 364,-0.3 400,0" fill="none" stroke="#7ce9b3" stroke-width="1.2" vector-effect="non-scaling-stroke"></polyline></g>
+            <g transform="translate(0,80) scale(1,1.35)"><polyline points="0,-19.2 7,-7.2 14,-0.4 36,0 64,-0.1 71,-4.2 79,-16.5 86,-9.2 93,-3.9 100,-12.9 107,-7.3 114,-0.6 136,0 143,-0.3 150,-2.7 157,-3.7 164,-0.7 186,-0.5 193,-0.8 200,-0.2 221,-0.1 243,-0.7 250,-4.9 257,-4.9 264,-0.7 293,0 314,-0.6 321,-1.1 329,-0.3 357,-0.1 364,-0.1 400,0" fill="none" stroke="#5cd99c" stroke-width="1.1" vector-effect="non-scaling-stroke"></polyline></g>
+            <g transform="translate(0,100) scale(1,1.35)"><polyline points="0,-19.4 7,-7.2 14,-0.4 36,0 64,-0.1 71,-3.7 79,-14.7 86,-8.2 93,-2.8 100,-8.6 107,-4.9 114,-0.4 136,0 143,-0.1 150,-1.3 157,-1.8 164,-0.3 186,-0.2 193,-0.3 200,-0.1 243,-0.4 250,-3.1 257,-3.2 264,-0.4 293,0 314,-0.3 321,-0.5 329,-0.1 400,0" fill="none" stroke="#43bd85" stroke-width="1.1" vector-effect="non-scaling-stroke"></polyline></g>
+            <g transform="translate(0,120) scale(1,1.35)"><polyline points="0,-17.9 7,-6.7 14,-0.3 36,0 64,-0.1 71,-3.2 79,-12.8 86,-7.2 93,-1.9 100,-5.6 107,-3.2 114,-0.3 136,0 143,-0.1 150,-0.6 157,-0.8 164,-0.2 186,-0.1 193,-0.1 243,-0.3 250,-2 257,-2 264,-0.3 293,0 314,-0.1 321,-0.2 329,-0.1 400,0" fill="none" stroke="#32a06f" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+            <g transform="translate(0,140) scale(1,1.35)"><polyline points="0,-15.8 7,-5.9 14,-0.3 36,0 64,-0.1 71,-2.8 79,-11 86,-6.1 93,-1.3 100,-3.6 107,-2 114,-0.2 143,0 150,-0.3 157,-0.4 164,-0.1 243,-0.2 250,-1.2 257,-1.2 264,-0.2 314,-0.1 321,-0.1 400,0" fill="none" stroke="#24825a" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+            <g transform="translate(0,160) scale(1,1.35)"><polyline points="0,-14.7 7,-5.5 14,-0.3 36,0 64,-0.1 71,-2.6 79,-10.2 86,-5.7 93,-1.1 100,-2.8 107,-1.6 136,0 150,-0.2 157,-0.3 243,-0.1 250,-1 257,-1 264,-0.1 321,-0.1 400,0" fill="none" stroke="#1e7351" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+          </svg>
+          <div style="position:absolute;left:12px;top:6px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;letter-spacing:.1em">ATAQUE</div>
+          <div style="position:absolute;right:12px;bottom:5px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#3a6b57;letter-spacing:.1em">32×</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:1280px;display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:6px">
+      <div>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.2em;color:#5d6d69;margin-bottom:8px">PROMOVIDA DESDE 3e</div>
+        <div style="font-size:15px;line-height:1.65;color:#8fa39d">Waterfall en <span style="color:#d6e2dd">156 px compartidos</span> con el scope, y por defecto en cuanto suena una nota; diagrama en <span style="color:#d6e2dd">700 px</span> con la forma espectral y el Hz real por operador; y los armónicos como panel permanente con <span style="color:#d6e2dd">Bessel superpuesto</span> — la tesis del proyecto visible sin abrir nada.</div>
+      </div>
+      <div>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.2em;color:#5d6d69;margin-bottom:8px">NUEVO EN LA CABECERA</div>
+        <div style="font-size:15px;line-height:1.65;color:#8fa39d">El <span style="color:#ffb9a6">pánico</span> — permanente, forma octogonal única, aislado del resto por un filete y 16 px de aire — y el conmutador <span style="color:#d6e2dd">CREAR · A/B · APRENDER</span>. Y el artefacto recupera su frecuencia: un aviso sin el Hz no se puede accionar.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section style="padding:44px 40px 60px;display:flex;flex-direction:column;gap:14px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+  <div id="4b" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">4b</span>
+      <span style="font-size:26px;color:#d6e2dd">El A/B — misma nota, un solo parámetro cambiando</span>
+      <span style="font-size:15px;color:#8fa39d">es un <strong style="color:#d6e2dd;font-weight:400">modo</strong> de <a href="#4a">4a</a>, no una pantalla aparte · 1280×800</span>
+    </div>
+
+    <div style="width:1280px;height:800px;box-sizing:border-box;overflow:hidden;background:#06080a;color:#d6e2dd;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.12);background-image:radial-gradient(120% 90% at 12% 0%,rgba(125,240,176,.045),transparent 60%)">
+
+      <div style="flex:0 0 58px;display:flex;align-items:center;gap:14px;padding:0 16px;border-bottom:2px solid rgba(255,255,255,.09);background:linear-gradient(#0b0f11,#080b0d)">
+        <div style="display:flex;align-items:center;gap:9px">
+          <span style="width:9px;height:9px;border-radius:50%;background:#7df0b0;box-shadow:0 0 10px #7df0b0;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;color:#8fa39d;white-space:nowrap">MODX-1</span>
+        </div>
+        <div style="width:1px;height:28px;background:rgba(255,255,255,.1)"></div>
+        <span style="font-size:17px;white-space:nowrap">FM 2OP CHAIN</span>
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 11px;border-radius:999px;border:1px solid rgba(125,240,176,.3);background:rgba(125,240,176,.05)">
+          <span style="width:14px;height:14px;border-radius:4px;border:1.5px solid #7df0b0;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#7df0b0;white-space:nowrap">CADENA LIMPIA</span>
+        </div>
+        <button style="all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;padding:5px 11px;min-height:36px;box-sizing:border-box;border-radius:999px;border:1px solid rgba(255,255,255,.12)">
+          <span style="width:14px;height:14px;border:1.5px solid #6f817c;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">SysEx</span>
+        </button>
+        <div style="flex:1"></div>
+        <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)">
+          <span style="padding:9px 13px;border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#6f817c">CREAR</span>
+          <span style="padding:9px 13px;border-radius:999px;background:rgba(125,240,176,.14);border:1px solid rgba(125,240,176,.4);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#7df0b0">A/B</span>
+          <span style="padding:9px 13px;border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#6f817c">APRENDER</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 15px;border-radius:999px;border:2px solid rgba(88,200,245,.5);background:rgba(88,200,245,.1);box-shadow:0 0 26px -10px rgba(88,200,245,.8)">
+          <span style="width:16px;height:16px;border-radius:50%;background:#58c8f5;box-shadow:0 0 12px #58c8f5;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;color:#bfe9fb;white-space:nowrap">TOCA LA APP · C4</span>
+        </div>
+        <div style="width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:12px"></div>
+        <button style="all:unset;cursor:pointer;flex:0 0 auto;width:56px;height:56px;margin-left:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:2px solid #ff7a5c;background:#1c0d0a;box-shadow:0 0 26px -8px rgba(255,122,92,.8);clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
+          <span style="width:15px;height:15px;background:#ff7a5c;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.08em;color:#ffb9a6">CALLA</span>
+        </button>
+      </div>
+
+      <div style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 232px;gap:2px;background:rgba(255,255,255,.07)">
+
+        <div style="background:#080b0d;padding:12px 18px;display:flex;flex-direction:column;gap:10px;min-height:0;box-sizing:border-box">
+
+          <div style="flex:0 0 auto;display:flex;align-items:stretch;gap:14px">
+            <div style="flex:1;min-width:0;border:2px solid rgba(125,240,176,.4);border-radius:14px;background:rgba(125,240,176,.05);padding:11px 15px;display:flex;align-items:center;gap:18px">
+              <div style="flex:0 0 auto">
+                <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.2em;color:#63c99a">EL ÚNICO PARÁMETRO QUE CAMBIA</div>
+                <div style="font-size:19px;color:#eafff5;margin-top:2px">OP3 · Level del modulador</div>
+              </div>
+              <div style="flex:1;min-width:0;display:flex;align-items:center;gap:12px">
+                <div style="flex:0 0 auto;display:flex;align-items:baseline;gap:8px">
+                  <span style="width:26px;height:26px;border-radius:50%;border:2px solid #6f817c;display:inline-flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#8fa39d">A</span>
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#8fa39d;line-height:1">20</span>
+                </div>
+                <div style="flex:1;min-width:0;height:20px;border-radius:6px;background:#080c0d;border:1px solid rgba(255,255,255,.08);position:relative;overflow:hidden">
+                  <div style="position:absolute;left:0;top:0;bottom:0;width:20%;background:rgba(143,163,157,.3)"></div>
+                  <div style="position:absolute;left:20%;top:0;bottom:0;width:71%;background:linear-gradient(90deg,rgba(125,240,176,.2),rgba(125,240,176,.6))"></div>
+                  <div style="position:absolute;left:20%;top:-2px;bottom:-2px;width:2px;background:#8fa39d"></div>
+                  <div style="position:absolute;left:91%;top:-2px;bottom:-2px;width:2px;background:#7df0b0;box-shadow:0 0 10px #7df0b0"></div>
+                </div>
+                <div style="flex:0 0 auto;display:flex;align-items:baseline;gap:8px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#7df0b0;line-height:1">90</span>
+                  <span style="width:26px;height:26px;border-radius:50%;background:#7df0b0;color:#06110a;display:inline-flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:12px">B</span>
+                </div>
+              </div>
+              <div style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;text-align:right;line-height:1.6;border-left:1px solid rgba(125,240,176,.2);padding-left:14px">49 20 1A<br>arrastra los extremos</div>
+            </div>
+            <button style="all:unset;cursor:pointer;flex:0 0 auto;padding:0 18px;min-height:56px;box-sizing:border-box;display:flex;align-items:center;gap:11px;border:1.5px solid rgba(255,255,255,.16);border-radius:14px">
+              <span style="width:18px;height:18px;border:2px solid #8fa39d;border-radius:4px;display:block"></span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#8fa39d;text-align:left;line-height:1.4">BARRER<br><span style="color:#5d6d69">0→99 en 8 pasos</span></span>
+            </button>
+          </div>
+
+          <div style="flex:1.15;min-height:0;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:linear-gradient(#0a0f10,#070a0b);padding:11px 14px;display:flex;flex-direction:column;box-sizing:border-box">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+              <div style="display:flex;align-items:baseline;gap:14px">
+                <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">ESPECTRO · A SOBRE B</div>
+                <div style="font-size:13px;color:#6f817c">mismas frecuencias, reparto de amplitudes radicalmente distinto</div>
+              </div>
+              <div style="display:flex;gap:14px">
+                <span style="display:flex;align-items:center;gap:6px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d"><svg width="20" height="10"><rect x="0" y="1" width="7" height="8" fill="none" stroke="#8fa39d" stroke-width="1.6"></rect></svg>A · 20</span>
+                <span style="display:flex;align-items:center;gap:6px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7df0b0"><svg width="20" height="10"><rect x="0" y="1" width="7" height="8" fill="#7df0b0"></rect></svg>B · 90</span>
+              </div>
+            </div>
+            <div style="flex:1;min-height:0;position:relative">
+              <svg viewBox="0 0 400 140" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+                <path d="M0 136H400" stroke="rgba(255,255,255,.1)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+                <path d="M80 0V136M155 0V136M254 0V136" stroke="rgba(255,255,255,.04)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+                <path d="M0 136V18M80 136V104M102 136V126M155 136V132M191 136V135" stroke="#8fa39d" stroke-width="7" vector-effect="non-scaling-stroke" opacity=".45"></path>
+                <path d="M0 136V112M80 136V92M102 136V83M155 136V74M191 136V100M218 136V122M241 136V131M254 136V81M259 136V135" stroke="#7df0b0" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linecap="round" style="filter:drop-shadow(0 0 6px rgba(125,240,176,.6))"></path>
+                <path d="M0 14V6M0 108V100" stroke="#ff7a5c" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+                <path d="M254 77V60" stroke="#ff7a5c" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+              </svg>
+              <div style="position:absolute;left:1%;top:0;padding:3px 8px;border-radius:7px;background:#0a0f10;border:1px solid rgba(255,122,92,.5);font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#ffb9a6;white-space:nowrap">la fundamental PIERDE 14 dB</div>
+              <div style="position:absolute;left:58%;top:22%;padding:3px 8px;border-radius:7px;background:#0a0f10;border:1px solid rgba(255,122,92,.5);font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#ffb9a6;white-space:nowrap">el 9.º GANA 31 dB</div>
+              <div style="position:absolute;right:4px;bottom:2px;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">32×</div>
+            </div>
+          </div>
+
+          <div style="flex:1;min-height:0;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:linear-gradient(#0a0f10,#070a0b);padding:11px 14px;display:flex;flex-direction:column;box-sizing:border-box">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+              <div style="display:flex;align-items:baseline;gap:14px">
+                <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">ARMÓNICOS · A CONTRA B</div>
+                <div style="font-size:13px;color:#6f817c">y la teoría de cada uno: |J<span style="font-size:10px">n</span>(0.62)| y |J<span style="font-size:10px">n</span>(2.81)|</div>
+              </div>
+              <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69">ERROR 0.4 / 0.5 dB</div>
+            </div>
+            <div style="flex:1;min-height:0;position:relative">
+              <svg viewBox="0 0 400 150" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+                <path d="M0 132H400" stroke="rgba(255,255,255,.12)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+                <path d="M0 30H400M0 70H400M0 104H400" stroke="rgba(255,255,255,.04)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+                <path d="M50 8V140M100 8V140M150 8V140M200 8V140M250 8V140M300 8V140M350 8V140" stroke="rgba(255,255,255,.05)" stroke-width="1" vector-effect="non-scaling-stroke"></path>
+                <path d="M14 132V14M64 132V93M114 132V126M164 132V131M214 132V132M264 132V132M314 132V132M364 132V132" stroke="#8fa39d" stroke-width="13" vector-effect="non-scaling-stroke" opacity=".4"></path>
+                <path d="M34 132V114M84 132V86M134 132V71M184 132V90M234 132V112M284 132V124M334 132V130M384 132V132" stroke="#7df0b0" stroke-width="13" vector-effect="non-scaling-stroke" opacity=".9"></path>
+                <polyline points="14,14 64,93 114,126 164,131 214,132 264,132 314,132 364,132" fill="none" stroke="#f3b13f" stroke-width="1.6" stroke-dasharray="5 4" vector-effect="non-scaling-stroke" opacity=".65"></polyline>
+                <polyline points="34,114 84,86 134,71 184,90 234,112 284,124 334,130 384,132" fill="none" stroke="#f3b13f" stroke-width="2" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"></polyline>
+              </svg>
+              <div style="position:absolute;left:10px;top:2px;display:flex;gap:14px">
+                <span style="display:flex;align-items:center;gap:6px;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#c69445"><svg width="18" height="8"><path d="M0 4H18" stroke="#f3b13f" stroke-width="2" stroke-dasharray="4 3"></path></svg>TEORÍA DE CADA UNO</span>
+              </div>
+              <div style="position:absolute;left:1%;bottom:2px;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">n0</div>
+              <div style="position:absolute;left:26%;bottom:2px;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">n2</div>
+              <div style="position:absolute;left:51%;bottom:2px;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">n4</div>
+              <div style="position:absolute;left:76%;bottom:2px;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">n6</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#080b0d;padding:12px 13px;display:flex;flex-direction:column;gap:1px;min-height:0;box-sizing:border-box">
+          <div style="background:#0a0f10;border-radius:11px 11px 0 0;padding:11px 12px">
+            <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">ÍNDICE I</div>
+            <div style="display:flex;align-items:baseline;gap:9px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:17px;color:#8fa39d">0.62</span>
+              <svg width="22" height="10"><path d="M0 5H15" stroke="#f3b13f" stroke-width="1.6"></path><path d="M22 5L14 1V9Z" fill="#f3b13f"></path></svg>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#f3b13f;line-height:1.1">2.81</span>
+            </div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">×4.5 · ajustado a Bessel</div>
+          </div>
+          <div style="background:#0a0f10;padding:11px 12px">
+            <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">PICO DEL ESPECTRO</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#8fa39d">fundamental</div>
+            <div style="display:flex;align-items:center;gap:7px">
+              <svg width="16" height="12"><path d="M8 0V9" stroke="#f3b13f" stroke-width="1.6"></path><path d="M8 12L4 5H12Z" fill="#f3b13f"></path></svg>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#f3b13f">9.º armónico</span>
+            </div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c;margin-top:3px">la lección, en una línea</div>
+          </div>
+          <div style="background:#0a0f10;padding:11px 12px">
+            <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">PARCIALES SOBRE EL SUELO</div>
+            <div style="display:flex;align-items:baseline;gap:9px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:17px;color:#8fa39d">3</span>
+              <svg width="22" height="10"><path d="M0 5H15" stroke="#7df0b0" stroke-width="1.6"></path><path d="M22 5L14 1V9Z" fill="#7df0b0"></path></svg>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#7df0b0;line-height:1.1">11</span>
+            </div>
+          </div>
+          <div style="background:#0a0f10;padding:11px 12px">
+            <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">LO QUE NO CAMBIA</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#8fa39d;line-height:1.75">fc 261.763 Hz<br>fm 369.175 Hz<br>ratio 1.4103<br>C4 · vel 100</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#4f8f70;margin-top:5px">idénticos en A y en B</div>
+          </div>
+          <div style="background:#0a0f10;padding:11px 12px;display:flex;flex-direction:column;gap:7px">
+            <div style="font-size:9px;letter-spacing:.18em;color:#5d6d69">LAS DOS SON MEDIDAS</div>
+            <span style="padding:5px 10px;border-radius:999px;border:1px solid rgba(125,240,176,.35);background:rgba(125,240,176,.07);font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#7df0b0;text-align:center">A · 65536 · hace 6 s</span>
+            <span style="padding:5px 10px;border-radius:999px;border:1px solid rgba(125,240,176,.35);background:rgba(125,240,176,.07);font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#7df0b0;text-align:center">B · 65536 · hace 2 s</span>
+            <div style="font-size:12px;color:#6f817c;line-height:1.45">Nunca una medida contra una estimación.</div>
+          </div>
+          <div style="background:#0a0f10;border-radius:0 0 11px 11px;padding:11px 12px;flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:8px">
+            <button style="all:unset;cursor:pointer;padding:13px 12px;min-height:48px;box-sizing:border-box;border:2px solid #7df0b0;border-radius:12px;background:rgba(125,240,176,.12);box-shadow:0 0 26px -10px rgba(125,240,176,.8);text-align:center">
+              <span style="display:block;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;color:#eafff5">CONGELAR Y GUARDAR</span>
+              <span style="display:block;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#63c99a;margin-top:2px">como paso de lección</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:0 0 168px;background:#080b0d;border-top:2px solid rgba(255,255,255,.09);padding:12px 18px;display:flex;gap:16px;min-height:0;box-sizing:border-box">
+
+        <div style="flex:0 0 470px;border:2px solid rgba(88,200,245,.4);border-radius:16px;background:rgba(88,200,245,.05);padding:12px 15px;display:flex;flex-direction:column;box-sizing:border-box">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px">
+            <div style="font-size:12px;letter-spacing:.22em;color:#7fa7b6">EL REPRODUCTOR · EN BUCLE</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#4f7d8c">VUELTA 7</div>
+          </div>
+          <div style="flex:1;min-height:0;display:flex;align-items:center;gap:12px">
+            <button style="all:unset;cursor:pointer;flex:0 0 auto;width:62px;height:62px;border-radius:50%;border:2px solid #58c8f5;background:radial-gradient(circle at 50% 38%,rgba(88,200,245,.3),rgba(10,20,26,.9) 70%);box-shadow:0 0 30px -10px rgba(88,200,245,.9);display:flex;align-items:center;justify-content:center">
+              <span style="display:flex;gap:5px"><span style="width:6px;height:22px;background:#58c8f5;display:block"></span><span style="width:6px;height:22px;background:#58c8f5;display:block"></span></span>
+            </button>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px">
+              <div style="display:flex;gap:4px;align-items:stretch">
+                <div style="flex:1;min-width:0;padding:7px 9px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:#080c0d">
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69">A · 20</div>
+                  <div style="height:5px;border-radius:3px;background:rgba(143,163,157,.35);margin-top:5px"></div>
+                </div>
+                <div style="flex:1;min-width:0;padding:7px 9px;border-radius:9px;border:2px solid #58c8f5;background:rgba(88,200,245,.12)">
+                  <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#bfe9fb">B · 90 · SOSTENIENDO</div>
+                  <div style="height:5px;border-radius:3px;background:#58c8f5;box-shadow:0 0 8px #58c8f5;margin-top:5px"></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:16px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d">
+                <span>C4 · vel 100</span><span>SOSTÉN 1.4 s</span><span>PAUSA 0.4 s</span>
+              </div>
+              <div style="font-size:12px;color:#6f817c;line-height:1.4">Escribe el Level, toca, mide sobre la nota sostenida y suelta. Cada vuelta cambia <span style="color:#d6e2dd">un byte</span> y nada más.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:0;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:#0a0f10;padding:12px 15px;display:flex;flex-direction:column;box-sizing:border-box">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+            <div style="font-size:12px;letter-spacing:.22em;color:#8fa39d">WATERFALL · LAS DOS VUELTAS</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69">0 → 460 ms ↓</div>
+          </div>
+          <div style="flex:1;min-height:0;display:flex;gap:10px">
+            <div style="flex:1;min-width:0;position:relative;border:1px solid rgba(255,255,255,.07);border-radius:11px;background:#070a0b;overflow:hidden">
+              <svg viewBox="0 0 400 100" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+                <g transform="translate(0,14) scale(1,0.9)"><polyline points="0,-22 7,-8 14,-0.4 36,0 64,0 71,-1.2 79,-4 86,-2 93,-0.6 100,-1.8 107,-1 114,0 150,-1.2 157,-1.4 164,-0.3 200,0 250,-1.2 257,-1.2 264,-0.2 400,0" fill="none" stroke="#c6d4cf" stroke-width="1.4" vector-effect="non-scaling-stroke"></polyline></g>
+                <g transform="translate(0,38) scale(1,0.9)"><polyline points="0,-19 7,-7 14,-0.3 36,0 64,0 71,-0.9 79,-3 86,-1.5 93,-0.4 100,-1.2 107,-0.7 114,0 150,-0.8 157,-0.9 164,-0.2 200,0 250,-0.8 257,-0.8 400,0" fill="none" stroke="#8fa39d" stroke-width="1.2" vector-effect="non-scaling-stroke"></polyline></g>
+                <g transform="translate(0,62) scale(1,0.9)"><polyline points="0,-15 7,-5.5 14,-0.2 36,0 71,-0.6 79,-2 86,-1 100,-0.8 114,0 150,-0.5 157,-0.5 200,0 250,-0.5 400,0" fill="none" stroke="#6f817c" stroke-width="1.1" vector-effect="non-scaling-stroke"></polyline></g>
+                <g transform="translate(0,86) scale(1,0.9)"><polyline points="0,-11 7,-4 14,-0.2 36,0 71,-0.4 79,-1.4 86,-0.7 100,-0.5 150,-0.3 200,0 400,0" fill="none" stroke="#4f5f5b" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+              </svg>
+              <div style="position:absolute;left:8px;top:4px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d">A · 20</div>
+            </div>
+            <div style="flex:1;min-width:0;position:relative;border:2px solid rgba(125,240,176,.35);border-radius:11px;background:#070a0b;overflow:hidden">
+              <svg viewBox="0 0 400 100" preserveAspectRatio="none" width="100%" height="100%" style="display:block">
+                <g transform="translate(0,14) scale(1,0.9)"><polyline points="0,-10.3 7,-3.9 14,-0.2 36,0 64,-0.1 71,-2.9 79,-11.6 86,-6.6 93,-4.6 100,-16.5 107,-9.4 114,-0.7 143,-1.5 150,-14.6 157,-19.8 164,-3.8 186,-7.9 193,-12.5 200,-2.8 214,-3.9 243,-3.6 250,-15 257,-15 264,-2.3 307,-0.4 314,-5 321,-9 357,-1.9 364,-2.6 400,0" fill="none" stroke="#eafff4" stroke-width="1.5" vector-effect="non-scaling-stroke" style="filter:drop-shadow(0 0 4px rgba(234,255,244,.7))"></polyline></g>
+                <g transform="translate(0,38) scale(1,0.9)"><polyline points="0,-15.5 7,-5.8 14,-0.3 36,0 64,-0.2 71,-4.4 79,-17.5 86,-9.8 93,-5.1 100,-17.8 107,-10.1 114,-0.8 143,-0.5 150,-5.3 157,-7.3 164,-1.4 186,-1.3 193,-2.1 200,-0.5 243,-1.1 250,-7.5 257,-7.6 264,-1.1 314,-1.3 321,-2.3 400,0" fill="none" stroke="#7ce9b3" stroke-width="1.3" vector-effect="non-scaling-stroke"></polyline></g>
+                <g transform="translate(0,62) scale(1,0.9)"><polyline points="0,-19.4 7,-7.2 14,-0.4 36,0 71,-3.7 79,-14.7 86,-8.2 93,-2.8 100,-8.6 107,-4.9 150,-1.3 157,-1.8 200,-0.1 250,-3.1 257,-3.2 314,-0.3 400,0" fill="none" stroke="#43bd85" stroke-width="1.1" vector-effect="non-scaling-stroke"></polyline></g>
+                <g transform="translate(0,86) scale(1,0.9)"><polyline points="0,-15.8 7,-5.9 14,-0.3 36,0 71,-2.8 79,-11 86,-6.1 100,-3.6 107,-2 150,-0.3 250,-1.2 257,-1.2 400,0" fill="none" stroke="#24825a" stroke-width="1" vector-effect="non-scaling-stroke"></polyline></g>
+              </svg>
+              <div style="position:absolute;left:8px;top:4px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7df0b0">B · 90 · el ataque brillante</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:1280px;display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:6px">
+      <div>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.2em;color:#5d6d69;margin-bottom:8px">POR QUÉ ES UN MODO Y NO UNA PANTALLA</div>
+        <div style="font-size:15px;line-height:1.65;color:#8fa39d">Tu argumento para pantalla propia era el espacio para dos mediciones. Se cae si las dos medidas van <span style="color:#d6e2dd">superpuestas en vez de una al lado de otra</span> — y superpuestas se leen mejor, porque la diferencia salta sin buscar las siete diferencias. A 1280 px, dos espectros en paralelo serían 183 px cada uno: ilegibles. Sobre los mismos ejes son 700.<br><br>Y comparar es lo que haces <span style="color:#d6e2dd">mientras</span> creas: sacar al dueño de su bancada para mirar dos valores es fricción. El modo A/B <span style="color:#d6e2dd">reutiliza los paneles que ya están ahí</span> — el espectro y los armónicos con Bessel — y sólo cambia la columna de cifras por deltas.</div>
+      </div>
+      <div>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.2em;color:#5d6d69;margin-bottom:8px">DECISIONES DE LECTURA</div>
+        <div style="font-size:15px;line-height:1.65;color:#8fa39d"><strong style="font-weight:400;color:#d6e2dd">A y B se distinguen por relleno, no por color</strong>: A es barra hueca y apagada, B es barra sólida y luminosa. El discontinuo sigue reservado a la teoría — y aquí hay <span style="color:#d6e2dd">dos</span> teorías, una por índice.<br><br><strong style="font-weight:400;color:#d6e2dd">La diferencia se rotula, no se deduce</strong>: «la fundamental pierde 14 dB», «el 9.º gana 31 dB». Y la columna dice <span style="color:#d6e2dd">lo que no cambia</span> — fc, fm, ratio, nota y velocidad idénticos — porque eso es lo que hace válida la comparación.</div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}"></script>
+</body>
+</html>

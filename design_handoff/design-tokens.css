@@ -1,0 +1,287 @@
+/* ==========================================================================
+   MODX Analyzer — design tokens
+   Dirección A "Bancada". Nombres semánticos: la fase 1 los consume tal cual.
+
+   Lienzo de referencia: 1280 × 800 CSS px (portátil 14", 1920×1200 @ 150 %),
+   ~1280 × 740 útiles a pantalla completa. devicePixelRatio = 1.5.
+   Interacción: táctil como base, ratón como superconjunto.
+   ========================================================================== */
+
+:root {
+
+  /* --- Lienzo y densidad ------------------------------------------------- */
+  --canvas-w: 1280px;
+  --canvas-h: 800px;
+  --canvas-usable-h: 740px;   /* descontado el marco de la ventana Tauri */
+  --dpr-target: 1.5;          /* medios píxeles: nada de bitmaps fijos    */
+
+  /* --- Superficies ------------------------------------------------------ */
+  --surface-base:        oklch(0.16 0.008 180);   /* #06080a  el fondo del instrumento */
+  --surface-panel:       oklch(0.19 0.009 185);   /* #0a0f10  vista de señal, panel     */
+  --surface-raised:      oklch(0.22 0.010 190);   /* #0f1417  nodo, chip, cabecera      */
+  --surface-sunken:      oklch(0.14 0.008 180);   /* pozo tras una curva                */
+
+  /* Separadores: a DPR 1.5 un filete de 1px se ve sucio. 2px es el piso.  */
+  --rule-min:            2px;
+  --rule-color:          oklch(1 0 0 / 0.09);
+  --rule-color-strong:   oklch(1 0 0 / 0.16);
+  /* Alternativa preferida al filete: separar por color de superficie + aire */
+  --rule-by-space:       var(--space-5);
+
+  /* --- Tinta ------------------------------------------------------------ */
+  --ink-primary:         oklch(0.90 0.014 165);   /* #d6e2dd */
+  --ink-secondary:       oklch(0.68 0.017 165);   /* #8fa39d */
+  --ink-tertiary:        oklch(0.52 0.016 165);   /* #6f817c */
+  --ink-inert:           oklch(0.42 0.014 165);   /* #5d6d69  dato apagado o caduco */
+
+  /* --- Señal y roles FM ------------------------------------------------- */
+  /* Los tres acentos comparten croma y claridad; sólo cambia el tono.      */
+  --signal-primary:      oklch(0.87 0.155 155);   /* #7df0b0  audio medido, fósforo     */
+  --signal-primary-dim:  oklch(0.60 0.110 155);
+  --carrier:             oklch(0.80 0.150  75);   /* #f3b13f  portadora: suena          */
+  --carrier-dim:         oklch(0.66 0.110  75);
+  --modulator:           oklch(0.79 0.140 235);   /* #58c8f5  modulador: colorea        */
+  --modulator-dim:       oklch(0.62 0.100 235);
+  --inert:               oklch(0.36 0.012 180);   /* #3d4a48  Level 0                   */
+  --alert:               oklch(0.72 0.160  35);   /* #ff7a5c  artefacto, fallo, aviso   */
+  --theory:              var(--carrier);          /* la teoría es ámbar y discontinua   */
+
+  --carrier-fill:        linear-gradient(to top, oklch(0.80 0.150 75 / .50), oklch(0.80 0.150 75 / .04));
+  --modulator-fill:      linear-gradient(to top, oklch(0.79 0.140 235 / .46), oklch(0.79 0.140 235 / .05));
+  --signal-fill:         linear-gradient(to top, oklch(0.87 0.155 155 / .42), oklch(0.87 0.155 155 / .04));
+
+  /* --- Tipografía ------------------------------------------------------- */
+  --font-ui:   'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-num:  ui-monospace, 'Cascadia Mono', Consolas, 'DejaVu Sans Mono', monospace;
+
+  --text-display:  44px;   /* portada de hoja, nada más                     */
+  --text-title:    26px;
+  --text-section:  20px;
+  --text-body:     15px;
+  --text-label:    12px;
+  --text-micro:    10px;   /* piso absoluto; por debajo no se escribe nada  */
+  --text-readout-xl: 30px; /* cifra medida protagonista                     */
+  --text-readout:    22px;
+  --text-node:       25px; /* Level dentro del operador                     */
+
+  --tracking-label:  0.14em;
+  --tracking-eyebrow:0.24em;
+  --leading-prose:   1.55;
+
+  /* --- Espaciado (base 4) ----------------------------------------------- */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 26px; --space-7: 34px; --space-8: 44px;
+
+  /* --- Objetivos de toque ------------------------------------------------ */
+  /* En este panel (14" @150 %) 44 px CSS ≈ 9 mm físicos: dedo correcto.    */
+  --hit-min:        44px;  /* mínimo absoluto de cualquier cosa accionable  */
+  --hit-touch:      56px;  /* controles que se usan tocando a menudo        */
+  --hit-gap:         8px;  /* separación mínima entre dos objetivos         */
+  --grip-handle:    22px;  /* punto de arrastre DIBUJADO (envolventes)      */
+  --grip-hit:       44px;  /* su zona de agarre real, invisible            */
+  --grip-knob:     160px;  /* mando continuo: diámetro de agarre           */
+  --track-bipolar:  58px;  /* alto de la pista de un control bipolar        */
+  --value-offset:  -34px;  /* el valor va ARRIBA del punto, fuera del dedo  */
+  --grip-curve:     22px;  /* punto sobre una curva superpuesta            */
+  --grip-halo:      19px;  /* radio del halo discontinuo del punto activo  */
+  --hit-tab:        44px;  /* pestaña de vista: alto mínimo                */
+  --hit-chip:       36px;  /* chip de enum dibujado (Spectral Form, filtro) */
+
+  /* --- El pánico -------------------------------------------------------- */
+  /* Aislamiento en vez de confirmación: no hay diálogo, hay aire.         */
+  --hit-panic:      56px;  /* siempre este tamaño, en toda cabecera        */
+  --gap-isolate:    16px;  /* aire a su izquierda: el doble de --hit-gap   */
+  /* La ÚNICA forma octogonal de la app. Nada más la usa. */
+  --shape-panic:    polygon(26% 0, 74% 0, 100% 26%, 100% 74%, 74% 100%, 26% 100%, 0 74%, 0 26%);
+  --panic-idle-bg:  oklch(0.18 0.030 30);  /* #140a08 — hueco, sin llamar  */
+  --panic-live-bg:  oklch(0.21 0.045 30);  /* #1c0d0a — relleno + glow     */
+  --panic-ack:      1500ms;                /* el aviso se va solo          */
+
+  /* --- El reproductor --------------------------------------------------- */
+  --play-hold:      1400ms;  /* sostén por defecto: C4, vel 100            */
+  --play-gap:        400ms;  /* pausa entre vueltas del bucle              */
+  --probe-idle:        12;   /* Hz de sondeo en silencio                   */
+  --probe-playing:      2;   /* Hz mientras el reproductor sostiene        */
+  --who-app:        var(--modulator);        /* toca la app                */
+  --who-hands:      var(--signal-primary);   /* tocas tú                   */
+
+  /* --- Comparación A/B --------------------------------------------------- */
+  /* A y B se distinguen por RELLENO, no por color: el discontinuo sigue
+     reservado a la teoría, y en A/B hay dos teorías (una por índice).     */
+  --ab-a-ink:   var(--ink-secondary);    /* A: barra hueca y apagada       */
+  --ab-a-alpha: 0.45;
+  --ab-b-ink:   var(--signal-primary);   /* B: barra sólida y luminosa     */
+  --ab-bar-w:   13px;
+
+  /* --- El editor de operador (5a) ---------------------------------------- */
+  --op-rail-hit:    32px;   /* chip de operador en el rail de la cabecera  */
+  --editor-once-h: 172px;   /* franja de «se pone una vez y se olvida»      */
+  --knob-level:    190px;   /* mando de Level a tamaño de editor           */
+  --skirt-steps:       8;   /* Skirt es 0-7: ocho anchos, NO un mando      */
+
+  /* --- El barrido (5b) ---------------------------------------------------- */
+  --sweep-steps:       8;   /* pasos por defecto de 0 a 99                 */
+  --sweep-step-s:    3.1;   /* s por paso: sostener + 65536 + cola + pausa */
+  --bessel-zero:   2.405;   /* primer cero de J0 — se marca y se explica   */
+  --traj-stroke:     3px;   /* trayectoria del armónico en foco            */
+  --traj-stroke-dim: 1.8px;
+
+  /* --- La consola SysEx (5c) ---------------------------------------------- */
+  /* Cajón, no pantalla: se despliega sobre la franja inferior.            */
+  --drawer-grab:    52px;   /* asa del cajón                                */
+  --drawer-lift:    0 -22px 44px -20px oklch(0 0 0 / .9);
+  --byte-box:       6px;    /* radio de la caja de un byte etiquetado      */
+
+  /* --- Radios: curvas, y con significado -------------------------------- */
+  --radius-carrier: 26px;  /* portadora: curva total. Es SEMÁNTICO.         */
+  --radius-modulator: 5px; /* modulador: esquina viva. Es SEMÁNTICO.        */
+  --radius-panel:   16px;
+  --radius-view:    14px;
+  --radius-pill:    999px;
+
+  /* --- Elevación: luz, no sombra negra ---------------------------------- */
+  --glow-carrier:   0 0 30px -8px oklch(0.80 0.150 75 / .70);
+  --glow-modulator: 0 0 26px -7px oklch(0.79 0.140 235 / .75);
+  --glow-signal:    0 0 28px -8px oklch(0.87 0.155 155 / .65);
+  --glow-alert:     0 0 24px -6px oklch(0.72 0.160 35 / .75);
+  --glow-trace:     drop-shadow(0 0 5px oklch(0.87 0.155 155 / .55)); /* filter */
+  --inset-panel:    inset 0 1px 0 oklch(1 0 0 / .06);
+  /* Refinamiento de ratón: SOLO resalta algo que ya se ve. */
+  --hover-lift:     0 0 26px -10px oklch(0.87 0.155 155 / .70);
+
+  /* --- Trazos de señal --------------------------------------------------- */
+  /* Todo vectorial o canvas escalado por DPR. Ningún bitmap de tamaño fijo. */
+  --stroke-trace:    2px;   /* scope, envolvente                            */
+  --stroke-partial:  3px;   /* línea de parcial en el espectro              */
+  --stroke-ridge:    1.2px; /* traza del waterfall (non-scaling-stroke)     */
+  --stroke-theory:   2px;
+  --dash-theory:     5 4;   /* la teoría SIEMPRE discontinua                */
+  --dash-inactive:   4 5;   /* ruta con Level 0                             */
+
+  /* --- Movimiento -------------------------------------------------------- */
+  --ease-instrument: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-mechanical: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-instant:  90ms;   /* foco, hover                                    */
+  --dur-state:   180ms;   /* encendido/apagado de un dibujo                 */
+  --dur-settle:  420ms;   /* llega una medida nueva                         */
+  --dur-heartbeat: 1400ms;/* latido de "mirando"                            */
+  --frame-live:  33.3ms;  /* 30 fps: nada de UI puede costar más            */
+
+  /* --- Geometría del diagrama de operadores ----------------------------- */
+  /* Tamaño tras el rebalance de la ronda 3: el diagrama se lleva 700 px.  */
+  --op-node-w: 118px;  --op-node-h: 108px;  /* también es objetivo de toque */
+  --op-node-h-tall: 116px;                  /* nodo con ratio medido        */
+  --op-col-gap: 82px;  --op-row-gap: 28px;
+  --op-bus-offset: 30px;
+
+  /* --- Comparación de los ocho (modo crear) ------------------------------ */
+  --op-strip-w: 128px;      /* tarjeta de operador en la vista de los ocho  */
+  --op-strip-gap: 8px;
+  --op-level-col-w: 30px;   /* columna de Level arrastrable                */
+  --curve-focus-stroke: 3.4px;
+  --curve-ghost-stroke: 1.4px;
+  --curve-ghost-alpha: 0.5; /* las siete que no están en foco              */
+
+  /* --- Estado de la cadena de la Part ------------------------------------ */
+  /* Una etapa transparente se DIBUJA recta; una que interviene, con forma. */
+  --chain-clean: var(--signal-primary);
+  --chain-dirty: var(--alert);
+  --chain-inert-dash: 4 5;
+
+  /* --- Registro de lección (sub-registro cálido, sólo modo aprender) ----- */
+  /* Heredado de la dirección C. NO se usa en superficies de medida.        */
+  --font-lesson: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+  --lesson-surface: oklch(0.16 0.010 60);   /* #0a0806 */
+  --lesson-ink:      oklch(0.92 0.014 85);  /* #ece3d2 */
+  --lesson-ink-dim:  oklch(0.68 0.020 80);  /* #8a7f6c */
+  --lesson-accent:   oklch(0.58 0.170 38);  /* #e2542b */
+}
+
+/* Monitor externo (>1600 CSS px): caso de escape, no caso de diseño.
+   Se gana aire y tamaño de vista; no cambia el vocabulario. */
+@media (min-width: 1600px) {
+  :root {
+    --space-7: 40px; --space-8: 52px;
+    --text-readout-xl: 34px;
+    --op-col-gap: 90px;
+  }
+}
+
+/* ============================================================
+   RONDA 6 · el patch cambia debajo, sólo lectura, confianza
+   ============================================================ */
+
+:root{
+  /* El ancla — el nombre de la Performance sondeado a 1 Hz (31 00 00-13, ~40 ms) */
+  --anchor-probe-hz: 1;
+  --anchor-ink: var(--ink-primary);
+  --anchor-eyebrow: var(--ink-inert);
+  --anchor-changed-border: var(--modulator);
+  --anchor-changed-bg: oklch(.79 .14 235 / .1);
+  --anchor-old-ink: var(--ink-inert);          /* el nombre viejo, tachado al lado */
+  --anchor-flash: 2200ms;                       /* mismo destello que la escritura del tutor */
+
+  /* Muerto ≠ caduco. Un valor muerto conserva su forma y pierde su cifra:
+     NUNCA opacity sobre el contenedor — se lleva por delante la prosa. */
+  --dead-mark: "—";
+  --dead-ink: #3f4d4a;
+  --dead-border: oklch(1 0 0 / .1);
+  --dead-note-ink: #4f5f5b;
+  --reread-total: 416;                          /* direcciones que se releen al cambiar el ancla */
+  --reread-silent-s: 0.9;
+  --reread-playing-s: 5.5;
+
+  /* El corte, donde se dibuja: waterfall (6b) y mapa del barrido (6c) */
+  --cut-line: var(--modulator);                 /* benigno: informativo */
+  --cut-line-broken: var(--alert);              /* invalidó algo con estado vivo */
+  --dash-cut: 7 5;
+
+  /* Sólo lectura — tercer modo de fallo de la consola (6d).
+     Ámbar didáctico, NO alerta: no está roto, es que no se puede. */
+  --readonly-border: var(--carrier);
+  --readonly-bg: oklch(.80 .15 75 / .05);
+  --readonly-ink: #ffd08a;
+  --readonly-max-tries: 2;                      /* dos intentos y para; nunca un tercero automático */
+  --observable-no-grip: 1;                      /* mando sin marca de agarre = emite, no acepta */
+
+  /* Grados de confianza del barrido (6e) */
+  --conf-solid: var(--signal-primary);          /* punto relleno: fiable */
+  --conf-doubt: var(--carrier);                 /* círculo hueco + halo: cerca de un cero */
+  --dash-doubt: 3 4;
+  --conf-doubt-halo: 15px;
+  --conf-floor-margin-db: 12;                   /* dudoso si la parcial queda a <12 dB del suelo */
+  --conf-averages: 3;                           /* la segunda pasada promedia 3 */
+  --sweep-refine-s: 19;
+
+  /* Quién toca — MIDI primero, audio como respaldo (medido, fase 0e) */
+  --who-count-by: pitch;                        /* alturas distintas, no mensajes: Multi da 4 por tecla */
+  --who-fallback: "ENTRA AUDIO QUE NO HE PEDIDO";
+}
+
+/* ============================================================
+   RONDA 7 · seguimiento y los dos anillos
+   ============================================================ */
+
+:root{
+  /* Seguir al teclado — sugerencia visible y reversible, nunca salto de foco */
+  --follow-ink: var(--signal-primary);          /* tus manos = señal que entra = fósforo */
+  --follow-app-ink: var(--modulator);           /* lo escribió la app */
+  --follow-ring: 1600ms;                        /* el anillo del operador con actividad */
+  --follow-suggestion-ttl: 6000ms;              /* la banda se va sola */
+  --follow-suggestions-max: 1;                  /* la última, no una cola */
+  --trace-old-mark: var(--dash-inactive);       /* el valor viejo, marca discontinua en la columna */
+
+  /* Los dos anillos de sondeo. Comparten canal: abrir un operador ralentiza el seguimiento. */
+  --ring-wide-addrs: 40;                        /* 5 parámetros × 8 operadores */
+  --ring-wide-hz: 12.2;                         /* en silencio; 2.43 con ocho notas */
+  --ring-narrow-addrs: 43;                      /* el operador abierto */
+  --ring-narrow-hz: 6.1;                        /* con el ancho corriendo a la vez */
+  --stale-factor: 4;                            /* CADUCO = 4 × periodo de SU anillo */
+  --stale-wide-s: 0.33;
+  --stale-narrow-s: 0.66;
+  --ring-label-scope: zone;                     /* la cadencia se rotula por zona, no por cifra */
+
+  /* La lista de sólo lectura se reprueba una vez por sesión (4 ms) */
+  --readonly-reprobe: session;
+  --readonly-reconfirmed-ink: #4f8f70;
+}
