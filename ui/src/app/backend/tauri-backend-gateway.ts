@@ -168,6 +168,21 @@ export class TauriBackendGateway implements BackendGateway {
     };
   }
 
+  async measureWindow(samples: number): Promise<ArrayBuffer | null> {
+    try {
+      // Raw again, and for the same reason as the bloques: 256 KB of samples
+      // through JSON would be a megabyte of digits parsed on the thread that
+      // draws. The buffer is handed to the worker by transfer without being read.
+      return await invoke<ArrayBuffer>('measure_window', { samples });
+    } catch (reason) {
+      // The command says why in Spanish — the device is shut, or the ring has
+      // not filled — and the log is where a developer reads it. On screen it is
+      // one fact: there was nothing to measure.
+      console.warn('modx: no hay ventana para medir', reason);
+      return null;
+    }
+  }
+
   private toPatch(wire: PatchWire): PatchHeaderView {
     const arrivedAt = performance.now();
     return {

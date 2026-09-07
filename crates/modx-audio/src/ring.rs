@@ -79,6 +79,22 @@ impl MonoRing {
     }
 }
 
+/// Samples laid out as little-endian f32, the way the medida's window crosses to
+/// the worker.
+///
+/// It is the bloque's payload without the bloque's header: no sequence, no
+/// timestamp, no flags, because a window taken out of the ring is not something
+/// that just happened — it is the past, and there is nothing about *when* worth
+/// carrying. The length says everything the reader needs, and the reader checks
+/// it (`ui/src/app/audio/bridge.ts`).
+pub fn encode_mono(samples: &[f32]) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(samples.len() * 4);
+    for sample in samples {
+        bytes.extend_from_slice(&sample.to_le_bytes());
+    }
+    bytes
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -121,6 +137,15 @@ mod tests {
         let last = (RING_SAMPLES + 9) as f32;
         assert_eq!(tail, vec![last - 2.0, last - 1.0, last]);
         assert_eq!(ring.tail(RING_SAMPLES + 1), None);
+    }
+
+    #[test]
+    fn a_window_crosses_as_little_endian_f32_and_nothing_else() {
+        let bytes = encode_mono(&[1.0, -0.5]);
+
+        assert_eq!(bytes.len(), 8);
+        assert_eq!(f32::from_le_bytes(bytes[0..4].try_into().unwrap()), 1.0);
+        assert_eq!(f32::from_le_bytes(bytes[4..8].try_into().unwrap()), -0.5);
     }
 
     #[test]

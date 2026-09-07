@@ -1,4 +1,6 @@
 import { Injectable, signal } from '@angular/core';
+import { CHANNELS } from 'modx-dsp';
+import { HEADER_BYTES } from '../audio/bridge';
 import {
   AppInfo,
   BackendGateway,
@@ -58,6 +60,15 @@ export class FakeBackendGateway implements BackendGateway {
 
   private readonly blockListeners = new Set<(block: ArrayBuffer) => void>();
 
+  /**
+   * Channel 0 of everything emitted, the way Rust's `MonoRing` keeps it.
+   *
+   * A test that pressed MEDIR would otherwise be handed a window somebody wrote
+   * by hand, and the one thing the medida has to get right is that it analyses
+   * **the sound that was playing** and not the one arriving next.
+   */
+  private ring = new Float32Array(0);
+
   appInfo(): Promise<AppInfo> {
     return Promise.resolve(this.appInfoResult);
   }
@@ -74,10 +85,32 @@ export class FakeBackendGateway implements BackendGateway {
     return Promise.resolve(() => this.blockListeners.delete(onBlock));
   }
 
+  measureWindow(samples: number): Promise<ArrayBuffer | null> {
+    if (this.ring.length < samples) {
+      // What the real command answers when the ring has not filled: nothing at
+      // all, never a shorter window.
+      return Promise.resolve(null);
+    }
+    return Promise.resolve(this.ring.slice(this.ring.length - samples).buffer as ArrayBuffer);
+  }
+
   /** Test driver: hand every subscriber a bloque as if it came off the device. */
   emitBlock(block: ArrayBuffer): void {
+    this.keepChannelZero(block);
     for (const listener of this.blockListeners) {
       listener(block);
     }
+  }
+
+  /** The ring the native side keeps, filled from the bloques as they go out. */
+  private keepChannelZero(block: ArrayBuffer): void {
+    const frames = new DataView(block).getUint32(4, true);
+    const interleaved = new Float32Array(block, HEADER_BYTES, frames * CHANNELS);
+    const kept = new Float32Array(this.ring.length + frames);
+    kept.set(this.ring);
+    for (let frame = 0; frame < frames; frame += 1) {
+      kept[this.ring.length + frame] = interleaved[frame * CHANNELS];
+    }
+    this.ring = kept;
   }
 }

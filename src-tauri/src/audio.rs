@@ -14,8 +14,8 @@ use std::sync::mpsc::Receiver;
 use std::sync::Mutex;
 use std::thread;
 
-use modx_audio::{AudioBlock, Capture};
-use tauri::ipc::{Channel, InvokeResponseBody};
+use modx_audio::{encode_mono, AudioBlock, Capture, RING_SAMPLES};
+use tauri::ipc::{Channel, InvokeResponseBody, Response};
 use tauri::{AppHandle, Manager};
 
 use crate::connection::Connection;
@@ -91,6 +91,41 @@ fn forward(app: AppHandle, blocks: Receiver<AudioBlock>) {
             }
         })
         .expect("the audio forwarding thread starts");
+}
+
+/// The window MEDIR analyses: the most recent `samples` of channel 0, oldest
+/// first, as little-endian f32 and nothing else.
+///
+/// **The shutter looks backwards.** When the finger moves, the sound it was
+/// pointing at is already in the past — the note was held before the press — so
+/// the samples come out of the ring rather than being collected after it. Without
+/// that, a medida would start by making the owner hold the note another second
+/// and a half.
+///
+/// How many samples is the front's business, not this side's: 65 536 is a
+/// parameter of the analysis and the analysis lives in TypeScript (ADR-0001).
+/// What is decided here is only what the ring can honestly serve, so the ask is
+/// clamped to its size.
+///
+/// It answers an error rather than a short window when the ring has not filled
+/// that far yet — at launch, or when the device is not open. Padding it would be
+/// measuring a silence that never entered.
+#[tauri::command]
+pub fn measure_window(app: AppHandle, samples: u32) -> Result<Response, String> {
+    let wanted = (samples as usize).min(RING_SAMPLES);
+    let audio = app.state::<Audio>();
+    let capture = audio
+        .capture
+        .lock()
+        .map_err(|_| "el bloqueo de la captura está envenenado".to_owned())?;
+
+    let taken = capture
+        .as_ref()
+        .ok_or_else(|| format!("`{}` no está abierto", modx_audio::DEVICE_NAME))?
+        .tail(wanted)
+        .ok_or_else(|| format!("todavía no hay {wanted} muestras en el anillo"))?;
+
+    Ok(Response::new(encode_mono(&taken)))
 }
 
 /// Start receiving bloques on this channel. The front calls it once, from the

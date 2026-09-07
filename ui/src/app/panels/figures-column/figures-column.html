@@ -1,7 +1,7 @@
 <div class="cell">
   <span class="cell__eyebrow">RATIO MEDIDO</span>
   <span class="cell__value cell__value--xl"><app-figure [value]="dead" /></span>
-  <span class="cell__note">hay que volver a medir</span>
+  <span class="cell__note">los ajustes no entran en esta sesión</span>
 </div>
 
 <div class="cell">
@@ -17,10 +17,36 @@
   <span class="cell__note">los ajustes no entran en esta sesión</span>
 </div>
 
+<!-- La tabla de parciales: lo único que MEDIR produce hoy. Se queda quieta hasta
+     la siguiente pulsación; sólo envejece. -->
 <div class="cell cell--grow">
+  <span class="cell__eyebrow">PARCIALES</span>
+  @if (partials(); as lines) {
+    <span class="cell__stamp">{{ stamp() }}</span>
+    <ol class="lines">
+      @for (line of lines; track $index) {
+        <li class="lines__row" [class.lines__row--artefact]="line.artefact">
+          <span class="lines__hz">{{ line.hz }}</span>
+          <span class="lines__db">{{ line.db }}</span>
+          <span class="lines__tag">{{ line.tag }}</span>
+        </li>
+      }
+    </ol>
+  } @else {
+    <span class="cell__value"><app-figure [value]="dead" /></span>
+    <span class="cell__note">{{ why() }}</span>
+  }
+</div>
+
+<div class="cell">
   <span class="cell__eyebrow">ÚLTIMA MEDIDA</span>
-  <span class="cell__value"><app-figure [value]="dead" /></span>
-  <span class="cell__note">hay que volver a medir</span>
+  @if (stamp(); as taken) {
+    <span class="cell__value cell__value--live">{{ window }} · hace {{ ageSeconds() }} s</span>
+    <span class="cell__note">{{ caught() }}</span>
+  } @else {
+    <span class="cell__value"><app-figure [value]="dead" /></span>
+    <span class="cell__note">{{ measuring() ? 'midiendo' : why() }}</span>
+  }
 </div>
 
 <div class="cell">

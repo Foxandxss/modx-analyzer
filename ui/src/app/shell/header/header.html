@@ -55,10 +55,18 @@
     <span class="look__text">MIRAR · {{ fps() === null ? '—' : fps()!.toFixed(1) }} fps</span>
   </div>
 
-  <button type="button" class="measure" disabled>
+  <button
+    type="button"
+    class="measure"
+    [class.measure--on]="canMeasure()"
+    [class.measure--busy]="measuring()"
+    [disabled]="!canMeasure()"
+    aria-label="Medir: una ventana de 65536 muestras"
+    (click)="onMeasure()"
+  >
     <span class="measure__shutter" aria-hidden="true"></span>
     <span class="measure__label">MEDIR</span>
-    <span class="measure__hint">65536<br />NOTA SOST.</span>
+    <span class="measure__hint">{{ measureWindow }}<br />NOTA SOST.</span>
   </button>
 
   <!-- Aislamiento en vez de confirmación: filete de 2 px y 16 px de aire, y nada

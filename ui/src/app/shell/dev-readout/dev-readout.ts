@@ -26,6 +26,8 @@ import { DEAD_MARK } from '../../provenance/provenance';
       }
       <span class="dev__label">TRAMA</span>
       <span>{{ tramaLine() }}</span>
+      <span class="dev__label">MEDIDA</span>
+      <span>{{ medidaLine() }}</span>
       <span class="dev__label">VOLCADO</span>
       <span>{{ dumpLine() }}</span>
     </div>
@@ -87,6 +89,17 @@ export class DevReadout {
       `max ${millis(stats.tramaMaxMs)}`,
       `${this.audio.fps() === null ? DEAD_MARK : this.audio.fps()!.toFixed(1)} fps`,
     ].join(' · ');
+  });
+
+  /**
+   * What the last 65 536 cost, so the figure can be copied down in the same pass
+   * as the others. It has no budget of its own: nothing is being drawn while it
+   * runs. What it feeds is #14, which asks whether the anillo's polling changes
+   * the spectrum a medida sees.
+   */
+  protected readonly medidaLine = computed(() => {
+    const cost = this.audio.measureMs();
+    return cost === null ? `${DEAD_MARK} · sin medir` : `65536 · ${cost.toFixed(1)} ms`;
   });
 
   protected readonly line = computed(() => {

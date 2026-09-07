@@ -227,3 +227,101 @@ describe('Header · el transporte', () => {
     expect(host.querySelector('.look__text')?.textContent?.trim()).toMatch(/^MIRAR · [\d.]+ fps$/);
   });
 });
+
+/** The header with the bridge behind it, so MEDIR has something to measure. */
+async function renderWithAudio() {
+  const backend = new FakeBackendGateway();
+  TestBed.configureTestingModule({
+    imports: [Header],
+    providers: [
+      { provide: BACKEND_GATEWAY, useValue: backend },
+      { provide: AUDIO_WORKER, useValue: () => new FakeAudioWorker() },
+    ],
+  });
+  const fixture = TestBed.createComponent(Header);
+  const audio = TestBed.inject(AudioService);
+  audio.start();
+  await fixture.whenStable();
+  const host = fixture.nativeElement as HTMLElement;
+
+  return {
+    audio,
+    host,
+    button: () => host.querySelector<HTMLButtonElement>('.measure')!,
+    async hold(frequency: number, blocks: number) {
+      backend.lowestLivePitch.set(60);
+      await fixture.whenStable();
+      for (let sequence = 0; sequence < blocks; sequence += 1) {
+        backend.emitBlock(
+          fakeBlock({
+            sequence,
+            sentAtMicros: sequence * 30_000,
+            mono: heldNote(frequency, sequence * BLOCK_FRAMES),
+          }),
+        );
+      }
+      await fixture.whenStable();
+    },
+    settle: () => fixture.whenStable(),
+  };
+}
+
+describe('Header · el obturador', () => {
+  it('dibuja MEDIR desde el primer fotograma, con su ventana y su nota sostenida', async () => {
+    const { host } = await renderHeader();
+
+    const measure = host.querySelector('.measure');
+    expect(measure?.textContent).toContain('MEDIR');
+    expect(measure?.textContent).toContain('65536');
+    expect(measure?.textContent).toContain('NOTA SOST.');
+  });
+
+  it('está apagado mientras el anillo no tiene nada que medir', async () => {
+    const { button } = await renderWithAudio();
+
+    // Antes del primer bloque no hay sonido guardado: el obturador no promete
+    // una medida que la app no puede tomar.
+    expect(button().disabled).toBe(true);
+    expect(button().className).not.toContain('measure--on');
+  });
+
+  it('se arma en cuanto entra audio', async () => {
+    const { button, hold } = await renderWithAudio();
+
+    await hold(261.626, 10);
+
+    expect(button().disabled).toBe(false);
+    expect(button().className).toContain('measure--on');
+  });
+
+  it('tocarlo toma una medida de 65 536 muestras', async () => {
+    const { button, hold, audio, settle } = await renderWithAudio();
+
+    await hold(261.626, 50);
+    button().click();
+    await settle();
+
+    expect(audio.medida()?.medida.window).toBe(65_536);
+    expect(audio.medida()?.medida.partials[0]!.harmonic).toBe(1);
+  });
+
+  it('la tecla M es un extra del ratón, no la única vía', async () => {
+    const { hold, audio, settle } = await renderWithAudio();
+
+    await hold(261.626, 50);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'm' }));
+    await settle();
+
+    expect(audio.medida()).not.toBeNull();
+  });
+
+  it('ignora la tecla con modificador: Ctrl+M es de otro', async () => {
+    const { hold, audio, settle } = await renderWithAudio();
+
+    await hold(261.626, 50);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'm', ctrlKey: true }));
+    await settle();
+
+    expect(audio.medida()).toBeNull();
+  });
+});

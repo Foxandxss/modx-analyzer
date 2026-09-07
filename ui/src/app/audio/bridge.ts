@@ -1,4 +1,14 @@
-import { BLOCK_FRAMES, CHANNELS, LiveTrama, SAMPLE_RATE, liveTrama, scopeTrace } from 'modx-dsp';
+import {
+  BLOCK_FRAMES,
+  CHANNELS,
+  LiveTrama,
+  MEASURE_WINDOW,
+  Medida,
+  SAMPLE_RATE,
+  liveTrama,
+  medida,
+  scopeTrace,
+} from 'modx-dsp';
 
 /**
  * The front's half of the audio bridge: everything the Web Worker does, as plain
@@ -82,6 +92,22 @@ export function decodeBlock(buffer: ArrayBuffer): AudioBlock {
     silent: (header.getUint32(20, true) & FLAG_SILENT) !== 0,
     samples: new Float32Array(buffer, HEADER_BYTES, frames * CHANNELS),
   };
+}
+
+/**
+ * The medida's window, as `measure_window` hands it over: bare little-endian f32
+ * of channel 0, no header, oldest sample first.
+ *
+ * It is checked against the window that is about to be analysed rather than
+ * trusted, exactly as the bloque is: a buffer one sample short would otherwise
+ * be a spectrum quietly measured over the wrong length of time.
+ */
+export function decodeMeasureWindow(buffer: ArrayBuffer, window = MEASURE_WINDOW): Float32Array {
+  const expected = window * 4;
+  if (buffer.byteLength !== expected) {
+    throw new Error(`ventana de ${buffer.byteLength} B, se esperaban ${expected} B`);
+  }
+  return new Float32Array(buffer);
 }
 
 /** Channel 0 of an interleaved bloque, which is what every analysis reads. */
@@ -257,10 +283,23 @@ export interface BridgeFrame {
   readonly tramaMs: number;
 }
 
+/** What one press of MEDIR left behind. */
+export interface MedidaFrame {
+  /** The partial table, or `null` when the shutter opened on a silence. */
+  readonly medida: Medida | null;
+  /** What the 65 536 cost here, in ms. Measured, and it is not the 33 ms budget. */
+  readonly costMs: number;
+}
+
 /** The marks the trama budget is measured with. Named so a profile reads. */
 const MARK_START = 'trama:inicio';
 const MARK_END = 'trama:fin';
 const MEASURE = 'trama';
+
+/** And the medida's own, which nobody is timing against a budget. */
+const MEDIDA_START = 'medida:inicio';
+const MEDIDA_END = 'medida:fin';
+const MEDIDA_MEASURE = 'medida';
 
 /**
  * The worker's whole job: take a bloque, keep the score, and hand back the piece
@@ -279,6 +318,16 @@ export class AudioBridge {
 
   /** The note the keyboard is holding, when it says so. See {@link setNote}. */
   private noteHz: number | null = null;
+
+  /**
+   * The note the last trama was actually drawn against, fallback included.
+   *
+   * It is what a medida taken with the MIDI port gone reads its harmonics
+   * against: the espectro is still drawing an axis off the scope's period, and a
+   * table that refused to number the same lines the axis is numbering would be
+   * the two halves of the screen disagreeing about which note is sounding.
+   */
+  private drawnHz: number | null = null;
 
   /**
    * The note the espectro's axis is drawn against.
@@ -311,7 +360,8 @@ export class AudioBridge {
     const trace =
       found === null ? null : scopeWindow.slice(found.trigger, found.trigger + found.length);
 
-    const trama = liveTrama(this.history, this.noteHz ?? found?.frequencyHz ?? null);
+    this.drawnHz = this.noteHz ?? found?.frequencyHz ?? null;
+    const trama = liveTrama(this.history, this.drawnHz);
 
     performance.mark(MARK_END);
     const measured = performance.measure(MEASURE, MARK_START, MARK_END);
@@ -321,6 +371,31 @@ export class AudioBridge {
     performance.clearMeasures(MEASURE);
 
     return { trace, frequencyHz: found?.frequencyHz ?? null, trama, tramaMs: measured.duration };
+  }
+
+  /**
+   * One press of MEDIR: 65 536 samples out of the ring, one Hann window, one
+   * transform, and a partial table that will not move again until the next press.
+   *
+   * It runs **here**, on the worker's thread, for the same reason the trama does
+   * (ADR-0001): a 65 536-point transform is tens of milliseconds and the thread
+   * that draws cannot spend them. The note it is read against is the same one
+   * the espectro's axis uses, so the medida and the vista viva can never
+   * disagree about which note was playing.
+   */
+  measure(buffer: ArrayBuffer, window = MEASURE_WINDOW): MedidaFrame {
+    performance.mark(MEDIDA_START);
+
+    const samples = decodeMeasureWindow(buffer, window);
+    const taken = medida(samples, this.noteHz ?? this.drawnHz, SAMPLE_RATE, window);
+
+    performance.mark(MEDIDA_END);
+    const measured = performance.measure(MEDIDA_MEASURE, MEDIDA_START, MEDIDA_END);
+    performance.clearMarks(MEDIDA_START);
+    performance.clearMarks(MEDIDA_END);
+    performance.clearMeasures(MEDIDA_MEASURE);
+
+    return { medida: taken, costMs: measured.duration };
   }
 
   stats(): BridgeStats {

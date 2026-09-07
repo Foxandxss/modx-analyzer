@@ -1,5 +1,5 @@
-import { BLOCK_FRAMES, CURVE_POINTS, HARMONIC_BARS } from 'modx-dsp';
-import { AudioBridge, BlockMeter, channelZero, decodeBlock } from './bridge';
+import { BLOCK_FRAMES, CURVE_POINTS, HARMONIC_BARS, MEASURE_WINDOW, SAMPLE_RATE } from 'modx-dsp';
+import { AudioBridge, BlockMeter, channelZero, decodeBlock, decodeMeasureWindow } from './bridge';
 import { fakeBlock, heldNote, withComb } from './fake-block';
 
 describe('decodeBlock', () => {
@@ -229,5 +229,81 @@ describe('AudioBridge · la vista viva', () => {
     const stats = bridge.stats();
     expect(stats.tramaP50Ms).not.toBeNull();
     expect(stats.tramaMaxMs).toBeGreaterThanOrEqual(stats.tramaP50Ms!);
+  });
+});
+
+describe('AudioBridge · la medida', () => {
+  /** A window of a held note, the way `measure_window` hands it over. */
+  function window(frequency: number | null, samples = MEASURE_WINDOW): ArrayBuffer {
+    const mono = new Float32Array(samples);
+    if (frequency !== null) {
+      for (let index = 0; index < samples; index += 1) {
+        mono[index] = 0.5 * Math.sin((2 * Math.PI * frequency * index) / SAMPLE_RATE);
+      }
+    }
+    return mono.buffer as ArrayBuffer;
+  }
+
+  it('lee la ventana cruda: f32 little-endian y ni un byte de cabecera', () => {
+    const samples = decodeMeasureWindow(window(261.626));
+
+    expect(samples).toHaveLength(MEASURE_WINDOW);
+    expect(samples[0]).toBeCloseTo(0, 6);
+  });
+
+  it('rechaza una ventana que no mide lo que va a analizar', () => {
+    // Una muestra de menos sería un espectro medido en silencio sobre otra
+    // duración: no falla, miente.
+    expect(() => decodeMeasureWindow(window(440, MEASURE_WINDOW - 1))).toThrow(/se esperaban/);
+  });
+
+  it('analiza 65 536 muestras contra la nota que el teclado está sujetando', () => {
+    const bridge = new AudioBridge();
+    bridge.setNote(261.626);
+
+    const { medida } = bridge.measure(window(261.626));
+
+    expect(medida).not.toBeNull();
+    expect(medida!.window).toBe(MEASURE_WINDOW);
+    expect(medida!.fundamentalHz).toBe(261.626);
+    expect(medida!.partials[0]!.harmonic).toBe(1);
+    expect(medida!.partials[0]!.hz).toBeCloseTo(261.6, 0);
+  });
+
+  it('no inventa una tabla cuando el obturador se abre sobre el silencio', () => {
+    const { medida } = new AudioBridge().measure(window(null));
+
+    expect(medida).toBeNull();
+  });
+
+  it('mide lo que le cuesta, que no es el presupuesto de una trama', () => {
+    const { costMs } = new AudioBridge().measure(window(440));
+
+    expect(costMs).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('AudioBridge · la nota que mide', () => {
+  it('mide contra el eje que el espectro está dibujando, no contra nada', () => {
+    // Sin puerto MIDI el espectro sigue dibujando su eje sobre el periodo que
+    // midió el scope. Una tabla que se negara a numerar las mismas líneas que el
+    // eje está numerando serían las dos mitades de la pantalla discrepando sobre
+    // qué nota suena.
+    const bridge = new AudioBridge();
+    for (let sequence = 0; sequence < 6; sequence += 1) {
+      bridge.receive(
+        fakeBlock({ sequence, mono: heldNote(440, sequence * BLOCK_FRAMES) }),
+        sequence * 30,
+      );
+    }
+
+    const window = new Float32Array(MEASURE_WINDOW);
+    for (let index = 0; index < window.length; index += 1) {
+      window[index] = 0.5 * Math.sin((2 * Math.PI * 440 * index) / SAMPLE_RATE);
+    }
+    const { medida } = bridge.measure(window.buffer as ArrayBuffer);
+
+    expect(medida!.fundamentalHz).toBeCloseTo(440, 0);
+    expect(medida!.partials[0]!.harmonic).toBe(1);
   });
 });

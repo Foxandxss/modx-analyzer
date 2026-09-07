@@ -37,5 +37,5 @@ pub use block::{
     CHANNELS, FLAG_SILENT, HEADER_BYTES, SAMPLE_RATE,
 };
 pub use capture::{Capture, CaptureError, CaptureStats, DeviceInfo, DEVICE_NAME};
-pub use ring::{MonoRing, RING_SAMPLES};
+pub use ring::{encode_mono, MonoRing, RING_SAMPLES};
 pub use silence::{SilenceDetector, SILENCE_FRAMES};

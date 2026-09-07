@@ -8,3 +8,4 @@ export * from './fft';
 export * from './spectrum';
 export * from './partials';
 export * from './live';
+export * from './measure';

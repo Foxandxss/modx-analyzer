@@ -4,10 +4,11 @@ import {
   CURVE_POINTS,
   HARMONIC_BARS,
   LIVE_WINDOW,
+  NOTHING_ENTERING,
   SAMPLE_RATE,
 } from './constants';
 import { Partial, artefactChipHz, findPartials } from './partials';
-import { Spectrum, spectrum } from './spectrum';
+import { Spectrum, spectrum, windowPeak } from './spectrum';
 
 /**
  * One trama of the vista viva: everything the espectro, the armónicos and the
@@ -56,15 +57,6 @@ export const NO_TRAMA: LiveTrama = {
 };
 
 /**
- * Under this peak there is nothing to analyse: −80 dBFS, the scope's own floor.
- *
- * It is not «no entra audio» — that is exact digital zeros for a second, decided
- * in Rust — it is a window with nothing in it, which happens at every launch
- * before the first bloque and between two notes.
- */
-const NOTHING_ENTERING = 1e-4;
-
-/**
  * The whole vista viva of one window.
  *
  * `fundamentalHz` is the note the axis is drawn against: the played one when the
@@ -79,7 +71,7 @@ export function liveTrama(
   sampleRate: number = SAMPLE_RATE,
   window: number = LIVE_WINDOW,
 ): LiveTrama {
-  if (samples.length < window || peakOf(samples, window) < NOTHING_ENTERING) {
+  if (samples.length < window || windowPeak(samples, window) < NOTHING_ENTERING) {
     return NO_TRAMA;
   }
 
@@ -158,16 +150,4 @@ export function harmonicBars(analysed: Spectrum, fundamentalHz: number): Float32
     bars[harmonic - 1] = loudest - peakDb;
   }
   return bars;
-}
-
-/** The loudest sample of the window that is about to be analysed. */
-function peakOf(samples: Float32Array, window: number): number {
-  let peak = 0;
-  for (let index = samples.length - window; index < samples.length; index += 1) {
-    const magnitude = Math.abs(samples[index]!);
-    if (magnitude > peak) {
-      peak = magnitude;
-    }
-  }
-  return peak;
 }

@@ -98,6 +98,25 @@ export function spectrum(
   return { db, binHz: sampleRate / window, peakDb, peakBin, floorDb: medianOf(db) - peakDb };
 }
 
+/**
+ * The loudest sample of the window that is about to be analysed.
+ *
+ * Both callers use it for the same decision — whether there is anything in this
+ * window at all — and they must make it the same way: the vista viva drawing a
+ * frame the medida would call silent, or the other way round, would be the two
+ * analyses disagreeing about whether the note is still sounding.
+ */
+export function windowPeak(samples: Float32Array, window: number): number {
+  let peak = 0;
+  for (let index = Math.max(0, samples.length - window); index < samples.length; index += 1) {
+    const magnitude = Math.abs(samples[index]!);
+    if (magnitude > peak) {
+      peak = magnitude;
+    }
+  }
+  return peak;
+}
+
 /** The median of the bins, in dBFS. Copies, because sorting in place is a lie. */
 function medianOf(db: Float32Array): number {
   const sorted = Float32Array.from(db).sort();

@@ -25,9 +25,11 @@
     border-radius: 0 0 11px 11px;
   }
 
+  // La celda de las parciales se queda con lo que sobre: la tabla puede tener
+  // una línea o veinticuatro, y lo que no cabe se baja con el dedo.
   &--grow {
     flex: 1;
-    justify-content: flex-end;
+    min-height: 0;
   }
 }
 
@@ -58,6 +60,59 @@
     font-size: var(--text-label);
     color: var(--alert);
   }
+}
+
+// El sello de la medida: qué ventana y hace cuánto. Va pegado al título porque
+// una cifra medida sin su edad deja de ser una medida en cuanto cambia el sonido.
+.cell__stamp {
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  letter-spacing: 0.08em;
+  color: var(--signal-primary);
+}
+
+// La tabla: monoespaciada y alineada por columnas, que es como se lee una lista
+// de frecuencias. Desborda con scroll en vez de recortarse en silencio.
+.lines {
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+  min-height: 0;
+  overflow-y: auto;
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  color: var(--ink-secondary);
+}
+
+.lines__row {
+  display: grid;
+  grid-template-columns: 1fr auto 30px;
+  gap: var(--space-2);
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+
+  // El comb del generador no se esconde y no se cuenta como armónico.
+  &--artefact {
+    color: var(--alert);
+  }
+}
+
+.lines__hz {
+  text-align: right;
+}
+
+.lines__db {
+  text-align: right;
+  color: inherit;
+}
+
+.lines__tag {
+  color: var(--ink-tertiary);
+  text-align: right;
+}
+
+.lines__row--artefact .lines__tag {
+  color: inherit;
 }
 
 .cell__note {

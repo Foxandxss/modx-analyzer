@@ -49,7 +49,8 @@ pub fn run() {
             app_info,
             dumps::last_dump,
             keyboard::panic_keyboard,
-            audio::subscribe_audio_blocks
+            audio::subscribe_audio_blocks,
+            audio::measure_window
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

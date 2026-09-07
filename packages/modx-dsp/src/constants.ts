@@ -73,3 +73,13 @@ export const HARMONIC_BARS = 16;
  * quietest drawn harmonic is the 15th at −25 dB, comfortably on.
  */
 export const HARMONIC_SPAN_DB = 72;
+
+/**
+ * Under this peak there is nothing to analyse: −80 dBFS, the scope's own floor.
+ *
+ * It is not «no entra audio» — that is exact digital zeros for a second, decided
+ * in Rust — it is a window with nothing in it, which happens at every launch
+ * before the first bloque, between two notes, and whenever the shutter of MEDIR
+ * opens on a silence.
+ */
+export const NOTHING_ENTERING = 1e-4;

@@ -78,6 +78,21 @@ export interface BackendGateway {
    * (ADR-0001), which is why it is documented in `audio/bridge.ts` and not here.
    */
   subscribeBlocks(onBlock: (block: ArrayBuffer) => void): Promise<() => void>;
+
+  /**
+   * The window MEDIR analyses: the most recent `samples` of channel 0, as raw
+   * little-endian f32, or `null` when the ring cannot serve that many yet.
+   *
+   * **The shutter looks backwards.** The sound somebody pressed MEDIR at is
+   * already in the past, so the samples come out of the ring buffer Rust keeps
+   * rather than being collected afterwards — otherwise a medida would begin by
+   * asking for another second and a half of the same note.
+   *
+   * `null` is «there is not that much audio», which is the honest answer at
+   * launch and with the device shut, and never a shorter window: a medida over a
+   * padded window measures a silence that never entered.
+   */
+  measureWindow(samples: number): Promise<ArrayBuffer | null>;
 }
 
 export const BACKEND_GATEWAY = new InjectionToken<BackendGateway>('BackendGateway');

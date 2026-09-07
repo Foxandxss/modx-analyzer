@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-import { LiveTrama } from 'modx-dsp';
+import { LiveTrama, Medida } from 'modx-dsp';
 import { AudioBridge, BridgeStats } from './bridge';
 
 /**
@@ -31,7 +31,16 @@ export interface NoteMessage {
   readonly hz: number | null;
 }
 
-export type WorkerMessage = BlockMessage | NoteMessage;
+/**
+ * One press of MEDIR, carrying the window Rust took out of the ring. It is the
+ * only message that arrives because somebody did something.
+ */
+export interface MeasureMessage {
+  readonly kind: 'measure';
+  readonly buffer: ArrayBuffer;
+}
+
+export type WorkerMessage = BlockMessage | NoteMessage | MeasureMessage;
 
 export interface FrameMessage {
   readonly kind: 'frame';
@@ -45,12 +54,31 @@ export interface FrameMessage {
   readonly stats?: BridgeStats;
 }
 
+/** What comes back from a press of MEDIR: a partial table, or a silence. */
+export interface MedidaMessage {
+  readonly kind: 'medida';
+  /** `null` when the shutter opened on a window with nothing in it. */
+  readonly medida: Medida | null;
+  /** What the 65 536 cost on this thread, in ms. */
+  readonly costMs: number;
+}
+
 const bridge = new AudioBridge();
 let received = 0;
 
 addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
   if (event.data.kind === 'note') {
     bridge.setNote(event.data.hz);
+    return;
+  }
+  if (event.data.kind === 'measure') {
+    const frame = bridge.measure(event.data.buffer);
+    const answer: MedidaMessage = {
+      kind: 'medida',
+      medida: frame.medida,
+      costMs: frame.costMs,
+    };
+    postMessage(answer);
     return;
   }
   if (event.data.kind !== 'block') {

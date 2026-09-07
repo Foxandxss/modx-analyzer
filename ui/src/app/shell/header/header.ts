@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject } from '@angular/core';
+import { MEASURE_WINDOW } from 'modx-dsp';
 import { BACKEND_GATEWAY, invalidated } from '../../backend/backend-gateway';
 import { Figure } from '../../provenance/figure';
 import { RingFreshness } from '../../provenance/freshness';
@@ -47,8 +48,43 @@ export class Header {
   protected readonly fps = this.audio.fps;
   protected readonly looking = computed(() => this.audio.fps() !== null);
 
+  /**
+   * Medir is a shutter, and it is live the moment there is sound to measure.
+   *
+   * Before the first bloque the ring holds nothing at all, so the button stays in
+   * its dead look rather than promising a medida the app cannot take. What it
+   * never does is disappear: the shutter is half of the transport and the layout
+   * is final from the first frame.
+   */
+  protected readonly measureWindow = MEASURE_WINDOW;
+  protected readonly measuring = this.audio.measuring;
+  protected readonly canMeasure = computed(() => this.audio.fps() !== null && !this.measuring());
+
   /** Only CREAR is selectable; the other two are drawn so the layout is final. */
   protected readonly selectedMode: Mode = 'CREAR';
+
+  constructor() {
+    // The keyboard shortcut of the design's own table — «MEDIR: tocar / atajo de
+    // teclado». It is an **extra**: the 56 px button does everything it does, and
+    // taking the keyboard away takes no function with it. `M` for medir, with no
+    // modifier, and never while somebody is typing in a field.
+    const shortcut = (event: KeyboardEvent) => {
+      const editing = (event.target as HTMLElement | null)?.isContentEditable === true;
+      if (event.key.toLowerCase() !== 'm' || event.altKey || event.ctrlKey || event.metaKey) {
+        return;
+      }
+      if (!editing && this.canMeasure()) {
+        void this.audio.measure();
+      }
+    };
+    document.addEventListener('keydown', shortcut);
+    inject(DestroyRef).onDestroy(() => document.removeEventListener('keydown', shortcut));
+  }
+
+  /** One press, one medida. A second press while one is running does nothing. */
+  protected onMeasure(): void {
+    void this.audio.measure();
+  }
 
   protected readonly connection = this.backend.connection;
   protected readonly patch = this.backend.patch;

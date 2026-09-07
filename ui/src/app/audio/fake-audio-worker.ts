@@ -1,6 +1,6 @@
 import { AudioBridge } from './bridge';
-import { FrameMessage, NoteMessage, WorkerMessage } from './audio.worker';
-import { AudioWorkerLike } from './audio-service';
+import { FrameMessage, MedidaMessage, NoteMessage, WorkerMessage } from './audio.worker';
+import { AudioWorkerLike, WorkerReply } from './audio-service';
 
 /**
  * The worker's twenty lines, run in place.
@@ -12,7 +12,7 @@ import { AudioWorkerLike } from './audio-service';
  */
 export class FakeAudioWorker implements AudioWorkerLike {
   private readonly bridge = new AudioBridge();
-  private readonly listeners = new Set<(event: MessageEvent<FrameMessage>) => void>();
+  private readonly listeners = new Set<(event: MessageEvent<WorkerReply>) => void>();
 
   /** How many bloques have gone through. `terminate` does not reset it. */
   received = 0;
@@ -20,7 +20,16 @@ export class FakeAudioWorker implements AudioWorkerLike {
   /** The notes the service has sent, in order. The axis hangs off the last one. */
   readonly notes: (number | null)[] = [];
 
+  /** How many medidas have been asked for. A press that measured nothing counts. */
+  measured = 0;
+
   postMessage(message: WorkerMessage): void {
+    if (message.kind === 'measure') {
+      const frame = this.bridge.measure(message.buffer);
+      this.measured += 1;
+      this.send({ kind: 'medida', medida: frame.medida, costMs: frame.costMs });
+      return;
+    }
     if (message.kind === 'note') {
       this.notes.push((message as NoteMessage).hz);
       this.bridge.setNote(message.hz);
@@ -40,12 +49,16 @@ export class FakeAudioWorker implements AudioWorkerLike {
       tramaMs: frame.tramaMs,
       stats: this.bridge.stats(),
     };
+    this.send(reply);
+  }
+
+  private send(reply: FrameMessage | MedidaMessage): void {
     for (const listener of this.listeners) {
-      listener({ data: reply } as MessageEvent<FrameMessage>);
+      listener({ data: reply } as MessageEvent<WorkerReply>);
     }
   }
 
-  addEventListener(_type: 'message', listener: (event: MessageEvent<FrameMessage>) => void): void {
+  addEventListener(_type: 'message', listener: (event: MessageEvent<WorkerReply>) => void): void {
     this.listeners.add(listener);
   }
 
