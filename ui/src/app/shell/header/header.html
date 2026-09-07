@@ -65,13 +65,23 @@
        accionable dentro de esa franja. -->
   <div class="isolate" aria-hidden="true"></div>
 
+  <!-- Sin confirmación y sin :hover: actúa al levantar el dedo dentro del objetivo. -->
   <button
     type="button"
     class="panic"
     [class.panic--live]="panicLive()"
+    [class.panic--done]="panicDone()"
     aria-label="Pánico: silenciar el teclado"
+    (pointerdown)="onPanicDown($event)"
+    (pointerup)="onPanicUp($event)"
+    (pointercancel)="onPanicCancel()"
+    (click)="onPanicClick($event)"
   >
-    <span class="panic__mark" aria-hidden="true"></span>
-    <span class="panic__label">CALLA</span>
+    @if (panicDone()) {
+      <span class="panic__label panic__label--done">HECHO</span>
+    } @else {
+      <span class="panic__mark" aria-hidden="true"></span>
+      <span class="panic__label">CALLA</span>
+    }
   </button>
 </header>

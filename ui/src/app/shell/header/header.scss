@@ -229,6 +229,10 @@
     background: var(--panic-live-bg);
     box-shadow: var(--glow-alert);
   }
+
+  &--done {
+    border-color: var(--signal-primary);
+  }
 }
 
 .panic__mark {
@@ -242,4 +246,9 @@
   font-size: 8px;
   letter-spacing: 0.08em;
   color: var(--alert);
+
+  &--done {
+    font-size: 11px;
+    color: var(--signal-primary);
+  }
 }

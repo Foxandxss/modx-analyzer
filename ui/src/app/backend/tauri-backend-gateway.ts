@@ -6,6 +6,7 @@ import {
   AudioBlock,
   BackendGateway,
   ConnectionView,
+  PanicOutcome,
   PatchHeaderView,
   RereadProgress,
   invalidated,
@@ -51,6 +52,10 @@ export class TauriBackendGateway implements BackendGateway {
 
   appInfo(): Promise<AppInfo> {
     return invoke<AppInfo>('app_info');
+  }
+
+  panic(): Promise<PanicOutcome> {
+    return invoke<PanicOutcome>('panic_keyboard');
   }
 
   async subscribeBlocks(onBlock: (block: AudioBlock) => void): Promise<() => void> {

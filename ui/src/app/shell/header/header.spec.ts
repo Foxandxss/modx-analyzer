@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
 import { FakeBackendGateway } from '../../backend/fake-backend-gateway';
 import { DEAD_MARK } from '../../provenance/provenance';
+import { PANIC_ACK_MS, PanicService } from '../panic/panic-service';
 import { Header } from './header';
 
 async function renderHeader() {
@@ -12,7 +13,29 @@ async function renderHeader() {
   });
   const fixture = TestBed.createComponent(Header);
   await fixture.whenStable();
-  return { backend, fixture, host: fixture.nativeElement as HTMLElement };
+  return {
+    backend,
+    fixture,
+    host: fixture.nativeElement as HTMLElement,
+    panic: TestBed.inject(PanicService),
+  };
+}
+
+/**
+ * The pánico is 56×56 wherever it is drawn, and jsdom lays nothing out, so the
+ * rect it would measure has to be given to it. A point outside this box is a
+ * finger that was dragged off the octagon before it came up.
+ */
+function stubPanicBox(host: HTMLElement): HTMLButtonElement {
+  const button = host.querySelector<HTMLButtonElement>('.panic')!;
+  button.getBoundingClientRect = () => ({ left: 100, right: 156, top: 0, bottom: 56 }) as DOMRect;
+  return button;
+}
+
+function pointer(type: string, clientX: number, clientY: number): Event {
+  const event = new Event(type, { bubbles: true });
+  Object.assign(event, { pointerId: 1, clientX, clientY, detail: 1 });
+  return event;
 }
 
 describe('Header', () => {
@@ -89,5 +112,74 @@ describe('Header', () => {
     await fixture.whenStable();
 
     expect(host.querySelector('.panic')?.classList.contains('panic--live')).toBe(true);
+  });
+
+  it('acts when the finger comes up inside the octagon, with nothing to confirm', async () => {
+    const { backend, fixture, host } = await renderHeader();
+    backend.liveNotes.set(3);
+    await fixture.whenStable();
+    const button = stubPanicBox(host);
+
+    button.dispatchEvent(pointer('pointerdown', 120, 20));
+    // Nothing on the way down: a press that is never let go sends nothing.
+    expect(backend.panicPresses).toBe(0);
+
+    button.dispatchEvent(pointer('pointerup', 120, 20));
+    await fixture.whenStable();
+
+    expect(backend.panicPresses).toBe(1);
+    // No dialog, no second step: the header is all there is.
+    expect(document.querySelector('dialog')).toBeNull();
+  });
+
+  it('does nothing when the finger is dragged off before it comes up', async () => {
+    const { backend, fixture, host } = await renderHeader();
+    const button = stubPanicBox(host);
+
+    button.dispatchEvent(pointer('pointerdown', 120, 20));
+    button.dispatchEvent(pointer('pointerup', 400, 20));
+    await fixture.whenStable();
+
+    expect(backend.panicPresses).toBe(0);
+  });
+
+  it('reaches the pánico from the keyboard without sending it twice', async () => {
+    const { backend, fixture, host } = await renderHeader();
+    const button = stubPanicBox(host);
+
+    // Enter on the focused button: a synthesised click, `detail === 0`.
+    const synthesised = new Event('click', { bubbles: true });
+    Object.assign(synthesised, { detail: 0 });
+    button.dispatchEvent(synthesised);
+    await fixture.whenStable();
+
+    expect(backend.panicPresses).toBe(1);
+
+    // The click the mouse produces after its own pointerup must not send again.
+    button.dispatchEvent(pointer('pointerdown', 120, 20));
+    button.dispatchEvent(pointer('pointerup', 120, 20));
+    button.dispatchEvent(pointer('click', 120, 20));
+    await fixture.whenStable();
+
+    expect(backend.panicPresses).toBe(2);
+  });
+
+  it('says HECHO for the length of the ack and then goes back to CALLA', async () => {
+    const { fixture, host, panic } = await renderHeader();
+
+    // Real timers up to here: Angular's own stabilisation runs on them.
+    vi.useFakeTimers();
+    try {
+      await panic.press();
+      fixture.detectChanges();
+      expect(host.querySelector('.panic')?.textContent?.trim()).toBe('HECHO');
+
+      vi.advanceTimersByTime(PANIC_ACK_MS);
+      fixture.detectChanges();
+
+      expect(host.querySelector('.panic')?.textContent?.trim()).toBe('CALLA');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

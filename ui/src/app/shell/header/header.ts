@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { BACKEND_GATEWAY, invalidated } from '../../backend/backend-gateway';
 import { Figure } from '../../provenance/figure';
+import { PanicService } from '../panic/panic-service';
 
 /** The three modes of the app. Only `CREAR` is reachable this session. */
 export type Mode = 'CREAR' | 'A/B' | 'APRENDER';
@@ -24,6 +25,10 @@ export const MODES: readonly Mode[] = ['CREAR', 'A/B', 'APRENDER'];
 })
 export class Header {
   private readonly backend = inject(BACKEND_GATEWAY);
+  private readonly panic = inject(PanicService);
+
+  /** The pointer that went down on the pánico, until it comes up again. */
+  private pressing: number | null = null;
 
   protected readonly modes = MODES;
 
@@ -43,6 +48,53 @@ export class Header {
 
   /** The pánico fills and glows while any note is live. */
   protected readonly panicLive = computed(() => this.liveNotes() > 0);
+
+  /** The third state: `HECHO` for `--panic-ack` after the messages went out. */
+  protected readonly panicDone = this.panic.done;
+
+  /**
+   * Nothing happens on the way down. The pánico acts on the way up, so a touch
+   * landed by accident and dragged off the octagon costs nothing.
+   */
+  protected onPanicDown(event: PointerEvent): void {
+    this.pressing = event.pointerId;
+  }
+
+  protected onPanicUp(event: PointerEvent): void {
+    if (this.pressing !== event.pointerId) {
+      return;
+    }
+    this.pressing = null;
+
+    // Touch capture keeps sending us the pointerup even when the finger has left
+    // the button, so where it came up has to be checked rather than assumed.
+    const target = event.currentTarget as HTMLElement;
+    const box = target.getBoundingClientRect();
+    const inside =
+      event.clientX >= box.left &&
+      event.clientX <= box.right &&
+      event.clientY >= box.top &&
+      event.clientY <= box.bottom;
+
+    if (inside) {
+      void this.panic.press();
+    }
+  }
+
+  protected onPanicCancel(): void {
+    this.pressing = null;
+  }
+
+  /**
+   * Enter and Space on the focused button. A keyboard `click` carries `detail = 0`,
+   * which is how it is told apart from the one the mouse already handled on
+   * pointer-up — the alternative is the pánico going out twice per press.
+   */
+  protected onPanicClick(event: MouseEvent): void {
+    if (event.detail === 0) {
+      void this.panic.press();
+    }
+  }
 
   protected readonly audioLine = computed(() => {
     const { audioDevice, sampleRate } = this.connection();

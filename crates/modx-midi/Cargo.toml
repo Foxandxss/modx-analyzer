@@ -6,3 +6,7 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+# Default features, so the Windows backend stays WinMM — the one the fase 0c
+# latency and loss numbers were measured on.
+midir = "0.11"
+thiserror.workspace = true

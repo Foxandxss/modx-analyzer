@@ -38,6 +38,15 @@ export interface BackendGateway {
   appInfo(): Promise<AppInfo>;
 
   /**
+   * Silence the keyboard: All Sound Off, All Notes Off and 2 048 explicit Note
+   * Offs on the sixteen channels, and not one parameter.
+   *
+   * It is the last thing that stops working, so it is allowed to fail loudly: if
+   * the port was lost the native side reopens it and sends anyway.
+   */
+  panic(): Promise<PanicOutcome>;
+
+  /**
    * Raw f32 bloques straight off the device, one per three device callbacks.
    * Returns the unsubscribe. The blocks carry no analysis: that is TypeScript's
    * job in the worker (ADR-0001).
@@ -92,6 +101,14 @@ export interface PatchHeaderView {
 export interface RereadProgress {
   readonly done: number;
   readonly total: number;
+}
+
+/** What one press of the pánico did. */
+export interface PanicOutcome {
+  /** Notas vivas held when the messages went out, counted before the silencing. */
+  readonly silenced: number;
+  /** Whether the port had to be reopened first. */
+  readonly reopened: boolean;
 }
 
 export interface AppInfo {

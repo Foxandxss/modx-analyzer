@@ -4,6 +4,7 @@ import {
   AudioBlock,
   BackendGateway,
   ConnectionView,
+  PanicOutcome,
   PatchHeaderView,
   RereadProgress,
   invalidated,
@@ -39,10 +40,24 @@ export class FakeBackendGateway implements BackendGateway {
 
   appInfoResult: AppInfo = { version: '0.0.0-fake', dumpsFolder: '' };
 
+  /** What the next pánico answers, or a rejection when the port is gone for good. */
+  panicResult: () => Promise<PanicOutcome> = () =>
+    Promise.resolve({ silenced: this.liveNotes(), reopened: false });
+
+  /** How many times the pánico has been pressed. A second press is a bug, not a habit. */
+  panicPresses = 0;
+
   private readonly blockListeners = new Set<(block: AudioBlock) => void>();
 
   appInfo(): Promise<AppInfo> {
     return Promise.resolve(this.appInfoResult);
+  }
+
+  panic(): Promise<PanicOutcome> {
+    this.panicPresses += 1;
+    const outcome = this.panicResult();
+    this.liveNotes.set(0);
+    return outcome;
   }
 
   subscribeBlocks(onBlock: (block: AudioBlock) => void): Promise<() => void> {

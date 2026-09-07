@@ -1,3 +1,6 @@
+mod keyboard;
+
+use keyboard::Keyboard;
 use tauri::{LogicalSize, Manager};
 
 /// The measured useful client area on the target laptop: a 14" panel of
@@ -35,7 +38,8 @@ fn app_info(app: tauri::AppHandle) -> Result<AppInfo, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![app_info])
+        .manage(Keyboard::new())
+        .invoke_handler(tauri::generate_handler![app_info, keyboard::panic_keyboard])
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -49,6 +53,12 @@ pub fn run() {
                 .get_webview_window("main")
                 .expect("the main window is declared in tauri.conf.json");
             window.set_min_size(Some(LogicalSize::new(MIN_CLIENT_WIDTH, MIN_CLIENT_HEIGHT)))?;
+
+            // Startup order: the port first, so the pánico is live before anything
+            // else can make a note sound. The volcado de seguridad, the ancla, the
+            // relectura, the rings and the audio device slot in behind it as their
+            // own tickets land.
+            keyboard::start(app.handle());
 
             Ok(())
         })

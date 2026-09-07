@@ -4,6 +4,7 @@ import { OperatorDiagram } from './panels/operator-diagram/operator-diagram';
 import { SignalViews } from './panels/signal-views/signal-views';
 import { TabPanel } from './panels/tab-panel/tab-panel';
 import { Header } from './shell/header/header';
+import { PanicNotice } from './shell/panic/panic-notice';
 import { RereadStrip } from './shell/reread-strip/reread-strip';
 
 /**
@@ -16,9 +17,19 @@ import { RereadStrip } from './shell/reread-strip/reread-strip';
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Header, RereadStrip, OperatorDiagram, SignalViews, FiguresColumn, TabPanel],
+  imports: [
+    Header,
+    PanicNotice,
+    RereadStrip,
+    OperatorDiagram,
+    SignalViews,
+    FiguresColumn,
+    TabPanel,
+  ],
   template: `
     <app-header />
+    <!-- Todo lo que avisa se dibuja DEBAJO de la cabecera: el pánico nunca se tapa. -->
+    <app-panic-notice />
     <app-reread-strip />
     <div class="body">
       <app-operator-diagram />
