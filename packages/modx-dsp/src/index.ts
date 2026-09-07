@@ -4,3 +4,7 @@
 // already because the audio bridge needs them.
 export * from './constants';
 export * from './scope';
+export * from './fft';
+export * from './spectrum';
+export * from './partials';
+export * from './live';

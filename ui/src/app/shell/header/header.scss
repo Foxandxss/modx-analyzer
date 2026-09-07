@@ -141,6 +141,23 @@
   padding: 12px 16px;
   border-radius: var(--radius-pill);
   border: var(--rule-min) solid var(--dead-border);
+
+  // Mirar late en continuo: es el acto que no se pulsa. El latido sólo existe
+  // mientras llegan bloques; sin puente, la pastilla está muerta.
+  &--on {
+    border-color: oklch(0.87 0.155 155 / 0.28);
+    background: oklch(0.87 0.155 155 / 0.06);
+
+    .look__dot {
+      border-color: var(--signal-primary);
+      background: var(--signal-primary);
+      animation: livePulse var(--dur-heartbeat) var(--ease-instrument) infinite;
+    }
+
+    .look__text {
+      color: var(--signal-primary);
+    }
+  }
 }
 
 .look__dot {
@@ -149,6 +166,16 @@
   border-radius: 50%;
   border: var(--rule-min) solid var(--dead-ink);
   box-sizing: border-box;
+}
+
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .look__text {

@@ -1,4 +1,8 @@
 import { TestBed } from '@angular/core/testing';
+import { BLOCK_FRAMES } from 'modx-dsp';
+import { AUDIO_WORKER, AudioService } from '../../audio/audio-service';
+import { fakeBlock, heldNote } from '../../audio/fake-block';
+import { FakeAudioWorker } from '../../audio/fake-audio-worker';
 import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
 import { FakeBackendGateway } from '../../backend/fake-backend-gateway';
 import { DEAD_MARK } from '../../provenance/provenance';
@@ -181,5 +185,45 @@ describe('Header', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('Header · el transporte', () => {
+  it('deja MIRAR muerto mientras no llega un bloque', async () => {
+    const { host } = await renderHeader();
+
+    // A heartbeat over a bridge that is not delivering would be the one lie this
+    // bar cannot tell.
+    expect(host.querySelector('.look')?.className).not.toContain('look--on');
+    expect(host.querySelector('.look__text')?.textContent?.trim()).toBe(`MIRAR · ${DEAD_MARK} fps`);
+  });
+
+  it('late y dice su cadencia medida en cuanto entra audio', async () => {
+    const backend = new FakeBackendGateway();
+    TestBed.configureTestingModule({
+      imports: [Header],
+      providers: [
+        { provide: BACKEND_GATEWAY, useValue: backend },
+        { provide: AUDIO_WORKER, useValue: () => new FakeAudioWorker() },
+      ],
+    });
+    const fixture = TestBed.createComponent(Header);
+    TestBed.inject(AudioService).start();
+    await fixture.whenStable();
+    const host = fixture.nativeElement as HTMLElement;
+
+    for (let sequence = 0; sequence < 10; sequence += 1) {
+      backend.emitBlock(
+        fakeBlock({
+          sequence,
+          sentAtMicros: sequence * 30_000,
+          mono: heldNote(261.626, sequence * BLOCK_FRAMES),
+        }),
+      );
+    }
+    await fixture.whenStable();
+
+    expect(host.querySelector('.look')?.className).toContain('look--on');
+    expect(host.querySelector('.look__text')?.textContent?.trim()).toMatch(/^MIRAR · [\d.]+ fps$/);
   });
 });

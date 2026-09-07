@@ -1,9 +1,9 @@
 import { AudioBridge } from './bridge';
-import { BlockMessage, FrameMessage } from './audio.worker';
+import { FrameMessage, NoteMessage, WorkerMessage } from './audio.worker';
 import { AudioWorkerLike } from './audio-service';
 
 /**
- * The worker's fifteen lines, run in place.
+ * The worker's twenty lines, run in place.
  *
  * A test drives the real {@link AudioBridge} — the same class the worker wraps —
  * synchronously, so a bloque pushed through `FakeBackendGateway` reaches the
@@ -17,7 +17,16 @@ export class FakeAudioWorker implements AudioWorkerLike {
   /** How many bloques have gone through. `terminate` does not reset it. */
   received = 0;
 
-  postMessage(message: BlockMessage): void {
+  /** The notes the service has sent, in order. The axis hangs off the last one. */
+  readonly notes: (number | null)[] = [];
+
+  postMessage(message: WorkerMessage): void {
+    if (message.kind === 'note') {
+      this.notes.push((message as NoteMessage).hz);
+      this.bridge.setNote(message.hz);
+      return;
+    }
+
     const frame = this.bridge.receive(message.buffer, performance.now());
     this.received += 1;
 
@@ -27,6 +36,8 @@ export class FakeAudioWorker implements AudioWorkerLike {
       kind: 'frame',
       trace: frame.trace,
       frequencyHz: frame.frequencyHz,
+      trama: frame.trama,
+      tramaMs: frame.tramaMs,
       stats: this.bridge.stats(),
     };
     for (const listener of this.listeners) {

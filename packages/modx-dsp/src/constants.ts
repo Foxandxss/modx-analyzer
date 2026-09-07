@@ -43,3 +43,33 @@ export const WATERFALL_FRAMES = 14;
  * the sample clock, not to the note, so it never counts as content.
  */
 export const ARTEFACT_HZ = SAMPLE_RATE / 16;
+
+/**
+ * The espectro's axis is **multiples of the note**, not hertz: `LOG 1×–32×`.
+ *
+ * It is the axis the design draws and it is the one that teaches: the harmonics
+ * of any note land on the same marks, so the shape of a timbre stops moving when
+ * the note does. It also means there is no espectro without a note — with nothing
+ * periodic there is no 1×, and an empty frame is the honest drawing.
+ */
+export const AXIS_LOW_MULTIPLE = 1;
+export const AXIS_HIGH_MULTIPLE = 32;
+
+/**
+ * Points of the drawn curve. 256 over five octaves is ~51 per octave, more than
+ * the 700-odd pixels the panel is wide can show at the top of the axis, and it
+ * makes a trama's message 1 KB instead of the 16 KB of the whole bin array.
+ */
+export const CURVE_POINTS = 256;
+
+/** The armónicos panel: n1 … n16. */
+export const HARMONIC_BARS = 16;
+
+/**
+ * How far down a bar is drawn from the loudest line of the frame before it is
+ * nothing: 72 dB. It puts the fase 0 noise floor (−100 to −109 dB) off the
+ * bottom, so a harmonic that is not there has no bar at all rather than a stub
+ * of floor — and it keeps the whole odd skeleton of the modhigh vector, whose
+ * quietest drawn harmonic is the 15th at −25 dB, comfortably on.
+ */
+export const HARMONIC_SPAN_DB = 72;

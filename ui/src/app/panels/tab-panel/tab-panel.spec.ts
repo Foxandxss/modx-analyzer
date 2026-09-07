@@ -51,10 +51,40 @@ describe('TabPanel', () => {
     const { host, selectScope } = await renderPanel();
 
     expect(host.querySelector('app-scope')).toBeNull();
+    expect(host.querySelector('app-waterfall canvas')).not.toBeNull();
 
     await selectScope();
 
     expect(host.querySelector('app-scope')).not.toBeNull();
+    expect(host.querySelector('app-waterfall')).toBeNull();
+  });
+
+  it('shows the waterfall as soon as a note is live', async () => {
+    const { backend, fixture, host } = await renderPanel();
+
+    backend.liveNotes.set(1);
+    await fixture.whenStable();
+
+    expect(host.querySelector('app-waterfall')).not.toBeNull();
+  });
+
+  it('keeps the scope for as long as the note that asked for it lasts', async () => {
+    const { backend, fixture, host, selectScope } = await renderPanel();
+    backend.liveNotes.set(2);
+    await fixture.whenStable();
+
+    await selectScope();
+    backend.liveNotes.set(1);
+    await fixture.whenStable();
+
+    // A tab that snapped back under a held chord would be the app arguing.
+    expect(host.querySelector('app-scope')).not.toBeNull();
+
+    backend.liveNotes.set(0);
+    await fixture.whenStable();
+
+    // The request expires with the phrase: the next note starts on the waterfall.
+    expect(host.querySelector('app-waterfall')).not.toBeNull();
   });
 
   it('says the scope has nothing to trigger on before any audio', async () => {

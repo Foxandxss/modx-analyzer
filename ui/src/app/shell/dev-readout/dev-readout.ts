@@ -24,6 +24,8 @@ import { DEAD_MARK } from '../../provenance/provenance';
       @if (noAudio()) {
         <span class="dev__alert">SIN AUDIO · CEROS EXACTOS</span>
       }
+      <span class="dev__label">TRAMA</span>
+      <span>{{ tramaLine() }}</span>
       <span class="dev__label">VOLCADO</span>
       <span>{{ dumpLine() }}</span>
     </div>
@@ -70,6 +72,20 @@ export class DevReadout {
       `${taken.messages} DE ${taken.expectedMessages} MSJ`,
       taken.tookMs === null ? DEAD_MARK : `${(taken.tookMs / 1000).toFixed(2)} s`,
       taken.state.toUpperCase(),
+    ].join(' · ');
+  });
+
+  /**
+   * What one trama of the vista viva costs end to end in the worker, which is
+   * the number #9 asks to be written down. The budget is one bloque: 33 ms.
+   */
+  protected readonly tramaLine = computed(() => {
+    const stats = this.audio.stats();
+    return [
+      `p50 ${millis(stats.tramaP50Ms)}`,
+      `p99 ${millis(stats.tramaP99Ms)}`,
+      `max ${millis(stats.tramaMaxMs)}`,
+      `${this.audio.fps() === null ? DEAD_MARK : this.audio.fps()!.toFixed(1)} fps`,
     ].join(' · ');
   });
 

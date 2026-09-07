@@ -10,7 +10,7 @@ import {
 import { Figure } from '../../provenance/figure';
 import { RingFreshness } from '../../provenance/freshness';
 import { PROVENANCE_LABEL } from '../../provenance/provenance';
-import { equalTemperamentHz } from './theory';
+import { equalTemperamentHz } from '../../provenance/theory';
 
 /** What the role is called on the node. UI copy is Spanish; identifiers are not. */
 const ROLE_LABEL: Readonly<Record<OperatorRole, string>> = {

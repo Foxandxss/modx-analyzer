@@ -1,4 +1,4 @@
-import { BLOCK_FRAMES, CHANNELS, SAMPLE_RATE } from 'modx-dsp';
+import { ARTEFACT_HZ, BLOCK_FRAMES, CHANNELS, SAMPLE_RATE } from 'modx-dsp';
 import { HEADER_BYTES } from './bridge';
 
 /**
@@ -49,4 +49,22 @@ export function heldNote(frequency: number, startFrame = 0, frames = BLOCK_FRAME
     mono[index] = 0.5 * Math.sin((2 * Math.PI * frequency * (startFrame + index)) / SAMPLE_RATE);
   }
   return mono;
+}
+
+/**
+ * The generator's comb added on top of a note: one line at 2 756.25 Hz, 72 dB
+ * under the note, which is where fase 0 §7 found it in all four vectores de oro.
+ *
+ * It exists so a test can ask the screen what it does about an artefact without
+ * reading a WAV: the vectores are the DSP's regression tests and live in
+ * `modx-dsp`, and a UI test that needed one of them would be measuring the
+ * analysis all over again instead of the panel.
+ */
+export function withComb(mono: Float32Array, startFrame = 0, amplitude = 1.25e-4): Float32Array {
+  const both = Float32Array.from(mono);
+  for (let index = 0; index < both.length; index += 1) {
+    both[index] +=
+      amplitude * Math.sin((2 * Math.PI * ARTEFACT_HZ * (startFrame + index)) / SAMPLE_RATE);
+  }
+  return both;
 }

@@ -128,6 +128,8 @@ _Avoid_: muerto, pausado, congelado
 
 **Vista viva**:
 Scope, espectro y waterfall a ~30 fps sobre FFT corta. Es audio que entra ahora: nunca se invalida.
+Sus cifras no llevan ninguno de los cinco sellos de procedencia —no salen de una Medida, ni de un
+sondeo, ni de una fórmula— sino el sello **`VIVO`** de su zona, con la cadencia medida al lado.
 
 **Medida**:
 FFT larga disparada explícitamente sobre una nota sostenida. Produce parciales, fc, fm, ratio

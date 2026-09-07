@@ -50,9 +50,9 @@
 
   <!-- Transporte. Mirar late y medir es un obturador: dos actos distintos, y aquí
        los dos son ranuras — laten y disparan cuando llegue el audio. -->
-  <div class="look">
+  <div class="look" [class.look--on]="looking()">
     <span class="look__dot" aria-hidden="true"></span>
-    <span class="look__text">MIRAR · <app-figure [value]="deadFps" [unit]="' fps'" /></span>
+    <span class="look__text">MIRAR · {{ fps() === null ? '—' : fps()!.toFixed(1) }} fps</span>
   </div>
 
   <button type="button" class="measure" disabled>

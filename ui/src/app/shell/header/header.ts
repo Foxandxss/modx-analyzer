@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { BACKEND_GATEWAY, invalidated } from '../../backend/backend-gateway';
 import { Figure } from '../../provenance/figure';
 import { RingFreshness } from '../../provenance/freshness';
+import { AudioService } from '../../audio/audio-service';
 import { PanicService } from '../panic/panic-service';
 
 /** The three modes of the app. Only `CREAR` is reachable this session. */
@@ -27,6 +28,7 @@ export const MODES: readonly Mode[] = ['CREAR', 'A/B', 'APRENDER'];
 export class Header {
   private readonly backend = inject(BACKEND_GATEWAY);
   private readonly panic = inject(PanicService);
+  private readonly audio = inject(AudioService);
   private readonly freshness = inject(RingFreshness);
 
   /** The pointer that went down on the pánico, until it comes up again. */
@@ -34,9 +36,16 @@ export class Header {
 
   protected readonly modes = MODES;
 
-  /** Nothing has been read yet, so the transport and the audio line show the dash. */
+  /** Nothing has been read yet, so the audio line shows the dash. */
   protected readonly dead = invalidated<string>();
-  protected readonly deadFps = invalidated<number>();
+
+  /**
+   * Mirar is continuous and says its own rate, measured. The pastille beats
+   * while bloques are arriving and is dead before the first one: a heartbeat on
+   * a bridge that is not delivering would be the one lie this bar cannot tell.
+   */
+  protected readonly fps = this.audio.fps;
+  protected readonly looking = computed(() => this.audio.fps() !== null);
 
   /** Only CREAR is selectable; the other two are drawn so the layout is final. */
   protected readonly selectedMode: Mode = 'CREAR';

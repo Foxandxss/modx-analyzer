@@ -1,6 +1,6 @@
-import { BLOCK_FRAMES } from 'modx-dsp';
+import { BLOCK_FRAMES, CURVE_POINTS, HARMONIC_BARS } from 'modx-dsp';
 import { AudioBridge, BlockMeter, channelZero, decodeBlock } from './bridge';
-import { fakeBlock, heldNote } from './fake-block';
+import { fakeBlock, heldNote, withComb } from './fake-block';
 
 describe('decodeBlock', () => {
   it('reads the header Rust wrote', () => {
@@ -152,5 +152,82 @@ describe('AudioBridge', () => {
     }
 
     expect(last).not.toBeNull();
+  });
+});
+
+describe('AudioBridge · la vista viva', () => {
+  /** Enough bloques for the 4 096 window to be full of the note and nothing else. */
+  function hold(bridge: AudioBridge, frequency: number, blocks = 5) {
+    let frame = bridge.receive(fakeBlock({ mono: heldNote(frequency, 0) }), 0);
+    for (let sequence = 1; sequence < blocks; sequence += 1) {
+      frame = bridge.receive(
+        fakeBlock({ sequence, mono: heldNote(frequency, sequence * BLOCK_FRAMES) }),
+        sequence * 30,
+      );
+    }
+    return frame;
+  }
+
+  it('trae la curva, las barras y la nota contra la que están dibujadas', () => {
+    const frame = hold(new AudioBridge(), 261.626);
+
+    expect(frame.trama.curve).toHaveLength(CURVE_POINTS);
+    expect(frame.trama.harmonics).toHaveLength(HARMONIC_BARS);
+    expect(frame.trama.fundamentalHz).toBeCloseTo(261.626, 0);
+    // A pure tone: the first bar is the peak and the second is far under it.
+    expect(frame.trama.harmonics![0]).toBeCloseTo(0, 0);
+    expect(frame.trama.harmonics![1]).toBeLessThan(-60);
+  });
+
+  it('dibuja el eje contra la nota pulsada y no contra el periodo que midió', () => {
+    // The keyboard says C3 while the audio is a C4. The axis follows the
+    // keyboard: it is the note somebody is playing, and the strongest line of an
+    // FM timbre is not the note.
+    const bridge = new AudioBridge();
+    bridge.setNote(130.813);
+
+    const frame = hold(bridge, 261.626);
+
+    expect(frame.trama.fundamentalHz).toBe(130.813);
+    expect(frame.frequencyHz).toBeCloseTo(261.626, 0);
+  });
+
+  it('marca el comb del generador con su frecuencia y no lo cuenta como armónico', () => {
+    const bridge = new AudioBridge();
+    let frame = bridge.receive(fakeBlock({ mono: withComb(heldNote(261.626, 0), 0) }), 0);
+    for (let sequence = 1; sequence < 5; sequence += 1) {
+      frame = bridge.receive(
+        fakeBlock({
+          sequence,
+          mono: withComb(heldNote(261.626, sequence * BLOCK_FRAMES), sequence * BLOCK_FRAMES),
+        }),
+        sequence * 30,
+      );
+    }
+
+    expect(frame.trama.artefactHz).toBeCloseTo(2756.25, 2);
+    const comb = frame.trama.partials.filter((partial) => partial.kind === 'artefact');
+    expect(comb.length).toBeGreaterThan(0);
+    for (const line of comb) {
+      expect(line.harmonic).toBeNull();
+    }
+  });
+
+  it('no dibuja nada cuando no entra nada, ni una línea plana', () => {
+    const frame = new AudioBridge().receive(fakeBlock({ silent: true }), 0);
+
+    expect(frame.trama.curve).toBeNull();
+    expect(frame.trama.harmonics).toBeNull();
+    expect(frame.trama.partials).toEqual([]);
+  });
+
+  it('mide lo que cuesta cada trama en vez de suponerlo', () => {
+    const bridge = new AudioBridge();
+    const frame = hold(bridge, 261.626);
+
+    expect(frame.tramaMs).toBeGreaterThanOrEqual(0);
+    const stats = bridge.stats();
+    expect(stats.tramaP50Ms).not.toBeNull();
+    expect(stats.tramaMaxMs).toBeGreaterThanOrEqual(stats.tramaP50Ms!);
   });
 });

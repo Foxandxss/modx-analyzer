@@ -1,4 +1,4 @@
-import { BLOCK_FRAMES, CHANNELS, SAMPLE_RATE, scopeTrace } from 'modx-dsp';
+import { BLOCK_FRAMES, CHANNELS, LiveTrama, SAMPLE_RATE, liveTrama, scopeTrace } from 'modx-dsp';
 
 /**
  * The front's half of the audio bridge: everything the Web Worker does, as plain
@@ -31,6 +31,20 @@ const FLAG_SILENT = 1;
 
 /** How many bloques of channel 0 the scope keeps: 90 ms, two cycles down to 22 Hz. */
 const SCOPE_BLOCKS = 3;
+
+/**
+ * How many bloques of channel 0 are kept in all: four, 5 292 samples, because the
+ * vista viva's window is 4 096 and three bloques are 3 969. The scope still reads
+ * the last three of them — a longer buffer would change where it triggers — so
+ * this number is the espectro's, not the scope's.
+ */
+const HISTORY_BLOCKS = 4;
+
+/**
+ * How many trama costs are kept for the percentiles. The same 65 536 as the
+ * latencies, for the same reason: a ten-minute run is measured whole.
+ */
+const TRAMA_HISTORY = 65536;
 
 /**
  * How many delivery latencies are kept for the percentiles: 33 minutes at 33.3 Hz,
@@ -94,6 +108,14 @@ export interface BridgeStats {
   readonly p50Ms: number | null;
   readonly p99Ms: number | null;
   readonly maxMs: number | null;
+  /**
+   * What one trama costs end to end in the worker, from the bloque arriving to
+   * the espectro, the armónicos and the ridgeline being ready to draw. The budget
+   * is 33 ms — one bloque — and these are the numbers that say whether it is met.
+   */
+  readonly tramaP50Ms: number | null;
+  readonly tramaP99Ms: number | null;
+  readonly tramaMaxMs: number | null;
   /** No entra audio: exact digital zeros for a second. */
   readonly silent: boolean;
 }
@@ -108,6 +130,9 @@ const NO_STATS: BridgeStats = {
   p50Ms: null,
   p99Ms: null,
   maxMs: null,
+  tramaP50Ms: null,
+  tramaP99Ms: null,
+  tramaMaxMs: null,
   silent: false,
 };
 
@@ -139,6 +164,10 @@ export class BlockMeter {
   private readonly deltas = new Float64Array(LATENCY_HISTORY);
   private written = 0;
 
+  /** What each trama cost the worker, in ms, oldest overwritten. */
+  private readonly tramas = new Float64Array(TRAMA_HISTORY);
+  private tramasWritten = 0;
+
   /** `arrivedAt` is `performance.now()` when the buffer reached the worker. */
   observe(block: AudioBlock, arrivedAt: number): void {
     // Lost is counted as a hole in the span, not as a jump: a bloque that came
@@ -166,6 +195,12 @@ export class BlockMeter {
     this.written += 1;
   }
 
+  /** What the analysis of one trama cost, in ms. Measured, never estimated. */
+  observeTrama(costMs: number): void {
+    this.tramas[this.tramasWritten % TRAMA_HISTORY] = costMs;
+    this.tramasWritten += 1;
+  }
+
   stats(): BridgeStats {
     if (this.blocks === 0) {
       return NO_STATS;
@@ -174,6 +209,11 @@ export class BlockMeter {
     const kept = this.deltas.slice(0, Math.min(this.written, LATENCY_HISTORY));
     const floor = kept.reduce((lowest, delta) => Math.min(lowest, delta), Infinity);
     const latencies = Array.from(kept, (delta) => delta - floor).sort((a, b) => a - b);
+
+    // The trama costs need no floor subtracted: one clock measured them.
+    const tramas = Array.from(
+      this.tramas.slice(0, Math.min(this.tramasWritten, TRAMA_HISTORY)),
+    ).sort((a, b) => a - b);
 
     return {
       blocks: this.blocks,
@@ -185,6 +225,9 @@ export class BlockMeter {
       p50Ms: percentile(latencies, 0.5),
       p99Ms: percentile(latencies, 0.99),
       maxMs: latencies[latencies.length - 1] ?? null,
+      tramaP50Ms: percentile(tramas, 0.5),
+      tramaP99Ms: percentile(tramas, 0.99),
+      tramaMaxMs: tramas[tramas.length - 1] ?? null,
       silent: this.silent,
     };
   }
@@ -208,7 +251,16 @@ export interface BridgeFrame {
   readonly trace: Float32Array | null;
   /** The frequency the trace was triggered at, for the readout. */
   readonly frequencyHz: number | null;
+  /** The espectro, the armónicos and the ridgeline of this trama. */
+  readonly trama: LiveTrama;
+  /** What this trama cost, in ms, measured with `performance` marks. */
+  readonly tramaMs: number;
 }
+
+/** The marks the trama budget is measured with. Named so a profile reads. */
+const MARK_START = 'trama:inicio';
+const MARK_END = 'trama:fin';
+const MEASURE = 'trama';
 
 /**
  * The worker's whole job: take a bloque, keep the score, and hand back the piece
@@ -223,9 +275,28 @@ export interface BridgeFrame {
  */
 export class AudioBridge {
   private readonly meter = new BlockMeter();
-  private readonly history = new Float32Array(BLOCK_FRAMES * SCOPE_BLOCKS);
+  private readonly history = new Float32Array(BLOCK_FRAMES * HISTORY_BLOCKS);
+
+  /** The note the keyboard is holding, when it says so. See {@link setNote}. */
+  private noteHz: number | null = null;
+
+  /**
+   * The note the espectro's axis is drawn against.
+   *
+   * It is the **played** note, from the note tracker, and not the period the
+   * scope measured: with a high modulation index the loudest line is the ninth
+   * harmonic and an axis that took the strongest peak for 1× would redraw itself
+   * every time somebody turned a knob. The scope's period is the fallback, so
+   * that audio entering with the MIDI port gone is still drawn — it is the same
+   * note, read off the sound instead of off the keyboard.
+   */
+  setNote(hz: number | null): void {
+    this.noteHz = hz;
+  }
 
   receive(buffer: ArrayBuffer, arrivedAt: number): BridgeFrame {
+    performance.mark(MARK_START);
+
     const block = decodeBlock(buffer);
     this.meter.observe(block, arrivedAt);
 
@@ -233,11 +304,23 @@ export class AudioBridge {
     this.history.copyWithin(0, mono.length);
     this.history.set(mono, this.history.length - mono.length);
 
-    const found = scopeTrace(this.history, SAMPLE_RATE);
+    // The scope keeps reading the last three bloques it always read: the trigger
+    // it finds is a property of the window it was given.
+    const scopeWindow = this.history.subarray(this.history.length - BLOCK_FRAMES * SCOPE_BLOCKS);
+    const found = scopeTrace(scopeWindow, SAMPLE_RATE);
     const trace =
-      found === null ? null : this.history.slice(found.trigger, found.trigger + found.length);
+      found === null ? null : scopeWindow.slice(found.trigger, found.trigger + found.length);
 
-    return { trace, frequencyHz: found?.frequencyHz ?? null };
+    const trama = liveTrama(this.history, this.noteHz ?? found?.frequencyHz ?? null);
+
+    performance.mark(MARK_END);
+    const measured = performance.measure(MEASURE, MARK_START, MARK_END);
+    this.meter.observeTrama(measured.duration);
+    performance.clearMarks(MARK_START);
+    performance.clearMarks(MARK_END);
+    performance.clearMeasures(MEASURE);
+
+    return { trace, frequencyHz: found?.frequencyHz ?? null, trama, tramaMs: measured.duration };
   }
 
   stats(): BridgeStats {
