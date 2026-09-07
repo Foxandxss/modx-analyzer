@@ -18,6 +18,7 @@
 //! ```
 #![forbid(unsafe_code)]
 
+pub mod algorithms;
 pub mod dump;
 pub mod fake;
 pub mod hardware;
@@ -30,6 +31,7 @@ pub mod sysex;
 pub mod table;
 pub mod verify;
 
+pub use algorithms::{Feedback, Role, Topology};
 pub use dump::Dump;
 pub use notes::NoteTracker;
 pub use owner::{OwnerHandle, PortOwner, Priority, Request, RequestQueue, Served};
