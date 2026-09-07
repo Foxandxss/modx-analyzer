@@ -34,6 +34,13 @@ export interface BackendGateway {
   /** Live notes counted by distinct pitch (Note On with velocity 0 is Note Off). */
   readonly liveNotes: Signal<number>;
 
+  /**
+   * The volcado de seguridad of this launch, or `null` while it is still being
+   * taken. One per launch, never deleted, and it carries the folder path in
+   * every state — including the failures, where the path *is* the message.
+   */
+  readonly dump: Signal<DumpView | null>;
+
   /** Version and the folder where the volcados de seguridad are written. */
   appInfo(): Promise<AppInfo>;
 
@@ -119,4 +126,28 @@ export interface AppInfo {
   readonly version: string;
   /** Full path of the `dumps` folder. A safety file you cannot find is not safety. */
   readonly dumpsFolder: string;
+}
+
+/**
+ * How the volcado went. `short` is its own state on purpose: the bytes were kept
+ * and written, and calling that `saved` would hide the one failure mode a bulk
+ * dump has that nothing in the app can see or fix (`Bulk Interval`).
+ */
+export type DumpState = 'saved' | 'short' | 'failed';
+
+export interface DumpView {
+  readonly state: DumpState;
+  /** Full path of the file, or `null` when there is no file. */
+  readonly path: string | null;
+  /** Full path of the folder, in every state. A warning with no path is no warning. */
+  readonly folder: string;
+  readonly bytes: number;
+  readonly messages: number;
+  /** How long the dump took, or `null` when it never ran: the dash, not a zero. */
+  readonly tookMs: number | null;
+  /** One line in Spanish saying what went wrong, or `null` when nothing did. */
+  readonly reason: string | null;
+  /** The 123 messages and 7 669 bytes of fase 0c, so nothing here hardcodes them. */
+  readonly expectedMessages: number;
+  readonly expectedBytes: number;
 }

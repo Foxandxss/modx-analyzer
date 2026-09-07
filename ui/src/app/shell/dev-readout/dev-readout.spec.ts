@@ -89,4 +89,26 @@ describe('DevReadout', () => {
     await push(fakeBlock({ sequence: 1, silent: true }));
     expect(text()).toContain('SIN AUDIO · CEROS EXACTOS');
   });
+
+  it('has the volcado on screen so its time can be written down', async () => {
+    const { backend, fixture, text } = await renderReadout();
+
+    expect(text()).toContain('VOLCADO');
+    expect(text()).toContain('en curso');
+
+    backend.dump.set({
+      state: 'saved',
+      path: 'C:\\dumps\\2026-09-07_193305 Init Normal (FM-X).syx',
+      folder: 'C:\\dumps',
+      bytes: 7669,
+      messages: 123,
+      tookMs: 2410,
+      reason: null,
+      expectedMessages: 123,
+      expectedBytes: 7669,
+    });
+    await fixture.whenStable();
+
+    expect(text()).toContain('7669 B · 123 DE 123 MSJ · 2.41 s · SAVED');
+  });
 });

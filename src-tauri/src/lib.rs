@@ -1,9 +1,11 @@
 mod audio;
 mod connection;
+mod dumps;
 mod keyboard;
 
 use audio::Audio;
 use connection::Connection;
+use dumps::Dumps;
 use keyboard::Keyboard;
 use tauri::{LogicalSize, Manager};
 
@@ -27,15 +29,9 @@ struct AppInfo {
 
 #[tauri::command]
 fn app_info(app: tauri::AppHandle) -> Result<AppInfo, String> {
-    let dumps_folder = app
-        .path()
-        .app_data_dir()
-        .map_err(|error| error.to_string())?
-        .join("dumps");
-
     Ok(AppInfo {
         version: app.package_info().version.to_string(),
-        dumps_folder: dumps_folder.to_string_lossy().into_owned(),
+        dumps_folder: dumps::folder(&app)?.to_string_lossy().into_owned(),
     })
 }
 
@@ -45,8 +41,10 @@ pub fn run() {
         .manage(Connection::new())
         .manage(Keyboard::new())
         .manage(Audio::new())
+        .manage(Dumps::new())
         .invoke_handler(tauri::generate_handler![
             app_info,
+            dumps::last_dump,
             keyboard::panic_keyboard,
             audio::subscribe_audio_blocks
         ])
@@ -65,10 +63,18 @@ pub fn run() {
             window.set_min_size(Some(LogicalSize::new(MIN_CLIENT_WIDTH, MIN_CLIENT_HEIGHT)))?;
 
             // Startup order: the port first, so the pánico is live before anything
-            // else can make a note sound, and the audio device last. The volcado de
-            // seguridad, the ancla, the relectura and the rings slot in between as
-            // their own tickets land.
+            // else can make a note sound; then the volcado de seguridad, which is
+            // the first thing that touches the keyboard; then the audio device last.
+            // The ancla, the relectura and the rings slot in between as their own
+            // tickets land.
+            //
+            // The volcado runs on its own thread — it holds the port for seconds
+            // and this function has to return for the window to appear — so it is
+            // first to *ask* rather than first to *finish*. Nothing else asks the
+            // keyboard for anything yet, so that is the same thing today and will
+            // stop being so the moment the rings exist.
             keyboard::start(app.handle());
+            dumps::start(app.handle());
             audio::start(app.handle());
 
             Ok(())

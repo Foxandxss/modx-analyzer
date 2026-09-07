@@ -4,6 +4,7 @@ import { FiguresColumn } from './panels/figures-column/figures-column';
 import { OperatorDiagram } from './panels/operator-diagram/operator-diagram';
 import { SignalViews } from './panels/signal-views/signal-views';
 import { TabPanel } from './panels/tab-panel/tab-panel';
+import { AlertStrip } from './shell/alert-strip/alert-strip';
 import { DevReadout } from './shell/dev-readout/dev-readout';
 import { Header } from './shell/header/header';
 import { PanicNotice } from './shell/panic/panic-notice';
@@ -22,6 +23,7 @@ import { RereadStrip } from './shell/reread-strip/reread-strip';
   imports: [
     Header,
     PanicNotice,
+    AlertStrip,
     RereadStrip,
     OperatorDiagram,
     SignalViews,
@@ -33,6 +35,7 @@ import { RereadStrip } from './shell/reread-strip/reread-strip';
     <app-header />
     <!-- Todo lo que avisa se dibuja DEBAJO de la cabecera: el pánico nunca se tapa. -->
     <app-panic-notice />
+    <app-alert-strip />
     <app-reread-strip />
     <div class="body">
       <app-operator-diagram />

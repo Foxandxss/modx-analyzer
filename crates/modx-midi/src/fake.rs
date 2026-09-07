@@ -20,6 +20,9 @@
 //! - Note On with velocity 0, and one Note On per Part in Multi mode;
 //! - a **silent Performance change**: the Part 1 name changes underneath with zero
 //!   bytes emitted, exactly as the real keyboard does;
+//! - a Bulk Dump Request answered with **123 messages adding up to 7 669 bytes**,
+//!   the shape the fase 0c volcado of `0E 25 00` had, spaced by a `Bulk Interval`
+//!   that can be turned up until the dump comes back short;
 //! - asymmetric latency, with a "notes playing" mode, so that the scheduler's
 //!   priorities and the adaptive `CADUCO` thresholds are exercised in real time
 //!   rather than asserted on paper.
@@ -27,9 +30,39 @@
 use std::collections::{BTreeMap, VecDeque};
 use std::time::{Duration, Instant};
 
+use crate::dump;
 use crate::port::{MidiPort, PortError};
 use crate::sysex::{self, Address};
 use crate::table;
+
+/// `0F 25 00`: the Bulk Footer of the Performance edit buffer, the counterpart of
+/// [`dump::EDIT_BUFFER`]. Documentado — the app has never looked for one, which is
+/// why the end of a volcado is a silence and not this address.
+const BULK_FOOTER: Address = Address::new(0x0F, 0x25, 0x00);
+
+/// What a bulk message costs before its payload: the six header bytes, the three
+/// of the address, the checksum and the `F7`.
+const BULK_ENVELOPE_BYTES: usize = 11;
+
+/// One bulk message around a payload, with the measured Yamaha checksum over the
+/// address and the data.
+fn bulk_envelope(address: Address, payload: &[u8]) -> Vec<u8> {
+    let mut body = vec![address.ah, address.am, address.al];
+    body.extend_from_slice(payload);
+
+    let mut message = vec![
+        sysex::SYSEX_START,
+        sysex::YAMAHA_ID,
+        0x00,
+        sysex::GROUP[0],
+        sysex::GROUP[1],
+        sysex::MODEL_MODX,
+    ];
+    message.extend_from_slice(&body);
+    message.push(sysex::checksum(&body));
+    message.push(sysex::SYSEX_END);
+    message
+}
 
 /// Median round trip with the port already open and the keyboard idle (fase 0c).
 pub const LATENCY_IDLE: Duration = Duration::from_micros(2_000);
@@ -95,6 +128,13 @@ pub struct FakeModx {
     swallow_next: usize,
     /// Parts that report a key press. One in Single mode, more in Multi.
     parts: u8,
+    /// What a Bulk Dump Request is answered with. Empty is a keyboard that says
+    /// nothing, which is the only failure mode the volcado has.
+    dump: Vec<Vec<u8>>,
+    /// `Bulk Interval`: the gap the keyboard leaves between two bulk messages.
+    /// A UTILITY setting, out of remote reach (fase 0d), so the app can neither
+    /// read it nor fix it — it can only notice what a wide one does to a dump.
+    bulk_interval: Duration,
 }
 
 impl Default for FakeModx {
@@ -115,6 +155,8 @@ impl FakeModx {
             replies: 0,
             swallow_next: 0,
             parts: 1,
+            dump: Self::documented_dump(),
+            bulk_interval: Duration::ZERO,
         }
     }
 
@@ -249,6 +291,52 @@ impl FakeModx {
         self.swallow_next = count;
     }
 
+    /// The volcado the fake answers a Bulk Dump Request with:
+    /// [`dump::DOCUMENTED_MESSAGES`] messages adding up to
+    /// [`dump::DOCUMENTED_BYTES`] bytes.
+    ///
+    /// The **counts are measured** and the **contents are not**. The fase 0c spike
+    /// saved the bytes and put them back on the wire without ever parsing one — the
+    /// restore came back identical 7 669 of 7 669 — so what is inside a Bulk Dump
+    /// message was never written down, and the app is opaque to it by design. A
+    /// deterministic filler is the honest version of that: it reproduces the shape
+    /// that was measured and refuses to invent the layout that was not.
+    pub fn documented_dump() -> Vec<Vec<u8>> {
+        let payload_total =
+            dump::DOCUMENTED_BYTES - BULK_ENVELOPE_BYTES * dump::DOCUMENTED_MESSAGES;
+        let between = dump::DOCUMENTED_MESSAGES - 2;
+        let (each, extra) = (payload_total / between, payload_total % between);
+
+        let mut messages = Vec::with_capacity(dump::DOCUMENTED_MESSAGES);
+        messages.push(bulk_envelope(dump::EDIT_BUFFER, &[]));
+        for index in 0..between {
+            let length = each + usize::from(index < extra);
+            let payload: Vec<u8> = (0..length)
+                .map(|byte| ((index * 7 + byte) % 0x80) as u8)
+                .collect();
+            messages.push(bulk_envelope(dump::EDIT_BUFFER, &payload));
+        }
+        messages.push(bulk_envelope(BULK_FOOTER, &[]));
+        messages
+    }
+
+    /// What the fake will answer the next Bulk Dump Request with. An empty list is
+    /// a keyboard that says nothing at all, which is the volcado's timeout.
+    pub fn set_dump(&mut self, messages: Vec<Vec<u8>>) {
+        self.dump = messages;
+    }
+
+    pub fn dump_messages(&self) -> &[Vec<u8>] {
+        &self.dump
+    }
+
+    /// `Bulk Interval`, the gap the keyboard leaves between two bulk messages.
+    /// Turned up past the collector's silence it truncates the dump, which is the
+    /// one way a volcado can come back short without anything being broken.
+    pub fn set_bulk_interval(&mut self, interval: Duration) {
+        self.bulk_interval = interval;
+    }
+
     /// Every message the app has put on the wire, in order. The test's only window
     /// onto what actually left the app.
     pub fn sent(&self) -> &[Vec<u8>] {
@@ -312,6 +400,25 @@ impl FakeModx {
             ready_at: Instant::now(),
             message,
         });
+    }
+
+    /// Push the whole volcado into the inbox at once, spaced by `Bulk Interval`.
+    /// Whatever bulk address was asked for gets the one dump the fake holds: the
+    /// app only ever asks for `0E 25 00`, and the per-Part addresses (`52 nn`) are
+    /// documented and never measured.
+    fn dump_out(&mut self) {
+        let interval = self.bulk_interval;
+        let start = Instant::now();
+        let stream: Vec<Pending> = self
+            .dump
+            .iter()
+            .enumerate()
+            .map(|(index, message)| Pending {
+                ready_at: start + interval * index as u32,
+                message: message.clone(),
+            })
+            .collect();
+        self.inbox.extend(stream);
     }
 
     fn answer(&mut self, address: Address) {
@@ -403,6 +510,7 @@ impl MidiPort for FakeModx {
 
         match message.get(2).map(|kind| kind & 0xF0) {
             Some(0x30) => self.answer(address),
+            Some(0x20) => self.dump_out(),
             Some(0x10) => {
                 let data = &message[9..message.len() - 1];
                 self.apply(address, data);

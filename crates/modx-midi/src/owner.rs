@@ -9,16 +9,24 @@
 //!
 //! The note tracker lives here too. It is not a second listener: it is fed from the
 //! messages this loop already has to step over to find its replies.
+//!
+//! One request is served to the end before the next is looked at, so the priority
+//! order decides who goes *next* and not who gets interrupted. Every request but
+//! one costs a round trip — 2 ms idle, 24 ms at its worst under notes. The one is
+//! the volcado, which holds the port for as long as the keyboard takes to send
+//! 7,7 KB, and is therefore also the longest a pánico can ever wait: `dump::DEADLINE`.
 
 use std::sync::mpsc::{sync_channel, Receiver, RecvTimeoutError, SyncSender, TrySendError};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
+use crate::dump::{self, Dump};
 use crate::notes::NoteTracker;
 use crate::panic;
 use crate::port::{MidiPort, PortError, REPLY_TIMEOUT};
 use crate::read::read_parameter;
 use crate::sysex::Address;
+use crate::table;
 use crate::verify::{VerifiedWrite, WriteState};
 
 /// Who gets the channel when more than one wants it. Lower is served first, and
@@ -29,6 +37,10 @@ pub enum Priority {
     Panic,
     /// A write is worth nothing until it is reread, so it keeps the channel.
     Write,
+    /// The volcado de seguridad. It goes behind the write only because splitting a
+    /// write from its relectura is worse; it goes in front of everything that
+    /// polls because nothing that polls is a precondition of anything.
+    Dump,
     /// 1 Hz, and it keeps its slot under notes: without it the app starts lying.
     Anchor,
     /// The 42 addresses behind the operator diagram.
@@ -38,7 +50,7 @@ pub enum Priority {
 }
 
 /// The number of lanes, one per [`Priority`].
-const LANES: usize = 5;
+const LANES: usize = 6;
 
 /// One thing to do with the port.
 #[derive(Clone, Debug)]
@@ -50,6 +62,9 @@ pub enum Request {
         address: Address,
         data: Vec<u8>,
     },
+    /// A bulk dump of one address, normally [`dump::EDIT_BUFFER`]. It is the one
+    /// request that can hold the port for seconds.
+    Dump(Address),
 }
 
 /// What came of serving one request.
@@ -66,6 +81,9 @@ pub enum Served {
         address: Address,
         state: WriteState,
     },
+    /// The bytes the keyboard sent, however many that was. An empty one is a
+    /// keyboard that said nothing; a short one is a keyboard that stopped early.
+    Dumped(Dump),
 }
 
 /// Requests waiting for the port, kept in strict priority order.
@@ -88,6 +106,7 @@ impl RequestQueue {
         for (lane, priority) in [
             Priority::Panic,
             Priority::Write,
+            Priority::Dump,
             Priority::Anchor,
             Priority::WideRing,
             Priority::NarrowRing,
@@ -163,6 +182,19 @@ impl<P: MidiPort> PortOwner<P> {
                     })?
                     .clone();
                 Ok(Served::Written { address, state })
+            }
+            Request::Dump(address) => {
+                let tracker = &mut self.tracker;
+                let taken = dump::take(
+                    &mut self.port,
+                    address,
+                    dump::QUIET,
+                    dump::DEADLINE,
+                    &mut |message| {
+                        tracker.observe(message);
+                    },
+                )?;
+                Ok(Served::Dumped(taken))
             }
         }
     }
@@ -252,6 +284,34 @@ impl OwnerHandle {
             Served::Silenced(notes) => Ok(notes),
             other => unreachable!("a pánico answers with what it silenced, not {other:?}"),
         }
+    }
+
+    /// The volcado de seguridad of the edit buffer.
+    ///
+    /// It holds the port for as long as the keyboard takes to send it, so a pánico
+    /// asked for while it is running waits behind it — bounded by [`dump::DEADLINE`]
+    /// and stated there.
+    pub fn dump(&self, address: Address) -> Result<Dump, PortError> {
+        match self.request(Request::Dump(address))? {
+            Served::Dumped(taken) => Ok(taken),
+            other => unreachable!("a volcado answers with bytes, not {other:?}"),
+        }
+    }
+
+    /// The Part name, read one address at a time off the ancla's twenty.
+    ///
+    /// A read that timed out leaves a blank rather than a wrong letter, so the
+    /// answer is always a name and never an error — which is what the volcado
+    /// needs, because a dump that cannot be named still has to be saved.
+    pub fn part_name(&self, part: u8) -> Result<String, PortError> {
+        let mut replies = Vec::with_capacity(usize::from(table::PART_NAME_BYTES));
+        for address in table::anchor(part) {
+            match self.request(Request::Read(address))? {
+                Served::Read { data, .. } => replies.push(data),
+                other => unreachable!("a read answers with data, not {other:?}"),
+            }
+        }
+        Ok(table::anchor_name(&replies))
     }
 }
 
@@ -363,6 +423,7 @@ mod tests {
             Priority::Anchor,
             Request::Read(Address::part(sysex::AH_PART, 1, 0x00)),
         );
+        queue.push(Priority::Dump, Request::Dump(dump::EDIT_BUFFER));
         queue.push(Priority::Panic, Request::Panic);
 
         let order: Vec<Priority> = std::iter::from_fn(|| queue.pop())
@@ -373,11 +434,33 @@ mod tests {
             order,
             vec![
                 Priority::Panic,
+                Priority::Dump,
                 Priority::Anchor,
                 Priority::WideRing,
                 Priority::NarrowRing
             ]
         );
+    }
+
+    #[test]
+    fn the_thread_brings_back_the_volcado_and_the_name_to_file_it_under() {
+        let owner = OwnerHandle::spawn(FakeModx::init_normal_fmx(), |_| {});
+
+        let taken = owner.dump(dump::EDIT_BUFFER).unwrap();
+
+        assert_eq!(taken.messages, dump::DOCUMENTED_MESSAGES);
+        assert_eq!(taken.bytes.len(), dump::DOCUMENTED_BYTES);
+        assert_eq!(owner.part_name(1).unwrap(), "Init Normal (FM-X)");
+    }
+
+    #[test]
+    fn names_the_part_with_blanks_where_the_keyboard_did_not_answer() {
+        let mut fake = FakeModx::init_normal_fmx();
+        // The first two letters go missing. The volcado still has to be filed.
+        fake.swallow_next_requests(2);
+        let owner = OwnerHandle::spawn(fake, |_| {});
+
+        assert_eq!(owner.part_name(1).unwrap(), "  it Normal (FM-X)");
     }
 
     #[test]

@@ -45,6 +45,19 @@
   &--xl {
     font-size: var(--text-readout-xl);
   }
+
+  // Una cifra que está de verdad ahí, no la marca de que falta.
+  &--live {
+    font-family: var(--font-num);
+    font-size: var(--text-label);
+    color: var(--ink-secondary);
+  }
+
+  &--bad {
+    font-family: var(--font-num);
+    font-size: var(--text-label);
+    color: var(--alert);
+  }
 }
 
 .cell__note {

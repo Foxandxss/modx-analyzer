@@ -18,6 +18,7 @@
 //! ```
 #![forbid(unsafe_code)]
 
+pub mod dump;
 pub mod fake;
 pub mod hardware;
 pub mod notes;
@@ -29,6 +30,7 @@ pub mod sysex;
 pub mod table;
 pub mod verify;
 
+pub use dump::Dump;
 pub use notes::NoteTracker;
 pub use owner::{OwnerHandle, PortOwner, Priority, Request, RequestQueue, Served};
 pub use port::{MidiPort, PortError, PORT_NAME, REPLY_TIMEOUT};

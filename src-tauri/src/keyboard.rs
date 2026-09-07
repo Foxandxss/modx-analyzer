@@ -7,9 +7,11 @@
 
 use std::sync::Mutex;
 
+use modx_midi::dump::Dump;
 use modx_midi::hardware::HardwarePort;
 use modx_midi::owner::OwnerHandle;
 use modx_midi::port::{PortError, PORT_NAME};
+use modx_midi::sysex::Address;
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::connection::Connection;
@@ -80,6 +82,26 @@ impl Keyboard {
             silenced: handle.panic()?,
             reopened,
         })
+    }
+
+    /// A bulk dump through the one owner. Unlike the pánico it does **not** reopen
+    /// a lost port: a volcado of a keyboard that is not there is not a volcado, and
+    /// pretending otherwise would put an empty safety file on disk.
+    pub fn dump(&self, address: Address) -> Result<Dump, PortError> {
+        self.with_owner(|owner| owner.dump(address))
+    }
+
+    /// The Part name, for the volcado to be filed under and for the ancla later.
+    pub fn part_name(&self, part: u8) -> Result<String, PortError> {
+        self.with_owner(|owner| owner.part_name(part))
+    }
+
+    fn with_owner<T>(
+        &self,
+        ask: impl FnOnce(&OwnerHandle) -> Result<T, PortError>,
+    ) -> Result<T, PortError> {
+        let owner = self.owner.lock().expect("lock");
+        ask(owner.as_ref().ok_or(PortError::OwnerGone)?)
     }
 }
 

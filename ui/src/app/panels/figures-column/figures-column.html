@@ -24,10 +24,17 @@
 </div>
 
 <div class="cell">
-  <span class="cell__eyebrow">VOLCADOS</span>
-  @if (dumpsFolder.value(); as folder) {
-    <span class="cell__path">{{ folder }}</span>
+  <span class="cell__eyebrow">VOLCADO DE SEGURIDAD</span>
+  <!-- La cifra antes que el nombre: lo que importa es que los bytes están. -->
+  <span class="cell__value" [class.cell__value--live]="saved()" [class.cell__value--bad]="bad()">{{
+    line()
+  }}</span>
+  @if (fileName(); as file) {
+    <span class="cell__note">{{ file }}</span>
   } @else {
-    <span class="cell__value"><app-figure [value]="dead" /></span>
+    <span class="cell__note">{{ note() }}</span>
+  }
+  @if (folder(); as path) {
+    <span class="cell__path">{{ path }}</span>
   }
 </div>

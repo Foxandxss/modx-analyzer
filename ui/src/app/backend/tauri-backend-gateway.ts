@@ -5,6 +5,7 @@ import {
   AppInfo,
   BackendGateway,
   ConnectionView,
+  DumpView,
   PanicOutcome,
   PatchHeaderView,
   RereadProgress,
@@ -42,11 +43,23 @@ export class TauriBackendGateway implements BackendGateway {
 
   readonly liveNotes = signal(0);
 
+  readonly dump = signal<DumpView | null>(null);
+
   constructor() {
     this.listenInto('modx://connection', this.connection);
     this.listenInto('modx://patch', this.patch);
     this.listenInto('modx://reread', this.reread);
     this.listenInto('modx://live-notes', this.liveNotes);
+    this.listenInto('modx://dump', this.dump);
+
+    // The volcado is taken once, on a thread, and is very likely finished before
+    // this window has run a line of JavaScript. The event would then have nobody
+    // listening, so the state is asked for as well as listened to.
+    void invoke<DumpView | null>('last_dump').then((taken) => {
+      if (taken !== null && this.dump() === null) {
+        this.dump.set(taken);
+      }
+    });
   }
 
   appInfo(): Promise<AppInfo> {

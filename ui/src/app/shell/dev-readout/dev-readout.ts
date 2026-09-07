@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { AudioService } from '../../audio/audio-service';
+import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
 import { DEAD_MARK } from '../../provenance/provenance';
 
 /**
@@ -23,6 +24,8 @@ import { DEAD_MARK } from '../../provenance/provenance';
       @if (noAudio()) {
         <span class="dev__alert">SIN AUDIO · CEROS EXACTOS</span>
       }
+      <span class="dev__label">VOLCADO</span>
+      <span>{{ dumpLine() }}</span>
     </div>
   `,
   styles: `
@@ -48,8 +51,27 @@ import { DEAD_MARK } from '../../provenance/provenance';
 })
 export class DevReadout {
   private readonly audio = inject(AudioService);
+  private readonly backend = inject(BACKEND_GATEWAY);
 
   protected readonly noAudio = this.audio.noAudio;
+
+  /**
+   * How long the volcado took, which is the number #5 asks to be written down.
+   * It includes the silence the collector waits out, so it is an upper bound on
+   * the transfer and an exact measure of what the startup costs.
+   */
+  protected readonly dumpLine = computed(() => {
+    const taken = this.backend.dump();
+    if (taken === null) {
+      return `${DEAD_MARK} · en curso`;
+    }
+    return [
+      `${taken.bytes} B`,
+      `${taken.messages} DE ${taken.expectedMessages} MSJ`,
+      taken.tookMs === null ? DEAD_MARK : `${(taken.tookMs / 1000).toFixed(2)} s`,
+      taken.state.toUpperCase(),
+    ].join(' · ');
+  });
 
   protected readonly line = computed(() => {
     const stats = this.audio.stats();

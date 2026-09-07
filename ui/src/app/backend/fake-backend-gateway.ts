@@ -3,6 +3,7 @@ import {
   AppInfo,
   BackendGateway,
   ConnectionView,
+  DumpView,
   PanicOutcome,
   PatchHeaderView,
   RereadProgress,
@@ -36,6 +37,9 @@ export class FakeBackendGateway implements BackendGateway {
   readonly reread = signal<RereadProgress | null>(null);
 
   readonly liveNotes = signal(0);
+
+  /** No volcado yet: the launch the app opens in, before the keyboard answered. */
+  readonly dump = signal<DumpView | null>(null);
 
   appInfoResult: AppInfo = { version: '0.0.0-fake', dumpsFolder: '' };
 
