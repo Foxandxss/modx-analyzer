@@ -61,6 +61,7 @@ describe('Header', () => {
 
     backend.connection.set({
       port: 'connected',
+      loss: null,
       portName: 'MODX-1',
       audioDevice: 'Line (MODX)',
       sampleRate: 44100,

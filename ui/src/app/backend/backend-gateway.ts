@@ -83,6 +83,16 @@ export interface BackendGateway {
   panic(): Promise<PanicOutcome>;
 
   /**
+   * `REINTENTAR`: throw `MODX-1` away, enumerate again and open what is there.
+   *
+   * It rejects when there was nothing to open, which is what keeps the card from
+   * flashing «done» at a keyboard that is still switched off. What it does **not**
+   * report is whether the keyboard answers: that is the ancla's next whole pass,
+   * and until it comes the app has nothing to say about it.
+   */
+  retry(): Promise<void>;
+
+  /**
    * Raw f32 bloques straight off the device, one per three device callbacks.
    * Returns the unsubscribe.
    *
@@ -132,9 +142,28 @@ export function invalidated<T>(): PolledValue<T> {
 
 export type PortState = 'connected' | 'disconnected';
 
+/**
+ * The two roads to `DESCONECTADO`, which are not the same fact.
+ *
+ * `enumeration` is `MODX-1` gone from the list — unplugged, switched off, or held
+ * exclusively by another app — and there is something for `REINTENTAR` to reopen.
+ * `timeouts` is three ancla passes in a row with a hole in them: the port is
+ * there and the keyboard is not answering. One timeout is anomalous (fase 0c lost
+ * 0 replies in 27 000 requests) and is deliberately **not** this: a single
+ * timeout is what a busy keyboard looks like, and the card must not appear over a
+ * chord.
+ */
+export type PortLoss = 'enumeration' | 'timeouts';
+
 export interface ConnectionView {
   readonly port: PortState;
-  /** `MODX-1`, or `null` while the port has not been enumerated. */
+  /** Why the port counts as gone, or `null` when it does not. */
+  readonly loss: PortLoss | null;
+  /**
+   * `MODX-1`, or `null` while the port has not been enumerated. It is **kept**
+   * through a disconnection: a port that stopped answering is not a port that was
+   * never there.
+   */
   readonly portName: string | null;
   /** `Line (MODX)`, or `null` while the audio device is not open. */
   readonly audioDevice: string | null;

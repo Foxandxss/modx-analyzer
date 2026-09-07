@@ -9,6 +9,7 @@ import { DevReadout } from './shell/dev-readout/dev-readout';
 import { Header } from './shell/header/header';
 import { PanicNotice } from './shell/panic/panic-notice';
 import { RereadStrip } from './shell/reread-strip/reread-strip';
+import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
 
 /**
  * `4a`, the screen you look at while you play.
@@ -25,6 +26,7 @@ import { RereadStrip } from './shell/reread-strip/reread-strip';
     PanicNotice,
     AlertStrip,
     RereadStrip,
+    UnhappyCards,
     OperatorDiagram,
     SignalViews,
     FiguresColumn,
@@ -36,6 +38,7 @@ import { RereadStrip } from './shell/reread-strip/reread-strip';
     <!-- Todo lo que avisa se dibuja DEBAJO de la cabecera: el pánico nunca se tapa. -->
     <app-panic-notice />
     <app-alert-strip />
+    <app-unhappy-cards />
     <app-reread-strip />
     <div class="body">
       <app-operator-diagram />

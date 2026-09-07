@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { AudioService } from '../../audio/audio-service';
 import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
+import { Clock } from '../../provenance/clock';
+import { lastPollAt } from '../../provenance/last-poll';
 import { DEAD_MARK } from '../../provenance/provenance';
 
 /**
@@ -32,6 +34,8 @@ import { DEAD_MARK } from '../../provenance/provenance';
       <span>{{ dumpLine() }}</span>
       <span class="dev__label">RELECTURA</span>
       <span>{{ rereadLine() }}</span>
+      <span class="dev__label">ENLACE</span>
+      <span [class.dev__alert]="linkLost()">{{ linkLine() }}</span>
     </div>
   `,
   styles: `
@@ -58,6 +62,7 @@ import { DEAD_MARK } from '../../provenance/provenance';
 export class DevReadout {
   private readonly audio = inject(AudioService);
   private readonly backend = inject(BACKEND_GATEWAY);
+  private readonly clock = inject(Clock);
 
   protected readonly noAudio = this.audio.noAudio;
 
@@ -117,6 +122,26 @@ export class DevReadout {
     }
     const cost = pass.tookMs === null ? 'en curso' : `${(pass.tookMs / 1000).toFixed(2)} s`;
     return `${pass.answered} DE ${pass.total} · ${cost}`;
+  });
+
+  /**
+   * Which of the two roads to `DESCONECTADO` the app took, and how long ago the
+   * keyboard last answered anything.
+   *
+   * The card says the same thing in Spanish and without the word `timeouts`;
+   * this line is what #15 asks to be written down after pulling the USB cable,
+   * because «it went red» is not a result and «enumeration, 4 s» is.
+   */
+  protected readonly linkLost = computed(() => this.backend.connection().port === 'disconnected');
+
+  protected readonly linkLine = computed(() => {
+    const connection = this.backend.connection();
+    if (connection.port === 'connected') {
+      return `${connection.portName ?? DEAD_MARK} · ABIERTO`;
+    }
+    const at = lastPollAt(this.backend.patch(), this.backend.operators());
+    const since = at === null ? DEAD_MARK : `${((this.clock.now() - at) / 1000).toFixed(1)} s`;
+    return `DESCONECTADO · ${connection.loss ?? DEAD_MARK} · ÚLTIMO SONDEO ${since}`;
   });
 
   protected readonly line = computed(() => {

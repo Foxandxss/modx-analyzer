@@ -1,0 +1,120 @@
+// Layout only. Every colour, radius, glow and duration comes from design-tokens.css.
+
+:host {
+  display: block;
+}
+
+.cards {
+  display: grid;
+  // Two at most this session, side by side and each half the row. A card that
+  // grew to fill the bar when it is alone would change size as the other appears.
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 18px 22px;
+  border-bottom: var(--rule-min) solid var(--rule-color);
+  background: var(--surface-base);
+}
+
+.card {
+  // 18 px is the design's own radius for the four unhappy cards; it is not
+  // --radius-panel, which is the surfaces they draw over.
+  border-radius: 18px;
+  border: 1.5px solid var(--card-edge);
+  background: linear-gradient(180deg, var(--card-wash-top), var(--card-wash-bottom));
+  padding: var(--space-5);
+
+  &--alert {
+    --card-ink: var(--alert);
+    --card-edge: oklch(0.72 0.16 35 / 0.45);
+    --card-wash-top: oklch(0.72 0.16 35 / 0.09);
+    --card-wash-bottom: oklch(0.72 0.16 35 / 0.02);
+  }
+
+  &--carrier {
+    --card-ink: var(--carrier);
+    --card-edge: oklch(0.8 0.15 75 / 0.45);
+    --card-wash-top: oklch(0.8 0.15 75 / 0.08);
+    --card-wash-bottom: oklch(0.8 0.15 75 / 0.02);
+  }
+}
+
+.card__art {
+  display: block;
+  width: 100%;
+  height: 70px;
+  fill: none;
+  stroke: var(--card-ink);
+  stroke-width: 2;
+  // The drawing scales with the card and the strokes do not: at DPR 1.5 a line
+  // scaled by a viewBox is a line that looks dirty.
+  vector-effect: non-scaling-stroke;
+
+  text {
+    fill: var(--card-ink);
+    stroke: none;
+    font-family: var(--font-num);
+    font-size: 11px;
+  }
+
+  &--gone {
+    stroke: var(--ink-inert);
+    stroke-dasharray: 4 4;
+  }
+
+  &--halo {
+    stroke-width: 6;
+    opacity: 0.15;
+  }
+
+  &--small {
+    font-size: 10px;
+    opacity: 0.7;
+  }
+}
+
+.card__title {
+  margin: 14px 0 0;
+  font-size: var(--text-section);
+  font-weight: 400;
+  color: var(--ink-primary);
+}
+
+.card__body {
+  margin: var(--space-2) 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-secondary);
+}
+
+.card__mono {
+  font-family: var(--font-num);
+}
+
+.card__diagnosis {
+  margin: var(--space-3) 0 0;
+  font-family: var(--font-num);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--card-ink);
+}
+
+.card__action {
+  all: unset;
+  display: inline-block;
+  margin-top: var(--space-3);
+  // 44 px of target with the padding: this is a touch panel first.
+  padding: 12px 18px;
+  border-radius: var(--radius-pill);
+  border: var(--rule-min) solid var(--card-edge);
+  font-family: var(--font-num);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--card-ink);
+  cursor: pointer;
+
+  &:disabled {
+    color: var(--ink-inert);
+    border-color: var(--rule-color);
+    cursor: default;
+  }
+}

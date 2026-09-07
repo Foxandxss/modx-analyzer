@@ -16,15 +16,21 @@ export const CLOCK_TICK_MS = 100;
  * today's stamp is the exact failure this app exists to avoid. So something has
  * to tick.
  *
- * A test sets `now` by hand; the interval it also has running cannot get in the
- * way, because a test asserts long before the next tick.
+ * **It only ever moves forward.** A tick that is older than what the signal
+ * already holds is dropped rather than written, which is true of time and is also
+ * what lets a test jump the clock by hand: without it a tick landing between the
+ * jump and the assertion would drag `now` back to the present and un-expire the
+ * very thing the test advanced past.
  */
 @Injectable({ providedIn: 'root' })
 export class Clock {
   readonly now = signal(performance.now());
 
   constructor() {
-    const tick = setInterval(() => this.now.set(performance.now()), CLOCK_TICK_MS);
+    const tick = setInterval(
+      () => this.now.update((held) => Math.max(held, performance.now())),
+      CLOCK_TICK_MS,
+    );
     inject(DestroyRef).onDestroy(() => clearInterval(tick));
   }
 }

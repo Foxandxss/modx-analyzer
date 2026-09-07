@@ -123,6 +123,37 @@ describe('App (4a)', () => {
     );
   });
 
+  /**
+   * The rule of the whole shell: everything that warns draws **under** the
+   * header. The pánico is the last thing that stops working, and a card that
+   * covered it would take the one gesture that stops a hung note.
+   */
+  it('draws the unhappy cards under the header, with the pánico still reachable', async () => {
+    const { backend, fixture, host } = await renderApp();
+    expect(host.querySelector('.card')).toBeNull();
+
+    backend.portLost('timeouts');
+    await fixture.whenStable();
+
+    const card = host.querySelector('.card')!;
+    const panic = host.querySelector<HTMLButtonElement>('.panic')!;
+    expect(card.textContent).toContain('DIAGRAMA CONGELADO');
+    expect(panic.disabled).toBe(false);
+    // Under, in the document order the shell lays out top to bottom: the header
+    // comes first and nothing overlaps it.
+    expect(
+      host.querySelector('app-header')!.compareDocumentPosition(card) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    // And the pánico still goes out: `DESCONECTADO` is exactly the state it is
+    // built to survive, and the native side reopens the port and sends anyway.
+    panic.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, bubbles: true }));
+    panic.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, bubbles: true }));
+    await fixture.whenStable();
+    expect(backend.panicPresses).toBe(1);
+  });
+
   it('opens on the waterfall, the default the moment a note is live', async () => {
     const { host } = await renderApp();
 

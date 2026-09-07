@@ -5,10 +5,12 @@
 //! the port at startup, push the connection state and the live-note count out as
 //! events, and expose the pánico as a command that works from any screen.
 
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
 use modx_midi::dump::Dump;
 use modx_midi::hardware::HardwarePort;
+use modx_midi::link::{Link, Loss};
 use modx_midi::owner::{LiveNotes, OwnerHandle};
 use modx_midi::port::{PortError, PORT_NAME};
 use modx_midi::sysex::Address;
@@ -59,12 +61,16 @@ pub struct PanicOutcome {
 /// pánico. Serialising the port is the owner's job, not this mutex's.
 pub struct Keyboard {
     owner: Mutex<Option<Arc<OwnerHandle>>>,
+    /// Bumped once per reopen. The ancla reads it between beats and forgets the
+    /// timeouts it counted against the connection that has just been thrown away.
+    reopens: AtomicU64,
 }
 
 impl Keyboard {
     pub fn new() -> Self {
         Self {
             owner: Mutex::new(None),
+            reopens: AtomicU64::new(0),
         }
     }
 
@@ -86,27 +92,84 @@ impl Keyboard {
             let _ = notify.emit(EVENT_LIVE_NOTES, LiveNotesView::from(live));
         })));
 
-        Connection::set_port(app, Some(PORT_NAME.to_owned()));
+        Connection::set_link(app, Link::Connected);
         Ok(())
+    }
+
+    /// `REINTENTAR`: throw the port away, enumerate again and open what is there.
+    ///
+    /// Reopening rather than reusing is the whole point. A `midir` connection to a
+    /// port that has been unplugged does not heal when the cable goes back in —
+    /// the handle stays, the reads keep timing out, and nothing in the app can
+    /// tell that from a keyboard that has stopped answering. So the handle goes
+    /// first and the enumeration decides what comes back.
+    ///
+    /// It writes the link state itself, both ways, because a `REINTENTAR` that
+    /// failed has to *say* it failed: waiting for the ancla's next beat would
+    /// leave the button looking as if it had worked for a second.
+    pub fn reopen(&self, app: &AppHandle) -> Result<(), PortError> {
+        self.close();
+        self.reopens.fetch_add(1, Ordering::Release);
+        match self.connect(app) {
+            Ok(()) => Ok(()),
+            Err(error) => {
+                Connection::set_link(app, Link::Disconnected(Loss::Enumeration));
+                Err(error)
+            }
+        }
+    }
+
+    /// How many times the port has been reopened since launch. The ancla watches
+    /// it so the timeouts of a connection that is gone are not counted against
+    /// the one that replaced it.
+    pub fn reopens(&self) -> u64 {
+        self.reopens.load(Ordering::Acquire)
+    }
+
+    /// Let the port go. Whoever is mid-request keeps their `Arc` and finishes;
+    /// the thread ends when the last one drops it.
+    fn close(&self) {
+        *self.owner.lock().expect("lock") = None;
     }
 
     /// Silence the keyboard, from any screen and in any state.
     ///
-    /// It is the last thing that stops working: if the port was lost it tries to
-    /// open it again and sends anyway, because a hung note does not care why the
-    /// app thinks it is disconnected.
+    /// It is the last thing that stops working. Three ways in, in this order:
+    ///
+    /// 1. In `DESCONECTADO` it reopens **first**. The app already knows the link
+    ///    is not answering, and 2 080 messages handed to a dead port is a second
+    ///    of a note that will not stop.
+    /// 2. Otherwise it sends down the port it has, which is every ordinary press.
+    /// 3. If that send fails it reopens and sends again, because a port that died
+    ///    between two events is exactly the case nobody has been told about yet.
+    ///
+    /// A reopen that failed is not a reason to stop: the send is attempted anyway
+    /// and it is the send's error that comes back, because what the owner needs to
+    /// know is whether the notes stopped and not which of the two steps failed.
     pub fn panic(&self, app: &AppHandle) -> Result<PanicOutcome, PortError> {
-        let mut reopened = false;
-        if self.owner.lock().expect("lock").is_none() {
-            self.connect(app)?;
-            reopened = true;
+        let reopened = self.owner().is_none() || Connection::is_disconnected(app);
+        if reopened {
+            let _ = self.reopen(app);
         }
 
-        let handle = self.owner().ok_or(PortError::OwnerGone)?;
-        Ok(PanicOutcome {
-            silenced: handle.panic()?,
-            reopened,
-        })
+        match self.send_panic() {
+            Ok(silenced) => Ok(PanicOutcome { silenced, reopened }),
+            // Already reopened once: a second attempt would enumerate the same
+            // ports and find the same nothing.
+            Err(error) if reopened => Err(error),
+            Err(error) => {
+                log::warn!("pánico: el puerto no lo aceptó ({error}); se reabre y se reintenta");
+                let _ = self.reopen(app);
+                Ok(PanicOutcome {
+                    silenced: self.send_panic()?,
+                    reopened: true,
+                })
+            }
+        }
+    }
+
+    fn send_panic(&self) -> Result<usize, PortError> {
+        self.owner().ok_or(PortError::OwnerGone)?.panic()
     }
 
     /// A bulk dump through the one owner. Unlike the pánico it does **not** reopen
@@ -153,7 +216,7 @@ pub fn start(app: &AppHandle) {
         Ok(()) => log::info!("{PORT_NAME} abierto"),
         Err(error) => {
             log::warn!("{PORT_NAME} no se pudo abrir: {error}");
-            Connection::set_port(app, None);
+            Connection::set_link(app, Link::Disconnected(Loss::Enumeration));
         }
     }
 }
@@ -162,5 +225,19 @@ pub fn start(app: &AppHandle) {
 pub fn panic_keyboard(app: AppHandle) -> Result<PanicOutcome, String> {
     app.state::<Keyboard>()
         .panic(&app)
+        .map_err(|error| error.to_string())
+}
+
+/// `REINTENTAR`, from the «teclado no conectado» card.
+///
+/// What clears here is only what this can know: `MODX-1` was in the enumeration
+/// and it opened. Whether the keyboard behind it **answers** is the ancla's next
+/// whole pass, and if it does not, three more passes put the card back. So a
+/// `REINTENTAR` into a keyboard that is switched off shows the card leaving and
+/// coming back a few seconds later, which is the truth rather than a spinner.
+#[tauri::command]
+pub fn retry_connection(app: AppHandle) -> Result<(), String> {
+    app.state::<Keyboard>()
+        .reopen(&app)
         .map_err(|error| error.to_string())
 }

@@ -116,6 +116,7 @@ export class TauriBackendGateway implements BackendGateway {
 
   readonly connection = signal<ConnectionView>({
     port: 'disconnected',
+    loss: null,
     portName: null,
     audioDevice: null,
     sampleRate: null,
@@ -172,6 +173,13 @@ export class TauriBackendGateway implements BackendGateway {
 
   panic(): Promise<PanicOutcome> {
     return invoke<PanicOutcome>('panic_keyboard');
+  }
+
+  retry(): Promise<void> {
+    // The connection state is not set here and is not awaited into anything: the
+    // native side emits `modx://connection` either way, and the card is drawn off
+    // that event and nothing else. One writer, the way `connection.rs` says.
+    return invoke<void>('retry_connection');
   }
 
   async subscribeBlocks(onBlock: (block: ArrayBuffer) => void): Promise<() => void> {

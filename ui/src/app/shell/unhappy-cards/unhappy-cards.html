@@ -1,0 +1,56 @@
+@if (disconnected() || noAudio()) {
+  <div class="cards" role="status">
+    @if (disconnected()) {
+      <!-- 1. Teclado no conectado. El audio sigue entrando: se puede mirar, no
+           se puede leer el patch. -->
+      <section class="card card--alert">
+        <svg class="card__art" viewBox="0 0 120 70" aria-hidden="true">
+          <rect x="4" y="18" width="46" height="34" rx="8" />
+          <rect class="card__art--gone" x="70" y="18" width="46" height="34" rx="8" />
+          <path d="M50 35H60" />
+          <path class="card__art--gone" d="M70 35H64" />
+          <path d="M56 24L64 46" />
+        </svg>
+        <h2 class="card__title">Teclado no conectado</h2>
+        <p class="card__body">
+          @if (loss() === 'timeouts') {
+            El puerto <span class="card__mono">MODX-1</span> está, pero el teclado no ha contestado
+            al ancla tres veces seguidas. El audio sigue entrando: puedes mirar, no puedes leer el
+            patch.
+          } @else {
+            El puerto <span class="card__mono">MODX-1</span> no está o lo tiene otra app abierta en
+            exclusiva. El audio sigue entrando: puedes mirar, no puedes leer el patch.
+          }
+        </p>
+        <p class="card__diagnosis">DIAGRAMA CONGELADO · ÚLTIMO SONDEO {{ lastPoll() }}</p>
+        <button type="button" class="card__action" [disabled]="retrying()" (click)="onRetry()">
+          {{ retrying() ? 'REINTENTANDO' : 'REINTENTAR' }}
+        </button>
+      </section>
+    }
+
+    @if (noAudio()) {
+      <!-- 2. Sin audio entrando. No es silencio: son ceros digitales exactos. -->
+      <section class="card card--carrier">
+        <svg class="card__art" viewBox="0 0 120 70" aria-hidden="true">
+          <path d="M0 40H120" />
+          <path class="card__art--halo" d="M0 40H120" />
+          <text x="60" y="28" text-anchor="middle">0.000000</text>
+          <text class="card__art--small" x="60" y="60" text-anchor="middle">
+            ceros digitales exactos
+          </text>
+        </svg>
+        <h2 class="card__title">Sin audio entrando</h2>
+        <p class="card__body">
+          No es silencio: son ceros exactos, así que no hay cable ni ruta. Casi siempre es
+          <span class="card__mono">Part Output = USB1&amp;2</span>, que no existe fuera de ASIO.
+        </p>
+        <p class="card__diagnosis">SILENCIO REAL ≠ CABLE MAL PUESTO</p>
+        <!-- La pantalla `4e` no existe en esta sesión, así que el botón se dibuja
+             y no se puede pulsar — lo mismo que A/B y APRENDER en la cabecera:
+             la maqueta es definitiva y el destino todavía no. -->
+        <button type="button" class="card__action" disabled>VER LA DISCIPLINA DE INIT</button>
+      </section>
+    }
+  </div>
+}

@@ -50,6 +50,7 @@ pub fn run() {
             app_info,
             dumps::last_dump,
             keyboard::panic_keyboard,
+            keyboard::retry_connection,
             audio::subscribe_audio_blocks,
             audio::measure_window
         ])

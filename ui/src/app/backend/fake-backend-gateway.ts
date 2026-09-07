@@ -9,6 +9,7 @@ import {
   OperatorsView,
   PanicOutcome,
   PatchHeaderView,
+  PortLoss,
   RereadProgress,
   Topology,
   invalidated,
@@ -28,6 +29,7 @@ import {
 export class FakeBackendGateway implements BackendGateway {
   readonly connection = signal<ConnectionView>({
     port: 'disconnected',
+    loss: null,
     portName: null,
     audioDevice: null,
     sampleRate: null,
@@ -58,6 +60,22 @@ export class FakeBackendGateway implements BackendGateway {
   /** How many times the pánico has been pressed. A second press is a bug, not a habit. */
   panicPresses = 0;
 
+  /**
+   * What the next `REINTENTAR` does. The default is the keyboard being there
+   * again: the port opens and the link clears, which is what the native side
+   * reports the moment `MODX-1` is back in the enumeration.
+   *
+   * A test that wants the other case — the owner presses it with the keyboard
+   * still switched off — replaces this with a rejection, and the card stays.
+   */
+  retryResult: () => Promise<void> = () => {
+    this.portFound();
+    return Promise.resolve();
+  };
+
+  /** How many times `REINTENTAR` has been pressed. */
+  retryPresses = 0;
+
   private readonly blockListeners = new Set<(block: ArrayBuffer) => void>();
 
   /**
@@ -78,6 +96,37 @@ export class FakeBackendGateway implements BackendGateway {
     const outcome = this.panicResult();
     this.liveNotes.set(0);
     return outcome;
+  }
+
+  retry(): Promise<void> {
+    this.retryPresses += 1;
+    return this.retryResult();
+  }
+
+  /**
+   * Test driver: the link went. `enumeration` is the cable pulled or another app
+   * holding the port; `timeouts` is three ancla passes in a row with a hole.
+   *
+   * The name stays, exactly as the native side keeps it: `MODX-1` is still what
+   * the app is looking for behind the keyboard.
+   */
+  portLost(loss: PortLoss): void {
+    this.connection.update((view) => ({
+      ...view,
+      port: 'disconnected',
+      loss,
+      portName: view.portName ?? 'MODX-1',
+    }));
+  }
+
+  /** Test driver: the port is open and answering again. */
+  portFound(): void {
+    this.connection.update((view) => ({
+      ...view,
+      port: 'connected',
+      loss: null,
+      portName: 'MODX-1',
+    }));
   }
 
   subscribeBlocks(onBlock: (block: ArrayBuffer) => void): Promise<() => void> {

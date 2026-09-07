@@ -77,8 +77,25 @@ impl Anchor {
     }
 
     /// Passes in a row that came back with a hole in the name.
+    ///
+    /// Three of them is [`crate::link::INCOMPLETE_FOR_DISCONNECTION`]. The ancla
+    /// counts them and does nothing with them: what a count means is the link's
+    /// question, not the name's.
     pub fn incomplete_in_a_row(&self) -> u32 {
         self.incomplete_in_a_row
+    }
+
+    /// Forget the timeouts, keep the name.
+    ///
+    /// `REINTENTAR` threw the port away and opened another one, so the passes
+    /// that did not come back belong to a connection that no longer exists;
+    /// counting them against the new one would put the disconnected card straight
+    /// back over a keyboard that is answering. The **name** is deliberately kept:
+    /// reopening a port does not load another Performance, and forgetting it
+    /// would make the next whole pass read as a change and take the whole screen
+    /// to dashes for nothing.
+    pub fn rearm(&mut self) {
+        self.incomplete_in_a_row = 0;
     }
 
     /// Ask the twenty once and say what that means.
