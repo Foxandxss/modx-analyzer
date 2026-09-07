@@ -53,14 +53,67 @@
 
 // Sin algoritmo leído no hay rol: contorno neutro, forma conservada, cifra perdida.
 .node {
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: var(--rule-min) solid var(--dead-border);
+  border-radius: 8px;
+  background: var(--surface-raised);
+
+  // El rol se lee por FORMA antes que por color: curva total = portadora,
+  // esquina viva = modulador, contorno discontinuo = cortado a cero.
+  &--carrier {
+    border-color: var(--carrier);
+    border-radius: var(--radius-carrier);
+    box-shadow: var(--glow-carrier);
+  }
+
+  &--modulator {
+    border-color: var(--modulator);
+    border-radius: var(--radius-modulator);
+    box-shadow: var(--glow-modulator);
+  }
+
+  &--inert {
+    border-style: dashed;
+    border-color: var(--inert);
+    border-radius: var(--radius-modulator);
+    box-shadow: none;
+  }
+
+  // Caduco no es muerto: la cifra sigue siendo de este patch, sólo que vieja.
+  // Contorno discontinuo y sin luz; nunca opacidad sobre el contenedor.
+  &--stale {
+    border-style: dashed;
+    box-shadow: none;
+  }
+}
+
+// El relleno es la cifra: capa anclada abajo cuya altura ES el Level.
+.node__fill {
+  position: absolute;
+  inset: auto 0 0 0;
+  background: var(--modulator-fill);
+  pointer-events: none;
+}
+
+.node--carrier .node__fill {
+  background: var(--carrier-fill);
+}
+
+.node--inert .node__fill,
+.node--stale .node__fill {
+  background: none;
+}
+
+.node__body {
+  position: relative;
+  height: 100%;
   box-sizing: border-box;
   padding: 8px 11px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border: var(--rule-min) solid var(--dead-border);
-  border-radius: 8px;
-  background: var(--surface-raised);
 }
 
 .node__head {
@@ -78,18 +131,57 @@
 .node__role {
   font-size: 8px;
   letter-spacing: var(--tracking-label);
-  color: var(--dead-ink);
+  color: var(--ink-secondary);
 }
 
 .node__level {
   font-size: var(--text-node);
   line-height: 1;
-  color: var(--dead-ink);
+  color: var(--ink-primary);
 }
 
-.node__ratio,
-.node__form {
+.node__line,
+.node__hz {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
   font-size: var(--text-micro);
+  color: var(--ink-secondary);
+}
+
+.node__hz-stamp {
+  font-size: 7px;
+  letter-spacing: var(--tracking-label);
+  color: var(--theory);
+}
+
+// Un sello por nodo, en la esquina: el peor de los que lleva dentro.
+.node__stamp {
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  font-size: 7px;
+  letter-spacing: var(--tracking-label);
+  color: var(--ink-inert);
+}
+
+.node--stale .node__stamp {
+  color: var(--carrier-dim);
+}
+
+.node--carrier .node__role,
+.node--carrier .node__level {
+  color: var(--carrier);
+}
+
+.node--modulator .node__role,
+.node--modulator .node__level {
+  color: var(--modulator);
+}
+
+.node--inert .node__role,
+.node--inert .node__level,
+.node--inert .node__line {
   color: var(--dead-ink);
 }
 

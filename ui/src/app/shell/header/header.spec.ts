@@ -65,7 +65,7 @@ describe('Header', () => {
     expect(host.querySelector('.audio')?.textContent).toContain('Line (MODX) · 44100 Hz');
   });
 
-  it('draws the algorithm zero-padded once the ring has read it', async () => {
+  it('draws the algorithm and the feedback the anillo ancho read, zero-padded', async () => {
     const { backend, fixture, host } = await renderHeader();
 
     backend.patch.update((patch) => ({

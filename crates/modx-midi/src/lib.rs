@@ -12,7 +12,7 @@
 //! ```no_run
 //! use modx_midi::{hardware::HardwarePort, owner::OwnerHandle};
 //!
-//! let owner = OwnerHandle::spawn(HardwarePort::open()?, |live| println!("{live} vivas"));
+//! let owner = OwnerHandle::spawn(HardwarePort::open()?, |live| println!("{} vivas", live.count));
 //! let silenced = owner.panic()?;
 //! # Ok::<(), modx_midi::port::PortError>(())
 //! ```
@@ -27,6 +27,7 @@ pub mod owner;
 pub mod panic;
 pub mod port;
 pub mod read;
+pub mod ring;
 pub mod sysex;
 pub mod table;
 pub mod verify;
@@ -34,8 +35,9 @@ pub mod verify;
 pub use algorithms::{Feedback, Role, Topology};
 pub use dump::Dump;
 pub use notes::NoteTracker;
-pub use owner::{OwnerHandle, PortOwner, Priority, Request, RequestQueue, Served};
+pub use owner::{LiveNotes, OwnerHandle, PortOwner, Priority, Request, RequestQueue, Served};
 pub use port::{MidiPort, PortError, PORT_NAME, REPLY_TIMEOUT};
+pub use ring::WideRing;
 pub use sysex::Address;
 pub use table::{Access, Entry, Provenance};
 pub use verify::{VerifiedWrite, WriteState};

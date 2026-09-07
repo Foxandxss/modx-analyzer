@@ -4,10 +4,12 @@ import {
   BackendGateway,
   ConnectionView,
   DumpView,
+  OperatorsView,
   PanicOutcome,
   PatchHeaderView,
   RereadProgress,
   invalidated,
+  noOperators,
 } from './backend-gateway';
 
 /**
@@ -36,7 +38,11 @@ export class FakeBackendGateway implements BackendGateway {
 
   readonly reread = signal<RereadProgress | null>(null);
 
+  readonly operators = signal<OperatorsView>(noOperators());
+
   readonly liveNotes = signal(0);
+
+  readonly lowestLivePitch = signal<number | null>(null);
 
   /** No volcado yet: the launch the app opens in, before the keyboard answered. */
   readonly dump = signal<DumpView | null>(null);

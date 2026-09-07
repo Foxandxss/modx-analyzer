@@ -16,7 +16,9 @@
 //! the volcado, which holds the port for as long as the keyboard takes to send
 //! 7,7 KB, and is therefore also the longest a pánico can ever wait: `dump::DEADLINE`.
 
-use std::sync::mpsc::{sync_channel, Receiver, RecvTimeoutError, SyncSender, TrySendError};
+use std::sync::mpsc::{
+    sync_channel, Receiver, RecvTimeoutError, SyncSender, TryRecvError, TrySendError,
+};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
@@ -86,23 +88,39 @@ pub enum Served {
     Dumped(Dump),
 }
 
-/// Requests waiting for the port, kept in strict priority order.
-#[derive(Debug, Default)]
-pub struct RequestQueue {
-    lanes: [Vec<Request>; LANES],
+/// Things waiting for the port, kept in strict priority order.
+///
+/// It is generic over what is waiting because the queue is used twice with the
+/// same rule: over bare [`Request`]s by a caller driving the owner itself, and
+/// over the owner thread's jobs, which are a request plus the channel its answer
+/// goes back down. One rule, one place.
+#[derive(Debug)]
+pub struct Lanes<T> {
+    lanes: [Vec<T>; LANES],
 }
 
-impl RequestQueue {
+/// The queue as a caller driving a [`PortOwner`] by hand sees it.
+pub type RequestQueue = Lanes<Request>;
+
+impl<T> Default for Lanes<T> {
+    fn default() -> Self {
+        Self {
+            lanes: std::array::from_fn(|_| Vec::new()),
+        }
+    }
+}
+
+impl<T> Lanes<T> {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn push(&mut self, priority: Priority, request: Request) {
+    pub fn push(&mut self, priority: Priority, request: T) {
         self.lanes[priority as usize].push(request);
     }
 
-    /// The most urgent request waiting, and its lane. Within a lane, in order.
-    pub fn pop(&mut self) -> Option<(Priority, Request)> {
+    /// The most urgent thing waiting, and its lane. Within a lane, in order.
+    pub fn pop(&mut self) -> Option<(Priority, T)> {
         for (lane, priority) in [
             Priority::Panic,
             Priority::Write,
@@ -226,8 +244,22 @@ impl<P: MidiPort> PortOwner<P> {
 
 /// What the owner thread is asked to do, and where the answer goes.
 struct Job {
+    priority: Priority,
     request: Request,
     answer: SyncSender<Result<Served, PortError>>,
+}
+
+/// The keyboard's hands, as the front needs them: how many pitches are down and
+/// which is the lowest.
+///
+/// The lowest is what the `TEORÍA` frequency line of every operator is computed
+/// from. Under a chord any choice is arbitrary; the lowest is the one that does
+/// not move when a chord is built upwards over a held bass, which is what makes
+/// the eight numbers stand still while somebody plays.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct LiveNotes {
+    pub count: usize,
+    pub lowest: Option<u8>,
 }
 
 /// A running owner: the thread, and the only way to talk to it.
@@ -249,7 +281,7 @@ impl OwnerHandle {
     pub fn spawn<P, F>(port: P, mut on_live_notes: F) -> Self
     where
         P: MidiPort + Send + 'static,
-        F: FnMut(usize) + Send + 'static,
+        F: FnMut(LiveNotes) + Send + 'static,
     {
         // Capacity 1 per lane's worth of urgency: the sender blocks rather than
         // letting a backlog build up behind the port.
@@ -267,10 +299,20 @@ impl OwnerHandle {
     }
 
     /// Ask the owner for something and wait for what came of it.
-    pub fn request(&self, request: Request) -> Result<Served, PortError> {
+    ///
+    /// The priority decides who goes *next* when more than one caller is waiting,
+    /// not who gets interrupted: one request is always served to the end. It stops
+    /// being decoration the moment something polls continuously — the anillo ancho
+    /// asks 12 times a second forever, and without the lanes a pánico would queue
+    /// behind whatever the ring had already handed over.
+    pub fn request(&self, priority: Priority, request: Request) -> Result<Served, PortError> {
         let jobs = self.jobs.as_ref().ok_or(PortError::OwnerGone)?;
         let (answer, reply) = sync_channel(1);
-        match jobs.try_send(Job { request, answer }) {
+        match jobs.try_send(Job {
+            priority,
+            request,
+            answer,
+        }) {
             Ok(()) => {}
             Err(TrySendError::Full(job)) => jobs.send(job).map_err(|_| PortError::OwnerGone)?,
             Err(TrySendError::Disconnected(_)) => return Err(PortError::OwnerGone),
@@ -280,7 +322,7 @@ impl OwnerHandle {
 
     /// The pánico, from anywhere, including the error states.
     pub fn panic(&self) -> Result<usize, PortError> {
-        match self.request(Request::Panic)? {
+        match self.request(Priority::Panic, Request::Panic)? {
             Served::Silenced(notes) => Ok(notes),
             other => unreachable!("a pánico answers with what it silenced, not {other:?}"),
         }
@@ -292,9 +334,17 @@ impl OwnerHandle {
     /// asked for while it is running waits behind it — bounded by [`dump::DEADLINE`]
     /// and stated there.
     pub fn dump(&self, address: Address) -> Result<Dump, PortError> {
-        match self.request(Request::Dump(address))? {
+        match self.request(Priority::Dump, Request::Dump(address))? {
             Served::Dumped(taken) => Ok(taken),
             other => unreachable!("a volcado answers with bytes, not {other:?}"),
+        }
+    }
+
+    /// One address, in the lane of whoever is asking. `Ok(None)` is a timeout.
+    pub fn read(&self, priority: Priority, address: Address) -> Result<Option<Vec<u8>>, PortError> {
+        match self.request(priority, Request::Read(address))? {
+            Served::Read { data, .. } => Ok(data),
+            other => unreachable!("a read answers with data, not {other:?}"),
         }
     }
 
@@ -306,10 +356,7 @@ impl OwnerHandle {
     pub fn part_name(&self, part: u8) -> Result<String, PortError> {
         let mut replies = Vec::with_capacity(usize::from(table::PART_NAME_BYTES));
         for address in table::anchor(part) {
-            match self.request(Request::Read(address))? {
-                Served::Read { data, .. } => replies.push(data),
-                other => unreachable!("a read answers with data, not {other:?}"),
-            }
+            replies.push(self.read(Priority::Anchor, address)?);
         }
         Ok(table::anchor_name(&replies))
     }
@@ -326,28 +373,52 @@ impl Drop for OwnerHandle {
     }
 }
 
-fn run_owner<P: MidiPort>(port: P, incoming: Receiver<Job>, on_live_notes: &mut dyn FnMut(usize)) {
+fn run_owner<P: MidiPort>(
+    port: P,
+    incoming: Receiver<Job>,
+    on_live_notes: &mut dyn FnMut(LiveNotes),
+) {
     let mut owner = PortOwner::new(port);
-    let mut reported = 0;
+    let mut waiting: Lanes<Job> = Lanes::new();
+    let mut reported = LiveNotes::default();
 
     loop {
-        match incoming.recv_timeout(IDLE_PATIENCE) {
-            Ok(job) => {
+        // Everything that has arrived goes into its lane before anything is
+        // served, so the order the requests were *sent* in never decides who goes
+        // first — the lane does.
+        loop {
+            match incoming.try_recv() {
+                Ok(job) => waiting.push(job.priority, job),
+                Err(TryRecvError::Empty) => break,
+                // Every handle is gone. What is already queued is dropped: nobody
+                // is left to receive an answer.
+                Err(TryRecvError::Disconnected) => return,
+            }
+        }
+
+        match waiting.pop() {
+            Some((_, job)) => {
                 let served = owner.serve(job.request);
                 // The answer going nowhere is normal: the asker may have given up.
                 let _ = job.answer.try_send(served);
             }
-            Err(RecvTimeoutError::Timeout) => {
-                // Nobody wants the port, so spend the time listening: this is where
-                // the note tracker learns what the hands are doing.
-                let _ = owner.drain(IDLE_PATIENCE);
-            }
-            Err(RecvTimeoutError::Disconnected) => return,
+            None => match incoming.recv_timeout(IDLE_PATIENCE) {
+                Ok(job) => waiting.push(job.priority, job),
+                Err(RecvTimeoutError::Timeout) => {
+                    // Nobody wants the port, so spend the time listening: this is
+                    // where the note tracker learns what the hands are doing.
+                    let _ = owner.drain(IDLE_PATIENCE);
+                }
+                Err(RecvTimeoutError::Disconnected) => return,
+            },
         }
 
-        // Only when it moved: the clock alone would wake the front 125 times a
-        // second with the same number.
-        let live = owner.tracker().live_notes();
+        // Only when they moved: the clock alone would wake the front 125 times a
+        // second with the same pair.
+        let live = LiveNotes {
+            count: owner.tracker().live_notes(),
+            lowest: owner.tracker().live_pitches().next(),
+        };
         if live != reported {
             reported = live;
             on_live_notes(live);
@@ -507,20 +578,23 @@ mod tests {
         fake.press(67, 100);
 
         let (live_notes, seen) = std::sync::mpsc::channel();
-        let owner = OwnerHandle::spawn(fake, move |count| {
-            let _ = live_notes.send(count);
+        let owner = OwnerHandle::spawn(fake, move |live| {
+            let _ = live_notes.send(live);
         });
 
         // The loop listens on its own while nobody is asking, so the chord reaches
         // the tracker without anything being read.
-        let mut counted = 0;
-        while let Ok(count) = seen.recv_timeout(Duration::from_secs(1)) {
-            counted = count;
-            if counted == 3 {
+        let mut counted = LiveNotes::default();
+        while let Ok(live) = seen.recv_timeout(Duration::from_secs(1)) {
+            counted = live;
+            if counted.count == 3 {
                 break;
             }
         }
-        assert_eq!(counted, 3);
+        assert_eq!(counted.count, 3);
+        // And the lowest of the three, which is what every node's TEORÍA line is
+        // computed from.
+        assert_eq!(counted.lowest, Some(60));
 
         assert_eq!(owner.panic().unwrap(), 3);
     }
@@ -529,13 +603,62 @@ mod tests {
     fn a_read_through_the_thread_answers_with_the_data() {
         let owner = OwnerHandle::spawn(FakeModx::init_normal_fmx(), |_| {});
 
-        match owner.request(Request::Read(ALGORITHM)).unwrap() {
+        match owner
+            .request(Priority::WideRing, Request::Read(ALGORITHM))
+            .unwrap()
+        {
             Served::Read { address, data } => {
                 assert_eq!(address, ALGORITHM);
                 assert_eq!(data, Some(vec![0x01]));
             }
             other => panic!("expected a read, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn the_thread_serves_a_panico_ahead_of_the_reads_already_queued() {
+        // The lanes only start to matter when more than one caller is waiting at
+        // once, which is what the rings make normal. Eight reads are handed over
+        // before the pánico is asked for; under a plain FIFO the pánico would be
+        // ninth, which at 10 ms a read is most of a tenth of a second of a note
+        // that will not stop.
+        let mut fake = FakeModx::init_normal_fmx();
+        fake.set_latency(Latency::NotesPlaying);
+        let owner = std::sync::Arc::new(OwnerHandle::spawn(fake, |_| {}));
+
+        let (finished, order) = std::sync::mpsc::channel::<&'static str>();
+        let readers: Vec<_> = wide_ring_addresses()
+            .into_iter()
+            .map(|address| {
+                let owner = std::sync::Arc::clone(&owner);
+                let finished = finished.clone();
+                std::thread::spawn(move || {
+                    let _ = owner.read(Priority::WideRing, address);
+                    let _ = finished.send("read");
+                })
+            })
+            .collect();
+
+        // Long enough for all eight to be in their lane, short enough that at most
+        // one of them can have been served.
+        std::thread::sleep(Duration::from_millis(5));
+        owner.panic().unwrap();
+        let _ = finished.send("panico");
+        drop(finished);
+        for reader in readers {
+            reader.join().unwrap();
+        }
+
+        let served: Vec<&str> = order.into_iter().collect();
+        let after = served
+            .iter()
+            .skip_while(|what| **what != "panico")
+            .filter(|what| **what == "read")
+            .count();
+        assert!(
+            after >= 5,
+            "the pánico waited behind the ring: only {after} of 8 reads came after it",
+        );
     }
 
     #[test]

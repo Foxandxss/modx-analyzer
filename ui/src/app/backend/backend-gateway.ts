@@ -31,8 +31,23 @@ export interface BackendGateway {
    */
   readonly reread: Signal<RereadProgress | null>;
 
+  /**
+   * The eight operators as the anillo ancho last read them, and how long its last
+   * complete pass took. Everything the diagram draws comes from here.
+   */
+  readonly operators: Signal<OperatorsView>;
+
   /** Live notes counted by distinct pitch (Note On with velocity 0 is Note Off). */
   readonly liveNotes: Signal<number>;
+
+  /**
+   * The lowest pitch the keyboard is holding, or `null` when nothing sounds.
+   *
+   * It is what every node's `TEORÍA` frequency is computed from: an operator's
+   * frequency is a multiple of the note's, so with no note there is no number —
+   * a dash, not a zero.
+   */
+  readonly lowestLivePitch: Signal<number | null>;
 
   /**
    * The volcado de seguridad of this launch, or `null` while it is still being
@@ -112,6 +127,58 @@ export interface PatchHeaderView {
 export interface RereadProgress {
   readonly done: number;
   readonly total: number;
+}
+
+/**
+ * What an operator is doing in this patch. Carrier and modulator come from the
+ * algorithm's topology; `inert` is Level 0 and overrides both, wherever the
+ * algorithm put the operator.
+ */
+export type OperatorRole = 'carrier' | 'modulator' | 'inert';
+
+/** Whether Coarse and Fine mean a ratio of the note, or a frequency of their own. */
+export type FrequencyMode = 'ratio' | 'fixed';
+
+/** One node of the diagram. Every figure carries its own stamp and its own age. */
+export interface OperatorView {
+  /** 1-8. */
+  readonly operator: number;
+  readonly role: PolledValue<OperatorRole>;
+  /** 0-99. It is drawn as the height of the fill; the number only confirms it. */
+  readonly level: PolledValue<number>;
+  /** The nominal ratio. Absent in `fixed` mode, where the pair is not a ratio. */
+  readonly ratio: PolledValue<number>;
+  readonly frequencyMode: PolledValue<FrequencyMode>;
+  readonly spectralForm: PolledValue<string>;
+}
+
+export interface OperatorsView {
+  /** Always eight, in operator order, whether or not anything has been read. */
+  readonly operators: readonly OperatorView[];
+  /**
+   * How long the anillo ancho's last completed pass took, or `null` before the
+   * first one closed. `CADUCO` and the zone's cadence both come from it, and it
+   * is never a constant: the same 42 addresses take ~84 ms in silence and ~430 ms
+   * while somebody plays.
+   */
+  readonly passMs: number | null;
+  readonly passes: number;
+}
+
+/** The eight nodes before the keyboard has answered: shape kept, figures lost. */
+export function noOperators(): OperatorsView {
+  return {
+    operators: [1, 2, 3, 4, 5, 6, 7, 8].map((operator) => ({
+      operator,
+      role: invalidated<OperatorRole>(),
+      level: invalidated<number>(),
+      ratio: invalidated<number>(),
+      frequencyMode: invalidated<FrequencyMode>(),
+      spectralForm: invalidated<string>(),
+    })),
+    passMs: null,
+    passes: 0,
+  };
 }
 
 /** What one press of the pánico did. */

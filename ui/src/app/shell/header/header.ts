@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { BACKEND_GATEWAY, invalidated } from '../../backend/backend-gateway';
 import { Figure } from '../../provenance/figure';
+import { RingFreshness } from '../../provenance/freshness';
 import { PanicService } from '../panic/panic-service';
 
 /** The three modes of the app. Only `CREAR` is reachable this session. */
@@ -26,6 +27,7 @@ export const MODES: readonly Mode[] = ['CREAR', 'A/B', 'APRENDER'];
 export class Header {
   private readonly backend = inject(BACKEND_GATEWAY);
   private readonly panic = inject(PanicService);
+  private readonly freshness = inject(RingFreshness);
 
   /** The pointer that went down on the pánico, until it comes up again. */
   private pressing: number | null = null;
@@ -42,6 +44,17 @@ export class Header {
   protected readonly connection = this.backend.connection;
   protected readonly patch = this.backend.patch;
   protected readonly liveNotes = this.backend.liveNotes;
+
+  /**
+   * The algorithm and the feedback come off the anillo ancho like everything else
+   * in the diagram, so they go `CADUCO` on the same threshold. The header is not
+   * allowed to be the one place on screen where a number never gets old.
+   */
+  protected readonly algorithm = computed(() => this.freshness.stamp(this.patch().algorithm));
+  protected readonly feedback = computed(() => this.freshness.stamp(this.patch().feedback));
+  protected readonly feedbackOperator = computed(() =>
+    this.freshness.stamp(this.patch().feedbackOperator),
+  );
 
   protected readonly portName = computed(() => this.connection().portName);
   protected readonly connected = computed(() => this.connection().port === 'connected');

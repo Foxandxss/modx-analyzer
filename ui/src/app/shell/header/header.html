@@ -16,12 +16,12 @@
 
   <div class="pill pill--algorithm">
     <span class="pill__eyebrow">ALG</span>
-    <app-figure [value]="patch().algorithm" [pad]="2" />
+    <app-figure [value]="algorithm()" [pad]="2" />
   </div>
 
   <div class="feedback">
-    FB <app-figure [value]="patch().feedback" /> · OP
-    <app-figure [value]="patch().feedbackOperator" />
+    FB <app-figure [value]="feedback()" /> · OP
+    <app-figure [value]="feedbackOperator()" />
   </div>
 
   <div class="audio">

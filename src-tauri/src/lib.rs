@@ -2,11 +2,13 @@ mod audio;
 mod connection;
 mod dumps;
 mod keyboard;
+mod patch;
 
 use audio::Audio;
 use connection::Connection;
 use dumps::Dumps;
 use keyboard::Keyboard;
+use patch::Patch;
 use tauri::{LogicalSize, Manager};
 
 /// The measured useful client area on the target laptop: a 14" panel of
@@ -42,6 +44,7 @@ pub fn run() {
         .manage(Keyboard::new())
         .manage(Audio::new())
         .manage(Dumps::new())
+        .manage(Patch::new())
         .invoke_handler(tauri::generate_handler![
             app_info,
             dumps::last_dump,
@@ -64,17 +67,21 @@ pub fn run() {
 
             // Startup order: the port first, so the pánico is live before anything
             // else can make a note sound; then the volcado de seguridad, which is
-            // the first thing that touches the keyboard; then the audio device last.
-            // The ancla, the relectura and the rings slot in between as their own
-            // tickets land.
+            // the first thing that touches the keyboard; then the anillo ancho;
+            // then the audio device last. The ancla and the relectura slot between
+            // the volcado and the ring when #13 lands.
             //
-            // The volcado runs on its own thread — it holds the port for seconds
-            // and this function has to return for the window to appear — so it is
-            // first to *ask* rather than first to *finish*. Nothing else asks the
-            // keyboard for anything yet, so that is the same thing today and will
-            // stop being so the moment the rings exist.
+            // The volcado and the ring each run on a thread of their own — this
+            // function has to return for the window to appear, and the volcado
+            // holds the port for seconds while the ring never lets go of it at all
+            // — so the order here is the order they *ask* in, not the order they
+            // finish in. That the volcado still goes first is the port owner's
+            // doing: `Priority::Dump` is served ahead of `Priority::WideRing`, so
+            // the ring's first pass waits behind the safety copy rather than
+            // interleaving with it.
             keyboard::start(app.handle());
             dumps::start(app.handle());
+            patch::start(app.handle());
             audio::start(app.handle());
 
             Ok(())
