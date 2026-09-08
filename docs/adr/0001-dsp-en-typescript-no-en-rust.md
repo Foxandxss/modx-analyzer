@@ -28,4 +28,13 @@ lo que cuesta es pintar, y eso va en canvas en las dos opciones.
   Tauri con el front pintando. `RESULTS.md` dice si aguanta sin pérdidas y cuánta latencia añade.
 - Si el puente no aguantara, mover funciones puras a Rust es un cambio acotado; construir encima
   sin medirlo no lo es.
+- **El go/no-go está tomado y sale que sí** (#8, 2026-09-08, MODX8 real). Diez minutos bajo notas
+  densas —20 394 bloques, 28 618 mensajes por el mismo puerto, ninguno rechazado— con **`HUECOS 0`,
+  `DESORDEN 0` y un p99 de 4,0 ms** contra un presupuesto de 33 ms: el 12 %. La pasada con manos de
+  verdad, otros 1 221 bloques, da lo mismo: `HUECOS 0`, `DESORDEN 0`, p99 8,0 ms. La carga no
+  empeoró el puente, lo dejó **mejor** que en reposo (p50 1,1 → 0,7 ms; p99 5,5 → 3,8 ms).
+- Ese margen es el que sostiene la decisión: no hay nada que mover a Rust por rendimiento, y este
+  ADR no se reabre por el puente. Los detalles y la única anomalía —una ráfaga de arranque de
+  ~210 ms, siempre en los primeros segundos y sin perder un solo bloque— están en
+  `docs/results/2026-09-07-fase1-sesion1.md`.
 - El documento `prompt.md` de la primera sesión decía lo contrario; este ADR lo sustituye.
