@@ -77,3 +77,40 @@ describe('compareWindows', () => {
     expect(found.maxDb).toBe(0);
   });
 });
+
+/**
+ * The floor is random and the note is not, so a comparison that counts every bin
+ * counts mostly noise. These pin the part of the answer #14 actually rests on.
+ */
+describe('compareWindows · sólo el contenido', () => {
+  /** A window whose bins below the content line are pure noise, and different noise. */
+  function withNoise(hz: number, seed: number): Float32Array {
+    const base = sine(hz);
+    let state = seed;
+    const noisy = new Float32Array(base.length);
+    for (let n = 0; n < base.length; n += 1) {
+      state = (state * 1103515245 + 12345) & 0x7fffffff;
+      noisy[n] = base[n]! + ((state / 0x7fffffff) * 2 - 1) * 1e-6;
+    }
+    return noisy;
+  }
+
+  it('ignores a floor that moved and keeps the note that did not', () => {
+    const found = compareWindows(withNoise(440, 1), withNoise(440, 7));
+
+    // Two different noise floors under the same note: the all-bins figures see a
+    // great deal and the content figures see almost nothing. That gap is the
+    // whole reason the content half exists.
+    expect(found.maxDb).toBeGreaterThan(found.contentMaxDb);
+    expect(found.contentP50Db).toBeLessThan(1);
+    expect(found.contentBins).toBeLessThan(found.bins);
+    expect(found.contentBins).toBeGreaterThan(0);
+  });
+
+  it('still sees a spur that stands above the content line', () => {
+    const found = compareWindows(sine(440), withSpur(440, 2756.25, -72));
+
+    expect(found.contentMaxDb).toBeGreaterThan(6);
+    expect(Math.abs(found.contentMaxBinHz - 2756.25)).toBeLessThan(found.binHz);
+  });
+});

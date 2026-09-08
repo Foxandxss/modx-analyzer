@@ -48,9 +48,46 @@ export interface WindowComparison {
    * a line present — a difference that large would change what the app reports.
    */
   readonly over: readonly { readonly thresholdDb: number; readonly bins: number }[];
+
+  /**
+   * The same figures over **content bins only**, and this is the half that
+   * answers #14.
+   *
+   * Comparing all 32 769 bins weights the noise floor exactly as heavily as the
+   * note, and the floor is random: two windows of the same sound seconds apart
+   * differ by tens of dB down there, because −150 dB against −130 dB is a 20 dB
+   * «difference» between two silences. A comparison that counts those is a
+   * comparison that answers noise, whatever the polling did.
+   *
+   * A bin counts as content when **either** window has it above
+   * {@link CONTENT_FLOOR_DB} relative to its own peak — −100 dB, the top of fase
+   * 0's floor band, so anything the spike called a floor is excluded and anything
+   * it called a spur (−72 dB) is kept.
+   */
+  readonly contentBins: number;
+  readonly contentP50Db: number;
+  readonly contentP99Db: number;
+  readonly contentMaxDb: number;
+  readonly contentMaxBinHz: number;
 }
 
 const THRESHOLDS_DB = [0.1, 1, 6];
+
+/**
+ * Above this, relative to each window's own peak, a bin is content rather than
+ * floor.
+ *
+ * **Not fase 0's number.** The spike's −100 to −109 dB floor is a figure of the
+ * **4 096** window; at 65 536 each bin gathers a sixteenth of the bandwidth and
+ * the median goes down with it, which #10 measured over the golden vectors:
+ * −129,9 dB for the sine, −123,9 for `modlow`, −111,4 for `modhigh` and −100,6
+ * for `ratio1414`. So −100 sits at or above the worst of the four and comfortably
+ * above the rest — conservative in the direction that matters, since a bin it
+ * keeps is unambiguously content while a bin it drops might merely be quiet.
+ *
+ * The oscillator spurs fase 0 measured at −72 dB are kept either way.
+ */
+export const CONTENT_FLOOR_DB = -100;
 
 function percentile(sorted: Float64Array, fraction: number): number {
   const index = Math.min(sorted.length - 1, Math.floor(sorted.length * fraction));
@@ -83,8 +120,32 @@ export function compareWindows(
     }
   }
 
+  // Content is judged against each window's own peak, so the two are compared on
+  // equal terms even when one was played a decibel louder than the other.
+  const contentA = left.peakDb + CONTENT_FLOOR_DB;
+  const contentB = right.peakDb + CONTENT_FLOOR_DB;
+  const content: number[] = [];
+  let contentMaxDb = 0;
+  let contentMaxBin = 0;
+  for (let bin = 0; bin < left.db.length; bin += 1) {
+    if (left.db[bin]! <= contentA && right.db[bin]! <= contentB) {
+      continue;
+    }
+    content.push(diffs[bin]!);
+    if (diffs[bin]! > contentMaxDb) {
+      contentMaxDb = diffs[bin]!;
+      contentMaxBin = bin;
+    }
+  }
+  const contentSorted = Float64Array.from(content).sort();
+
   const sorted = Float64Array.from(diffs).sort();
   return {
+    contentBins: content.length,
+    contentP50Db: content.length === 0 ? 0 : percentile(contentSorted, 0.5),
+    contentP99Db: content.length === 0 ? 0 : percentile(contentSorted, 0.99),
+    contentMaxDb,
+    contentMaxBinHz: contentMaxBin * left.binHz,
     window,
     binHz: left.binHz,
     bins: left.db.length,
@@ -123,5 +184,14 @@ export function formatComparison(found: WindowComparison): string {
     const share = ((bins / found.bins) * 100).toFixed(3);
     rows.push([`bins con dif > ${thresholdDb} dB`, `${bins} (${share} %)`]);
   }
-  return rows.map(([name, value]) => `${name.padEnd(24)} ${value}`).join('\n');
+  // The half that answers the ticket: everything above is the floor talking.
+  rows.push(
+    ['', ''],
+    [`bins de contenido (>${CONTENT_FLOOR_DB} dB)`, `${found.contentBins}`],
+    ['contenido p50 (dB)', found.contentP50Db.toFixed(3)],
+    ['contenido p99 (dB)', found.contentP99Db.toFixed(3)],
+    ['contenido máxima (dB)', found.contentMaxDb.toFixed(3)],
+    ['contenido bin de la máx', `${found.contentMaxBinHz.toFixed(1)} Hz`],
+  );
+  return rows.map(([name, value]) => `${name.padEnd(28)} ${value}`).join('\n');
 }
