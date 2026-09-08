@@ -24,6 +24,24 @@
   align-items: baseline;
   gap: var(--space-2);
   margin-bottom: 7px;
+  /* La cabecera de ESPECTRO lleva dos elementos más que la de ARMÓNICOS —el eje
+     `LOG` y la píldora `ARTEFACTO`—, así que al aparecer el chip del cambio no
+     cabía. Sin esto ninguno de los hijos podía negarse a encogerse y el que
+     cedía era el chip: se quedaba en un óvalo estrecho de cinco líneas encima
+     de `LOG` y de `SUELO` (#19). Ahora la fila pasa a dos y todos se leen. */
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+
+/* Ninguna de las piezas de la cabecera se parte por dentro: o cabe entera en la
+   fila o baja a la siguiente. */
+.view__live,
+.view__artefact,
+.view__alive,
+.view__title,
+.view__readout {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 // El sello de la zona: todo lo que hay debajo es audio que entra ahora.

@@ -102,10 +102,11 @@ describe('App (4a)', () => {
     backend.loadPerformance('Bright FM Keys');
     await fixture.whenStable();
 
-    // The new name, with the old one struck through beside it.
+    // El nombre nuevo y el destello. El viejo tachado ya no se dibuja: con 20
+    // caracteres se metía debajo del chip `ALG` (#19).
     const anchor = host.querySelector('.anchor');
     expect(anchor?.textContent).toContain('Bright FM Keys');
-    expect(anchor?.querySelector('.anchor__old')?.textContent).toBe('Init Normal (FM-X)');
+    expect(anchor?.textContent).not.toContain('Init Normal (FM-X)');
     expect(anchor?.classList.contains('anchor--changed')).toBe(true);
     expect(anchor?.textContent).toContain('SIN MEDIR EN ESTE SONIDO');
 

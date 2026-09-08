@@ -90,12 +90,20 @@ const OPERATORS = [1, 2, 3, 4, 5, 6, 7, 8];
     .sweep__grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, 62px);
-      gap: 2px var(--space-2);
+      /* El hueco ENTRE celdas tiene que ser mayor que el hueco DENTRO de una,
+         o el ojo empareja al revés. */
+      gap: 2px var(--space-4);
       margin-top: 4px;
     }
+    /* space-between empujaba la cifra al borde derecho de su caja de 62 px, o
+       sea contra la etiqueta de la celda SIGUIENTE: «1A 99» se leía «99 1B», y
+       en la sesión de #16 el 20 de 1A se apuntó como de 1B. La celda roja de
+       CAMBIÓ era justo la peor colocada. Ahora el par va junto y a la
+       izquierda, y lo que queda de la caja es el aire que lo separa del par
+       siguiente (#19). */
     .sweep__cell {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: var(--space-1);
       color: var(--ink-secondary);
     }

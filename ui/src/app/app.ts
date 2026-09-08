@@ -61,15 +61,43 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
       flex-direction: column;
       height: 100%;
       min-height: 0;
+      /* Red de seguridad y nada más: en reposo no hay barra aquí porque el
+         cuerpo se encoge hasta lo que quede. Sólo aparece si las tiras fijas
+         llegasen a no caber, y entonces vale más una barra que recortar en
+         silencio lo que se pulsa, que es como se perdieron el pánico y
+         EXPORTAR. */
+      overflow-y: auto;
+    }
+
+    /* Nada de la columna cede su altura salvo el cuerpo.
+     *
+     * Antes el cuerpo era el único flex: 1, así que cada tira que aparecía por
+     * encima —la de relectura, una tarjeta infeliz— salía del diagrama y de las
+     * vistas, que se quedaban en lascas mientras la tarjeta que explicaba el
+     * problema se leía perfecta encima (#19). Una tarjeta sola cuesta lo mismo
+     * que dos: las tarjetas van en dos columnas siempre.
+     *
+     * El waterfall y las lecturas de abajo no se mueven nunca: lo que cede es
+     * el cuerpo, y lo que no cabe dentro del cuerpo se baja con el dedo ahí
+     * dentro. La app entera no scrollea. */
+    :host > :not(.body) {
+      flex-shrink: 0;
     }
 
     /* El "filete" del cuerpo es un hueco de 2 px sobre el color de la rejilla,
        no un borde de 1 px: a DPR 1.5 un filete de 1 px se ve sucio. */
     .body {
-      flex: 1;
+      flex: 1 1 auto;
       min-height: 0;
       display: grid;
       grid-template-columns: 700px 1fr 208px;
+      /* El suelo va en la FILA, no en el cuerpo: el cuerpo se encoge con la
+         ventana —así que en reposo no sobra nada y no hay barra— pero su fila
+         nunca baja de 360 px, que es donde los ocho nodos dejan de tener
+         números dentro y las vistas se quedan sin curva (#19). Cuando una
+         tarjeta se lleva el alto, lo que scrollea es esta caja y sólo ella. */
+      grid-template-rows: minmax(360px, 1fr);
+      overflow-y: auto;
       gap: var(--rule-min);
       background: var(--rule-color);
     }

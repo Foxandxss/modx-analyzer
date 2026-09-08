@@ -8,6 +8,11 @@
   min-height: 0;
   box-sizing: border-box;
   background: var(--surface-base);
+  /* La columna entera se baja con el dedo, no sólo la tabla de parciales.
+     Sin esto lo que no cabía se cortaba sin decirlo y sin poder alcanzarlo:
+     `VOLCADO DE SEGURIDAD` era ilegible a esta altura de ventana y no había
+     forma de llegar a él (#19). */
+  overflow-y: auto;
 }
 
 .cell {

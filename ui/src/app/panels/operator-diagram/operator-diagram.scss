@@ -242,19 +242,34 @@
   color: var(--ink-secondary);
 }
 
+// La cifra cede y el sello no: con ocho tarjetas con frecuencia de verdad
+// —`587.33 Hz`— lo que sobraba se comía el sello. Ahora se corta la cifra, que
+// es lo que se puede volver a leer en la columna de la derecha.
+.node__line-figures,
+.node__hz-figure {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Un sello por línea, al final de la línea que califica: SONDEADO al lado de lo
+// que se sondeó, TEORÍA al lado de lo que se calculó. Ninguno de los dos está
+// ya fuera del flujo, que es lo que los ponía a los dos en la misma línea de
+// base y los hacía ilegibles (#19).
+.node__stamp,
 .node__hz-stamp {
+  margin-left: auto;
+  flex-shrink: 0;
   font-size: 7px;
   letter-spacing: var(--tracking-label);
+}
+
+.node__hz-stamp {
   color: var(--theory);
 }
 
-// Un sello por nodo, en la esquina: el peor de los que lleva dentro.
 .node__stamp {
-  position: absolute;
-  right: 6px;
-  bottom: 5px;
-  font-size: 7px;
-  letter-spacing: var(--tracking-label);
   color: var(--ink-inert);
 }
 

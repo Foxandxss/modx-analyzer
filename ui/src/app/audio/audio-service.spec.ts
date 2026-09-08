@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { BLOCK_FRAMES, WATERFALL_FRAMES } from 'modx-dsp';
+import { ARTEFACT_HZ, BLOCK_FRAMES, WATERFALL_FRAMES } from 'modx-dsp';
 import { AUDIO_WORKER, AudioService } from './audio-service';
-import { fakeBlock, heldNote } from './fake-block';
+import { fakeBlock, heldNote, withComb } from './fake-block';
 import { FakeAudioWorker } from './fake-audio-worker';
 import { BACKEND_GATEWAY } from '../backend/backend-gateway';
 import { FakeBackendGateway } from '../backend/fake-backend-gateway';
@@ -158,5 +158,63 @@ describe('AudioService', () => {
 
     expect(audio.medida()).not.toBeNull();
     expect(audio.live.cuts).toHaveLength(0);
+  });
+  // El chip parpadeaba dos veces por segundo. `artefactChipHz` ya responde con
+  // la línea más baja, pero de SU ventana: medido con el teclado delante el
+  // 2026-09-08, un C4 se queda en 2 756 Hz y un C5 en 5 513 y ninguno se mueve,
+  // pero un G4 va y viene porque la de 2 756 cae por debajo del detector en
+  // algunas ventanas y la más baja pasa a ser la de 5 513 (#19).
+  //
+  // La regla es sobre el tiempo y no sobre una ventana.
+  it('sostiene la línea más baja del comb cuando una ventana no la ve', () => {
+    const { backend, audio } = setUp();
+    const push = (sequence: number, multiples: number[]) => {
+      const start = sequence * BLOCK_FRAMES;
+      let mono = heldNote(261.626, start);
+      for (const multiple of multiples) {
+        mono = withComb(mono, start, 1.25e-4, multiple);
+      }
+      backend.emitBlock(fakeBlock({ sequence, sentAtMicros: sequence * 30_000, mono }));
+    };
+
+    // Las dos líneas presentes: el chip nombra la baja.
+    for (let sequence = 0; sequence < 12; sequence += 1) {
+      push(sequence, [1, 2]);
+    }
+    expect(audio.artefactHz()).toBeCloseTo(ARTEFACT_HZ, 2);
+
+    // La de 2 756 desaparece de la ventana y sólo queda la de 5 513. El chip no
+    // se mueve: dentro del sostenimiento manda la más baja que se ha visto.
+    for (let sequence = 12; sequence < 28; sequence += 1) {
+      push(sequence, [2]);
+    }
+    expect(audio.artefactHz()).toBeCloseTo(ARTEFACT_HZ, 2);
+  });
+
+  // Y el sostenimiento no se arrastra hasta la nota siguiente: existe para que
+  // la línea no baile dentro de UNA nota. Con el teclado delante, pasar de C4 a
+  // C5 tardaba el sostenimiento entero en mover el chip.
+  it('suelta la línea sostenida en cuanto cambia la nota', () => {
+    const { backend, audio } = setUp();
+    const push = (sequence: number, note: number, multiples: number[]) => {
+      const start = sequence * BLOCK_FRAMES;
+      let mono = heldNote(note, start);
+      for (const multiple of multiples) {
+        mono = withComb(mono, start, 1.25e-4, multiple);
+      }
+      backend.emitBlock(fakeBlock({ sequence, sentAtMicros: sequence * 30_000, mono }));
+    };
+
+    for (let sequence = 0; sequence < 12; sequence += 1) {
+      push(sequence, 261.626, [1, 2]);
+    }
+    expect(audio.artefactHz()).toBeCloseTo(ARTEFACT_HZ, 2);
+
+    // Otra nota, y en ella sólo está la línea de 5 513. El chip la nombra sin
+    // esperar: nada de esto tarda el segundo del sostenimiento.
+    for (let sequence = 12; sequence < 28; sequence += 1) {
+      push(sequence, 523.251, [2]);
+    }
+    expect(audio.artefactHz()).toBeCloseTo(ARTEFACT_HZ * 2, 2);
   });
 });

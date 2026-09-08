@@ -331,24 +331,55 @@ describe('Header · el obturador', () => {
 });
 
 describe('Header · el ancla', () => {
-  it('dibuja el nombre nuevo con el viejo tachado al lado y el destello', async () => {
+  it('dibuja el nombre nuevo con el destello, y el viejo ya no se dibuja', async () => {
     const { host, settle, backend } = await renderWithAudio();
     backend.anchorReads('Init Normal (FM-X)');
     await settle();
 
     const anchor = () => host.querySelector('.anchor')!;
     expect(anchor().textContent).toContain('Init Normal (FM-X)');
-    expect(anchor().querySelector('.anchor__old')).toBeNull();
     expect(anchor().classList.contains('anchor--changed')).toBe(false);
 
     backend.loadPerformance('Bright FM Keys');
     await settle();
 
     expect(anchor().querySelector('.anchor__name')?.textContent).toContain('Bright FM Keys');
-    expect(anchor().querySelector('.anchor__old')?.textContent).toBe('Init Normal (FM-X)');
+    // El viejo tachado se fue: con los 20 caracteres del MODX se metía debajo
+    // del chip `ALG` y de `FB`, y lo que hay que leer en el destello es el
+    // nombre nuevo (#19). El destello sigue diciendo que acaba de cambiar.
+    expect(anchor().textContent).not.toContain('Init Normal (FM-X)');
     expect(anchor().classList.contains('anchor--changed')).toBe(true);
     // La procedencia va al lado del nombre, con peso bajo: 1 Hz y la dirección.
     expect(anchor().querySelector('.anchor__eyebrow')?.textContent).toBe('ANCLA · 1 Hz · 31 00 00');
+  });
+
+  // El criterio de #19: el nombre más largo que admite el MODX —20 caracteres,
+  // medidos con el teclado delante el 2026-09-08— con el chip `ALG` dibujado.
+  //
+  // El solape no era un desbordamiento cualquiera: era el `flex` del ancla, que
+  // crecía con el nombre y lo metía debajo del chip. Ahora la ranura es fija y
+  // el nombre se corta dentro con elipsis.
+  it('dibuja entero el nombre más largo que admite el MODX', async () => {
+    const { host, settle, backend } = await renderWithAudio();
+    backend.anchorReads('Init Normal (FM-X)');
+    await settle();
+
+    const anchor = () => host.querySelector<HTMLElement>('.anchor')!;
+
+    // 20 «W»: el nombre más ancho que puede llegar a esta ranura.
+    backend.loadPerformance('W'.repeat(20));
+    await settle();
+
+    expect(anchor().querySelector('.anchor__name')?.textContent).toContain('W'.repeat(20));
+    // Y sigue habiendo un solo hijo que pueda crecer: el que se llevaba el
+    // ancho por delante era el tachado, y ya no está.
+    expect(anchor().querySelector('.anchor__old')).toBeNull();
+
+    // Aquí se acaba lo que esta tira puede decir: jsdom no hace layout, así que
+    // getBoundingClientRect() devuelve cero para todo y una comprobación de
+    // anchura sería verde sin mirar nada. Que el chip ALG siga legible con este
+    // nombre es el tercer criterio de #19 y se verifica a tamaño real, con el
+    // teclado delante. Esta prueba cubre el contenido; el píxel, no.
   });
 
   it('se queda en SIN MEDIR EN ESTE SONIDO hasta que haya otra medida', async () => {

@@ -22,3 +22,34 @@ app-root {
   display: block;
   height: 100%;
 }
+
+// Las barras de scroll de Windows son claras y anchas: sobre esta pantalla se
+// ven más que lo que hay dentro del panel que recorren. Aquí van finas, sin
+// pista y sobre el propio fondo, que es lo que hace que una columna que se baja
+// con el dedo no parezca un error de maquetación.
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-color) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: var(--rule-color);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-inert);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}

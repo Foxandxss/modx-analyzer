@@ -127,6 +127,31 @@ const READOUT_EVERY = 8;
 const DEVICE_GONE_MS = 1_000;
 
 /**
+ * How long the chip keeps naming a comb line that this window did not see.
+ *
+ * One second: long enough to cover the windows where a line drops under the
+ * detector, short enough that changing note moves the chip while you are still
+ * looking at it.
+ */
+const ARTEFACT_HOLD_MS = 1_000;
+
+/**
+ * How far the note has to move before the comb is treated as a new one.
+ *
+ * Three per cent is about half a semitone: wider than the wobble of a held note
+ * as the scope re-triggers, narrower than any key you could press next.
+ */
+const NOTE_MOVED = 0.03;
+
+/** Whether the note under the comb is a different note, not the same one wobbling. */
+function noteMoved(before: number | null, now: number | null): boolean {
+  if (before === null || now === null) {
+    return before !== now;
+  }
+  return Math.abs(now - before) / before > NOTE_MOVED;
+}
+
+/**
  * What the audio is doing. Four states, because «no entra audio» turned out to be
  * three different facts wearing one name (#21, #22).
  *
@@ -187,6 +212,11 @@ export class AudioService {
 
   /** When the last bloque arrived, on this side's clock. `null` before the first. */
   private readonly lastBlockAt = signal<number | null>(null);
+
+  /** The comb line on the chip, when it was last actually seen, and under which note. */
+  private artefactHeldHz: number | null = null;
+  private artefactHeldAt = 0;
+  private artefactNoteHz: number | null = null;
 
   /** Since when the keyboard has been holding something, or `null` if it is not. */
   private readonly notesLiveSince = signal<number | null>(null);
@@ -485,8 +515,54 @@ export class AudioService {
     const hertz = frame.frequencyHz;
     this.frequencyHz.set(hertz === null ? null : Math.round(hertz * 10) / 10);
     this.floorDb.set(frame.trama.curve === null ? null : Math.round(frame.trama.floorDb));
-    this.artefactHz.set(frame.trama.artefactHz);
+    this.holdArtefact(frame.trama.artefactHz, frame.frequencyHz, now);
     this.drawing.set(frame.trama.curve !== null);
+  }
+
+  /**
+   * The comb line the chip names, held so it stops flickering.
+   *
+   * `artefactChipHz` already answers with the **lowest** comb line of its
+   * window, snapped to `ARTEFACT_HZ`. What moves is which lines clear the
+   * detector inside one 4 096-sample window: measured on the MODX8 on
+   * 2026-09-08, a C4 sits on 2 756 Hz and a C5 on 5 513 Hz and neither moves,
+   * but a **G4 alternates between the two** because the 2 756 line drops under
+   * the threshold on some windows. The chip then repainted twice a second and
+   * a number that does that reads as broken, however right each frame was (#19).
+   *
+   * So the rule is over time and not over one window: the lowest line seen in
+   * the last {@link ARTEFACT_HOLD_MS}. A lower line is taken at once — it is
+   * the comb's own fundamental and the more telling of the two — and a higher
+   * one only once the held line has been gone for the whole hold, which is what
+   * lets the chip follow a real change of note instead of sticking on 2 756 Hz
+   * for the rest of the session.
+   */
+  private holdArtefact(hz: number | null, noteHz: number | null, now: number): void {
+    // Una nota nueva es un comb nuevo. El sostenimiento existe para que la línea
+    // no baile dentro de UNA nota, no para arrastrarla hasta la siguiente: sin
+    // esto, pasar de un C4 a un C5 tardaba el sostenimiento entero en mover el
+    // chip, que es el segundo largo que se nota con el teclado delante.
+    if (noteMoved(this.artefactNoteHz, noteHz)) {
+      this.artefactHeldHz = null;
+      this.artefactHeldAt = 0;
+    }
+    this.artefactNoteHz = noteHz;
+
+    if (hz === null) {
+      if (now - this.artefactHeldAt > ARTEFACT_HOLD_MS) {
+        this.artefactHeldHz = null;
+        this.artefactHz.set(null);
+      }
+      return;
+    }
+    const held = this.artefactHeldHz;
+    if (held === null || hz < held || now - this.artefactHeldAt > ARTEFACT_HOLD_MS) {
+      this.artefactHeldHz = hz;
+      this.artefactHeldAt = now;
+    } else if (hz === held) {
+      this.artefactHeldAt = now;
+    }
+    this.artefactHz.set(this.artefactHeldHz);
   }
 
   private postNote(hz: number | null): void {

@@ -52,19 +52,29 @@ export function heldNote(frequency: number, startFrame = 0, frames = BLOCK_FRAME
 }
 
 /**
- * The generator's comb added on top of a note: one line at 2 756.25 Hz, 72 dB
- * under the note, which is where fase 0 §7 found it in all four vectores de oro.
+ * The generator's comb added on top of a note: one line at a multiple of
+ * 2 756.25 Hz, 72 dB under the note, which is where fase 0 §7 found it in all
+ * four vectores de oro.
  *
  * It exists so a test can ask the screen what it does about an artefact without
  * reading a WAV: the vectores are the DSP's regression tests and live in
  * `modx-dsp`, and a UI test that needed one of them would be measuring the
  * analysis all over again instead of the panel.
+ *
+ * `multiple` is which line of the comb to lay down. It is there because the comb
+ * is not one line: on the MODX8 a C4 shows the 1× and a C5 the 2×, and the chip
+ * flickering between them was #19. Call it twice to put down both.
  */
-export function withComb(mono: Float32Array, startFrame = 0, amplitude = 1.25e-4): Float32Array {
+export function withComb(
+  mono: Float32Array,
+  startFrame = 0,
+  amplitude = 1.25e-4,
+  multiple = 1,
+): Float32Array {
   const both = Float32Array.from(mono);
+  const hz = ARTEFACT_HZ * multiple;
   for (let index = 0; index < both.length; index += 1) {
-    both[index] +=
-      amplitude * Math.sin((2 * Math.PI * ARTEFACT_HZ * (startFrame + index)) / SAMPLE_RATE);
+    both[index] += amplitude * Math.sin((2 * Math.PI * hz * (startFrame + index)) / SAMPLE_RATE);
   }
   return both;
 }

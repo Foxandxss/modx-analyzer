@@ -95,9 +95,6 @@ export class Header {
   /** The 2 200 ms after the Performance was changed underneath. */
   protected readonly justChanged = this.anchor.justChanged;
 
-  /** The name it had before, struck through beside the new one. */
-  protected readonly previousName = this.anchor.previousName;
-
   /**
    * The ancla's third state. After a change the header **does not go back to
    * rest**: it stays saying that this sound has not been measured, because the

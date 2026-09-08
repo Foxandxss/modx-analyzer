@@ -218,7 +218,6 @@
   --anchor-eyebrow: var(--ink-inert);
   --anchor-changed-border: var(--modulator);
   --anchor-changed-bg: oklch(.79 .14 235 / .1);
-  --anchor-old-ink: var(--ink-inert);          /* el nombre viejo, tachado al lado */
   --anchor-flash: 2200ms;                       /* mismo destello que la escritura del tutor */
 
   /* Muerto ≠ caduco. Un valor muerto conserva su forma y pierde su cifra:

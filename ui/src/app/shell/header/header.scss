@@ -54,7 +54,14 @@
   flex-direction: column;
   justify-content: center;
   gap: 2px;
-  min-width: 160px;
+  /* Ranura fija, no un hueco que crece con el nombre.
+   *
+   * El MODX admite 20 caracteres y con los anchos —20 «W»— el nombre se metía
+   * debajo del chip `ALG` y de `FB` (#19). Una anchura fija más la elipsis de
+   * `.anchor__name` es lo que garantiza que el chip siga legible sea cual sea
+   * el nombre: la barra no se reordena nunca por lo que diga el ancla. */
+  flex: 0 0 264px;
+  min-width: 0;
   /* El destello vive en el borde y el fondo, nunca en la opacidad: el nombre
      nuevo es una cifra viva y bajarle la tinta lo diría muerto. Padding e
      `inset` constantes para que el estado no mueva nada de la barra. */
@@ -74,23 +81,23 @@
   font-size: var(--text-micro);
   letter-spacing: var(--tracking-eyebrow);
   color: var(--anchor-eyebrow);
+  /* Sin esto la procedencia se partía en dos líneas y empujaba
+     `SIN MEDIR EN ESTE SONIDO` fuera de los 58 px de la barra (#19). */
+  white-space: nowrap;
 }
 
 .anchor__name {
   display: flex;
   align-items: baseline;
-  gap: var(--space-2);
-  font-size: 17px;
-  line-height: 1;
+  /* 14 px y no 17: los 20 caracteres del MODX caben en la ranura sin tocar el
+     chip `ALG`. La elipsis es el seguro —si algún día el nombre creciera, se
+     corta aquí dentro en vez de empujar la barra (#19). */
+  font-size: 14px;
+  line-height: 1.15;
   color: var(--anchor-ink);
   white-space: nowrap;
-}
-
-/* El nombre viejo, al lado y tachado. Se queda toda la sesión: es lo que
-   explica de dónde venían las cifras que ya no están. */
-.anchor__old {
-  font-size: var(--text-micro);
-  color: var(--anchor-old-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .anchor__unmeasured {

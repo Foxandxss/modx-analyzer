@@ -107,20 +107,29 @@
 
           <div class="node__level"><app-figure [value]="node.level" /></div>
 
+          <!-- Cada sello en la línea de lo que califica, y nunca dos en la
+               misma. El sello del nodo va aquí porque lo que se sondea es esto
+               —el Level, la ratio y la forma—, y TEORÍA va abajo porque lo
+               calculado es la frecuencia. Antes los dos caían en la misma
+               línea de base y se pisaban, y una tarjeta que decía TEORÍA y
+               SONDEADO a la vez no decía cuál calificaba a qué (#19). -->
           <div class="node__line">
-            <app-figure [value]="node.ratio" /> ·
-            <app-figure [value]="node.spectralForm" />
+            <span class="node__line-figures">
+              <app-figure [value]="node.ratio" /> ·
+              <app-figure [value]="node.spectralForm" />
+            </span>
+            <span class="node__stamp">{{ labels[node.stamp] }}</span>
           </div>
 
           <!-- La frecuencia real de la nota viva. Es TEORÍA y lo dice: el
                fundamental que mide el MODX no cae donde dice la fórmula. -->
           <div class="node__hz">
-            <app-figure [value]="node.hz" [unit]="' Hz'" />
+            <span class="node__hz-figure">
+              <app-figure [value]="node.hz" [unit]="' Hz'" />
+            </span>
             <span class="node__hz-stamp">{{ labels.theory }}</span>
           </div>
         </div>
-
-        <span class="node__stamp">{{ labels[node.stamp] }}</span>
       </div>
     }
   </div>
