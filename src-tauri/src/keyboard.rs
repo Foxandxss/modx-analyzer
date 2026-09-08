@@ -262,6 +262,15 @@ pub fn panic_keyboard(app: AppHandle) -> Result<PanicOutcome, String> {
 /// coming back a few seconds later, which is the truth rather than a spinner.
 #[tauri::command]
 pub fn retry_connection(app: AppHandle) -> Result<(), String> {
+    // Both halves, because on this hardware they are one cable: `MODX-1` and
+    // `Line (MODX)` go together and they come back together. Reopening only the
+    // MIDI half is what #22 caught — the card cleared, the diagram came back and
+    // the audio stayed dead for the rest of the process without saying so.
+    //
+    // The audio goes first and its failure is **not** fatal to the retry: a
+    // keyboard whose patch can be read again is worth having even if the device
+    // did not come back, and `Connection::set_audio(None)` says which happened.
+    crate::audio::reopen(&app);
     app.state::<Keyboard>()
         .reopen(&app)
         .map_err(|error| error.to_string())

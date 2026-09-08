@@ -26,7 +26,7 @@ import { Spectrum } from '../spectrum/spectrum';
     <section class="view">
       <div class="view__head">
         <h2 class="view__title">ESPECTRO</h2>
-        <span class="view__live">VIVO · {{ fps() }}</span>
+        <span class="view__live" [class.view__live--dead]="stopped()">{{ liveStamp() }}</span>
         @if (patchChanged()) {
           <span class="view__alive">ESTO NO HA MUERTO · ES AUDIO</span>
         }
@@ -43,7 +43,7 @@ import { Spectrum } from '../spectrum/spectrum';
     <section class="view">
       <div class="view__head">
         <h2 class="view__title">ARMÓNICOS</h2>
-        <span class="view__live">VIVO · {{ fps() }}</span>
+        <span class="view__live" [class.view__live--dead]="stopped()">{{ liveStamp() }}</span>
         @if (patchChanged()) {
           <span class="view__alive">ESTO NO HA MUERTO · ES AUDIO</span>
         }
@@ -77,6 +77,22 @@ export class SignalViews {
     const rate = this.audio.fps();
     return rate === null ? `${DEAD_MARK} fps` : `${rate.toFixed(1)} fps`;
   });
+
+  /** The device stopped delivering, so these panels are a still and not a view. */
+  protected readonly stopped = computed(() => this.audio.audioState() === 'gone');
+
+  /**
+   * `VIVO · N fps`, or the truth.
+   *
+   * «La vista viva nunca muere» was written on the premise that audio keeps
+   * arriving whatever happens to MIDI. On this hardware that premise is false —
+   * the two come down one USB cable — and a `VIVO` stamp over a stream that
+   * ended is the worst thing this screen can say (#22). What is on the canvas
+   * then is the last frame, held, and the stamp says so.
+   */
+  protected readonly liveStamp = computed(() =>
+    this.stopped() ? 'PARADO · SIN DISPOSITIVO' : `VIVO · ${this.fps()}`,
+  );
 
   protected readonly floor = computed(() => {
     const db = this.audio.floorDb();

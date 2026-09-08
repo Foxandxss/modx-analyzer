@@ -24,9 +24,11 @@ import { DEAD_MARK } from '../../provenance/provenance';
     <div class="dev">
       <span class="dev__label">PUENTE</span>
       <span>{{ line() }}</span>
-      @if (noAudio()) {
-        <span class="dev__alert">SIN AUDIO · CEROS EXACTOS</span>
+      @if (exactZeros()) {
+        <span class="dev__alert">CEROS EXACTOS</span>
       }
+      <span class="dev__label">AUDIO</span>
+      <span [class.dev__alert]="audioState() !== 'alive'">{{ audioState().toUpperCase() }}</span>
       <span class="dev__label">TRAMA</span>
       <span>{{ tramaLine() }}</span>
       <span class="dev__label">MEDIDA</span>
@@ -109,7 +111,9 @@ export class DevReadout {
   private readonly backend = inject(BACKEND_GATEWAY);
   private readonly clock = inject(Clock);
 
-  protected readonly noAudio = this.audio.noAudio;
+  /** The raw fact, and the dev strip is the one place it is drawn raw. */
+  protected readonly exactZeros = this.audio.exactZeros;
+  protected readonly audioState = this.audio.audioState;
 
   /**
    * How long the volcado took, which is the number #5 asks to be written down.

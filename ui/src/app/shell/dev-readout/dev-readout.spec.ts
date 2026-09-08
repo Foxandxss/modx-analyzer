@@ -85,14 +85,24 @@ describe('DevReadout', () => {
     expect(text).toMatch(/p99 \d+\.\d ms/);
   });
 
-  it('says «sin audio» only when Rust saw exact digital zeros for a second', async () => {
+  /**
+   * The dev strip is the one place the **raw** fact is drawn, separately from
+   * what it means: `CEROS EXACTOS` is what Rust saw in the samples, and `AUDIO`
+   * is the state that comes of combining it with the notes and with whether
+   * bloques are arriving at all. Before #21 the two were one word, and the word
+   * was wrong in both directions.
+   */
+  it('draws the exact-zeros flag apart from what it means', async () => {
     const { push, text } = await renderReadout();
 
     await push(fakeBlock({ sequence: 0, mono: new Float32Array(BLOCK_FRAMES) }));
-    expect(text()).not.toContain('SIN AUDIO');
+    expect(text()).not.toContain('CEROS EXACTOS');
+    expect(text()).toContain('ALIVE');
 
     await push(fakeBlock({ sequence: 1, silent: true }));
-    expect(text()).toContain('SIN AUDIO · CEROS EXACTOS');
+    expect(text()).toContain('CEROS EXACTOS');
+    // Zeros with nobody playing is the MODX idling, not a fault.
+    expect(text()).toContain('IDLE');
   });
 
   it('has the volcado on screen so its time can be written down', async () => {

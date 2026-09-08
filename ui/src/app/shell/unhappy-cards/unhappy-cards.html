@@ -1,8 +1,9 @@
-@if (disconnected() || noAudio()) {
+@if (disconnected() || audioGone() || noRoute()) {
   <div class="cards" role="status">
     @if (disconnected()) {
-      <!-- 1. Teclado no conectado. El audio sigue entrando: se puede mirar, no
-           se puede leer el patch. -->
+      <!-- 1. Teclado no conectado. Lo que se puede seguir haciendo depende de si
+           el audio sigue entrando, y en este teclado casi nunca sigue: `MODX-1` y
+           `Line (MODX)` bajan por el mismo cable USB (#22). -->
       <section class="card card--alert">
         <svg class="card__art" viewBox="0 0 120 70" aria-hidden="true">
           <rect x="4" y="18" width="46" height="34" rx="8" />
@@ -15,11 +16,16 @@
         <p class="card__body">
           @if (loss() === 'timeouts') {
             El puerto <span class="card__mono">MODX-1</span> está, pero el teclado no ha contestado
-            al ancla tres veces seguidas. El audio sigue entrando: puedes mirar, no puedes leer el
-            patch.
+            al ancla tres veces seguidas.
           } @else {
             El puerto <span class="card__mono">MODX-1</span> no está o lo tiene otra app abierta en
-            exclusiva. El audio sigue entrando: puedes mirar, no puedes leer el patch.
+            exclusiva.
+          }
+          @if (audioGone()) {
+            El audio se ha ido con él: <span class="card__mono">Line (MODX)</span> baja por el mismo
+            cable, así que no hay nada que mirar y no hay patch que leer.
+          } @else {
+            El audio sigue entrando: puedes mirar, no puedes leer el patch.
           }
         </p>
         <p class="card__diagnosis">DIAGRAMA CONGELADO · ÚLTIMO SONDEO {{ lastPoll() }}</p>
@@ -29,8 +35,30 @@
       </section>
     }
 
-    @if (noAudio()) {
-      <!-- 2. Sin audio entrando. No es silencio: son ceros digitales exactos. -->
+    @if (audioGone()) {
+      <!-- 2a. El dispositivo se ha ido: no llega ni un bloque. Es un hecho
+           distinto de los ceros exactos y por eso lo dice distinto (#22). -->
+      <section class="card card--carrier">
+        <svg class="card__art" viewBox="0 0 120 70" aria-hidden="true">
+          <path d="M0 40H44" />
+          <path class="card__art--gone" d="M76 40H120" />
+          <text x="60" y="28" text-anchor="middle">— — —</text>
+          <text class="card__art--small" x="60" y="60" text-anchor="middle">ni un bloque</text>
+        </svg>
+        <h2 class="card__title">El audio se ha ido</h2>
+        <p class="card__body">
+          No es que entren ceros: es que no entra nada. El dispositivo
+          <span class="card__mono">Line (MODX)</span> ha dejado de entregar, que es lo que pasa
+          cuando se va el cable USB. Las vistas de arriba están paradas, no vivas.
+        </p>
+        <p class="card__diagnosis">SIN BLOQUES · REINTENTAR REABRE LAS DOS MITADES</p>
+        <button type="button" class="card__action" [disabled]="retrying()" (click)="onRetry()">
+          {{ retrying() ? 'REINTENTANDO' : 'REINTENTAR' }}
+        </button>
+      </section>
+    } @else if (noRoute()) {
+      <!-- 2b. Entran bloques y son ceros exactos **con una nota pulsada**. Los
+           ceros solos no dicen nada: el MODX8 los manda cuando no suena (#21). -->
       <section class="card card--carrier">
         <svg class="card__art" viewBox="0 0 120 70" aria-hidden="true">
           <path d="M0 40H120" />
@@ -42,8 +70,9 @@
         </svg>
         <h2 class="card__title">Sin audio entrando</h2>
         <p class="card__body">
-          No es silencio: son ceros exactos, así que no hay cable ni ruta. Casi siempre es
-          <span class="card__mono">Part Output = USB1&amp;2</span>, que no existe fuera de ASIO.
+          Estás tocando y no entra nada: ceros exactos con una nota pulsada, así que no hay ruta.
+          Casi siempre es <span class="card__mono">Part Output = USB1&amp;2</span>, que no existe
+          fuera de ASIO.
         </p>
         <p class="card__diagnosis">SILENCIO REAL ≠ CABLE MAL PUESTO</p>
         <!-- La pantalla `4e` no existe en esta sesión, así que el botón se dibuja

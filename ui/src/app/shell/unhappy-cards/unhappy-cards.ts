@@ -57,7 +57,22 @@ export class UnhappyCards {
    */
   protected readonly disconnected = computed(() => this.loss() !== null);
 
-  protected readonly noAudio = this.audio.noAudio;
+  /**
+   * What the audio is doing, and the card hangs off the **reason** rather than
+   * off «no hay muestras» — the same rule card 1 already followed.
+   *
+   * Before #21 this was the raw silence flag, and the MODX8 sends exact zeros
+   * whenever its engine is idle: the card fired every time the owner stopped
+   * playing. A card that cries wolf that often is a card nobody believes the one
+   * time the route really is wrong.
+   */
+  protected readonly audioState = this.audio.audioState;
+
+  /** The audio is not arriving at all, which on this hardware means the cable. */
+  protected readonly audioGone = computed(() => this.audioState() === 'gone');
+
+  /** Exact zeros while the keyboard is holding a note: the route is wrong. */
+  protected readonly noRoute = computed(() => this.audioState() === 'noRoute');
 
   /**
    * `DIAGRAMA CONGELADO · ÚLTIMO SONDEO N s`, counted from the newest polled

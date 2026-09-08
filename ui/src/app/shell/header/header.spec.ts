@@ -365,6 +365,10 @@ describe('Header · el ancla', () => {
 
     // El destello se va solo a los 2 200 ms; la petición de medida no.
     TestBed.inject(Clock).now.set(performance.now() + ANCHOR_FLASH_MS);
+    // Y el audio sigue entrando mientras tanto, que es lo que pasa de verdad:
+    // adelantar el reloj 2 200 ms sin un bloque detrás sería un dispositivo que
+    // lleva dos segundos sin entregar, y entonces MEDIR se niega con razón (#22).
+    await hold(261.626, 2);
     await settle();
     expect(anchor().classList.contains('anchor--changed')).toBe(false);
     expect(anchor().textContent).toContain('SIN MEDIR EN ESTE SONIDO');

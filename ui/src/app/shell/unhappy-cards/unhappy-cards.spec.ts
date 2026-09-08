@@ -34,6 +34,17 @@ async function renderCards() {
       backend.portLost(loss);
       await fixture.whenStable();
     },
+    /**
+     * The keyboard is holding something, for long enough that the card is
+     * allowed to believe it. Striking a key and looking in the same millisecond
+     * is the case the dwell exists to refuse.
+     */
+    async playing() {
+      backend.liveNotes.set(1);
+      await fixture.whenStable();
+      TestBed.inject(Clock).now.set(performance.now() + 1_500);
+      await fixture.whenStable();
+    },
     /** Bloques of exact digital zeros, flagged by the native side as such. */
     async silence(blocks: number) {
       for (let sequence = 0; sequence < blocks; sequence += 1) {
@@ -158,15 +169,32 @@ describe('UnhappyCards · sin audio entrando', () => {
     expect(cards()).toBe(0);
   });
 
-  it('aparece cuando el lado nativo dice que son ceros exactos', async () => {
-    const { backend, silence, text, cards } = await renderCards();
+  /**
+   * Ceros **con una nota pulsada**. The zeros on their own are not news: the
+   * MODX8 sends exact digital zeros whenever its engine is idle, measured on
+   * 2026-09-08 (#21), so the card used to fire every time the owner stopped
+   * playing. What makes them a fault is that something should be sounding.
+   */
+  it('aparece cuando hay ceros exactos y el teclado está tocando', async () => {
+    const { backend, silence, playing, text, cards } = await renderCards();
     backend.portFound();
 
+    await playing();
     await silence(1);
 
     expect(cards()).toBe(1);
     expect(text()).toContain('SILENCIO REAL ≠ CABLE MAL PUESTO');
     expect(text()).toContain('Sin audio entrando');
+  });
+
+  /** The bug #21 was filed for, pinned so it cannot come back. */
+  it('NO aparece por ceros exactos con el teclado callado', async () => {
+    const { backend, silence, cards } = await renderCards();
+    backend.portFound();
+
+    await silence(40);
+
+    expect(cards()).toBe(0);
   });
 
   /**
@@ -191,8 +219,9 @@ describe('UnhappyCards · sin audio entrando', () => {
   });
 
   it('el botón a la pantalla que no existe se dibuja y no se pulsa', async () => {
-    const { backend, silence, host } = await renderCards();
+    const { backend, silence, playing, host } = await renderCards();
     backend.portFound();
+    await playing();
     await silence(1);
 
     const action = host.querySelector<HTMLButtonElement>('.card--carrier .card__action')!;
@@ -203,9 +232,10 @@ describe('UnhappyCards · sin audio entrando', () => {
 
 describe('UnhappyCards · las dos a la vez', () => {
   it('dibuja las dos sin taparse', async () => {
-    const { lose, silence, cards } = await renderCards();
+    const { lose, silence, playing, cards } = await renderCards();
 
     await lose('timeouts');
+    await playing();
     await silence(1);
 
     expect(cards()).toBe(2);

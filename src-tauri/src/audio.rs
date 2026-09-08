@@ -51,6 +51,35 @@ impl Audio {
 /// Failing is not fatal and never has been: the screen opens either way, the
 /// header's audio line stays a dash, and the pánico — which is the only thing that
 /// must always work — does not go through here.
+/// Throw `Line (MODX)` away and open it again, for `REINTENTAR`.
+///
+/// The device dies with the USB cable — `MODX-1` and `Line (MODX)` come down the
+/// same one — and until #22 nothing ever reopened it: `start` ran once at setup
+/// and `retry_connection` reopened only the MIDI port, so the audio stayed dead
+/// for the life of the process while the button said it had retried.
+///
+/// The old `Capture` is dropped **before** the new one is opened, and that order
+/// is the whole of it: its `Drop` stops the audio thread and releases the device,
+/// and ASIO will not hand the same device to a second stream. The subscribers are
+/// not touched — the front's channel outlives the device it was listening to, so
+/// bloques start arriving again on the same pipe.
+pub fn reopen(app: &AppHandle) {
+    let audio = app.state::<Audio>();
+    let closed = audio
+        .capture
+        .lock()
+        .expect("the capture lock is not held across a panic")
+        .take();
+    if closed.is_some() {
+        // Dropped here, with the lock already released: `Capture::drop` joins the
+        // audio thread, and joining it while holding the lock the forwarder may
+        // want is how a deadlock gets written by accident.
+        drop(closed);
+        log::info!("Line (MODX): cerrado para reabrir");
+    }
+    start(app);
+}
+
 pub fn start(app: &AppHandle) {
     match Capture::open() {
         Ok((capture, blocks)) => {

@@ -6,9 +6,11 @@ import {
   effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { LiveTrama, MEASURE_WINDOW, Medida, NO_TRAMA, WATERFALL_FRAMES } from 'modx-dsp';
 import { BACKEND_GATEWAY } from '../backend/backend-gateway';
+import { Clock } from '../provenance/clock';
 import { equalTemperamentHz } from '../provenance/theory';
 import { BridgeStats } from './bridge';
 import { FrameMessage, MedidaMessage, WorkerMessage } from './audio.worker';
@@ -114,9 +116,39 @@ export interface MedidaView {
 /** How often the readout signals are allowed to move: four times a second. */
 const READOUT_EVERY = 8;
 
+/**
+ * No bloque for this long and the device is gone, not slow.
+ *
+ * Bloques arrive every 30 ms, so this is thirty-three of them missed. The margin
+ * is deliberate: the launch burst of #23 has delivered a bloque **379 ms** late
+ * with nothing lost, and a threshold that called that a disconnection would put a
+ * card over a working device once per launch.
+ */
+const DEVICE_GONE_MS = 1_000;
+
+/**
+ * What the audio is doing. Four states, because «no entra audio» turned out to be
+ * three different facts wearing one name (#21, #22).
+ *
+ * - `alive` — bloques arriving with something in them.
+ * - `idle` — bloques arriving and every sample is an exact zero, with nobody
+ *   playing. **This is the MODX8 not sounding**, measured on 2026-09-08: the
+ *   keyboard delivers exact digital zeros when its engine is idle, so zeros on
+ *   their own say nothing about the cable. No card: it would fire every time the
+ *   owner stopped playing, which while learning is constantly.
+ * - `noRoute` — exact zeros **while the keyboard is holding a note**. That
+ *   combination is unambiguous: something should be sounding and nothing is
+ *   arriving, so the route is wrong (`Part Output = USB1&2`).
+ * - `gone` — no bloque at all for {@link DEVICE_GONE_MS}. The device has been
+ *   taken away, which on this hardware happens every time the USB cable is
+ *   pulled, because `MODX-1` and `Line (MODX)` come down the same cable.
+ */
+export type AudioState = 'alive' | 'idle' | 'noRoute' | 'gone';
+
 @Injectable({ providedIn: 'root' })
 export class AudioService {
   private readonly backend = inject(BACKEND_GATEWAY);
+  private readonly clock = inject(Clock);
   private readonly makeWorker = inject(AUDIO_WORKER);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -139,8 +171,64 @@ export class AudioService {
   /** The comb line the chip names, or `null` when the comb is not in this sound. */
   readonly artefactHz = signal<number | null>(null);
 
-  /** Tramas a second, measured. What `MIRAR · N fps` says, and never a constant. */
-  readonly fps = signal<number | null>(null);
+  /** What the readout tick measured. {@link fps} is this, once it is believable. */
+  private readonly measuredFps = signal<number | null>(null);
+
+  /**
+   * Tramas a second, measured — and `null` the moment the device goes.
+   *
+   * It has to be `null` and not the last number, because a frozen cadence is the
+   * app's worst lie: `MIRAR · 33.4 fps` over a stream that ended is a figure that
+   * looks measured and is a memory. Everything downstream reads correctly off
+   * this one change — `MIRAR` goes to the dash, `MEDIR` refuses (there is nothing
+   * to measure), and the live panels drop their `VIVO`.
+   */
+  readonly fps = computed(() => (this.audioState() === 'gone' ? null : this.measuredFps()));
+
+  /** When the last bloque arrived, on this side's clock. `null` before the first. */
+  private readonly lastBlockAt = signal<number | null>(null);
+
+  /** Since when the keyboard has been holding something, or `null` if it is not. */
+  private readonly notesLiveSince = signal<number | null>(null);
+
+  /**
+   * What the audio is doing: see {@link AudioState}.
+   *
+   * It is computed **here and once**, from the three facts that live in three
+   * different places — the silence flag decided in Rust, the arrival of bloques
+   * known only to this side, and the notes the keyboard reports. Before #21 and
+   * #22 the first of those was asked to answer for all three, and it fired when
+   * the MODX was merely idle while staying silent when the device was gone.
+   *
+   * The age of the last bloque is computed here for the same reason
+   * `ÚLTIMO SONDEO` is: with the device gone **nothing is emitted**, so an age
+   * sent from the other side would freeze at the instant it left.
+   */
+  readonly audioState = computed<AudioState>(() => {
+    const arrived = this.lastBlockAt();
+    // **Nothing has arrived yet is not «gone».** `gone` means it was delivering
+    // and stopped, which is the fact #22 is about; before the first bloque the
+    // app has not looked, and the same rule that keeps card 1 off the screen
+    // during the frames before the first `modx://connection` keeps this quiet.
+    // A device that never opened at all is the header's `Line (MODX)` showing
+    // the dash, and that is already said elsewhere.
+    if (arrived === null) {
+      return 'idle';
+    }
+    if (this.clock.now() - arrived > DEVICE_GONE_MS) {
+      return 'gone';
+    }
+    if (!this.stats().silent) {
+      return 'alive';
+    }
+    // Zeros, and the keyboard is holding something — but only once it has been
+    // holding it for longer than the silence run itself. Without that dwell,
+    // striking a key would flash the card for the few milliseconds between the
+    // Note On and the first sample of the sound arriving.
+    const since = this.notesLiveSince();
+    const playing = since !== null && this.clock.now() - since >= DEVICE_GONE_MS;
+    return playing ? 'noRoute' : 'idle';
+  });
 
   /** Whether the vista viva has anything to draw: a note, and a curve for it. */
   readonly drawing = signal(false);
@@ -149,10 +237,14 @@ export class AudioService {
   readonly stats = signal<BridgeStats>(NO_STATS);
 
   /**
-   * No entra audio: exact digital zeros for a second, decided in Rust. The card
-   * that says so out loud is #15; this is the fact it will hang off.
+   * Exact digital zeros for a second, decided in Rust. It is a fact about the
+   * samples and nothing more.
+   *
+   * **It is not «no entra audio»** and it stopped being drawn as such in #21: the
+   * MODX8 sends exact zeros whenever its engine is idle, so on its own this is
+   * true every time nobody is playing. What it means is {@link audioState}.
    */
-  readonly noAudio = computed(() => this.stats().silent);
+  readonly exactZeros = computed(() => this.stats().silent);
 
   /**
    * The last medida, or `null` when there is none. **Nothing sets this but a
@@ -198,6 +290,21 @@ export class AudioService {
     effect(() => {
       const pitch = this.backend.lowestLivePitch();
       this.postNote(pitch === null ? null : equalTemperamentHz(pitch));
+    });
+
+    // Since when the keyboard has been holding something. It is a **since** and
+    // not a boolean because the card that reads it needs the note to have been
+    // down for longer than the silence run: otherwise striking a key flashes it
+    // for the milliseconds between the Note On and the first sample arriving.
+    effect(() => {
+      const live = this.backend.liveNotes() > 0;
+      untracked(() => {
+        if (!live) {
+          this.notesLiveSince.set(null);
+        } else if (this.notesLiveSince() === null) {
+          this.notesLiveSince.set(this.clock.now());
+        }
+      });
     });
 
     // The medida dies with the patch it was taken on, and it is **not**
@@ -323,6 +430,9 @@ export class AudioService {
     // The rate is counted from the first bloque, so the first readout already
     // has an interval to divide by instead of a dash for a second.
     this.readoutAt ??= performance.now();
+    // Every bloque, not every readout: what says the device is still there is
+    // that something arrived, and the readout only moves four times a second.
+    this.lastBlockAt.set(this.clock.now());
 
     this.live.trace = frame.trace;
     this.live.trama = frame.trama;
@@ -365,7 +475,9 @@ export class AudioService {
     const now = performance.now();
     if (this.readoutAt !== null) {
       const seconds = (now - this.readoutAt) / 1000;
-      this.fps.set(seconds > 0 ? Math.round((this.sinceReadout / seconds) * 10) / 10 : null);
+      this.measuredFps.set(
+        seconds > 0 ? Math.round((this.sinceReadout / seconds) * 10) / 10 : null,
+      );
     }
     this.readoutAt = now;
     this.sinceReadout = 0;
