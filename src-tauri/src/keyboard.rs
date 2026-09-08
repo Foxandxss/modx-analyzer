@@ -99,11 +99,26 @@ impl Keyboard {
 
     /// `REINTENTAR`: throw the port away, enumerate again and open what is there.
     ///
-    /// Reopening rather than reusing is the whole point. A `midir` connection to a
-    /// port that has been unplugged does not heal when the cable goes back in —
+    /// This was written on the assumption that a `midir` connection to a port
+    /// that has been unplugged **does not heal** when the cable goes back in —
     /// the handle stays, the reads keep timing out, and nothing in the app can
     /// tell that from a keyboard that has stopped answering. So the handle goes
     /// first and the enumeration decides what comes back.
+    ///
+    /// **That assumption is contradicted by measurement** (2026-09-08, #15). On
+    /// the target machine the cable was pulled — sends failed with
+    /// `OutPrepareHeader`, the card appeared by the enumeration road in 3 s —
+    /// and on plugging it back in the app read the patch again **without anybody
+    /// pressing this button**. Nothing here reopens on its own: `connect` runs
+    /// once at startup and the ancla's watchdog only writes the link state. So
+    /// the original handle healed, in both directions.
+    ///
+    /// It is kept, and kept as the button's whole action, for two reasons that
+    /// survive the correction: healing once is not healing always, and a port
+    /// taken by another app in exclusive mode is a different failure that only
+    /// re-enumeration can clear. What is no longer true is that reopening is the
+    /// *only* way back, and the button has never been pressed against real
+    /// hardware — the one path here that a keyboard session has not exercised.
     ///
     /// It writes the link state itself, both ways, because a `REINTENTAR` that
     /// failed has to *say* it failed: waiting for the ancla's next beat would
