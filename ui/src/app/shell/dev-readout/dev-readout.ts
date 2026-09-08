@@ -53,8 +53,17 @@ import { DEAD_MARK } from '../../provenance/provenance';
     </div>
   `,
   styles: `
+    /* It wraps, and the buttons are what must never be pushed out.
+     *
+     * A flex item defaults to min-width auto and refuses to shrink below its own
+     * text, so one long unbroken string — an exported file's path — made this row
+     * wider than the window and carried EXPORTAR off the right edge with it.
+     * Exactly what happened to the pánico in the header, twice in one session, so
+     * the rule is written down here too: what is read yields, what is pressed
+     * does not. */
     .dev {
       display: flex;
+      flex-wrap: wrap;
       align-items: baseline;
       gap: var(--space-3);
       padding: 5px 18px;
@@ -64,6 +73,13 @@ import { DEAD_MARK } from '../../provenance/provenance';
       font-size: var(--text-micro);
       letter-spacing: 0.08em;
       color: var(--ink-inert);
+    }
+    .dev > span {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .dev > button {
+      flex: 0 0 auto;
     }
     .dev__label {
       color: var(--ink-tertiary);
@@ -240,10 +256,22 @@ export class DevReadout {
   /** Where the last window went, so the two paths can be copied in one pass. */
   private readonly exported = signal<string | null>(null);
 
+  /**
+   * The state, and the **file name** of the last export rather than its path.
+   *
+   * The folder is the same for every window and is already on screen under
+   * `VOLCADO`; the name is the half that identifies which of the two this was,
+   * because the native side puts the polling state in it. Printing the whole path
+   * made this row wider than the window and pushed `EXPORTAR` out of reach.
+   */
   protected readonly pollingLine = computed(() => {
     const where = this.exported();
     const state = this.paused() ? 'PARADO · EL ANCLA NO MIRA' : 'CORRIENDO';
-    return where === null ? state : `${state} · ${where}`;
+    if (where === null) {
+      return state;
+    }
+    const name = where.split(/[\\/]/).pop() ?? where;
+    return `${state} · ${name}`;
   });
 
   protected togglePolling(): void {

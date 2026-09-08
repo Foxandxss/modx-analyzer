@@ -174,10 +174,19 @@ pub fn export_window(app: AppHandle, samples: u32) -> Result<String, String> {
     };
     let folder = crate::dumps::folder(&app)?.join("medidas");
     std::fs::create_dir_all(&folder).map_err(|error| error.to_string())?;
-    let path = folder.join(format!(
-        "{}-{label}-{wanted}.f32",
-        chrono::Local::now().format("%Y-%m-%d_%H%M%S")
-    ));
+
+    // The stamp has one-second resolution, so two exports inside the same second
+    // and the same polling state would land on one name and the first window
+    // would be gone without anybody being told. A measurement that quietly
+    // overwrote half of itself is worse than one that refuses.
+    let stamp = chrono::Local::now().format("%Y-%m-%d_%H%M%S");
+    let mut path = folder.join(format!("{stamp}-{label}-{wanted}.f32"));
+    for again in 2.. {
+        if !path.exists() {
+            break;
+        }
+        path = folder.join(format!("{stamp}-{label}-{wanted}-{again}.f32"));
+    }
 
     std::fs::write(&path, encode_mono(&taken)).map_err(|error| error.to_string())?;
     log::info!("medida exportada: {}", path.display());
