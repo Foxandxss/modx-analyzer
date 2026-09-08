@@ -234,19 +234,32 @@ impl Entry {
 /// The 31 offsets the spike's map named are `medido`, plus the five-byte
 /// Controller Set block it read back; the rest is the Data List.
 ///
-/// **Every `medido` here was measured at `part = 1`.** A grade belongs to an
-/// entry and not to a Part, so nothing in this block says anything about where
-/// the same parameter lives on a Part 2: that is the addressing rule
-/// ([`Layout::Operator`]), and it is swept rather than assumed ([`crate::sweep`]).
+/// **Every `medido` here was measured at `part = 1`**, and a grade belongs to an
+/// entry rather than to a Part. What carries an entry across to another Part is
+/// the addressing rule ([`Layout::Operator`]), and **that rule is now measured at
+/// `part = 2` as well**: on 2026-09-08 (#16), with a two-Part FM-X Performance
+/// loaded, `Operator Level` of Part 2's Op1 was moved from 0 to 20 on the panel
+/// and the sweep found it at `49 01 1A`, alone — one offset, the predicted one,
+/// the value that was dialled. The rule holds for the two Parts this session
+/// promotes, and says nothing about the other fourteen.
 ///
-/// **Where the sources disagree**: the Data List gives `2A` as five reserved bytes,
-/// which leaves 39 offsets answering in this block. The fase 0c blind sweep counted
-/// 43 answering and lists `2B`-`2E` among the ones it could not identify, while the
-/// same document also says it saw `2B`-`2E` silent and consumed by `2A`.
-/// Transcribed as the Data List has it, because it is the more specific source and
-/// because treating four unknown offsets as reserved is the safe side of the
-/// mistake. Closing it needs the keyboard; until then a relectura of this block is
-/// 39 offsets per operator, not 43.
+/// **Where the sources disagreed, and how it came out.** The Data List gives `2A`
+/// as five reserved bytes, which leaves 39 **entries** in this block; the fase 0c
+/// blind sweep counted 43 **answering** and said it saw `2B`-`2E` silent and
+/// consumed by `2A`. The sweep of 2026-09-08 gives **43 of 47**, and which four
+/// were silent settles all of it:
+///
+/// - **`26`-`29` are the silent four.** They are bytes 2 to 5 of `25`, the
+///   five-byte `Controller Set 1-16 Element Switch`. A multibyte **parameter**
+///   answers its whole field from its first address and its tail says nothing,
+///   which is exactly what the relectura already assumed.
+/// - **`2B`-`2E` all answered**, with zero. Five reserved bytes are not one
+///   five-byte field: they are five one-byte holes and each answers on its own.
+///
+/// So both counts were right about different questions — 39 entries, 43 answering
+/// addresses — and fase 0c had the right number with the wrong four offsets. **A
+/// relectura of this block stays 39 per operator**: the four extra addresses that
+/// answer are reserved bytes, and asking for one is not asking for a parameter.
 pub static OPERATOR: Block = Block {
     ah: AH_OPERATOR,
     name: "FM PART OPERATOR",

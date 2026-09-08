@@ -272,24 +272,40 @@ mod tests {
         assert!(swept.offsets.iter().all(|offset| offset.value().is_none()));
     }
 
-    /// The fake answers where the table has an entry, so what it counts is the
-    /// Data List's 39 and not the fase 0c sweep's 43. The four offsets the two
-    /// sources disagree about — `2B`-`2E` — are among the ones it leaves silent,
-    /// which is what makes this sweep worth taking with the keyboard in front of
-    /// you: on the MODX this number is expected to be different.
+    /// **43 of 47, and the four silent ones are the tail of a parameter.**
+    ///
+    /// Measured on the MODX8 on 2026-09-08 (#16) and pinned here, because it is
+    /// the answer to contradiction 1 of #6 and the fake now has to behave like
+    /// the keyboard rather than like the Data List's parameter count:
+    ///
+    /// - `26`-`29` are silent. They are bytes 2 to 5 of `25`, the five-byte
+    ///   `Controller Set 1-16 Element Switch`, and a multibyte parameter answers
+    ///   its whole field from its first address.
+    /// - `2B`-`2E` answer, with zero. They are not the tail of anything: `2A` is
+    ///   five reserved **bytes**, which the Data List prints as one row and the
+    ///   keyboard treats as five holes.
+    ///
+    /// So the fase 0c blind sweep's count of 43 was right and its note that it
+    /// saw `2B`-`2E` «silent and consumed by `2A`» was wrong — it had the right
+    /// number and the wrong four offsets.
     #[test]
-    fn against_the_fake_the_count_is_the_data_lists_and_not_the_spikes() {
+    fn the_block_answers_at_43_of_its_47_and_the_silent_four_are_a_parameters_tail() {
         let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
 
         let swept = sweep(&mut owner, 1, 1);
 
-        assert_eq!(swept.answered(), 39);
-        for al in [0x2B, 0x2C, 0x2D, 0x2E] {
-            let offset = &swept.offsets[al];
-            assert!(!offset.answered(), "the fake answered at {al:02X}");
+        assert_eq!(swept.answered(), 43);
+
+        for al in [0x26, 0x27, 0x28, 0x29] {
             assert!(
-                offset.entry().is_some(),
-                "the table leaves {al:02X} to the reserved five bytes at 2A"
+                !swept.offsets[al].answered(),
+                "{al:02X} is the tail of the five-byte 25 and answers nowhere"
+            );
+        }
+        for al in [0x2B, 0x2C, 0x2D, 0x2E] {
+            assert!(
+                swept.offsets[al].answered(),
+                "{al:02X} is one of the five reserved bytes at 2A and answers on its own"
             );
         }
     }

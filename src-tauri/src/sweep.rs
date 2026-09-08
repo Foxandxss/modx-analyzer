@@ -339,16 +339,33 @@ mod tests {
         assert_eq!(level.value, Some(0));
     }
 
-    /// The four offsets the two sources disagree about reach the screen as offsets
-    /// that did not answer and as bytes the Data List has down as reserved. What
-    /// the MODX says here is the whole reason the sweep exists.
+    /// The four the MODX8 leaves silent reach the screen as the dash and not as a
+    /// zero — `26`-`29`, measured on 2026-09-08 (#16). They are bytes 2 to 5 of
+    /// the five-byte `Controller Set 1-16 Element Switch` at `25`, so they are
+    /// **not** reserved and they are **not** an entry of their own: a multibyte
+    /// parameter answers its whole field from its first address, and its tail is
+    /// a gap in the table because it is a gap on the keyboard.
     #[test]
     fn an_offset_that_did_not_answer_carries_the_dash_and_not_a_zero() {
         let view = swept(2, 3, &[]);
 
-        for al in [0x2B, 0x2C, 0x2D, 0x2E] {
+        for al in [0x26, 0x27, 0x28, 0x29] {
             let offset = &view.offsets[al];
             assert_eq!(offset.value, None, "at {al:02X}");
+            assert!(!offset.reserved, "at {al:02X}");
+            assert_eq!(
+                offset.name,
+                Some("Controller Set 1-16 Element Switch"),
+                "the tail carries the name of the field it belongs to, so the dash \
+                 reads as «this parameter answered at 25» and not as a hole"
+            );
+        }
+
+        // And the other four the sources argued about are the opposite case: five
+        // reserved bytes are five one-byte holes, and every one of them answers.
+        for al in [0x2B, 0x2C, 0x2D, 0x2E] {
+            let offset = &view.offsets[al];
+            assert_eq!(offset.value, Some(0), "at {al:02X}");
             assert!(offset.reserved, "at {al:02X}");
             assert_eq!(
                 offset.name, None,

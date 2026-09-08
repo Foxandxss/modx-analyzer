@@ -233,6 +233,24 @@ impl FakeModx {
     }
 
     /// One entry of a block, at its documented default or at zero.
+    ///
+    /// **A multibyte entry answers where the keyboard answers, and the two kinds
+    /// do not answer alike.** Swept on the MODX8 on 2026-09-08 (#16), the
+    /// operator block gave 43 of its 47 offsets, and which four were silent says
+    /// what the shape is:
+    ///
+    /// - A multibyte **parameter** answers its whole field from its first
+    ///   address and its tail bytes say nothing. `49 op 25` is the five-byte
+    ///   `Controller Set 1-16 Element Switch`, and `26`-`29` were the only four
+    ///   offsets of the whole block that came back empty.
+    /// - Multibyte **reserved** is not one field, it is that many one-byte holes,
+    ///   and each answers on its own. `49 op 2A` is five reserved bytes and
+    ///   `2B`-`2E` all answered, with zero.
+    ///
+    /// So the tail of a reserved run is loaded and the tail of a parameter is
+    /// not. A fake that answered at both would have made the sweep's count agree
+    /// with itself whatever the keyboard said, which is the whole thing #16 was
+    /// there to find out.
     pub fn load_entry(
         &mut self,
         block: &'static table::Block,
@@ -248,6 +266,13 @@ impl FakeModx {
         match entry.range {
             Some((_, high)) => self.put_max(address, &data, high),
             None => self.put(address, &data),
+        }
+
+        if entry.is_reserved() {
+            for offset in 1..entry.length {
+                let tail = block.address(entry.al + offset, part, operator);
+                self.put(tail, &[0x00]);
+            }
         }
     }
 
