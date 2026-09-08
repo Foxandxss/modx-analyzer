@@ -28,6 +28,7 @@ use modx_midi::table::Provenance;
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::keyboard::Keyboard;
+use crate::polling::Polling;
 
 /// The header's facts.
 const EVENT_PATCH: &str = "modx://patch";
@@ -336,6 +337,15 @@ fn run(app: &AppHandle) {
             generation = now;
             ring.forget();
             publish(app, &ring);
+        }
+
+        // #14's pause. The figures already on screen age to `CADUCO` by
+        // themselves while it lasts, which is what the stamps are for and is the
+        // same thing that happens with no port: this loop not asking looks exactly
+        // like a keyboard not answering, and both are drawn honestly.
+        if Polling::is_paused(app) {
+            std::thread::sleep(NO_PORT_PATIENCE);
+            continue;
         }
 
         let Some(owner) = app.state::<Keyboard>().owner() else {

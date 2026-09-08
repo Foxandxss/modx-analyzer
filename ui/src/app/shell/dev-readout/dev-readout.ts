@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { MEASURE_WINDOW } from 'modx-dsp';
 import { AudioService } from '../../audio/audio-service';
 import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
 import { Clock } from '../../provenance/clock';
@@ -40,6 +41,14 @@ import { DEAD_MARK } from '../../provenance/provenance';
       <span [class.dev__alert]="starved()">{{ generatorLine() }}</span>
       <button type="button" class="dev__button" (click)="toggleGenerator()">
         {{ generator().running ? 'PARAR' : 'NOTAS DENSAS' }}
+      </button>
+      <span class="dev__label">SONDEO</span>
+      <span [class.dev__alert]="paused()">{{ pollingLine() }}</span>
+      <button type="button" class="dev__button" (click)="togglePolling()">
+        {{ paused() ? 'SONDEAR' : 'PARAR SONDEO' }}
+      </button>
+      <button type="button" class="dev__button" [disabled]="exporting()" (click)="exportWindow()">
+        EXPORTAR
       </button>
     </div>
   `,
@@ -212,6 +221,52 @@ export class DevReadout {
    */
   protected toggleGenerator(): void {
     void (this.generator().running ? this.backend.stopGenerator() : this.backend.startGenerator());
+  }
+
+  /**
+   * #14's control: stop the ancla and the anillo ancho, take a window, compare.
+   *
+   * It is drawn in alert while paused and it says what that costs in the same
+   * breath, because a paused app is an app that **cannot see a Performance
+   * change** — the ancla is one of the two loops this stops. Everything on the
+   * diagram ages to `CADUCO` on its own meanwhile, which is honest; the name in
+   * the header is the one thing that would go on saying a sound that is no
+   * longer loaded, and nothing on screen could tell.
+   */
+  protected readonly paused = computed(() => this.backend.polling().paused);
+
+  protected readonly exporting = signal(false);
+
+  /** Where the last window went, so the two paths can be copied in one pass. */
+  private readonly exported = signal<string | null>(null);
+
+  protected readonly pollingLine = computed(() => {
+    const where = this.exported();
+    const state = this.paused() ? 'PARADO · EL ANCLA NO MIRA' : 'CORRIENDO';
+    return where === null ? state : `${state} · ${where}`;
+  });
+
+  protected togglePolling(): void {
+    void this.backend.setPolling(!this.paused());
+  }
+
+  /**
+   * Write the window the medida would analyse, labelled by the native side.
+   *
+   * The label is **not** passed from here: it comes off the polling flag in
+   * Rust, so the two files cannot be swapped by a race between this click and
+   * the button that toggles the pause.
+   */
+  protected exportWindow(): void {
+    if (this.exporting()) {
+      return;
+    }
+    this.exporting.set(true);
+    void this.backend
+      .exportWindow(MEASURE_WINDOW)
+      .then((path) => this.exported.set(path))
+      .catch((error: unknown) => this.exported.set(`${DEAD_MARK} ${String(error)}`))
+      .finally(() => this.exporting.set(false));
   }
 
   protected readonly line = computed(() => {

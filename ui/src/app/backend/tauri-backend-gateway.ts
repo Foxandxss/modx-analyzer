@@ -19,6 +19,8 @@ import {
   Topology,
   invalidated,
   noGenerator,
+  noPolling,
+  PollingView,
   noOperators,
   noPatch,
   sameTopology,
@@ -143,6 +145,9 @@ export class TauriBackendGateway implements BackendGateway {
 
   readonly generator = signal<GeneratorView>(noGenerator());
 
+  /** #14's pause. Asked for at startup as well as listened to, like the rest. */
+  readonly polling = signal<PollingView>(noPolling());
+
   /** No barrido asked for yet. It is one press and it is never asked for twice. */
   readonly sweep = signal<SweepView | null>(null);
 
@@ -169,6 +174,7 @@ export class TauriBackendGateway implements BackendGateway {
     this.listenInto('modx://reread', this.reread);
     this.listenInto('modx://dump', this.dump);
     this.listenInto('modx://generator', this.generator);
+    this.listenInto('modx://polling', this.polling);
     this.listenInto('modx://sweep', this.sweep);
 
     // The three the anillo ancho feeds. Each arrives with ages rather than
@@ -197,6 +203,7 @@ export class TauriBackendGateway implements BackendGateway {
     // And for the same reason: a window reloaded in the middle of a ten-minute
     // run would otherwise say `PARADO` while the app is playing the keyboard.
     void invoke<GeneratorView>('generator_state').then((state) => this.generator.set(state));
+    void invoke<PollingView>('polling_state').then((state) => this.polling.set(state));
   }
 
   appInfo(): Promise<AppInfo> {
@@ -222,6 +229,16 @@ export class TauriBackendGateway implements BackendGateway {
     // The command joins the thread before it answers, so this resolving is the
     // keys being up and not the request having been filed.
     return invoke<void>('stop_generator');
+  }
+
+  setPolling(paused: boolean): Promise<void> {
+    // Not written here: the native side emits `modx://polling` either way, and
+    // the button is drawn off that event. One writer, like the connection.
+    return invoke<void>('set_polling', { paused });
+  }
+
+  exportWindow(samples: number): Promise<string> {
+    return invoke<string>('export_window', { samples });
   }
 
   sweepOperator(part: number, operator: number): Promise<void> {

@@ -127,6 +127,28 @@ export interface BackendGateway {
   stopGenerator(): Promise<void>;
 
   /**
+   * Whether the ancla and the anillo ancho are asking for anything.
+   *
+   * #14's instrument, and the only control in the app that makes it stop
+   * knowing things on purpose: with this on, nothing notices a Performance
+   * change. It exists so the same held note can be measured twice, once with
+   * the polling running and once without.
+   */
+  readonly polling: Signal<PollingView>;
+
+  /** Stop or resume the two polling loops. */
+  setPolling(paused: boolean): Promise<void>;
+
+  /**
+   * Write one window of the audio ring to disk and answer where it went.
+   *
+   * The **label is chosen by the native side** from the polling flag, not by
+   * this caller: filing a polled window as an unpolled one is the one mistake
+   * that would quietly ruin #14's comparison.
+   */
+  exportWindow(samples: number): Promise<string>;
+
+  /**
    * Ask every offset of one operator of one Part, one at a time, and write
    * nothing.
    *
@@ -506,4 +528,13 @@ export interface DumpView {
   /** The 123 messages and 7 669 bytes of fase 0c, so nothing here hardcodes them. */
   readonly expectedMessages: number;
   readonly expectedBytes: number;
+}
+
+/** Whether the two polling loops are asking the keyboard anything (#14). */
+export interface PollingView {
+  readonly paused: boolean;
+}
+
+export function noPolling(): PollingView {
+  return { paused: false };
 }

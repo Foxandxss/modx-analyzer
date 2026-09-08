@@ -17,6 +17,8 @@ import {
   Topology,
   invalidated,
   noGenerator,
+  noPolling,
+  PollingView,
   noOperators,
   noPatch,
   sameTopology,
@@ -155,6 +157,26 @@ export class FakeBackendGateway implements BackendGateway {
     // in the same breath and never a step later.
     this.generator.update((view) => ({ ...view, running: false, held: 0 }));
     return Promise.resolve();
+  }
+
+  readonly polling = signal<PollingView>(noPolling());
+
+  /** Windows exported since this fake was made, newest last. */
+  exported: string[] = [];
+
+  setPolling(paused: boolean): Promise<void> {
+    this.polling.set({ paused });
+    return Promise.resolve();
+  }
+
+  exportWindow(samples: number): Promise<string> {
+    // The label comes from the flag and not from the caller, the same way the
+    // native side does it — a test that could file a polled window as an
+    // unpolled one would be testing a mistake the real command cannot make.
+    const label = this.polling().paused ? 'sin-sondeo' : 'sondeo';
+    const path = `medidas/${this.exported.length}-${label}-${samples}.f32`;
+    this.exported.push(path);
+    return Promise.resolve(path);
   }
 
   /**

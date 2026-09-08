@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { BLOCK_FRAMES } from 'modx-dsp';
+import { BLOCK_FRAMES, MEASURE_WINDOW } from 'modx-dsp';
 import { AUDIO_WORKER, AudioService } from '../../audio/audio-service';
 import { fakeBlock, heldNote } from '../../audio/fake-block';
 import { FakeAudioWorker } from '../../audio/fake-audio-worker';
@@ -178,5 +178,79 @@ describe('DevReadout', () => {
     await fixture.whenStable();
 
     expect(text()).toContain('PARADO · 500 DE 500 ENVIADAS · 0 VIVAS');
+  });
+});
+
+/**
+ * #14's control. It is the one thing in the app that makes it stop knowing
+ * something on purpose, so what these check is that it says so.
+ */
+describe('DevReadout · el sondeo de #14', () => {
+  function press(fixture: { nativeElement: unknown }, label: string): void {
+    const button = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+    ).find((candidate) => (candidate.textContent ?? '').trim() === label);
+    if (button === undefined) {
+      throw new Error(`no hay botón «${label}»`);
+    }
+    button.click();
+  }
+
+  it('stops the two loops and says what that costs, in alert', async () => {
+    const { backend, fixture, text, fixtureAlerts } = await renderReadout();
+
+    expect(text()).toContain('CORRIENDO');
+    expect(fixtureAlerts()).not.toContain('EL ANCLA NO MIRA');
+
+    press(fixture, 'PARAR SONDEO');
+    await fixture.whenStable();
+
+    expect(backend.polling().paused).toBe(true);
+    // Not «PARADO» on its own: a paused app cannot see a Performance change, and
+    // the readout is the only thing that can say so.
+    expect(fixtureAlerts()).toContain('PARADO · EL ANCLA NO MIRA');
+  });
+
+  it('goes back to polling on the second press', async () => {
+    const { backend, fixture, text } = await renderReadout();
+
+    press(fixture, 'PARAR SONDEO');
+    await fixture.whenStable();
+    press(fixture, 'SONDEAR');
+    await fixture.whenStable();
+
+    expect(backend.polling().paused).toBe(false);
+    expect(text()).toContain('CORRIENDO');
+  });
+
+  /**
+   * The one mistake that would quietly ruin the measurement: filing a polled
+   * window as an unpolled one. The label is never passed from the front — it is
+   * read off the flag by the side that owns it.
+   */
+  it('labels each exported window by the polling state and not by the caller', async () => {
+    const { backend, fixture, text } = await renderReadout();
+
+    press(fixture, 'EXPORTAR');
+    await fixture.whenStable();
+    expect(backend.exported.at(-1)).toContain('-sondeo-');
+    expect(text()).toContain('-sondeo-');
+
+    press(fixture, 'PARAR SONDEO');
+    await fixture.whenStable();
+    press(fixture, 'EXPORTAR');
+    await fixture.whenStable();
+
+    expect(backend.exported.at(-1)).toContain('-sin-sondeo-');
+    expect(backend.exported).toHaveLength(2);
+  });
+
+  it('exports the window the medida analyses and no other size', async () => {
+    const { backend, fixture } = await renderReadout();
+
+    press(fixture, 'EXPORTAR');
+    await fixture.whenStable();
+
+    expect(backend.exported.at(-1)).toContain(`-${MEASURE_WINDOW}.f32`);
   });
 });

@@ -5,6 +5,7 @@ mod dumps;
 mod generator;
 mod keyboard;
 mod patch;
+mod polling;
 mod sweep;
 
 use audio::Audio;
@@ -50,6 +51,7 @@ pub fn run() {
         .manage(Audio::new())
         .manage(Dumps::new())
         .manage(Patch::new())
+        .manage(polling::Polling::new())
         .manage(Generator::new())
         .manage(Sweeps::new())
         .invoke_handler(tauri::generate_handler![
@@ -58,6 +60,9 @@ pub fn run() {
             dumps::last_dump,
             keyboard::panic_keyboard,
             keyboard::retry_connection,
+            polling::set_polling,
+            polling::polling_state,
+            audio::export_window,
             audio::subscribe_audio_blocks,
             audio::measure_window,
             generator::start_generator,

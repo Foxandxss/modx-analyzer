@@ -30,6 +30,7 @@ use tauri::{AppHandle, Emitter, Manager};
 use crate::connection::Connection;
 use crate::keyboard::Keyboard;
 use crate::patch::Patch;
+use crate::polling::Polling;
 
 /// The relectura, as the strip draws it.
 const EVENT_REREAD: &str = "modx://reread";
@@ -99,6 +100,19 @@ fn run(app: &AppHandle) {
             reopens = now;
             anchor.rearm();
             watch(app, &mut link, &anchor);
+        }
+
+        // #14's pause, and it is checked **after** the watchdog on purpose: with
+        // the ancla silent the link state is the one thing that can still be told
+        // honestly, from the enumeration alone, and a paused app that also stopped
+        // knowing whether the cable was in would be two lies for the price of one.
+        //
+        // What it does cost is the name: nothing notices a Performance change
+        // while this is on. That is why the control says so in alert, and why it
+        // exists for a measurement rather than for the design.
+        if Polling::is_paused(app) {
+            std::thread::sleep(BEAT);
+            continue;
         }
 
         let Some(owner) = app.state::<Keyboard>().owner() else {
