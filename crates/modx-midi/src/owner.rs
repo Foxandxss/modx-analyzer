@@ -16,9 +16,11 @@
 //! the volcado, which holds the port for as long as the keyboard takes to send
 //! 7,7 KB, and is therefore also the longest a pánico can ever wait: `dump::DEADLINE`.
 
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{
     sync_channel, Receiver, RecvTimeoutError, SyncSender, TryRecvError, TrySendError,
 };
+use std::sync::Arc;
 use std::thread::JoinHandle;
 use std::time::Duration;
 
@@ -49,10 +51,18 @@ pub enum Priority {
     WideRing,
     /// The 43 of the open operator. It has no consumer this session.
     NarrowRing,
+    /// The note generator of the bridge measurement (#8), and nothing else.
+    ///
+    /// Last of everything, on purpose. It is a measuring instrument, so it must
+    /// not change what it measures beyond the load itself: a generator served
+    /// ahead of the ancla would be loading an app that never runs. Its own
+    /// starvation is therefore a **result** and not a fault, which is why what it
+    /// asked for and what actually went out are counted separately.
+    Generator,
 }
 
 /// The number of lanes, one per [`Priority`].
-const LANES: usize = 6;
+const LANES: usize = 7;
 
 /// One thing to do with the port.
 #[derive(Clone, Debug)]
@@ -67,6 +77,15 @@ pub enum Request {
     /// A bulk dump of one address, normally [`dump::EDIT_BUFFER`]. It is the one
     /// request that can hold the port for seconds.
     Dump(Address),
+    /// Channel messages, sent back to back with nothing to wait for.
+    ///
+    /// There are exactly **two** senders of channel messages in this session and
+    /// both live in this crate: the pánico ([`Request::Panic`]) and the note
+    /// generator. That sentence is in the results document, and it is what makes
+    /// «the keyboard was sent these notes and nothing else» a fact rather than a
+    /// hope — which is why the only public way in fixes the lane as well as the
+    /// content (see [`OwnerHandle::send_notes`]).
+    Channel(Vec<Vec<u8>>),
 }
 
 /// What came of serving one request.
@@ -86,6 +105,9 @@ pub enum Served {
     /// The bytes the keyboard sent, however many that was. An empty one is a
     /// keyboard that said nothing; a short one is a keyboard that stopped early.
     Dumped(Dump),
+    /// How many channel messages the port took. Counted at the port and not at
+    /// the caller: a load that is not counted is a load that was assumed.
+    Sent(usize),
 }
 
 /// Things waiting for the port, kept in strict priority order.
@@ -128,6 +150,7 @@ impl<T> Lanes<T> {
             Priority::Anchor,
             Priority::WideRing,
             Priority::NarrowRing,
+            Priority::Generator,
         ]
         .into_iter()
         .enumerate()
@@ -201,6 +224,16 @@ impl<P: MidiPort> PortOwner<P> {
                     .clone();
                 Ok(Served::Written { address, state })
             }
+            // Nothing to wait for: the MODX does not answer channel messages, so
+            // they go out back to back the way the pánico's 2 080 do.
+            Request::Channel(messages) => {
+                let mut sent = 0;
+                for message in &messages {
+                    self.port.send(message)?;
+                    sent += 1;
+                }
+                Ok(Served::Sent(sent))
+            }
             Request::Dump(address) => {
                 let tracker = &mut self.tracker;
                 let taken = dump::take(
@@ -268,6 +301,13 @@ pub struct OwnerHandle {
     /// tells the thread to stop.
     jobs: Option<SyncSender<Job>>,
     thread: Option<JoinHandle<()>>,
+    /// The note tracker's count of channel messages, as of the loop's last turn.
+    ///
+    /// It is an atomic rather than an answer to a request because reading it must
+    /// not cost a place in the queue: the readout asks once a second while the
+    /// bridge measurement is running, and a question that had to wait behind the
+    /// anillo would be measuring the queue instead of the traffic.
+    traffic: Arc<AtomicU64>,
 }
 
 /// How long the loop listens to the keyboard when nobody has asked for anything.
@@ -287,14 +327,49 @@ impl OwnerHandle {
         // letting a backlog build up behind the port.
         let (jobs, incoming) = sync_channel::<Job>(LANES * 8);
 
+        let traffic = Arc::new(AtomicU64::new(0));
+        let counted = Arc::clone(&traffic);
         let thread = std::thread::Builder::new()
             .name("modx-port-owner".into())
-            .spawn(move || run_owner(port, incoming, &mut on_live_notes))
+            .spawn(move || run_owner(port, incoming, &counted, &mut on_live_notes))
             .expect("the owner thread is the app");
 
         Self {
             jobs: Some(jobs),
             thread: Some(thread),
+            traffic,
+        }
+    }
+
+    /// Every channel message the keyboard has sent since the port opened, clock
+    /// included.
+    ///
+    /// It is what makes the bridge measurement self-verifying: under real hands
+    /// this climbs with the playing, and under the note generator it says whether
+    /// the MODX echoes what it is told back to its own output — which nobody has
+    /// checked, and which is exactly the kind of thing that must be counted rather
+    /// than assumed.
+    pub fn traffic(&self) -> u64 {
+        self.traffic.load(Ordering::Acquire)
+    }
+
+    /// Send channel messages: the note generator's lane, and no other.
+    ///
+    /// The lane is fixed here rather than taken as an argument because the two
+    /// senders of channel messages this session are the pánico and the generator,
+    /// and the pánico has its own way in. A caller that could pick its own
+    /// priority could put a note in front of the ancla.
+    ///
+    /// The count that comes back is what the **port** took, not what was asked
+    /// for: an error stops the batch, and a batch that stopped is a load that did
+    /// not happen.
+    pub fn send_notes(&self, messages: Vec<Vec<u8>>) -> Result<usize, PortError> {
+        if messages.is_empty() {
+            return Ok(0);
+        }
+        match self.request(Priority::Generator, Request::Channel(messages))? {
+            Served::Sent(sent) => Ok(sent),
+            other => unreachable!("channel messages answer with a count, not {other:?}"),
         }
     }
 
@@ -376,6 +451,7 @@ impl Drop for OwnerHandle {
 fn run_owner<P: MidiPort>(
     port: P,
     incoming: Receiver<Job>,
+    traffic: &AtomicU64,
     on_live_notes: &mut dyn FnMut(LiveNotes),
 ) {
     let mut owner = PortOwner::new(port);
@@ -412,6 +488,10 @@ fn run_owner<P: MidiPort>(
                 Err(RecvTimeoutError::Disconnected) => return,
             },
         }
+
+        // The traffic count is published every turn: it is a number nobody is
+        // woken by, read only while the bridge is being measured.
+        traffic.store(owner.tracker().traffic(), Ordering::Release);
 
         // Only when they moved: the clock alone would wake the front 125 times a
         // second with the same pair.
@@ -511,6 +591,91 @@ mod tests {
                 Priority::NarrowRing
             ]
         );
+    }
+
+    #[test]
+    fn serves_the_generator_after_everything_else() {
+        let mut queue = RequestQueue::new();
+        // The generator asks first and is served last: it is an instrument, and an
+        // instrument that pushed the ancla aside would be measuring another app.
+        queue.push(
+            Priority::Generator,
+            Request::Channel(vec![vec![0x90, 60, 100]]),
+        );
+        queue.push(
+            Priority::NarrowRing,
+            Request::Read(Address::new(0x49, 0x20, 0x01)),
+        );
+        queue.push(
+            Priority::Anchor,
+            Request::Read(Address::part(sysex::AH_PART, 1, 0x00)),
+        );
+
+        let order: Vec<Priority> = std::iter::from_fn(|| queue.pop())
+            .map(|(priority, _)| priority)
+            .collect();
+
+        assert_eq!(
+            order,
+            vec![Priority::Anchor, Priority::NarrowRing, Priority::Generator]
+        );
+    }
+
+    #[test]
+    fn the_generators_notes_reach_the_port_as_they_were_written() {
+        let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
+        let mut generator = crate::generator::NoteGenerator::new();
+        let mut asked: Vec<Vec<u8>> = Vec::new();
+
+        let mark = owner.port_mut().mark();
+        for _ in 0..6 {
+            let step = generator.step();
+            asked.extend(step.iter().cloned());
+            match owner.serve(Request::Channel(step.clone())).unwrap() {
+                Served::Sent(sent) => assert_eq!(sent, step.len()),
+                other => panic!("expected a count, got {other:?}"),
+            }
+        }
+        let goodbye = generator.shutdown();
+        asked.extend(goodbye.iter().cloned());
+        owner.serve(Request::Channel(goodbye)).unwrap();
+
+        // Byte for byte and in order: the keyboard was sent the load and nothing
+        // else, which is the sentence the results document has to be able to make.
+        assert_eq!(owner.port_mut().sent_since(mark), asked.as_slice());
+    }
+
+    #[test]
+    fn the_thread_says_how_many_notes_the_port_took() {
+        let owner = OwnerHandle::spawn(FakeModx::init_normal_fmx(), |_| {});
+
+        let sent = owner
+            .send_notes(vec![vec![0x90, 60, 100], vec![0x80, 60, 0]])
+            .unwrap();
+
+        assert_eq!(sent, 2);
+        // Nothing came back: the fake does not echo what it is told, so the
+        // tracker's traffic stays where it was. What the real MODX does with a
+        // generated note is unknown and is why both numbers are on screen.
+        assert_eq!(owner.traffic(), 0);
+    }
+
+    #[test]
+    fn the_thread_counts_the_traffic_the_keyboard_sends() {
+        let mut fake = FakeModx::init_normal_fmx();
+        fake.press(60, 100);
+        fake.press(64, 100);
+        fake.release(60);
+        let owner = OwnerHandle::spawn(fake, |_| {});
+
+        // The loop listens while nobody asks, so the three messages land on their
+        // own; the count is what the bridge measurement writes down beside the
+        // generator's.
+        let deadline = std::time::Instant::now() + Duration::from_secs(1);
+        while owner.traffic() < 3 && std::time::Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        assert_eq!(owner.traffic(), 3);
     }
 
     #[test]

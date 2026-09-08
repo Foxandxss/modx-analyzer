@@ -31,6 +31,11 @@ async function renderReadout() {
       return (fixture.nativeElement as HTMLElement).textContent ?? '';
     },
     text: () => (fixture.nativeElement as HTMLElement).textContent ?? '',
+    /** Only what is drawn in alert, so «it is on screen» and «it is red» differ. */
+    fixtureAlerts: () =>
+      Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.dev__alert'))
+        .map((element) => element.textContent ?? '')
+        .join(' '),
   };
 }
 
@@ -110,5 +115,68 @@ describe('DevReadout', () => {
     await fixture.whenStable();
 
     expect(text()).toContain('7669 B · 123 DE 123 MSJ · 2.41 s · SAVED');
+  });
+
+  it('claims no load before the generator has been started', async () => {
+    const { text } = await renderReadout();
+
+    expect(text()).toContain('GENERADOR');
+    expect(text()).toContain('PARADO · —');
+    expect(text()).toContain('NOTAS DENSAS');
+  });
+
+  it('starts and stops the generator from the one control there is', async () => {
+    const { backend, fixture, text } = await renderReadout();
+    const button = () =>
+      (fixture.nativeElement as HTMLElement).querySelector('button') as HTMLButtonElement;
+
+    button().click();
+    await fixture.whenStable();
+
+    expect(backend.generatorStarts).toBe(1);
+    expect(text()).toContain('NOTAS CADA 40 ms');
+    expect(button().textContent).toContain('PARAR');
+
+    button().click();
+    await fixture.whenStable();
+
+    expect(backend.generatorStops).toBe(1);
+    expect(button().textContent).toContain('NOTAS DENSAS');
+  });
+
+  it('puts the load and the keyboard’s own traffic side by side', async () => {
+    const { backend, fixture, text } = await renderReadout();
+
+    backend.generatorRuns({ asked: 1_248, held: 4, traffic: 0 });
+    await fixture.whenStable();
+
+    // What the port took, what is being held, and what the keyboard said back:
+    // the load is counted at both ends and nothing here is assumed.
+    expect(text()).toContain('1248 DE 1248 ENVIADAS · 4 VIVAS · RECHAZOS 0 · TRÁFICO 0');
+  });
+
+  it('says so in alert when the load did not happen', async () => {
+    const { backend, fixture, fixtureAlerts } = await renderReadout();
+
+    // Served last of everything, so a run under a loaded port can be starved.
+    // That is a result about the port and it must not be written down as a
+    // successful run.
+    backend.generatorRuns({ asked: 1_000, sent: 640, refused: 12 });
+    await fixture.whenStable();
+
+    expect(fixtureAlerts()).toContain('640 DE 1000 ENVIADAS');
+  });
+
+  it('shows the run stopped the moment the pánico takes the keyboard back', async () => {
+    const { backend, fixture, text } = await renderReadout();
+
+    backend.generatorRuns({ asked: 500, held: 4 });
+    await fixture.whenStable();
+    expect(text()).toContain('4 VIVAS');
+
+    await backend.panic();
+    await fixture.whenStable();
+
+    expect(text()).toContain('PARADO · 500 DE 500 ENVIADAS · 0 VIVAS');
   });
 });

@@ -17,6 +17,7 @@ use modx_midi::sysex::Address;
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::connection::Connection;
+use crate::generator::Generator;
 
 /// The event the pánico's live state and every node's `TEORÍA` line listen to.
 const EVENT_LIVE_NOTES: &str = "modx://live-notes";
@@ -146,7 +147,16 @@ impl Keyboard {
     /// A reopen that failed is not a reason to stop: the send is attempted anyway
     /// and it is the send's error that comes back, because what the owner needs to
     /// know is whether the notes stopped and not which of the two steps failed.
+    ///
+    /// **The note generator is stopped before anything goes out.** It is the one
+    /// piece of app state a pánico changes, and it changes it because a generator
+    /// still generating would put a Note On behind the 2 080 messages that were
+    /// supposed to be the end of it. It touches no parameter either way: what is
+    /// stopped is something this app was doing to the keyboard, not something in
+    /// the patch.
     pub fn panic(&self, app: &AppHandle) -> Result<PanicOutcome, PortError> {
+        Generator::stop(app);
+
         let reopened = self.owner().is_none() || Connection::is_disconnected(app);
         if reopened {
             let _ = self.reopen(app);

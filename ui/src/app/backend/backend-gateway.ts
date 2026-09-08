@@ -55,6 +55,16 @@ export interface BackendGateway {
   readonly liveNotes: Signal<number>;
 
   /**
+   * The note generator of the bridge measurement: what it has asked for, what
+   * the port took, and what the keyboard has said back.
+   *
+   * It is an instrument and not a feature — it exists so that ADR-0001's
+   * go/no-go can be taken under the one condition where audio, MIDI polling and
+   * the repaint all compete, which only happens while the keyboard is sounding.
+   */
+  readonly generator: Signal<GeneratorView>;
+
+  /**
    * The lowest pitch the keyboard is holding, or `null` when nothing sounds.
    *
    * It is what every node's `TEORÍA` frequency is computed from: an operator's
@@ -91,6 +101,19 @@ export interface BackendGateway {
    * and until it comes the app has nothing to say about it.
    */
   retry(): Promise<void>;
+
+  /**
+   * Start the note generator: dense notes from the PC, down the same port.
+   *
+   * Two preconditions, and they are not decoration: the pánico is wired and has
+   * been pressed for real once, and the generator lets go of every key it
+   * pressed when the loop ends however it ends. The hung notes of fase 0c came
+   * from the second one being missing.
+   */
+  startGenerator(): Promise<void>;
+
+  /** Stop it. It resolves once the Note Offs have gone out, not before. */
+  stopGenerator(): Promise<void>;
 
   /**
    * Raw f32 bloques straight off the device, one per three device callbacks.
@@ -326,6 +349,50 @@ export interface PanicOutcome {
   readonly silenced: number;
   /** Whether the port had to be reopened first. */
   readonly reopened: boolean;
+}
+
+/**
+ * One run of the note generator, as the dev readout draws it.
+ *
+ * `asked` and `sent` are two numbers on purpose. The generator is served last of
+ * everything (ADR-0004), so a run in which the port never got round to it is a
+ * **result** about the port under load and not a broken instrument — and the two
+ * numbers drifting apart is the only way that shows.
+ */
+export interface GeneratorView {
+  readonly running: boolean;
+  /** Messages the pattern produced. */
+  readonly asked: number;
+  /** Messages the port took. */
+  readonly sent: number;
+  /** Steps the port refused outright, normally because there is no port. */
+  readonly refused: number;
+  /** Pitches the generator is holding. Zero whenever it is not running. */
+  readonly held: number;
+  /**
+   * Channel messages the **keyboard** has sent since the port opened.
+   *
+   * This is #8's self-verification. Under real hands it climbs with the playing.
+   * Under generated notes it only climbs if the MODX echoes what it is told back
+   * to its own output, which nobody has checked — so it is counted and written
+   * down rather than assumed either way.
+   */
+  readonly traffic: number;
+  /** Milliseconds per step of the pattern. */
+  readonly stepMs: number;
+}
+
+/** No run yet: dashes, not zeros with a story behind them. */
+export function noGenerator(): GeneratorView {
+  return {
+    running: false,
+    asked: 0,
+    sent: 0,
+    refused: 0,
+    held: 0,
+    traffic: 0,
+    stepMs: 0,
+  };
 }
 
 export interface AppInfo {

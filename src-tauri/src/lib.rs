@@ -2,12 +2,14 @@ mod anchor;
 mod audio;
 mod connection;
 mod dumps;
+mod generator;
 mod keyboard;
 mod patch;
 
 use audio::Audio;
 use connection::Connection;
 use dumps::Dumps;
+use generator::Generator;
 use keyboard::Keyboard;
 use patch::Patch;
 use tauri::{LogicalSize, Manager};
@@ -46,13 +48,17 @@ pub fn run() {
         .manage(Audio::new())
         .manage(Dumps::new())
         .manage(Patch::new())
+        .manage(Generator::new())
         .invoke_handler(tauri::generate_handler![
             app_info,
             dumps::last_dump,
             keyboard::panic_keyboard,
             keyboard::retry_connection,
             audio::subscribe_audio_blocks,
-            audio::measure_window
+            audio::measure_window,
+            generator::start_generator,
+            generator::stop_generator,
+            generator::generator_state
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {
@@ -90,6 +96,15 @@ pub fn run() {
             audio::start(app.handle());
 
             Ok(())
+        })
+        // The one interruption the generator's `Drop` cannot survive is the
+        // process going away, so the window's close asks it to stop and waits for
+        // the Note Offs. Closing the app with four keys down would leave them
+        // sounding with nothing left running to silence them.
+        .on_window_event(|window, event| {
+            if matches!(event, tauri::WindowEvent::CloseRequested { .. }) {
+                Generator::stop(window.app_handle());
+            }
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

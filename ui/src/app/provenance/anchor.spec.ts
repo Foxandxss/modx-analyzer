@@ -42,7 +42,11 @@ describe('Anchor', () => {
     // clock has to tick: no event is ever coming to end it.
     clock.now.set(at! + ANCHOR_FLASH_MS - 1);
     expect(anchor.justChanged()).toBe(true);
-    clock.now.set(at! + ANCHOR_FLASH_MS);
+    // A millisecond past the end and not exactly on it: `at` is a fractional
+    // `performance.now()`, so `(at + 2200) - at` is 2200 only when the float
+    // rounding happens to come out that way — which is where this test used to
+    // flake. Half a nanosecond either side of the boundary is not a state.
+    clock.now.set(at! + ANCHOR_FLASH_MS + 1);
     expect(anchor.justChanged()).toBe(false);
 
     // But the header does not go back to rest: it has changed, and it stays
@@ -58,7 +62,7 @@ describe('Anchor', () => {
     backend.loadPerformance('Bright FM Keys');
     TestBed.tick();
     const first = anchor.changedAt();
-    clock.now.set(first! + ANCHOR_FLASH_MS);
+    clock.now.set(first! + ANCHOR_FLASH_MS + 1);
     expect(anchor.justChanged()).toBe(false);
 
     // Back to the sound it started on. The name is the one it already had, and
@@ -67,6 +71,13 @@ describe('Anchor', () => {
     TestBed.tick();
 
     expect(anchor.changes()).toBe(2);
+    // The flash is read against the **second** stamp and not against the clock
+    // the first one was jumped past: the two stamps come off `performance.now()`
+    // milliseconds apart, so anything measured from the first one is measuring
+    // how long this test took to run.
+    const second = anchor.changedAt();
+    expect(second).not.toBe(first);
+    clock.now.set(second! + ANCHOR_FLASH_MS - 1);
     expect(anchor.justChanged()).toBe(true);
   });
 });

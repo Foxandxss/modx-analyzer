@@ -7,6 +7,7 @@ import {
   ConnectionView,
   DumpView,
   FrequencyMode,
+  GeneratorView,
   OperatorRole,
   OperatorView,
   OperatorsView,
@@ -16,6 +17,7 @@ import {
   RereadProgress,
   Topology,
   invalidated,
+  noGenerator,
   noOperators,
   noPatch,
   sameTopology,
@@ -138,10 +140,13 @@ export class TauriBackendGateway implements BackendGateway {
 
   readonly dump = signal<DumpView | null>(null);
 
+  readonly generator = signal<GeneratorView>(noGenerator());
+
   constructor() {
     this.listenInto('modx://connection', this.connection);
     this.listenInto('modx://reread', this.reread);
     this.listenInto('modx://dump', this.dump);
+    this.listenInto('modx://generator', this.generator);
 
     // The three the anillo ancho feeds. Each arrives with ages rather than
     // timestamps and is aligned to this side's clock on arrival.
@@ -165,6 +170,10 @@ export class TauriBackendGateway implements BackendGateway {
         this.dump.set(taken);
       }
     });
+
+    // And for the same reason: a window reloaded in the middle of a ten-minute
+    // run would otherwise say `PARADO` while the app is playing the keyboard.
+    void invoke<GeneratorView>('generator_state').then((state) => this.generator.set(state));
   }
 
   appInfo(): Promise<AppInfo> {
@@ -180,6 +189,16 @@ export class TauriBackendGateway implements BackendGateway {
     // native side emits `modx://connection` either way, and the card is drawn off
     // that event and nothing else. One writer, the way `connection.rs` says.
     return invoke<void>('retry_connection');
+  }
+
+  startGenerator(): Promise<void> {
+    return invoke<void>('start_generator');
+  }
+
+  stopGenerator(): Promise<void> {
+    // The command joins the thread before it answers, so this resolving is the
+    // keys being up and not the request having been filed.
+    return invoke<void>('stop_generator');
   }
 
   async subscribeBlocks(onBlock: (block: ArrayBuffer) => void): Promise<() => void> {

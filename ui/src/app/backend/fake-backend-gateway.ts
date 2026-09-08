@@ -6,6 +6,7 @@ import {
   BackendGateway,
   ConnectionView,
   DumpView,
+  GeneratorView,
   OperatorsView,
   PanicOutcome,
   PatchHeaderView,
@@ -13,6 +14,7 @@ import {
   RereadProgress,
   Topology,
   invalidated,
+  noGenerator,
   noOperators,
   noPatch,
   sameTopology,
@@ -50,6 +52,13 @@ export class FakeBackendGateway implements BackendGateway {
 
   /** No volcado yet: the launch the app opens in, before the keyboard answered. */
   readonly dump = signal<DumpView | null>(null);
+
+  /** Nothing has been generated: no run has been asked for. */
+  readonly generator = signal<GeneratorView>(noGenerator());
+
+  /** How many times the generator has been started and stopped. */
+  generatorStarts = 0;
+  generatorStops = 0;
 
   appInfoResult: AppInfo = { version: '0.0.0-fake', dumpsFolder: '' };
 
@@ -95,12 +104,48 @@ export class FakeBackendGateway implements BackendGateway {
     this.panicPresses += 1;
     const outcome = this.panicResult();
     this.liveNotes.set(0);
+    // The native side stops the generator before it sends: a generator still
+    // generating would put a Note On behind the 2 080 messages that were
+    // supposed to be the end of it.
+    this.generator.update((view) => ({ ...view, running: false, held: 0 }));
     return outcome;
   }
 
   retry(): Promise<void> {
     this.retryPresses += 1;
     return this.retryResult();
+  }
+
+  startGenerator(): Promise<void> {
+    this.generatorStarts += 1;
+    // The native side answers by emitting, so the state moves here too: a run
+    // that started is a run the readout has to be able to see.
+    this.generator.update((view) => ({ ...view, running: true, stepMs: 40 }));
+    return Promise.resolve();
+  }
+
+  stopGenerator(): Promise<void> {
+    this.generatorStops += 1;
+    // Stopping resolves once the keys are up, which is why `held` goes to zero
+    // in the same breath and never a step later.
+    this.generator.update((view) => ({ ...view, running: false, held: 0 }));
+    return Promise.resolve();
+  }
+
+  /**
+   * Test driver: the run has been going and these are its counts.
+   *
+   * `sent` defaults to `asked` — the port took everything — because the case
+   * worth writing a test about is the one where it did not.
+   */
+  generatorRuns(counts: Partial<GeneratorView> & { asked: number }): void {
+    this.generator.update((view) => ({
+      ...view,
+      running: true,
+      stepMs: 40,
+      sent: counts.asked,
+      ...counts,
+    }));
   }
 
   /**

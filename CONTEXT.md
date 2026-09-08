@@ -106,7 +106,17 @@ reparar, no escribir en orden, porque escribir un parámetro puede modificar otr
 
 **Pánico**:
 All Sound Off + All Notes Off + 2 048 Note Off explícitos por los 16 canales. No toca ningún
-parámetro, no cierra el puerto y no pide confirmación.
+parámetro, no cierra el puerto y no pide confirmación. Antes de mandar para el generador de notas:
+es lo único de la app que un pánico cambia, y lo cambia porque un generador que siguiera generando
+metería un Note On detrás de los 2 080 mensajes que iban a ser el final.
+
+**Generador de notas**:
+El patrón de notas densas que la app manda por el mismo puerto para cargar el puente (#8): un acorde
+de cuatro alturas que se mueve cada 40 ms por el canal 1. Es un **instrumento de medida y no una
+función**: va el último de todos los carriles (ADR-0004), cuenta aparte lo que pidió y lo que salió,
+y suelta todas las teclas que pulsó pase lo que pase con su bucle. Junto al pánico, son los dos
+únicos emisores de mensajes de canal de esta sesión.
+_Avoid_: secuenciador, reproductor
 
 ### Procedencia de una cifra
 

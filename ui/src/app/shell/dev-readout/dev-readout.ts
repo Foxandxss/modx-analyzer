@@ -36,6 +36,11 @@ import { DEAD_MARK } from '../../provenance/provenance';
       <span>{{ rereadLine() }}</span>
       <span class="dev__label">ENLACE</span>
       <span [class.dev__alert]="linkLost()">{{ linkLine() }}</span>
+      <span class="dev__label">GENERADOR</span>
+      <span [class.dev__alert]="starved()">{{ generatorLine() }}</span>
+      <button type="button" class="dev__button" (click)="toggleGenerator()">
+        {{ generator().running ? 'PARAR' : 'NOTAS DENSAS' }}
+      </button>
     </div>
   `,
   styles: `
@@ -56,6 +61,21 @@ import { DEAD_MARK } from '../../provenance/provenance';
     }
     .dev__alert {
       color: var(--alert);
+    }
+    /* The one thing in this strip that can be pressed. It is deliberately plain:
+       the design has no control for it, because the generator is not part of the
+       app — it is how the app is measured. */
+    .dev__button {
+      font-family: var(--font-num);
+      font-size: var(--text-micro);
+      letter-spacing: 0.08em;
+      color: var(--ink-secondary);
+      background: var(--surface-raised);
+      border: var(--rule-min) solid var(--rule-color);
+      border-radius: 4px;
+      padding: 3px 10px;
+      min-height: 22px;
+      cursor: pointer;
     }
   `,
 })
@@ -143,6 +163,55 @@ export class DevReadout {
     const since = at === null ? DEAD_MARK : `${((this.clock.now() - at) / 1000).toFixed(1)} s`;
     return `DESCONECTADO · ${connection.loss ?? DEAD_MARK} · ÚLTIMO SONDEO ${since}`;
   });
+
+  protected readonly generator = this.backend.generator;
+
+  /**
+   * The port never got round to the generator, or refused it.
+   *
+   * It is drawn in alert because it changes what the run means and not because
+   * anything is broken: the generator is served last of everything (ADR-0004),
+   * so a gap between what it asked for and what went out is a **result** about
+   * the port under load. A run whose load did not happen must not be written
+   * down as a run whose load did.
+   */
+  protected readonly starved = computed(() => {
+    const run = this.generator();
+    return run.sent < run.asked || run.refused > 0;
+  });
+
+  /**
+   * What the note generator has done, and what came back.
+   *
+   * The two counts are #8's self-verification: `ENVIADAS` is what the port took,
+   * `TRÁFICO` is what the **keyboard** said on its own. Under real hands the
+   * second climbs with the playing; under generated notes it only climbs if the
+   * MODX echoes them, which nobody has checked.
+   */
+  protected readonly generatorLine = computed(() => {
+    const run = this.generator();
+    if (!run.running && run.asked === 0) {
+      return `PARADO · ${DEAD_MARK}`;
+    }
+    return [
+      run.running ? `NOTAS CADA ${run.stepMs} ms` : 'PARADO',
+      `${run.sent} DE ${run.asked} ENVIADAS`,
+      `${run.held} VIVAS`,
+      `RECHAZOS ${run.refused}`,
+      `TRÁFICO ${run.traffic}`,
+    ].join(' · ');
+  });
+
+  /**
+   * Start or stop the run.
+   *
+   * Nothing is awaited into the state: the native side emits `modx://generator`
+   * either way and the line is drawn off that event and nothing else, the same
+   * one-writer rule the connection follows.
+   */
+  protected toggleGenerator(): void {
+    void (this.generator().running ? this.backend.stopGenerator() : this.backend.startGenerator());
+  }
 
   protected readonly line = computed(() => {
     const stats = this.audio.stats();
