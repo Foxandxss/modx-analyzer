@@ -129,6 +129,27 @@
   letter-spacing: 0.08em;
   color: var(--ink-inert);
   white-space: nowrap;
+  /* These two yield first, and they yield to the pánico.
+   *
+   * A flex item defaults to `min-width: auto`, which means it refuses to shrink
+   * below its own text — so a long line here does not wrap or clip, it pushes
+   * the row wider than the window and the last child off the right edge. The
+   * last child is the pánico.
+   *
+   * That is not hypothetical: `Line (MODX) · 44100 Hz` reached this slot for the
+   * first time when #18 was fixed (until then the connection event never arrived
+   * and it drew a dash), and it pushed `CALLA` clean out of the window on the
+   * target laptop. The one control that exists to stop a note that will not stop
+   * was unreachable, and nothing said so.
+   *
+   * So the two informational slots are the ones that lose room. Everything from
+   * `.modes` rightwards is `flex: 0 0 auto` and keeps its size.
+   *
+   * Clipped and not ellipsised on purpose: these are flex containers, and
+   * `text-overflow` does nothing to a flex container's own text. An ellipsis
+   * here would be a line of CSS that reads as a promise and is not one. */
+  min-width: 0;
+  overflow: hidden;
 }
 
 .spacer {
