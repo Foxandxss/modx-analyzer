@@ -65,6 +65,15 @@ Un conjunto de direcciones que se sondea cíclicamente con su propia cadencia. E
 vigila pocos parámetros de los ocho operadores; el **anillo estrecho** vigila los 43 del operador
 abierto. Comparten canal, así que abrir un operador ralentiza el ancho.
 
+**Barrido**:
+Pedir **todas** las direcciones de un bloque, una a una, sin escribir nada, para saber cuáles
+contestan y con qué. No es una relectura: la relectura pregunta por los parámetros que la tabla
+dice que hay, y un barrido pregunta por los 47 huecos del bloque precisamente porque la tabla es lo
+que se está poniendo a prueba. Es la única forma de contestar dos cosas: si `am = (op<<4)|parte`
+vale más allá de la Part 1 —medido sólo ahí— y cuántos de los 47 del bloque `49 op` contestan de
+verdad, que es la contradicción entre el Data List (39) y el barrido de la fase 0c (43).
+_Avoid_: escaneo, sondeo (un sondeo es cíclico y un barrido es una pasada)
+
 **Ancla**:
 El nombre de la Part 1 (`31 00 00`–`13`), sondeado a 1 Hz. Su cambio es la única señal de que la
 Performance cambió por debajo. Una pasada a la que le falte una letra no es un nombre nuevo: se

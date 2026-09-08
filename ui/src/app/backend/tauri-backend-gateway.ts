@@ -15,6 +15,7 @@ import {
   PatchHeaderView,
   PolledValue,
   RereadProgress,
+  SweepView,
   Topology,
   invalidated,
   noGenerator,
@@ -142,11 +143,15 @@ export class TauriBackendGateway implements BackendGateway {
 
   readonly generator = signal<GeneratorView>(noGenerator());
 
+  /** No barrido asked for yet. It is one press and it is never asked for twice. */
+  readonly sweep = signal<SweepView | null>(null);
+
   constructor() {
     this.listenInto('modx://connection', this.connection);
     this.listenInto('modx://reread', this.reread);
     this.listenInto('modx://dump', this.dump);
     this.listenInto('modx://generator', this.generator);
+    this.listenInto('modx://sweep', this.sweep);
 
     // The three the anillo ancho feeds. Each arrives with ages rather than
     // timestamps and is aligned to this side's clock on arrival.
@@ -199,6 +204,14 @@ export class TauriBackendGateway implements BackendGateway {
     // The command joins the thread before it answers, so this resolving is the
     // keys being up and not the request having been filed.
     return invoke<void>('stop_generator');
+  }
+
+  sweepOperator(part: number, operator: number): Promise<void> {
+    // The native side runs it on a thread and says what it found on the
+    // `modx://sweep` event: a sweep of a Part that is not there is 47 timeouts,
+    // and a command that waited for them would hold the thread that draws for
+    // five seconds.
+    return invoke<void>('sweep_operator', { part, operator });
   }
 
   async subscribeBlocks(onBlock: (block: ArrayBuffer) => void): Promise<() => void> {

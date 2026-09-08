@@ -65,6 +65,17 @@ export interface BackendGateway {
   readonly generator: Signal<GeneratorView>;
 
   /**
+   * The read-only sweep of one operator block, running or finished, or `null`
+   * before the first one has been asked for.
+   *
+   * It is #16's instrument: the app addresses every operator parameter with
+   * `am = (op << 4) | part`, a rule measured on the Part 1 and on the Part 1
+   * only. Sweeping the same operator on a Part 2 is what turns the assumption
+   * under the whole table into a reading.
+   */
+  readonly sweep: Signal<SweepView | null>;
+
+  /**
    * The lowest pitch the keyboard is holding, or `null` when nothing sounds.
    *
    * It is what every node's `TEORÍA` frequency is computed from: an operator's
@@ -114,6 +125,17 @@ export interface BackendGateway {
 
   /** Stop it. It resolves once the Note Offs have gone out, not before. */
   stopGenerator(): Promise<void>;
+
+  /**
+   * Ask every offset of one operator of one Part, one at a time, and write
+   * nothing.
+   *
+   * It resolves when the sweep has **started**, not when it is done: what
+   * happens arrives on the sweep signal, the same one-writer rule the
+   * connection and the relectura follow. It rejects when there is already one
+   * going or when the Part or the operator is not a number the keyboard has.
+   */
+  sweepOperator(part: number, operator: number): Promise<void>;
 
   /**
    * Raw f32 bloques straight off the device, one per three device callbacks.
@@ -380,6 +402,67 @@ export interface GeneratorView {
   readonly traffic: number;
   /** Milliseconds per step of the pattern. */
   readonly stepMs: number;
+}
+
+/**
+ * One offset of the operator block, as the sweep read it.
+ *
+ * `value` is `null` for an offset that did not answer, and that is the half of
+ * the sweep worth looking at: the Data List gives 39 of the 47 as parameters and
+ * the fase 0c blind sweep counted 43 answering, so how many dashes there are is
+ * the reading that closes the contradiction.
+ */
+export interface SweepOffset {
+  /** The `al` byte, which is how the Data List's own table is indexed. */
+  readonly al: number;
+  /** `49 21 1A`: the whole terna, ready to be copied onto paper. */
+  readonly address: string;
+  /** The decoded value, or `null` when the offset did not answer. */
+  readonly value: number | null;
+  /** What the table calls whatever owns this offset, or `null` where nothing does. */
+  readonly name: string | null;
+  /** ADR-0003's grade of that entry, in the table's own two words. */
+  readonly provenance: 'medido' | 'documentado' | null;
+  /** Whether the table has it down as reserved. A reserved offset reads like any other. */
+  readonly reserved: boolean;
+  /** Whether the bytes moved since the previous sweep of this same operator. */
+  readonly changed: boolean;
+}
+
+/**
+ * One sweep of one operator of one Part, running or finished.
+ *
+ * Nothing here is a figure of the patch and none of it wears one of the five
+ * stamps: a sweep is not a reading the app draws from, it is the app checking
+ * where its own readings come from.
+ */
+export interface SweepView {
+  readonly part: number;
+  readonly operator: number;
+  readonly done: number;
+  /** The operator block's documented size, from the table and not from here. */
+  readonly total: number;
+  readonly answered: number;
+  readonly running: boolean;
+  /** `null` while it is running, and the whole pass once it is over. */
+  readonly tookMs: number | null;
+  /** Empty while it runs: a half table would read as a Part that answers nowhere. */
+  readonly offsets: readonly SweepOffset[];
+  /**
+   * Whether there was a previous sweep of this same operator to compare with.
+   *
+   * «Nothing moved» and «there is nothing to have moved from» are two different
+   * facts, and a first sweep drawn as SIN CAMBIOS would be the app claiming a
+   * comparison it never made.
+   */
+  readonly compared: boolean;
+  /**
+   * Every `al` that moved since the previous sweep of this same operator.
+   *
+   * A list and not a flag: one panel change landing in **two** places is the
+   * interesting failure, and a flag could not say it.
+   */
+  readonly changed: readonly number[];
 }
 
 /** No run yet: dashes, not zeros with a story behind them. */

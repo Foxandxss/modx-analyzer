@@ -49,7 +49,11 @@ pub enum Priority {
     Anchor,
     /// The 42 addresses behind the operator diagram.
     WideRing,
-    /// The 43 of the open operator. It has no consumer this session.
+    /// The 43 of the open operator. The operator editor it was named for is not
+    /// this session's, but the lane has a consumer: the read-only sweep of one
+    /// operator block ([`crate::sweep`]), which is those same offsets asked once
+    /// instead of in a cycle. Behind the anillo ancho on purpose — a sweep is one
+    /// press and 47 round trips, and the diagram must not stop for it.
     NarrowRing,
     /// The note generator of the bridge measurement (#8), and nothing else.
     ///

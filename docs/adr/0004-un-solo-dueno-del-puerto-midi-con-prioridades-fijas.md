@@ -21,6 +21,11 @@ porque un reparto round-robin dejaría que el anillo estrecho ahogue al ancla ju
 está tocando, que es cuando la latencia sube de 2 ms a 10 ms de mediana y el peor momento para dejar
 de saber si le han cambiado el patch por debajo.
 
+El carril del anillo estrecho tiene ya un consumidor aunque el editor de operador para el que se
+nombró no sea de esta sesión: el **barrido** de #16, que son esas mismas direcciones de un operador
+pedidas una vez en vez de en ciclo. Va detrás del anillo ancho a propósito — es una pulsación y 47
+ida y vuelta, y el diagrama no puede pararse por ella.
+
 ## Consequences
 
 - Bajo notas densas los anillos bajan a ~2,4 Hz, pero el ancla conserva su hueco de 1 Hz.

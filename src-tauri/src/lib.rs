@@ -5,6 +5,7 @@ mod dumps;
 mod generator;
 mod keyboard;
 mod patch;
+mod sweep;
 
 use audio::Audio;
 use connection::Connection;
@@ -12,6 +13,7 @@ use dumps::Dumps;
 use generator::Generator;
 use keyboard::Keyboard;
 use patch::Patch;
+use sweep::Sweeps;
 use tauri::{LogicalSize, Manager};
 
 /// The measured useful client area on the target laptop: a 14" panel of
@@ -49,6 +51,7 @@ pub fn run() {
         .manage(Dumps::new())
         .manage(Patch::new())
         .manage(Generator::new())
+        .manage(Sweeps::new())
         .invoke_handler(tauri::generate_handler![
             app_info,
             dumps::last_dump,
@@ -58,7 +61,8 @@ pub fn run() {
             audio::measure_window,
             generator::start_generator,
             generator::stop_generator,
-            generator::generator_state
+            generator::generator_state,
+            sweep::sweep_operator
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

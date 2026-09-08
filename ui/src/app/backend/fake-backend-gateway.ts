@@ -12,6 +12,8 @@ import {
   PatchHeaderView,
   PortLoss,
   RereadProgress,
+  SweepOffset,
+  SweepView,
   Topology,
   invalidated,
   noGenerator,
@@ -55,6 +57,12 @@ export class FakeBackendGateway implements BackendGateway {
 
   /** Nothing has been generated: no run has been asked for. */
   readonly generator = signal<GeneratorView>(noGenerator());
+
+  /** No barrido asked for: the block on screen is not there at all. */
+  readonly sweep = signal<SweepView | null>(null);
+
+  /** Every `(parte, operador)` a sweep has been asked for, in order. */
+  readonly sweepCalls: { part: number; operator: number }[] = [];
 
   /** How many times the generator has been started and stopped. */
   generatorStarts = 0;
@@ -121,6 +129,23 @@ export class FakeBackendGateway implements BackendGateway {
     // The native side answers by emitting, so the state moves here too: a run
     // that started is a run the readout has to be able to see.
     this.generator.update((view) => ({ ...view, running: true, stepMs: 40 }));
+    return Promise.resolve();
+  }
+
+  /**
+   * Test driver: the native side takes the sweep and says what it found.
+   *
+   * The default is the fake MODX's own answer for a Part that is there — the 39
+   * offsets the Data List accounts for, and dashes at the eight it does not.
+   * Whether the **real** keyboard answers at 43 of them is the whole of #16 and
+   * cannot be decided here, so nothing in this file pretends it can.
+   */
+  sweepResult: (part: number, operator: number) => SweepView = (part, operator) =>
+    fakeSweep(part, operator);
+
+  sweepOperator(part: number, operator: number): Promise<void> {
+    this.sweepCalls.push({ part, operator });
+    this.sweep.set(this.sweepResult(part, operator));
     return Promise.resolve();
   }
 
@@ -250,4 +275,55 @@ export class FakeBackendGateway implements BackendGateway {
     }
     this.ring = kept;
   }
+}
+
+/** The offsets the table accounts for as parameters: `00`-`25`, and `2A` reserved. */
+const NAMED_OFFSETS = 0x26;
+const RESERVED_AT = 0x2a;
+const BLOCK_SIZE = 47;
+
+/**
+ * A sweep as the fake MODX answers it: every offset the table names comes back,
+ * and the rest are dashes.
+ *
+ * It is the app asking where the app thinks the parameters are, which is all a
+ * fake can ever show. The reading that matters — whether the MODX answers at
+ * `(op << 4) | part` for a Part 2, and at how many of the 47 — needs the
+ * keyboard, and is written down in `docs/results` rather than modelled here.
+ */
+export function fakeSweep(part: number, operator: number, changed: number[] = []): SweepView {
+  const offsets: SweepOffset[] = Array.from({ length: BLOCK_SIZE }, (_, al) => {
+    const answers = al < NAMED_OFFSETS || al === RESERVED_AT;
+    return {
+      al,
+      address: terna(part, operator, al),
+      value: answers ? 0 : null,
+      name: al < NAMED_OFFSETS ? `Parámetro ${hex(al)}` : null,
+      provenance: al >= RESERVED_AT ? 'documentado' : 'medido',
+      reserved: al >= RESERVED_AT,
+      changed: changed.includes(al),
+    };
+  });
+
+  return {
+    part,
+    operator,
+    done: BLOCK_SIZE,
+    total: BLOCK_SIZE,
+    answered: offsets.filter((offset) => offset.value !== null).length,
+    running: false,
+    tookMs: 310,
+    offsets,
+    compared: changed.length > 0,
+    changed,
+  };
+}
+
+/** `49 21 1A`, the way the native side writes it: `(op << 4) | part`, base zero. */
+function terna(part: number, operator: number, al: number): string {
+  return `49 ${hex(((operator - 1) << 4) | (part - 1))} ${hex(al)}`;
+}
+
+function hex(byte: number): string {
+  return byte.toString(16).toUpperCase().padStart(2, '0');
 }

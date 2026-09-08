@@ -9,6 +9,7 @@ import { DevReadout } from './shell/dev-readout/dev-readout';
 import { Header } from './shell/header/header';
 import { PanicNotice } from './shell/panic/panic-notice';
 import { RereadStrip } from './shell/reread-strip/reread-strip';
+import { SweepReadout } from './shell/sweep-readout/sweep-readout';
 import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
 
 /**
@@ -32,6 +33,7 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
     FiguresColumn,
     TabPanel,
     DevReadout,
+    SweepReadout,
   ],
   template: `
     <app-header />
@@ -49,6 +51,9 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
     <!-- El instrumento con el que se mide la sesión, no parte del diseño: se va
          cuando las cifras estén en docs/results. -->
     <app-dev-readout />
+    <!-- El barrido de #16: mismo sitio y mismo trato que la lectura de arriba,
+         debajo del todo porque es lo que menos se mira. -->
+    <app-sweep-readout />
   `,
   styles: `
     :host {

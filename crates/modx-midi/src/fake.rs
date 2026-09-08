@@ -202,6 +202,23 @@ impl FakeModx {
         fake
     }
 
+    /// A second FM-X Part, built from `Init Normal (FM-X)` the way #16 asks the
+    /// owner to build one on the panel: the eight operators and the Part's own
+    /// FM-X block, at the same documented defaults as the Part 1.
+    ///
+    /// It is what makes a Part 2 sweep testable at all, and it is **not** evidence
+    /// that the keyboard behaves this way: the fake addresses it with
+    /// `(op << 4) | part` because that is the rule the app assumes, so a sweep
+    /// against the fake can only ever show that the app asks where it thinks it
+    /// asks. Whether the MODX answers there is the measurement, and it is the
+    /// whole of #16.
+    pub fn load_fmx_part(&mut self, part: u8) {
+        for operator in 1..=8 {
+            self.load_block(&table::OPERATOR, part, operator);
+        }
+        self.load_block(&table::PART_FMX, part, 1);
+    }
+
     /// Load a whole block at its documented defaults, with the table's ranges as
     /// the ceilings it saturates at. `operator` is ignored outside the operator
     /// block.

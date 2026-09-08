@@ -99,6 +99,14 @@ pub fn encode(value: u32, length: u8) -> Vec<u8> {
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Layout {
     /// `am = ((operador - 1) << 4) | (part - 1)`, measured in fase 0b.
+    ///
+    /// **Measured on the Part 1 and on the Part 1 only.** Every function here
+    /// takes the Part as a parameter and nothing hardcodes the 1, so the app is
+    /// written as if the rule were parameterized — but the half of it that has
+    /// been read off a keyboard is `part = 1`. What promotes the other Parts is
+    /// [`crate::sweep`], read-only, and until it has been taken with the MODX in
+    /// front of somebody, a Part 2 address is the app asking where it thinks the
+    /// parameter is.
     Operator,
     /// `am = part - 1`: one instance of the block per Part.
     Part,
@@ -225,6 +233,11 @@ impl Entry {
 ///
 /// The 31 offsets the spike's map named are `medido`, plus the five-byte
 /// Controller Set block it read back; the rest is the Data List.
+///
+/// **Every `medido` here was measured at `part = 1`.** A grade belongs to an
+/// entry and not to a Part, so nothing in this block says anything about where
+/// the same parameter lives on a Part 2: that is the addressing rule
+/// ([`Layout::Operator`]), and it is swept rather than assumed ([`crate::sweep`]).
 ///
 /// **Where the sources disagree**: the Data List gives `2A` as five reserved bytes,
 /// which leaves 39 offsets answering in this block. The fase 0c blind sweep counted
