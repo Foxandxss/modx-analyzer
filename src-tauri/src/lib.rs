@@ -54,6 +54,7 @@ pub fn run() {
         .manage(Sweeps::new())
         .invoke_handler(tauri::generate_handler![
             app_info,
+            connection::connection_state,
             dumps::last_dump,
             keyboard::panic_keyboard,
             keyboard::retry_connection,

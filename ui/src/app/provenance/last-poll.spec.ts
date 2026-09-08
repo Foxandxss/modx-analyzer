@@ -1,5 +1,5 @@
 import { OperatorsView, PatchHeaderView, noOperators, noPatch } from '../backend/backend-gateway';
-import { lastPollAt } from './last-poll';
+import { lastPollAt, pollAgeSeconds } from './last-poll';
 
 function polledAt(readAt: number): PatchHeaderView {
   return {
@@ -37,5 +37,23 @@ describe('lastPollAt', () => {
    */
   it('ignores the figures an ancla change took the numbers out of', () => {
     expect(lastPollAt(polledAt(7000), noOperators())).toBe(7000);
+  });
+});
+
+describe('pollAgeSeconds', () => {
+  it('is the distance between the two instants, in seconds', () => {
+    expect(pollAgeSeconds(1000, 4500)).toBeCloseTo(3.5);
+  });
+
+  /**
+   * `readAt` is aligned onto this side's clock from an age carried on the wire,
+   * so it can land a few milliseconds ahead of `now`. That put
+   * `ÚLTIMO SONDEO -0.1 s` on screen during the 2026-09-08 keyboard session
+   * (#18): a keyboard that answered in the future, which is not a smaller truth
+   * than zero.
+   */
+  it('never reads as a keyboard that answered in the future', () => {
+    expect(pollAgeSeconds(4600, 4500)).toBe(0);
+    expect(pollAgeSeconds(4500, 4500)).toBe(0);
   });
 });

@@ -37,3 +37,16 @@ export function lastPollAt(patch: PatchHeaderView, operators: OperatorsView): nu
   }
   return newest;
 }
+
+/**
+ * How long ago that was, in seconds, never negative.
+ *
+ * `readAt` is an age from the wire aligned onto this side's clock, so it can land
+ * a few milliseconds **ahead** of `now` — which put `ÚLTIMO SONDEO -0.1 s` on
+ * screen during the 2026-09-08 keyboard session (#18). A negative age is not a
+ * smaller truth than zero, it is a keyboard that answered in the future, so the
+ * clamp lives here rather than in each of the two places that print it.
+ */
+export function pollAgeSeconds(at: number, now: number): number {
+  return Math.max(0, (now - at) / 1000);
+}

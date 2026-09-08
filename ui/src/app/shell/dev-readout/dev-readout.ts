@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { AudioService } from '../../audio/audio-service';
 import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
 import { Clock } from '../../provenance/clock';
-import { lastPollAt } from '../../provenance/last-poll';
+import { lastPollAt, pollAgeSeconds } from '../../provenance/last-poll';
 import { DEAD_MARK } from '../../provenance/provenance';
 
 /**
@@ -131,9 +131,10 @@ export class DevReadout {
 
   /**
    * The last relectura: how many of the addresses answered and what the whole
-   * pass cost. Both are figures #13 asks for with the keyboard in front of you —
-   * the design expects ~0,9 s idle and ~5,5 s while somebody plays, and the fase
-   * 0c sweep put the answers at 415 of 416 on the first try.
+   * pass cost. Both were measured on the MODX8 on 2026-09-08 (#13): **1,7 s and
+   * 383 of 384**, four times running, and the same 1,7 s with a chord held right
+   * through the change. The design expected ~0,9 s idle and ~5,5 s playing; the
+   * first was optimistic and the second was wrong — playing costs it nothing.
    */
   protected readonly rereadLine = computed(() => {
     const pass = this.backend.reread();
@@ -160,7 +161,7 @@ export class DevReadout {
       return `${connection.portName ?? DEAD_MARK} · ABIERTO`;
     }
     const at = lastPollAt(this.backend.patch(), this.backend.operators());
-    const since = at === null ? DEAD_MARK : `${((this.clock.now() - at) / 1000).toFixed(1)} s`;
+    const since = at === null ? DEAD_MARK : `${pollAgeSeconds(at, this.clock.now()).toFixed(1)} s`;
     return `DESCONECTADO · ${connection.loss ?? DEAD_MARK} · ÚLTIMO SONDEO ${since}`;
   });
 

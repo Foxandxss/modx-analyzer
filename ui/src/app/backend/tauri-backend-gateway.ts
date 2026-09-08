@@ -147,7 +147,25 @@ export class TauriBackendGateway implements BackendGateway {
   readonly sweep = signal<SweepView | null>(null);
 
   constructor() {
-    this.listenInto('modx://connection', this.connection);
+    // Heard once, and after that the event is the only writer. It exists so the
+    // ask below cannot overwrite a newer state with the one it set off to fetch.
+    let heardConnection = false;
+    this.listen<ConnectionView>('modx://connection', (view) => {
+      heardConnection = true;
+      this.connection.set(view);
+    });
+
+    // And the port is opened on a thread during setup, so `modx://connection`
+    // has very likely gone before this window ran a line of JavaScript — and
+    // `LinkWatch` only re-emits **on a change**, so with a keyboard that is there
+    // and stays there the next one never comes. Missing it left the app saying
+    // `DESCONECTADO` over an answering port for a whole session (#18).
+    void invoke<ConnectionView>('connection_state').then((state) => {
+      if (!heardConnection) {
+        this.connection.set(state);
+      }
+    });
+
     this.listenInto('modx://reread', this.reread);
     this.listenInto('modx://dump', this.dump);
     this.listenInto('modx://generator', this.generator);

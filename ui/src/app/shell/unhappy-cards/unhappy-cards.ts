@@ -3,7 +3,7 @@ import { AudioService } from '../../audio/audio-service';
 import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
 import { Clock } from '../../provenance/clock';
 import { DEAD_MARK } from '../../provenance/provenance';
-import { lastPollAt } from '../../provenance/last-poll';
+import { lastPollAt, pollAgeSeconds } from '../../provenance/last-poll';
 
 /**
  * Los estados que no son felices: the two cards this session draws.
@@ -70,7 +70,7 @@ export class UnhappyCards {
     if (at === null) {
       return DEAD_MARK;
     }
-    return `${Math.max(0, Math.round((this.clock.now() - at) / 1000))} s`;
+    return `${Math.round(pollAgeSeconds(at, this.clock.now()))} s`;
   });
 
   /** True between the press of `REINTENTAR` and the port answering one way or the other. */

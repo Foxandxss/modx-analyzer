@@ -85,12 +85,7 @@ impl Connection {
     /// is gone, and 2 080 messages down a dead handle is a second of not
     /// silencing anything.
     pub fn is_disconnected(app: &AppHandle) -> bool {
-        app.state::<Connection>()
-            .view
-            .lock()
-            .expect("the connection lock is not held across a panic")
-            .port
-            == "disconnected"
+        app.state::<Connection>().view().port == "disconnected"
     }
 
     /// Say what the audio device reports, leaving the port fields as they were.
@@ -107,6 +102,17 @@ impl Connection {
         });
     }
 
+    /// The merged view as it stands right now.
+    ///
+    /// Nobody is told anything by asking: this is the same value the last
+    /// [`EVENT_CONNECTION`] carried, for whoever was not listening when it went.
+    pub fn view(&self) -> ConnectionView {
+        self.view
+            .lock()
+            .expect("the connection lock is not held across a panic")
+            .clone()
+    }
+
     fn update(app: &AppHandle, change: impl FnOnce(&mut ConnectionView)) {
         let state = app.state::<Connection>();
         let view = {
@@ -119,4 +125,23 @@ impl Connection {
         };
         let _ = app.emit(EVENT_CONNECTION, view);
     }
+}
+
+/// What the link is doing, for a window that opened after the port did.
+///
+/// `Keyboard::connect` emits [`EVENT_CONNECTION`] from the setup thread, very
+/// likely before this window has run a line of JavaScript, and [`LinkWatch`]
+/// only re-emits **on a change** — so with a keyboard that is there and stays
+/// there, the one event saying so is missed and never repeated. The front then
+/// draws its own opening default, `DESCONECTADO` with no reason, for the rest of
+/// the session over a port that is answering.
+///
+/// That is exactly what happened on the 2026-09-08 keyboard session (#18), and
+/// it is why the volcado and the generator are asked for as well as listened to.
+/// This is the same guard for the third of them.
+///
+/// [`LinkWatch`]: modx_midi::link::LinkWatch
+#[tauri::command]
+pub fn connection_state(app: AppHandle) -> ConnectionView {
+    app.state::<Connection>().view()
 }
