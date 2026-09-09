@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  html,body{margin:0;background:#0b0e0f}
+  @keyframes livePulse{0%,100%{opacity:.35}50%{opacity:1}}
+  @keyframes shutterCall{0%,100%{box-shadow:0 0 0 1px rgba(243,177,63,.35),0 0 22px -8px rgba(243,177,63,.45)}50%{box-shadow:0 0 0 2px rgba(243,177,63,.7),0 0 34px -6px rgba(243,177,63,.8)}}
+  a{color:#7df0b0}a:hover{color:#a9f7cd}
+</style>
+</helmet>
+
+<section style="padding:40px 40px 80px;display:flex;flex-direction:column;gap:16px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1280px">
+    <div style="font-size:32px;color:#d6e2dd">Round 8 — the app is running, and it now speaks English</div>
+    <div style="font-size:15px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Nothing from rounds 3–7 is reverted. What changes: the vocabulary (see <span style="color:#d6e2dd">GLOSSARY.md</span>, which is the deliverable this sheet draws), the operator node gets its bars back (<a href="#8c">8c</a>), the measured column stops looking broken before the first capture (<a href="#8d">8d</a>), the scope states its contract in writing (<a href="#8e">8e</a>), and the algorithm becomes the primary surface whenever there is nothing measured on the screen (<a href="#8f">8f</a>). Two things are <span style="color:#d6e2dd">removed</span>: the anchor's debug eyebrow and the two disabled mode buttons.</div>
+    <div style="font-size:13px;color:#6f817c;line-height:1.6;max-width:1280px">The running app's screenshots <span style="color:#8fa39d">have now arrived and are checked against every answer here</span> — see <a href="#8h">8h</a>, which corrects four figures and a count, and adds a provenance word I had missed. <span style="color:#8fa39d">The viewport question is deferred by the owner</span>: the target stays 1280×800 and 125 % is not part of this round.</div>
+  </div>
+
+  <div id="8a" style="display:flex;flex-direction:column;gap:12px;margin-top:20px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">8a</span>
+      <span style="font-size:26px;color:#d6e2dd">The header — the naming pass, and two removals</span>
+      <span style="font-size:15px;color:#8fa39d">1280×58 · answers §1, §2c and §2g</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#8a5f4a">BEFORE — TRANSCRIBED FROM THE RUNNING BUILD (screenshots/RUNNING-app-*.jpg), STRING FOR STRING</div>
+      <div style="width:1280px;box-sizing:border-box;height:58px;display:flex;align-items:center;gap:12px;padding:0 14px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(#0b0f11,#080b0d)">
+        <span style="width:9px;height:9px;border-radius:50%;background:#7df0b0;box-shadow:0 0 10px #7df0b0;flex:0 0 auto"></span>
+        <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#8fa39d;white-space:nowrap">MODX-1</span>
+        <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:2px;margin-left:6px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.24em;color:#8a5f4a;white-space:nowrap">ANCLA · 1 Hz · 31 00 00</span>
+          <span style="font-size:17px;color:#d6e2dd;white-space:nowrap">FM CS80 Brass</span>
+        </div>
+        <span style="flex:0 0 auto;padding:5px 12px;border-radius:999px;border:1px solid rgba(243,177,63,.4);font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#f3b13f;white-space:nowrap">ALG 37</span>
+        <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#5d6d69;white-space:nowrap">FE Line</span>
+        <div style="flex:0 0 auto;display:flex;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.14)">
+          <span style="padding:11px 16px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#eaf7fd;background:rgba(125,240,176,.12);white-space:nowrap">CREAR</span>
+          <span style="padding:11px 16px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#3d4a48;background:#0a0d0e;white-space:nowrap">A/B</span>
+          <span style="padding:11px 16px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#3d4a48;background:#0a0d0e;white-space:nowrap">APRENDER</span>
+        </div>
+        <div style="flex:1"></div>
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid rgba(125,240,176,.28);background:rgba(125,240,176,.06)">
+          <span style="width:7px;height:7px;border-radius:50%;background:#7df0b0;animation:livePulse 1.4s ease-in-out infinite;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#7df0b0;white-space:nowrap">MIRAR · 33.2 fps</span>
+        </div>
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:11px 18px 11px 13px;border:1.5px solid rgba(243,177,63,.4);border-radius:999px 8px 8px 999px;background:rgba(243,177,63,.04)">
+          <span style="width:24px;height:24px;border-radius:50%;border:2px solid rgba(243,177,63,.5);background:radial-gradient(circle,rgba(243,177,63,.5) 34%,transparent 36%);display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;letter-spacing:.2em;color:#8a7038;white-space:nowrap">MEDIR</span>
+          <div style="width:1px;height:24px;background:rgba(243,177,63,.25)"></div>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;line-height:1.3;color:#5d6d69;white-space:nowrap">65536<br>NOTA SOST.</span>
+        </div>
+        <div style="flex:0 0 auto;width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:6px"></div>
+        <div style="flex:0 0 auto;width:56px;height:56px;background:#140a08;border:1.5px solid rgba(255,122,92,.5);display:flex;align-items:center;justify-content:center;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.06em;color:#ff9d85">CALLA</span>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#8fa39d;line-height:1.6;max-width:1280px;text-wrap:pretty">Four things, and only one of them is language. <span style="color:#d6e2dd">MIRAR</span> and <span style="color:#d6e2dd">MEDIR</span> are two verbs from the same family, so translating them to WATCH and MEASURE would have kept the confusion exactly where it was. <span style="color:#d6e2dd">ANCLA · 1 Hz · 31 00 00</span> is a poll rate and a SysEx address in the most expensive 200 px on the screen. Two disabled buttons make a working control look broken. And <span style="color:#d6e2dd">the fourth is not a problem at all</span> — the octagon already ships as <span style="color:#d6e2dd">CALLA</span> rather than PÁNICO, which is a better word than the one I specified, and <a href="#8h">8h</a> takes it into English rather than reverting it.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+      <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#4f8f70">AFTER — SAME SESSION, SAME VALUES. THE ONLY DELTAS ARE THE WORDS AND THE TWO REMOVALS</div>
+      <div style="width:1280px;box-sizing:border-box;height:58px;display:flex;align-items:center;gap:12px;padding:0 14px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(#0b0f11,#080b0d)">
+        <span style="width:9px;height:9px;border-radius:50%;background:#7df0b0;box-shadow:0 0 10px #7df0b0;flex:0 0 auto"></span>
+        <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#8fa39d;white-space:nowrap">MODX-1</span>
+        <span style="flex:0 0 auto;font-size:17px;color:#d6e2dd;white-space:nowrap;margin-left:6px">FM CS80 Brass</span>
+        <span style="flex:0 0 auto;padding:5px 12px;border-radius:999px;border:1px solid rgba(243,177,63,.4);font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#f3b13f;white-space:nowrap">ALGORITHM 37</span>
+        <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#5d6d69;white-space:nowrap">FE Line</span>
+        <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:1px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#d6e2dd;white-space:nowrap">BUILD</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.1em;color:#5d6d69;white-space:nowrap">the only mode built</span>
+        </div>
+        <div style="flex:1"></div>
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid rgba(125,240,176,.28);background:rgba(125,240,176,.06)">
+          <span style="width:7px;height:7px;border-radius:50%;background:#7df0b0;animation:livePulse 1.4s ease-in-out infinite;display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#7df0b0;white-space:nowrap">LIVE · 33.2 fps</span>
+        </div>
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:11px 18px 11px 13px;border:1.5px solid #f3b13f;border-radius:999px 8px 8px 999px;background:linear-gradient(180deg,rgba(243,177,63,.22),rgba(243,177,63,.06));animation:shutterCall 2.6s ease-in-out infinite">
+          <span style="width:24px;height:24px;border-radius:50%;border:2px solid #f3b13f;background:radial-gradient(circle,#f3b13f 34%,transparent 36%);display:block"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;letter-spacing:.2em;color:#ffd08a;white-space:nowrap">CAPTURE</span>
+          <div style="width:1px;height:24px;background:rgba(243,177,63,.35)"></div>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;line-height:1.3;color:#c69445;white-space:nowrap">65536<br>NEEDS A HELD NOTE</span>
+        </div>
+        <div style="flex:0 0 auto;width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:6px"></div>
+        <div style="flex:0 0 auto;width:56px;height:56px;background:#140a08;border:1.5px solid rgba(255,122,92,.5);display:flex;align-items:center;justify-content:center;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.06em;color:#ff9d85">HUSH</span>
+        </div>
+      </div>
+      <div style="font-size:12.5px;color:#6f817c;line-height:1.6;max-width:1280px;text-wrap:pretty">Deltas, and there are only these: the eyebrow is <span style="color:#8fa39d">gone</span>; the three-way switch is <span style="color:#8fa39d">gone</span> and its live third is a label; <span style="font-family:ui-monospace,Consolas,monospace">MIRAR → LIVE</span>, <span style="font-family:ui-monospace,Consolas,monospace">MEDIR → CAPTURE</span>, <span style="font-family:ui-monospace,Consolas,monospace">NOTA SOST. → NEEDS A HELD NOTE</span>, <span style="font-family:ui-monospace,Consolas,monospace">ALG → ALGORITHM</span>, <span style="font-family:ui-monospace,Consolas,monospace">CALLA → HUSH</span>. Patch name, algorithm number, frame rate and window size are the build's own and carry through untouched. <span style="color:#8fa39d">One string is deliberately left in place:</span> <span style="font-family:ui-monospace,Consolas,monospace">FE Line</span> — I do not know what it reads out, and the round-1 rule says I do not rename what I cannot define. It is the one open row in <span style="font-family:ui-monospace,Consolas,monospace">GLOSSARY.md</span>.</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;width:1280px;background:rgba(255,255,255,.08);margin-top:10px">
+      <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#7df0b0">LIVE IS A STATE · CAPTURE IS AN ACT</div>
+        <div style="font-size:13px;color:#8fa39d;line-height:1.6;text-wrap:pretty">WATCH/MEASURE would have failed the same way MIRAR/MEDIR did — both are verbs meaning <span style="color:#d6e2dd">look at the sound</span>. LIVE and CAPTURE are not even the same part of speech, so the grammar does the separating before the reading does. And CAPTURE gives the app the noun it was missing: the shutter leaves behind <span style="color:#d6e2dd">a capture</span>, and a capture has a window, an age and a note. <span style="color:#d6e2dd">ÚLTIMA MEDIDA</span> had to borrow the verb.</div>
+      </div>
+      <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#58c8f5">THE EYEBROW EARNS NOTHING IN REST</div>
+        <div style="font-size:13px;color:#8fa39d;line-height:1.6;text-wrap:pretty">A non-debugging user needs <span style="color:#d6e2dd">the name, and only when it changes</span>. So in rest the anchor is the name at 17 px and nothing else. What earns its place is what round 6 already designed and this keeps intact: <span style="color:#d6e2dd">the change flash</span> with the old name struck through, and <span style="color:#d6e2dd">NOT MEASURED IN THIS SOUND</span> afterwards. The poll rate and <span style="font-family:ui-monospace,Consolas,monospace">31 00 00</span> go to the check screen — which the anchor already opens on touch, so nothing becomes unreachable.</div>
+      </div>
+      <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#f3b13f">AN UNBUILT MODE IS NOT A DISABLED BUTTON</div>
+        <div style="font-size:13px;color:#8fa39d;line-height:1.6;text-wrap:pretty">The app's own rule says a disabled control keeps full opacity and stays readable — but that rule is for a control that <span style="color:#d6e2dd">will work when its precondition is met</span>. A mode with no code behind it has no precondition. So the switch <span style="color:#d6e2dd">renders only what exists</span>: today one label, not a segmented control with two dead thirds. When A/B lands, the label becomes a two-way switch; when LEARN lands, three. The roadmap line sits under the label at 8 px, where it costs nothing and promises nothing.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="8b" style="display:flex;flex-direction:column;gap:12px;margin-top:40px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">8b</span>
+      <span style="font-size:26px;color:#d6e2dd">The stamps become four words and two shapes</span>
+      <span style="font-size:15px;color:#8fa39d">the distinction is untouched; only its ink cost changes</span>
+    </div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty">Four of them are four different <span style="color:#d6e2dd">sources</span> and need a word: no shape distinguishes "a real window of audio" from "arithmetic on a poll" from "the keyboard answered" from "Yamaha's table says so". The other two are not sources — they are a source <span style="color:#d6e2dd">plus a modifier</span>, and both modifiers were already being drawn. <span style="color:#d6e2dd">DOCUMENTED is the app's own word</span>, taken from the running build: see <a href="#8h">8h</a>.</div>
+
+    <div style="display:flex;gap:2px;width:1280px;background:rgba(255,255,255,.08)">
+
+      <div style="flex:1;background:#0a0f10;padding:18px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#4f8f70">KEEP THE WORD — FOUR SOURCES</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="align-self:flex-start;padding:6px 12px;border-radius:999px;border:1.5px solid rgba(125,240,176,.55);background:rgba(125,240,176,.08);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#7df0b0">MEASURED · 65536</span>
+            <span style="font-size:12px;color:#6f817c;line-height:1.55">a real 65 536-sample window of real audio · the only figure that can contradict the theory</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="align-self:flex-start;padding:6px 12px;border-radius:999px;border:1.5px dashed rgba(243,177,63,.65);background:rgba(243,177,63,.06);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#ffd08a">PREDICTED</span>
+            <span style="font-size:12px;color:#6f817c;line-height:1.55">arithmetic on a poll — <span style="font-family:ui-monospace,Consolas,monospace">note freq × ratio</span>, or <span style="font-family:ui-monospace,Consolas,monospace">|Jₙ(I)|</span> · a claim that can be wrong</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="align-self:flex-start;padding:6px 12px;border-radius:999px;border:1.5px solid rgba(88,200,245,.55);background:rgba(88,200,245,.07);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#bfe9fb">POLLED · 10.4 Hz</span>
+            <span style="font-size:12px;color:#6f817c;line-height:1.55">the app asked by SysEx and the keyboard answered · once per zone header, not per figure</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="align-self:flex-start;padding:6px 12px;border-radius:999px;border:1.5px solid rgba(255,255,255,.22);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#8fa39d">DOCUMENTED</span>
+            <span style="font-size:12px;color:#6f817c;line-height:1.55">Yamaha's table says so — the routes, the ranges, the defaults · <span style="color:#8fa39d">paper has no colour</span>: neutral ink, solid outline</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1;background:#0a0f10;padding:18px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#8a5f4a">DROP THE WORD — THE SHAPE ALREADY SAID IT</div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="padding:6px 12px;border-radius:999px;border:1.5px dotted rgba(88,200,245,.45);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#7fa7b6">POLLED · 0.40 s</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.14em;color:#5d6d69">WAS: CADUCO</span>
+            </div>
+            <span style="font-size:12px;color:#6f817c;line-height:1.55;text-wrap:pretty">Stale is <span style="color:#8fa39d">POLLED plus age</span>, and both halves were already drawn: the broken outline and the seconds. The word was the third statement of a thing said twice. This is the stamp that appears most — forty addresses, ten times a second — so this is where the saving lands.</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="width:118px;height:44px;border-radius:6px;border:1.5px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:22px;color:#3f4d4a">—</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.14em;color:#5d6d69">WAS: INVALIDADO</span>
+            </div>
+            <span style="font-size:12px;color:#6f817c;line-height:1.55;text-wrap:pretty">Round 6 already decided a void figure <span style="color:#8fa39d">keeps its shape and loses its figure</span>. A dash inside a kept outline <span style="color:#8fa39d">is</span> the stamp. Writing VOID beside a dash is labelling a blank — and it puts uppercase text exactly where the eye is hunting for a number. Where it has to be said in words, the zone header says it <span style="color:#8fa39d">once</span>.</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:0 0 388px;background:#0a0f10;padding:18px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#8fa39d">SIX STATES, FOUR WORDS, STILL LEGIBLE IN GREYSCALE</div>
+        <div style="display:flex;flex-direction:column;gap:2px;background:rgba(255,255,255,.06)">
+          <div style="display:grid;grid-template-columns:1fr 78px;gap:2px">
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7df0b0">MEASURED · 65536</div>
+            <div style="background:#0d1214;padding:9px;display:flex;align-items:center;justify-content:center"><span style="width:54px;height:0;border-top:2px solid #7df0b0"></span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 78px;gap:2px">
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#ffd08a">PREDICTED</div>
+            <div style="background:#0d1214;padding:9px;display:flex;align-items:center;justify-content:center"><span style="width:54px;height:0;border-top:2px dashed #f3b13f"></span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 78px;gap:2px">
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#bfe9fb">POLLED · 10.4 Hz</div>
+            <div style="background:#0d1214;padding:9px;display:flex;align-items:center;justify-content:center"><span style="width:54px;height:0;border-top:2px solid #58c8f5"></span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 78px;gap:2px">
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d">DOCUMENTED</div>
+            <div style="background:#0d1214;padding:9px;display:flex;align-items:center;justify-content:center"><span style="width:54px;height:0;border-top:2px solid rgba(255,255,255,.35)"></span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 78px;gap:2px">
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7fa7b6">POLLED · 0.40 s</div>
+            <div style="background:#0d1214;padding:9px;display:flex;align-items:center;justify-content:center"><span style="width:54px;height:0;border-top:2px dotted #7fa7b6"></span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 78px;gap:2px">
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69">— &nbsp;(a dash, no word)</div>
+            <div style="background:#0d1214;padding:9px;display:flex;align-items:center;justify-content:center"><span style="width:54px;height:14px;border:1.5px solid rgba(255,255,255,.12);border-radius:4px"></span></div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#6f817c;line-height:1.55;text-wrap:pretty">Two words fewer on screen, six states still distinguishable without colour, and the two that lost their word are the two that were already unmistakable by shape.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="8c" style="display:flex;flex-direction:column;gap:12px;margin-top:40px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">8c</span>
+      <span style="font-size:26px;color:#d6e2dd">The operator node gets its bars back — and loses one fact</span>
+      <span style="font-size:15px;color:#8fa39d">118×108 · answers §2a and §4</span>
+    </div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty">The node shipped as text and the spectral form got ellipsised to <span style="font-family:ui-monospace,Consolas,monospace;color:#ff9d85">×0.50 ...</span> — which is the symptom, not the cause. <span style="color:#d6e2dd">The cause is that round 3 asked the node to hold six things in 118×108 and it only holds five.</span> So: the miniature AEG comes out. It has room in the 128 px card of ALL EIGHT and it has a whole panel in the editor; on the main screen it was the sixth fact in a five-fact box.</div>
+
+    <div style="display:flex;flex-direction:column;gap:16px;width:1280px">
+
+      <div style="display:flex;gap:2px;background:rgba(255,255,255,.08)">
+        <div style="flex:0 0 auto;background:#0a0f10;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#4f8f70">THE EIGHT AGAINST ONE CEILING DATUM — 99 · 0 · 90 · 99 · 72 · 64 · 0 · 55</div>
+          <div style="position:relative;display:flex;gap:10px;padding-top:24px">
+            <div style="position:absolute;left:-10px;right:-10px;top:25px;height:0;border-top:2px dashed rgba(255,255,255,.55);z-index:6;pointer-events:none"></div>
+            <span style="position:absolute;left:0;top:0;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.12em;color:#8fa39d">CEILING 99 — THE LOUDEST OPERATOR IN THIS PATCH. THE GAP BELOW IT IS WHAT YOU READ.</span>
+
+            <div style="position:relative;width:118px;height:108px;box-sizing:border-box;border:2px solid #f3b13f;border-radius:26px;background:#0d1214;overflow:hidden;box-shadow:0 0 30px -8px rgba(243,177,63,.7)">
+              <span style="position:absolute;left:0;right:0;bottom:0;height:99%;background:linear-gradient(to top,rgba(243,177,63,.5),rgba(243,177,63,.04));border-top:2px solid #f3b13f"></span>
+              <div style="position:relative;height:100%;padding:8px 10px;box-sizing:border-box;display:flex;flex-direction:column">
+                <div style="display:flex;align-items:baseline;gap:6px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#ffd08a">OP1</span>
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#c69445">CARR</span>
+                </div>
+                <div style="flex:1"></div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#ffe6bd">99</span>
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:3px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445">×1.00</span>
+                  <svg viewBox="0 0 18 14" width="18" height="14" style="display:block"><path d="M9 13V2" stroke="#f3b13f" stroke-width="2"></path></svg>
+                </div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#8a7038;letter-spacing:.06em">261.76 Hz</span>
+              </div>
+              <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:5px;bottom:5px;display:block"><path d="M21 9v12H9" stroke="#c69445" stroke-width="2" fill="none"></path></svg>
+            </div>
+
+            <div style="position:relative;width:118px;height:108px;box-sizing:border-box;border:1.5px dashed #3d4a48;border-radius:5px;background:#070a0b">
+              <div style="height:100%;padding:8px 10px;box-sizing:border-box;display:flex;flex-direction:column">
+                <div style="display:flex;align-items:baseline;gap:6px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#5d6d69">OP2</span>
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#4f5f5b">ZERO</span>
+                </div>
+                <div style="flex:1"></div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#3f4d4a">0</span>
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:3px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#3f4d4a">×1.00</span>
+                  <svg viewBox="0 0 18 14" width="18" height="14" style="display:block"><path d="M9 13V2" stroke="#3d4a48" stroke-width="2"></path></svg>
+                </div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#3f4d4a;letter-spacing:.06em">—</span>
+              </div>
+              <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:5px;bottom:5px;display:block"><path d="M21 9v12H9" stroke="#4f5f5b" stroke-width="2" fill="none"></path></svg>
+            </div>
+
+            <div style="position:relative;width:118px;height:108px;box-sizing:border-box;border:1.5px solid #58c8f5;border-radius:5px;background:#0a1013;overflow:hidden;box-shadow:0 0 26px -7px rgba(88,200,245,.75)">
+              <span style="position:absolute;left:0;right:0;bottom:0;height:90%;background:linear-gradient(to top,rgba(88,200,245,.46),rgba(88,200,245,.05));border-top:2px solid #58c8f5"></span>
+              <div style="position:relative;height:100%;padding:8px 10px;box-sizing:border-box;display:flex;flex-direction:column">
+                <div style="display:flex;align-items:baseline;gap:6px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#bfe9fb">OP3</span>
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#7fa7b6">MOD</span>
+                </div>
+                <div style="flex:1"></div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#eaf7fd">90</span>
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:3px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7fa7b6">×1.41</span>
+                  <svg viewBox="0 0 18 14" width="18" height="14" style="display:block"><path d="M3 13V4M9 13V6.5M15 13V9" stroke="#58c8f5" stroke-width="2"></path></svg>
+                </div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#7fa7b6;letter-spacing:.06em">369.18 Hz</span>
+              </div>
+              <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:5px;bottom:5px;display:block"><path d="M21 9v12H9" stroke="#7fa7b6" stroke-width="2" fill="none"></path></svg>
+            </div>
+
+            <div style="position:relative;width:118px;height:108px;box-sizing:border-box;border:2px solid #f3b13f;border-radius:26px;background:#0d1214;overflow:hidden;box-shadow:0 0 30px -8px rgba(243,177,63,.7)">
+              <span style="position:absolute;left:0;right:0;bottom:0;height:99%;background:linear-gradient(to top,rgba(243,177,63,.5),rgba(243,177,63,.04));border-top:2px solid #f3b13f"></span>
+              <div style="position:relative;height:100%;padding:8px 10px;box-sizing:border-box;display:flex;flex-direction:column">
+                <div style="display:flex;align-items:baseline;gap:6px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#ffd08a">OP4</span>
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#c69445">CARR</span>
+                </div>
+                <div style="flex:1"></div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#ffe6bd">99</span>
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:3px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445">×2.00</span>
+                  <svg viewBox="0 0 18 14" width="18" height="14" style="display:block"><path d="M9 13V2" stroke="#f3b13f" stroke-width="2"></path></svg>
+                </div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#8a7038;letter-spacing:.06em">523.53 Hz</span>
+              </div>
+              <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:5px;bottom:5px;display:block"><path d="M21 9v12H9" stroke="#c69445" stroke-width="2" fill="none"></path></svg>
+            </div>
+
+            <div style="position:relative;width:118px;height:108px;box-sizing:border-box;border:1.5px solid #58c8f5;border-radius:5px;background:#0a1013;overflow:hidden;box-shadow:0 0 26px -7px rgba(88,200,245,.75)">
+              <span style="position:absolute;left:0;right:0;bottom:0;height:72%;background:linear-gradient(to top,rgba(88,200,245,.46),rgba(88,200,245,.05));border-top:2px solid #58c8f5"></span>
+              <div style="position:relative;height:100%;padding:8px 10px;box-sizing:border-box;display:flex;flex-direction:column">
+                <div style="display:flex;align-items:baseline;gap:6px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#bfe9fb">OP5</span>
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#7fa7b6">MOD</span>
+                </div>
+                <div style="flex:1"></div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#eaf7fd">72</span>
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:3px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7fa7b6">×2.00</span>
+                  <svg viewBox="0 0 18 14" width="18" height="14" style="display:block"><path d="M3 13V9.5M8 13V3M13 13V8M17 13V10.5" stroke="#58c8f5" stroke-width="2"></path></svg>
+                </div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#7fa7b6;letter-spacing:.06em">523.53 Hz</span>
+              </div>
+              <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:5px;bottom:5px;display:block"><path d="M21 9v12H9" stroke="#7fa7b6" stroke-width="2" fill="none"></path></svg>
+            </div>
+
+            <div style="position:relative;width:118px;height:108px;box-sizing:border-box;border:1.5px solid #58c8f5;border-radius:5px;background:#0a1013;overflow:hidden;box-shadow:0 0 26px -7px rgba(88,200,245,.75)">
+              <span style="position:absolute;left:0;right:0;bottom:0;height:64%;background:linear-gradient(to top,rgba(88,200,245,.46),rgba(88,200,245,.05));border-top:2px solid #58c8f5"></span>
+              <div style="position:relative;height:100%;padding:8px 10px;box-sizing:border-box;display:flex;flex-direction:column">
+                <div style="display:flex;align-items:baseline;gap:6px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#bfe9fb">OP6</span>
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#7fa7b6">MOD</span>
+                </div>
+                <div style="flex:1"></div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#eaf7fd">64</span>
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:3px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7fa7b6">×7.00</span>
+                  <svg viewBox="0 0 18 14" width="18" height="14" style="display:block"><path d="M2 13V5M6 13V7M10 13V8.5M14 13V10M17.5 13V11.5" stroke="#58c8f5" stroke-width="1.6"></path></svg>
+                </div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#7fa7b6;letter-spacing:.06em">1832.3 Hz</span>
+              </div>
+              <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:5px;bottom:5px;display:block"><path d="M21 9v12H9" stroke="#7fa7b6" stroke-width="2" fill="none"></path></svg>
+            </div>
+
+            <div style="position:relative;width:118px;height:108px;box-sizing:border-box;border:1.5px dashed #3d4a48;border-radius:5px;background:#070a0b">
+              <div style="height:100%;padding:8px 10px;box-sizing:border-box;display:flex;flex-direction:column">
+                <div style="display:flex;align-items:baseline;gap:6px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#5d6d69">OP7</span>
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#4f5f5b">ZERO</span>
+                </div>
+                <div style="flex:1"></div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#3f4d4a">0</span>
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:3px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#3f4d4a">×1.00</span>
+                  <svg viewBox="0 0 18 14" width="18" height="14" style="display:block"><path d="M9 13V2" stroke="#3d4a48" stroke-width="2"></path></svg>
+                </div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#3f4d4a;letter-spacing:.06em">—</span>
+              </div>
+              <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:5px;bottom:5px;display:block"><path d="M21 9v12H9" stroke="#4f5f5b" stroke-width="2" fill="none"></path></svg>
+            </div>
+
+            <div style="position:relative;width:118px;height:108px;box-sizing:border-box;border:2px solid #f3b13f;border-radius:26px;background:#0d1214;overflow:hidden;box-shadow:0 0 30px -8px rgba(243,177,63,.7)">
+              <span style="position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(to top,rgba(243,177,63,.5),rgba(243,177,63,.04));border-top:2px solid #f3b13f"></span>
+              <div style="position:relative;height:100%;padding:8px 10px;box-sizing:border-box;display:flex;flex-direction:column">
+                <div style="display:flex;align-items:baseline;gap:6px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#ffd08a">OP8</span>
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#c69445">CARR</span>
+                </div>
+                <div style="flex:1"></div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:25px;line-height:1;color:#ffe6bd">55</span>
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:3px">
+                  <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445">×0.50</span>
+                  <svg viewBox="0 0 18 14" width="18" height="14" style="display:block"><path d="M2 13V6M6 13V4M10 13V6.5M14 13V8M17.5 13V10" stroke="#f3b13f" stroke-width="1.6"></path></svg>
+                </div>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;color:#8a7038;letter-spacing:.06em">130.88 Hz</span>
+              </div>
+              <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:5px;bottom:5px;display:block"><path d="M21 9v12H9" stroke="#c69445" stroke-width="2" fill="none"></path></svg>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:26px;align-items:center;padding-top:12px;border-top:2px solid rgba(255,255,255,.08)">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d">5 of 43 facts shown</span>
+            <span style="display:flex;align-items:center;gap:7px;font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d"><svg viewBox="0 0 22 22" width="16" height="16" style="display:block"><path d="M21 9v12H9" stroke="#8fa39d" stroke-width="2" fill="none"></path></svg>the corner opens the other 38</span>
+            <span style="display:flex;align-items:center;gap:7px;font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d"><span style="width:26px;height:0;border-top:2px dashed rgba(255,255,255,.3)"></span>the loudest operator in this patch</span>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#7fa7b6">the small Hz figure is PREDICTED · note freq × ratio</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:rgba(255,255,255,.08)">
+        <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#f3b13f">LEVEL → FILL HEIGHT: LINEAR 0–99, AND THAT IS NOT NEGOTIABLE</div>
+          <div style="font-size:13px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Any expanded or non-linear mapping makes the fill height stop meaning the figure — which is the spreadsheet trap in a new costume: a shape that lies is worse than a number alone. So the fill stays <span style="color:#d6e2dd">linear 0–99</span>.<br><br>The clustering problem is real, but it is not a mapping problem — it is that <span style="color:#d6e2dd">eight fills each had their own private baseline</span>. Give them one shared <span style="color:#d6e2dd">ceiling datum</span> at the patch's highest Level and the eye stops reading heights and starts reading <span style="color:#d6e2dd">the gaps above them</span>: OP3 is a hair under, OP5 a visible band, OP8 nearly half. 71 against 99 is 28 % of 108 px — 30 px of daylight, which is plenty once there is a line to measure it from.</div>
+        </div>
+        <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#58c8f5">THE SPECTRAL FORM AS A GLYPH, NOT A NAME</div>
+          <div style="font-size:13px;color:#8fa39d;line-height:1.6;text-wrap:pretty">The node stops writing <span style="font-family:ui-monospace,Consolas,monospace">Sine</span> / <span style="font-family:ui-monospace,Consolas,monospace">Odd 1</span> / <span style="font-family:ui-monospace,Consolas,monospace">All 1</span> at all — a word that ellipsises is worse than no word.<br><br>What survives at 18×14 is <span style="color:#d6e2dd">at most five strokes</span>, which is the same drawing as the big seven-way selector with its detail decimated: one stroke = Sine; evenly spaced descending = All; gapped = Odd; one tall stroke offset right = Res. Skirt is stroke width. Nobody learns the families from the node — they learn them once in the editor and then <span style="color:#d6e2dd">recognise</span> them here, which is all a 18 px glyph has to do.</div>
+        </div>
+        <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#7df0b0">THE CORNER — THE PATH TO THE EDITOR, MADE VISIBLE</div>
+          <div style="font-size:13px;color:#8fa39d;line-height:1.6;text-wrap:pretty">He had to ask where the other 38 parameters were, which means the path from a node to its editor was invisible. So every node grows an <span style="color:#d6e2dd">open corner</span> — two 2 px strokes in a 44×44 tap zone at bottom-right — the mark for <span style="color:#d6e2dd">there is more behind this</span>.<br><br>It is not a menu, not an icon and not a chevron: it is the same mark on all eight, and the <span style="color:#d6e2dd">words appear once</span>, in the diagram legend — <span style="font-family:ui-monospace,Consolas,monospace">5 of 43 facts shown · the corner opens the other 38</span>. Touching the node body still opens the editor as it always did; the corner is what makes that discoverable without teaching it.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="8d" style="display:flex;flex-direction:column;gap:12px;margin-top:40px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">8d</span>
+      <span style="font-size:26px;color:#d6e2dd">Before the first capture — the column is a contract, not a hole</span>
+      <span style="font-size:15px;color:#8fa39d">214 px · answers §2b</span>
+    </div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty">Born empty and empty all session is <span style="color:#d6e2dd">correct</span> — no capture, no numbers — but nothing said that CAPTURE is what fills it. The fix is not a hint that goes away: <span style="color:#d6e2dd">the empty column states what will fill each cell and who fills it</span>, and it draws the same shutter glyph as the button so the two are visibly one mechanism.</div>
+
+    <div style="display:flex;gap:2px;width:1280px;background:rgba(255,255,255,.08)">
+
+      <div style="flex:0 0 214px;background:#0a0f10;padding:12px 13px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;flex-direction:column;gap:8px;padding-bottom:12px;border-bottom:2px solid rgba(243,177,63,.22)">
+          <div style="display:flex;align-items:center;gap:9px">
+            <svg viewBox="0 0 26 26" width="26" height="26" style="display:block"><circle cx="13" cy="13" r="11" fill="none" stroke="#f3b13f" stroke-width="2" stroke-dasharray="5 4"></circle><circle cx="13" cy="13" r="4" fill="#f3b13f"></circle></svg>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.14em;color:#ffd08a;line-height:1.4">NOTHING<br>MEASURED YET</span>
+          </div>
+          <div style="font-size:12px;color:#8fa39d;line-height:1.55;text-wrap:pretty">Hold a note and press <span style="font-family:ui-monospace,Consolas,monospace;color:#ffd08a">CAPTURE</span>. One 1.5 s window fills every cell below.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,.05)">
+          <div style="background:#0a0f10;padding:11px 2px;display:flex;flex-direction:column;gap:3px">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#6f817c">MEASURED RATIO</span>
+            <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:29px;line-height:1;color:#3f4d4a">—</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">fm / fc</span></div>
+          </div>
+          <div style="background:#0a0f10;padding:11px 2px;display:flex;flex-direction:column;gap:3px">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#6f817c">fc / fm</span>
+            <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:20px;line-height:1;color:#3f4d4a">— / —</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">Hz</span></div>
+          </div>
+          <div style="background:#0a0f10;padding:11px 2px;display:flex;flex-direction:column;gap:3px">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#6f817c">INDEX I · FITTED</span>
+            <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:20px;line-height:1;color:#3f4d4a">—</span><span style="font-family:.9;font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">no I, no Bessel curve</span></div>
+          </div>
+          <div style="background:#0a0f10;padding:11px 2px;display:flex;flex-direction:column;gap:3px">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#6f817c">WORST PARTIAL</span>
+            <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:20px;line-height:1;color:#3f4d4a">—</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b">dB off prediction</span></div>
+          </div>
+          <div style="background:#0a0f10;padding:11px 2px;display:flex;flex-direction:column;gap:3px">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#6f817c">LAST CAPTURE</span>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#3f4d4a;line-height:1.5">never · this session</span>
+          </div>
+        </div>
+        <div style="flex:1"></div>
+        <button style="all:unset;cursor:pointer;box-sizing:border-box;min-height:44px;display:flex;align-items:center;justify-content:center;gap:9px;padding:11px;border-radius:999px;border:1.5px solid #f3b13f;background:linear-gradient(180deg,rgba(243,177,63,.2),rgba(243,177,63,.05));animation:shutterCall 2.6s ease-in-out infinite">
+          <svg viewBox="0 0 22 22" width="20" height="20" style="display:block"><circle cx="11" cy="11" r="9" fill="none" stroke="#f3b13f" stroke-width="2"></circle><circle cx="11" cy="11" r="3.4" fill="#f3b13f"></circle></svg>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;color:#ffd08a">CAPTURE</span>
+        </button>
+      </div>
+
+      <div style="flex:1;background:#0a0f10;padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#8fa39d">WHY A CONTRACT AND NOT A HINT</div>
+        <div style="display:flex;gap:20px">
+          <div style="flex:1;font-size:13px;color:#8fa39d;line-height:1.6;text-wrap:pretty">A hint that disappears after the first capture teaches the app once and then leaves the state undefined for every later session — and this column goes back to dashes <span style="color:#d6e2dd">every single time the Performance changes</span> (round 6), which is many times an hour. So the unmeasured state is not onboarding. It is a permanent, recurring state and gets designed as one.<br><br>Every cell keeps <span style="color:#d6e2dd">its label and its unit</span> and loses only its figure. That is exactly the void vocabulary from round 6 — <span style="color:#d6e2dd">shape kept, figure replaced by a dash</span> — reused rather than invented, so the column looks the same before the first capture as it does after the sound changes underneath. Two states, one drawing.</div>
+          <div style="flex:1;font-size:13px;color:#8fa39d;line-height:1.6;text-wrap:pretty">What makes it an invitation rather than a report is <span style="color:#d6e2dd">one sentence and one shared glyph</span>. The dashed shutter at the top of the column is the same drawing as the shutter inside the CAPTURE button, and the button repeats at the column's foot, where the eye already is. The sentence says the cost out loud — <span style="color:#d6e2dd">one 1.5 s window fills every cell below</span> — because a 1.5 s price is small enough that saying it removes the hesitation rather than causing it.<br><br>And the unit lines are doing real work: <span style="font-family:ui-monospace,Consolas,monospace">no I, no Bessel curve</span> under the index is the reason the harmonics panel has no dashed overlay yet, said in the place where someone would otherwise wonder.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1.5px dashed rgba(243,177,63,.4);background:rgba(243,177,63,.05)">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.14em;color:#ffd08a;white-space:nowrap">THE ONE RULE THIS STATE MUST NOT BREAK</span>
+          <span style="font-size:13px;color:#8fa39d;line-height:1.55">Never a zero and never a plausible-looking placeholder. A ratio that reads <span style="font-family:ui-monospace,Consolas,monospace;color:#ff9d85">0.00</span> before anything was measured is the one failure this whole project exists to prevent.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="8e" style="display:flex;flex-direction:column;gap:12px;margin-top:40px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">8e</span>
+      <span style="font-size:26px;color:#d6e2dd">The scope contract, and the caption that lied</span>
+      <span style="font-size:15px;color:#8fa39d">answers §2d and §2e</span>
+    </div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty">The report of <span style="font-family:ui-monospace,Consolas,monospace;color:#ff9d85">TRIGGER ↑0 · 2 CICLOS · 43.8 Hz</span> against a 349.23 Hz carrier is a locking bug for the implementer. The design's job is to <span style="color:#d6e2dd">write down what the scope guarantees</span>, so that when it cannot deliver it, the panel says so instead of drawing a flat line. Three states, and the caption is the specification.</div>
+
+    <div style="display:flex;gap:2px;width:1280px;background:rgba(255,255,255,.08)">
+      <div style="flex:1;background:#0a0f10;padding:14px 16px;display:flex;flex-direction:column;gap:9px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.2em;color:#8fa39d">SCOPE</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7df0b0">LOCKED 349.23 Hz · 4 CYCLES · 11.5 ms</span>
+        </div>
+        <div style="border:1px solid rgba(255,255,255,.07);border-radius:14px;background:linear-gradient(#0a0f10,#070a0b);padding:10px">
+          <svg viewBox="0 0 380 120" width="100%" height="120" preserveAspectRatio="none" style="display:block;filter:drop-shadow(0 0 5px rgba(125,240,176,.55))">
+            <path d="M0 60H380" stroke="rgba(255,255,255,.08)" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+            <path d="M0 60 C6 22 12 96 19 44 C25 8 31 108 38 58 C44 30 50 88 57 52 C63 36 69 74 76 60 C82 50 88 66 95 60 C95 60 96 60 95 60 C101 22 107 96 114 44 C120 8 126 108 133 58 C139 30 145 88 152 52 C158 36 164 74 171 60 C177 50 183 66 190 60 C196 22 202 96 209 44 C215 8 221 108 228 58 C234 30 240 88 247 52 C253 36 259 74 266 60 C272 50 278 66 285 60 C291 22 297 96 304 44 C310 8 316 108 323 58 C329 30 335 88 342 52 C348 36 354 74 361 60 C367 50 373 66 380 60" fill="none" stroke="#7df0b0" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+            <path d="M95 0V120M190 0V120M285 0V120" stroke="rgba(125,240,176,.18)" stroke-width="2" stroke-dasharray="4 6" vector-effect="non-scaling-stroke"></path>
+          </svg>
+        </div>
+        <div style="font-size:12px;color:#6f817c;line-height:1.55;text-wrap:pretty">Four periods of the carrier, with the period boundaries drawn. <span style="color:#8fa39d">Four, not two:</span> two periods of bright FM is 5.7 ms and does not visibly repeat, so it cannot show the one thing a scope is for — that the waveform <span style="color:#8fa39d">is</span> periodic.</div>
+      </div>
+
+      <div style="flex:1;background:#0a0f10;padding:14px 16px;display:flex;flex-direction:column;gap:9px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.2em;color:#8fa39d">SCOPE</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#ffd08a">NO LOCK · RAW 11.5 ms</span>
+        </div>
+        <div style="border:1.5px dashed rgba(243,177,63,.45);border-radius:14px;background:linear-gradient(#0f0c08,#080706);padding:10px">
+          <svg viewBox="0 0 380 120" width="100%" height="120" preserveAspectRatio="none" style="display:block">
+            <path d="M0 60H380" stroke="rgba(255,255,255,.08)" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+            <path d="M0 62 C14 30 22 92 38 50 C52 14 62 104 79 66 C94 34 104 84 120 46 C136 12 146 100 163 58 C178 26 190 90 206 52 C222 18 232 96 249 62 C264 32 276 86 292 48 C308 16 318 98 335 60 C350 30 364 82 380 54" fill="none" stroke="#c69445" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+          </svg>
+        </div>
+        <div style="font-size:12px;color:#6f817c;line-height:1.55;text-wrap:pretty">It could not lock, so it says so and shows the <span style="color:#8fa39d">raw window</span> in amber-dashed — the predicted register, because the time axis is now a claim rather than a measurement. And it names the reason: <span style="font-family:ui-monospace,Consolas,monospace">no held note</span> / <span style="font-family:ui-monospace,Consolas,monospace">pitch unstable</span> / <span style="font-family:ui-monospace,Consolas,monospace">no capture yet</span>.</div>
+      </div>
+
+      <div style="flex:1;background:#0a0f10;padding:14px 16px;display:flex;flex-direction:column;gap:9px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.2em;color:#8fa39d">SCOPE</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#ff9d85">SIGNAL BELOW FLOOR · −101 dB</span>
+        </div>
+        <div style="border:1.5px solid rgba(255,122,92,.4);border-radius:14px;background:linear-gradient(#100a09,#080606);padding:10px;position:relative">
+          <svg viewBox="0 0 380 120" width="100%" height="120" preserveAspectRatio="none" style="display:block">
+            <rect x="0" y="52" width="380" height="16" fill="rgba(255,122,92,.1)"></rect>
+            <path d="M0 52H380M0 68H380" stroke="rgba(255,122,92,.45)" stroke-width="2" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"></path>
+            <path d="M0 61 C20 59 40 62 60 60 C80 58 100 61 120 59 C140 62 160 59 180 61 C200 60 220 58 240 61 C260 59 280 62 300 60 C320 58 340 61 360 60 C370 61 375 59 380 60" fill="none" stroke="#8a5f4a" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+          </svg>
+          <span style="position:absolute;left:20px;top:14px;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.14em;color:#ff9d85">NOISE FLOOR BAND</span>
+        </div>
+        <div style="font-size:12px;color:#6f817c;line-height:1.55;text-wrap:pretty">The flat line is <span style="color:#8fa39d">labelled flat</span>. If peak-to-peak sits under floor + 6 dB, the panel draws the floor band and names it, because <span style="color:#8fa39d">a flat trace that looks like a valid trace is the exact failure this project exists to prevent</span>.</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:2px;width:1280px;background:rgba(255,255,255,.08);margin-top:14px">
+      <div style="flex:1;background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#7df0b0">THE THREE GUARANTEES, IN WRITING</div>
+        <div style="font-size:13px;color:#8fa39d;line-height:1.7;text-wrap:pretty"><span style="color:#d6e2dd">1 · Which period.</span> The scope locks to the <span style="color:#d6e2dd">fundamental of the held note</span> — fc from the last capture when there is one, the note's own pitch when there is not. <span style="color:#d6e2dd">Never a zero-crossing count</span>: bright FM crosses zero many times per period, which is how a 349.23 Hz carrier gets reported as 43.8 Hz, one eighth of it.<br><span style="color:#d6e2dd">2 · How many cycles.</span> Exactly four, always, and the caption states the resulting window in ms so the time axis is never ambiguous.<br><span style="color:#d6e2dd">3 · When it cannot lock.</span> It says <span style="font-family:ui-monospace,Consolas,monospace">NO LOCK</span>, draws the raw window in the predicted register, and names the reason. It never silently draws something that looks locked.</div>
+      </div>
+      <div style="flex:1;background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#58c8f5">THE WATERFALL CAPTION: COMPUTED, AND SHORTER</div>
+        <div style="font-size:13px;color:#8fa39d;line-height:1.7;text-wrap:pretty">The prose half goes. <span style="font-family:ui-monospace,Consolas,monospace;color:#ff9d85">«el ataque brillante apagándose»</span> was a claim about <span style="color:#d6e2dd">one particular patch</span> — a lovely sentence, hardcoded, and the only thing on screen that lies. There is no version of it that survives live data, because whether the attack is bright is a property of the sound and not of the panel.<br><br>What replaces it is the two figures, computed from the actual capture:<br><span style="font-family:ui-monospace,Consolas,monospace;color:#bfe9fb">WATERFALL · 22 FRAMES · 0 → 712 ms</span><br><br>and the axis labels stay (<span style="font-family:ui-monospace,Consolas,monospace">TIME ↓ · FREQUENCY →</span>). If the app is ever going to say something about the <span style="color:#d6e2dd">shape</span> — "the index is falling" — it has to be derived from the frames and stamped <span style="font-family:ui-monospace,Consolas,monospace">PREDICTED</span> like every other derived claim. That is a feature, not caption copy, and it is not in this round.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="8f" style="display:flex;flex-direction:column;gap:12px;margin-top:40px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">8f</span>
+      <span style="font-size:26px;color:#d6e2dd">The algorithm, when there is nothing measured on the screen</span>
+      <span style="font-size:15px;color:#8fa39d">1280×~540 · answers §3</span>
+    </div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty">He is right, and the trade is the right trade — but not as a mode and not as a hidden panel. <span style="color:#d6e2dd">The main screen is two compositions of the same elements, and which one you get is decided by whether a capture exists.</span> Nothing is deleted, nothing is chosen from a menu, and the state that decides it is already the most important state in the app.</div>
+
+    <div style="width:1280px;box-sizing:border-box;background:#0a0f10;border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:2px solid rgba(255,255,255,.09)">
+        <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.22em;color:#d6e2dd">ALGORITHM 06</span>
+        <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#bfe9fb">POLLED · 10.4 Hz · 48 00 4F</span>
+        <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d">FB 3 · OP5</span>
+        <div style="flex:1"></div>
+        <span style="padding:7px 12px;border-radius:999px;border:1.5px dashed rgba(243,177,63,.45);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#ffd08a">NOTHING MEASURED YET — THE ALGORITHM HAS THE ROOM</span>
+        <button style="all:unset;cursor:pointer;min-height:44px;box-sizing:border-box;display:flex;align-items:center;padding:11px 15px;border-radius:999px;border:1px solid rgba(255,255,255,.16)">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#8fa39d;white-space:nowrap">KEEP IT BIG</span>
+        </button>
+      </div>
+
+      <div style="position:relative;height:424px;padding:20px 24px">
+        <svg viewBox="0 0 1232 424" width="1232" height="424" style="display:block;position:absolute;left:24px;top:20px">
+          <defs>
+            <marker id="r8arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#58c8f5"></path></marker>
+            <marker id="r8arrowfb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#f3b13f"></path></marker>
+          </defs>
+          <path d="M0 376H1148" stroke="#7df0b0" stroke-width="3" vector-effect="non-scaling-stroke"></path>
+          <path d="M90 352V376M390 352V376M690 352V376" stroke="#7df0b0" stroke-width="3" vector-effect="non-scaling-stroke"></path>
+          <path d="M75 130V216" stroke="#58c8f5" stroke-width="2.4" marker-end="url(#r8arrow)" vector-effect="non-scaling-stroke"></path>
+          <path d="M375 130V216" stroke="#58c8f5" stroke-width="2.4" marker-end="url(#r8arrow)" vector-effect="non-scaling-stroke"></path>
+          <path d="M675 130V216" stroke="#58c8f5" stroke-width="2.4" marker-end="url(#r8arrow)" vector-effect="non-scaling-stroke"></path>
+          <path d="M300 28 C244 18 244 100 292 88" stroke="#f3b13f" stroke-width="2.2" fill="none" marker-end="url(#r8arrowfb)" vector-effect="non-scaling-stroke"></path>
+          <path d="M965 130V198" stroke="#3d4a48" stroke-width="2" stroke-dasharray="4 5" vector-effect="non-scaling-stroke"></path>
+          <path d="M940 198H990" stroke="#3d4a48" stroke-width="2" stroke-dasharray="4 5" vector-effect="non-scaling-stroke"></path>
+        </svg>
+
+        <div style="position:absolute;left:24px;top:20px;width:1232px;height:424px">
+          <div style="position:absolute;left:0;top:0;width:150px;height:120px;box-sizing:border-box;border:1.5px solid #58c8f5;border-radius:5px;background:#0a1013;overflow:hidden;box-shadow:0 0 26px -7px rgba(88,200,245,.75)">
+            <span style="position:absolute;left:0;right:0;bottom:0;height:90%;background:linear-gradient(to top,rgba(88,200,245,.4),rgba(88,200,245,.04));border-top:2px solid #58c8f5"></span>
+            <div style="position:relative;height:100%;padding:10px 12px;box-sizing:border-box;display:flex;flex-direction:column">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#bfe9fb">OP3 <span style="font-size:9px;letter-spacing:.14em;color:#7fa7b6">MOD</span></span>
+              <div style="flex:1"></div>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:30px;line-height:1;color:#eaf7fd">90</span>
+              <div style="display:flex;align-items:flex-end;justify-content:space-between"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#7fa7b6">×1.41</span><svg viewBox="0 0 18 14" width="20" height="16" style="display:block"><path d="M3 13V4M9 13V6.5M15 13V9" stroke="#58c8f5" stroke-width="2"></path></svg></div>
+            </div>
+            <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:6px;bottom:6px;display:block"><path d="M21 9v12H9" stroke="#7fa7b6" stroke-width="2" fill="none"></path></svg>
+          </div>
+
+          <div style="position:absolute;left:300px;top:0;width:150px;height:120px;box-sizing:border-box;border:1.5px solid #58c8f5;border-radius:5px;background:#0a1013;overflow:hidden;box-shadow:0 0 26px -7px rgba(88,200,245,.75)">
+            <span style="position:absolute;left:0;right:0;bottom:0;height:72%;background:linear-gradient(to top,rgba(88,200,245,.4),rgba(88,200,245,.04));border-top:2px solid #58c8f5"></span>
+            <div style="position:relative;height:100%;padding:10px 12px;box-sizing:border-box;display:flex;flex-direction:column">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#bfe9fb">OP5 <span style="font-size:9px;letter-spacing:.14em;color:#7fa7b6">MOD</span></span>
+              <div style="flex:1"></div>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:30px;line-height:1;color:#eaf7fd">72</span>
+              <div style="display:flex;align-items:flex-end;justify-content:space-between"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#7fa7b6">×2.00</span><svg viewBox="0 0 18 14" width="20" height="16" style="display:block"><path d="M3 13V9.5M8 13V3M13 13V8M17 13V10.5" stroke="#58c8f5" stroke-width="2"></path></svg></div>
+            </div>
+            <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:6px;bottom:6px;display:block"><path d="M21 9v12H9" stroke="#7fa7b6" stroke-width="2" fill="none"></path></svg>
+          </div>
+          <span style="position:absolute;left:222px;top:52px;font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#f3b13f">FB 3</span>
+
+          <div style="position:absolute;left:600px;top:0;width:150px;height:120px;box-sizing:border-box;border:1.5px solid #58c8f5;border-radius:5px;background:#0a1013;overflow:hidden;box-shadow:0 0 26px -7px rgba(88,200,245,.75)">
+            <span style="position:absolute;left:0;right:0;bottom:0;height:64%;background:linear-gradient(to top,rgba(88,200,245,.4),rgba(88,200,245,.04));border-top:2px solid #58c8f5"></span>
+            <div style="position:relative;height:100%;padding:10px 12px;box-sizing:border-box;display:flex;flex-direction:column">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#bfe9fb">OP6 <span style="font-size:9px;letter-spacing:.14em;color:#7fa7b6">MOD</span></span>
+              <div style="flex:1"></div>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:30px;line-height:1;color:#eaf7fd">64</span>
+              <div style="display:flex;align-items:flex-end;justify-content:space-between"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#7fa7b6">×7.00</span><svg viewBox="0 0 18 14" width="20" height="16" style="display:block"><path d="M2 13V5M6 13V7M10 13V8.5M14 13V10M17.5 13V11.5" stroke="#58c8f5" stroke-width="1.6"></path></svg></div>
+            </div>
+            <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:6px;bottom:6px;display:block"><path d="M21 9v12H9" stroke="#7fa7b6" stroke-width="2" fill="none"></path></svg>
+          </div>
+
+          <div style="position:absolute;left:890px;top:0;width:150px;height:120px;box-sizing:border-box;border:1.5px dashed #3d4a48;border-radius:5px;background:#070a0b">
+            <div style="height:100%;padding:10px 12px;box-sizing:border-box;display:flex;flex-direction:column">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#5d6d69">OP2 · OP7 <span style="font-size:9px;letter-spacing:.14em;color:#4f5f5b">ZERO</span></span>
+              <div style="flex:1"></div>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:30px;line-height:1;color:#3f4d4a">0</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b;letter-spacing:.06em">in the algorithm, silent</span>
+            </div>
+          </div>
+
+          <div style="position:absolute;left:0;top:222px;width:180px;height:130px;box-sizing:border-box;border:2px solid #f3b13f;border-radius:26px;background:#0d1214;overflow:hidden;box-shadow:0 0 30px -8px rgba(243,177,63,.7)">
+            <span style="position:absolute;left:0;right:0;bottom:0;height:99%;background:linear-gradient(to top,rgba(243,177,63,.44),rgba(243,177,63,.04));border-top:2px solid #f3b13f"></span>
+            <div style="position:relative;height:100%;padding:11px 14px;box-sizing:border-box;display:flex;flex-direction:column">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#ffd08a">OP1 <span style="font-size:9px;letter-spacing:.14em;color:#c69445">CARRIER</span></span>
+              <div style="flex:1"></div>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:34px;line-height:1;color:#ffe6bd">99</span>
+              <div style="display:flex;align-items:flex-end;justify-content:space-between"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#c69445">×1.00 · 261.76 Hz</span><svg viewBox="0 0 18 14" width="20" height="16" style="display:block"><path d="M9 13V2" stroke="#f3b13f" stroke-width="2"></path></svg></div>
+            </div>
+            <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:7px;bottom:7px;display:block"><path d="M21 9v12H9" stroke="#c69445" stroke-width="2" fill="none"></path></svg>
+          </div>
+
+          <div style="position:absolute;left:300px;top:222px;width:180px;height:130px;box-sizing:border-box;border:2px solid #f3b13f;border-radius:26px;background:#0d1214;overflow:hidden;box-shadow:0 0 30px -8px rgba(243,177,63,.7)">
+            <span style="position:absolute;left:0;right:0;bottom:0;height:99%;background:linear-gradient(to top,rgba(243,177,63,.44),rgba(243,177,63,.04));border-top:2px solid #f3b13f"></span>
+            <div style="position:relative;height:100%;padding:11px 14px;box-sizing:border-box;display:flex;flex-direction:column">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#ffd08a">OP4 <span style="font-size:9px;letter-spacing:.14em;color:#c69445">CARRIER</span></span>
+              <div style="flex:1"></div>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:34px;line-height:1;color:#ffe6bd">99</span>
+              <div style="display:flex;align-items:flex-end;justify-content:space-between"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#c69445">×2.00 · 523.53 Hz</span><svg viewBox="0 0 18 14" width="20" height="16" style="display:block"><path d="M9 13V2" stroke="#f3b13f" stroke-width="2"></path></svg></div>
+            </div>
+            <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:7px;bottom:7px;display:block"><path d="M21 9v12H9" stroke="#c69445" stroke-width="2" fill="none"></path></svg>
+          </div>
+
+          <div style="position:absolute;left:600px;top:222px;width:180px;height:130px;box-sizing:border-box;border:2px solid #f3b13f;border-radius:26px;background:#0d1214;overflow:hidden;box-shadow:0 0 30px -8px rgba(243,177,63,.7)">
+            <span style="position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(to top,rgba(243,177,63,.44),rgba(243,177,63,.04));border-top:2px solid #f3b13f"></span>
+            <div style="position:relative;height:100%;padding:11px 14px;box-sizing:border-box;display:flex;flex-direction:column">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#ffd08a">OP8 <span style="font-size:9px;letter-spacing:.14em;color:#c69445">CARRIER</span></span>
+              <div style="flex:1"></div>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:34px;line-height:1;color:#ffe6bd">55</span>
+              <div style="display:flex;align-items:flex-end;justify-content:space-between"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#c69445">×0.50 · 130.88 Hz</span><svg viewBox="0 0 18 14" width="20" height="16" style="display:block"><path d="M2 13V6M6 13V4M10 13V6.5M14 13V8M17.5 13V10" stroke="#f3b13f" stroke-width="1.6"></path></svg></div>
+            </div>
+            <svg viewBox="0 0 22 22" width="22" height="22" style="position:absolute;right:7px;bottom:7px;display:block"><path d="M21 9v12H9" stroke="#c69445" stroke-width="2" fill="none"></path></svg>
+          </div>
+
+          <span style="position:absolute;left:1156px;top:356px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;line-height:1.25;color:#7df0b0">OUT<br>L/R</span>
+          <span style="position:absolute;left:890px;top:150px;width:170px;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;line-height:1.6;color:#7fa7b6">ABOVE THE BUS —<br>THESE FEED SOMEBODY</span>
+          <span style="position:absolute;left:890px;top:242px;width:170px;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;line-height:1.6;color:#c69445">DOWN ON THE BUS —<br>THESE ARE THE CARRIERS</span>
+          <span style="position:absolute;left:890px;top:198px;width:190px;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;line-height:1.6;color:#4f5f5b">STUB ENDS NOWHERE —<br>AT ZERO, ON NO BRANCH</span>
+          <span style="position:absolute;left:0;top:392px;font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#4f8f70">THE OUTPUT BUS — TOUCHING IT IS WHAT MAKES AN OPERATOR A CARRIER</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;width:1280px;background:rgba(255,255,255,.08);margin-top:2px">
+      <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#7df0b0">A PANEL THAT EXPANDS — NOT A FIRST-CLASS SURFACE</div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Making it a screen of its own would mean navigating away from the signal views to see the topology, and the whole justification of the main screen is <span style="color:#d6e2dd">watching the waterfall while you turn a knob and seeing the diagram that goes with it</span>. So it stays in place and takes the slack: <span style="color:#d6e2dd">1232 px and 400 px tall</span> when nothing is measured, back to 700 px when there is a capture. Same panel, same component, two sizes.</div>
+      </div>
+      <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#58c8f5">AUTOMATIC ON «NOTHING MEASURED», WITH ONE PIN</div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Not a mode and not a toggle: <span style="color:#d6e2dd">automatic</span>, because the argument for the trade <span style="color:#d6e2dd">is</span> the empty-panel argument, and a manual switch would make the user do bookkeeping the app can do. A capture brings the panels back over <span style="font-family:ui-monospace,Consolas,monospace">--dur-settle</span> (420 ms), which is slow enough to read as a consequence of what you just pressed.<br><br><span style="color:#d6e2dd">KEEP IT BIG</span> pins the big composition for people working on topology, and it persists. One button, in the algorithm's own header, where its effect is.</div>
+      </div>
+      <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#f3b13f">SIZED BY THE WORST CASE, WHICH IS ARITHMETIC ON EIGHT NODES</div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Drawability is settled — the MODX draws all 88 on a smaller screen. What varies is room, so the surface is sized by the <span style="color:#d6e2dd">bound eight operators can produce</span>: up to <span style="color:#d6e2dd">6 depth levels</span> with up to <span style="color:#d6e2dd">4 parallel branches</span> at one level. At 150 px nodes and 30 px rows that is 1232 × 400 with the bus — which is what is drawn above, at its worst case rather than at algorithm 6.<br><br>I have <span style="color:#d6e2dd">not</span> claimed which algorithm is worst: that needs the depth/width histogram over the 88, which is a data task. Logged in <span style="font-family:ui-monospace,Consolas,monospace">CONCERNS.md</span> §31.</div>
+      </div>
+      <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#8fa39d">ROLE AT A GLANCE: POSITION DOES THE WORK NOW</div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">At 700 px the node had to carry its own role in its shape. With room, <span style="color:#d6e2dd">the layout carries it</span> and the shape becomes confirmation:<br><br><span style="color:#d6e2dd">Who is a carrier</span> — it touches the output bus. That is the definition, drawn.<br><span style="color:#d6e2dd">Who feeds whom</span> — one downward read. Every arrow points down; depth is height.<br><span style="color:#d6e2dd">Who is at zero</span> — parked to the right on a dashed stub, off the branches, drawn and never deleted.<br><br>The round-3 vocabulary survives underneath: full curve, live corner, dashed outline. Nothing new to learn.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="8g" style="display:flex;flex-direction:column;gap:12px;margin-top:40px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">8g</span>
+      <span style="font-size:26px;color:#d6e2dd">The bench drawer — one home for every temporary instrument</span>
+      <span style="font-size:15px;color:#8fa39d">52 px handle · answers §2f</span>
+    </div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty">The screenshots show <span style="color:#d6e2dd">five</span> blocks of temporary readout, not three — bridge, startup, audio, port and sweep — running to roughly 130 px of permanent text plus seven buttons. They do not need a design each; they need <span style="color:#d6e2dd">one affordance that already exists</span>: the SysEx console drawer from <span style="color:#d6e2dd">5c</span>, generalised. Same handle, same lift, same rule about not replacing the screen behind it, because you have to watch the instrument while the thing it measures happens.</div>
+
+    <div style="display:flex;flex-direction:column;gap:16px;width:1280px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#4f8f70">CLOSED — THE DEFAULT. FIVE TICKETED INSTRUMENTS, PLUS THE SYSEX CONSOLE, IN 52 PX OF THE SCREEN</div>
+        <div style="width:1280px;box-sizing:border-box;height:52px;display:flex;align-items:center;gap:10px;padding:0 18px;border-top:2px solid rgba(125,240,176,.28);background:linear-gradient(#0c1112,#080b0c);box-shadow:0 -22px 44px -20px rgba(0,0,0,.9)">
+          <span style="width:44px;height:5px;border-radius:3px;background:rgba(255,255,255,.18);flex:0 0 auto"></span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#6f817c;flex:0 0 auto">TEMPORARY INSTRUMENTS</span>
+          <div style="flex:0 0 auto;display:flex;gap:7px;margin-left:8px">
+            <span style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:#0a0f10">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d">BRIDGE</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.06em;color:#5d6d69">#5</span>
+            </span>
+            <span style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:#0a0f10">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d">STARTUP</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.06em;color:#5d6d69">#16</span>
+            </span>
+            <span style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:#0a0f10">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d">AUDIO</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.06em;color:#5d6d69">#16</span>
+            </span>
+            <span style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:#0a0f10">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d">PORT</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.06em;color:#5d6d69">#16</span>
+            </span>
+            <span style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:#0a0f10">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d">SWEEP</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.06em;color:#5d6d69">#8</span>
+            </span>
+            <span style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:2px solid rgba(255,122,92,.5);background:rgba(255,122,92,.08)">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#ff9d85">SYSEX</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.06em;color:#ff9d85">2 UNCONFIRMED</span>
+            </span>
+          </div>
+          <div style="flex:1"></div>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.12em;color:#5d6d69;flex:0 0 auto">TICKET SHOWING = ON ITS WAY OUT</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#8fa39d">OPEN — SAME SIX CHIPS, OVER THE BOTTOM STRIP, NEVER REPLACING THE SCREEN BEHIND</div>
+        <div style="width:1280px;box-sizing:border-box;background:linear-gradient(#0c1112,#080b0c);border-top:2px solid rgba(125,240,176,.28);box-shadow:0 -22px 44px -20px rgba(0,0,0,.9)">
+          <div style="height:52px;display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:2px solid rgba(255,255,255,.08)">
+            <span style="width:44px;height:5px;border-radius:3px;background:rgba(255,255,255,.28);flex:0 0 auto"></span>
+            <div style="flex:0 0 auto;display:flex;gap:7px">
+              <span style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:2px solid rgba(125,240,176,.5);background:rgba(125,240,176,.1)">
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#7df0b0">BRIDGE</span>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f8f70">#5</span>
+              </span>
+              <span style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14)">
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d">STARTUP</span>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69">#16</span>
+              </span>
+              <span style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14)">
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d">AUDIO</span>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69">#16</span>
+              </span>
+              <span style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14)">
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d">PORT</span>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69">#16</span>
+              </span>
+              <span style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14)">
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d">SWEEP</span>
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69">#8</span>
+              </span>
+              <span style="display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.14)">
+                <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#8fa39d">SYSEX</span>
+              </span>
+            </div>
+            <div style="flex:1"></div>
+            <span style="padding:7px 12px;border-radius:999px;border:1.5px dashed rgba(243,177,63,.4);font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#ffd08a;flex:0 0 auto">TICKET #5 · THIS PANEL GOES AWAY WHEN THE BRIDGE IS TRUSTED</span>
+            <button style="all:unset;cursor:pointer;flex:0 0 auto;min-height:44px;box-sizing:border-box;display:flex;align-items:center;padding:11px 15px;margin-left:10px;border-radius:999px;border:1px solid rgba(255,255,255,.16)">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#8fa39d">CLOSE</span>
+            </button>
+          </div>
+          <div style="padding:14px 18px;display:flex;gap:20px">
+            <div style="flex:1;font-family:ui-monospace,Consolas,monospace;font-size:11px;line-height:1.85;color:#6f817c">
+              <div>14:22:07.118 &nbsp;frames 33.2/s &nbsp;buffer 2048 &nbsp;drops 0</div>
+              <div>14:22:07.151 &nbsp;peak −18.4 dBFS &nbsp;floor −66.0 dB</div>
+              <div>14:22:07.184 &nbsp;frames 33.2/s &nbsp;buffer 2048 &nbsp;drops 0</div>
+              <div style="color:#8fa39d">14:22:07.217 &nbsp;capture window opened &nbsp;65536 &nbsp;1.486 s</div>
+            </div>
+            <div style="flex:0 0 300px;display:flex;flex-direction:column;gap:6px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.16em;color:#6f817c">THREE STABLE FIGURES, NOTHING LIVE</span>
+              <div style="display:flex;gap:2px;background:rgba(255,255,255,.06)">
+                <div style="flex:1;background:#0a0f10;padding:9px 10px"><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#6f817c">DROPS</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:17px;color:#7df0b0">0</div></div>
+                <div style="flex:1;background:#0a0f10;padding:9px 10px"><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#6f817c">MEDIAN</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:17px;color:#d6e2dd">2.0 ms</div></div>
+                <div style="flex:1;background:#0a0f10;padding:9px 10px"><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#6f817c">p99</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:17px;color:#d6e2dd">3.3 ms</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:2px;background:rgba(255,255,255,.08)">
+        <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#7df0b0">WHY THE TICKET NUMBER IS ON THE CHIP</div>
+          <div style="font-size:13px;color:#8fa39d;line-height:1.6;text-wrap:pretty">It is the whole point of the affordance. A panel labelled <span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">#5</span> is <span style="color:#d6e2dd">visibly on its way out</span>, so nobody designs around it, nobody grows attached to it, and closing the ticket has an obvious UI consequence: the chip disappears and the drawer gets one item shorter. When the last one goes, the handle goes with it and no layout has to be rethought — it was always 52 px on the outside.<br><br>Any future instrument docks into the same handle. That is the request answered: one affordance, <span style="color:#d6e2dd">five ticketed occupants today</span> — bridge, startup, audio, port and sweep, which is what the screenshots actually show — plus the console, which is not ticketed and never leaves. Sized by N, not by the current list.</div>
+        </div>
+        <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#58c8f5">WHAT IT INHERITS FROM 5c, AND WHAT IT DOES NOT</div>
+          <div style="font-size:13px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Inherits: <span style="font-family:ui-monospace,Consolas,monospace">--drawer-grab</span> 52 px, <span style="font-family:ui-monospace,Consolas,monospace">--drawer-lift</span>, the phosphor top edge, opening <span style="color:#d6e2dd">over</span> the bottom strip, and the rule that nothing inside animates or counts up — nothing in a drawer competes with the signal.<br><br>Does not inherit: <span style="color:#d6e2dd">the ticket, and the alert behaviour</span>. The SysEx console is a designed permanent feature from <span style="color:#d6e2dd">5c</span>, not a temporary instrument, so its chip carries <span style="color:#d6e2dd">no ticket number</span> — which is how you tell the one that stays from the five that go. The SysEx console still calls for attention when there are unconfirmed writes, because an unconfirmed write is a consequence. A bridge log with 0 drops has nothing to say and stays neutral, closed and quiet — a temporary instrument that nags is a temporary instrument nobody closes the ticket on.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="8h" style="display:flex;flex-direction:column;gap:12px;margin-top:40px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">8h</span>
+      <span style="font-size:26px;color:#d6e2dd">Checked against the running app</span>
+      <span style="font-size:15px;color:#8fa39d">two screenshots · four figures and one count corrected · one word I had missed</span>
+    </div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty">Every answer above was written from the notes. Now that the captures are here, this is what they confirm, what they correct, and the one thing they taught me that <span style="color:#d6e2dd">changes an answer</span>. Viewport is <span style="color:#d6e2dd">out of this round</span> by the owner's call: the target stays 1280×800 and 125 % is deferred.</div>
+
+    <div style="display:flex;gap:2px;width:1280px;background:rgba(255,255,255,.08)">
+      <div style="flex:1;background:#0a0f10;padding:18px;display:flex;flex-direction:column;gap:13px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#4f8f70">CONFIRMED — THE ANSWER STANDS AS DRAWN</div>
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <div style="display:flex;gap:12px;align-items:baseline"><span style="flex:0 0 34px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7df0b0">8c</span><span style="font-size:12.5px;color:#8fa39d;line-height:1.55">All eight levels are <span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">90 · 90 · 71 · 90 · 90 · 85 · 90 · 99</span> — six of the eight identical to the eye. The ceiling datum is doing more work than I claimed, not less.</span></div>
+          <div style="display:flex;gap:12px;align-items:baseline"><span style="flex:0 0 34px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7df0b0">8c</span><span style="font-size:12.5px;color:#8fa39d;line-height:1.55">The node is four stacked text rows and the ratio row is <span style="font-family:ui-monospace,Consolas,monospace;color:#ff9d85">×0.50 ...</span> in all eight. Overload confirmed as the cause.</span></div>
+          <div style="display:flex;gap:12px;align-items:baseline"><span style="flex:0 0 34px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7df0b0">8e</span><span style="font-size:12.5px;color:#8fa39d;line-height:1.55"><span style="font-family:ui-monospace,Consolas,monospace;color:#ff9d85">TRIGGER ↑0 · 2 CICLOS · 43.8 Hz</span> over a visibly flat trace. Exactly the failure the contract exists to make impossible.</span></div>
+          <div style="display:flex;gap:12px;align-items:baseline"><span style="flex:0 0 34px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7df0b0">8e</span><span style="font-size:12.5px;color:#8fa39d;line-height:1.55">The waterfall caption says <span style="color:#d6e2dd">14 frames, 0 → 460 ms</span> over ridgelines that are flat and dense — not a decaying attack. The sentence is wrong about the drawing directly beneath it.</span></div>
+          <div style="display:flex;gap:12px;align-items:baseline"><span style="flex:0 0 34px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#7df0b0">8f</span><span style="font-size:12.5px;color:#8fa39d;line-height:1.55">The diagram is a 3-column grid at 683 px with carriers scattered across three rows — OP1 mid-right, OP2 bottom-left, OP8 bottom-centre. <span style="color:#d6e2dd">Role is genuinely unreadable from position</span>, which is the whole of §3.</span></div>
+        </div>
+      </div>
+
+      <div style="flex:1;background:#0a0f10;padding:18px;display:flex;flex-direction:column;gap:13px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#8a5f4a">CORRECTED — MY FIGURES WERE THE SPIKE'S, NOT THE APP'S</div>
+        <div style="display:flex;flex-direction:column;gap:2px;background:rgba(255,255,255,.06)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px">
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">noise floor</div>
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">−66 dB, not −104</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px">
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">wide ring rate</div>
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">10.0–10.4 Hz, not 12.2</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px">
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">reread set</div>
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">383 of 384, not 416</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px">
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">bulk dump</div>
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">19 003 B / 123 msg, not 7 669 B</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px">
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">temporary blocks</div>
+            <div style="background:#0d1214;padding:9px 11px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">five, not three</div>
+          </div>
+        </div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.55;text-wrap:pretty">The <span style="color:#d6e2dd">CADUCO</span> thresholds of §24 were derived from 12.2 Hz. At a real 10 Hz the wide ring's stale threshold is <span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">0.40 s</span>, not 0.33 — the <span style="color:#d6e2dd">rule</span> (four times its own period) survives untouched, which is exactly why it was written as a rule.<br><br>And the bench drawer takes five chips, not three. It was designed to take N; five is N.</div>
+      </div>
+
+      <div style="flex:0 0 400px;background:#0a0f10;padding:18px;display:flex;flex-direction:column;gap:13px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#f3b13f">CHANGES AN ANSWER — A FOURTH SOURCE, AND A BETTER PANIC WORD</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="align-self:flex-start;padding:6px 12px;border-radius:999px;border:1.5px solid rgba(255,255,255,.22);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#8fa39d">DOCUMENTED</span>
+          <div style="font-size:12.5px;color:#8fa39d;line-height:1.55;text-wrap:pretty">The running app already stamps the routes <span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">RUTAS · DOCUMENTADO</span>, and it is <span style="color:#d6e2dd">right and I had missed it</span>. The topology comes from Yamaha's algorithm table — not from the keyboard, not from audio, not from arithmetic. That is a fourth source and it needs its own word.<br><br>So <a href="#8b">8b</a> is now <span style="color:#d6e2dd">four words and two shapes</span>, not three and two. Its colour rule writes itself: <span style="color:#d6e2dd">paper has no colour</span> — neutral ink, solid outline. Nothing else in the palette is neutral-and-solid, so it stays legible in greyscale alongside the other three.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:2px solid rgba(255,255,255,.08)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="width:56px;height:56px;flex:0 0 auto;background:#140a08;border:1.5px solid rgba(255,122,92,.5);display:flex;align-items:center;justify-content:center;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.06em;color:#ff9d85">HUSH</span>
+            </span>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#6f817c;line-height:1.5">WAS PÁNICO<br>SHIPPED AS CALLA</span>
+          </div>
+          <div style="font-size:12.5px;color:#8fa39d;line-height:1.55;text-wrap:pretty">The app ships it as <span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">CALLA</span>, and whoever did that was right: <span style="color:#d6e2dd">PANIC names the user's emotion, not the button's effect</span>. Every other failure in this app says what happens rather than what went wrong, and this was the one that didn't. So <span style="color:#d6e2dd">HUSH</span> — imperative, four letters at 56 px, and it says the outcome. <span style="font-family:ui-monospace,Consolas,monospace">SILENCE</span> is the alternate if HUSH reads too soft; I prefer HUSH because it is a thing you do to a sound.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</x-dc>
+</body>
+</html>

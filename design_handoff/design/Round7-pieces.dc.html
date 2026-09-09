@@ -19,29 +19,29 @@
 
 <section style="padding:40px 40px 0;display:flex;flex-direction:column;gap:14px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
   <div style="display:flex;flex-direction:column;gap:6px;max-width:1280px">
-    <div style="font-size:32px;color:#d6e2dd">Ronda 7 — la app puede saber dónde tienes las manos</div>
-    <div style="font-size:15px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Dos piezas de comportamiento, <span style="color:#d6e2dd">sin pantalla nueva</span>: el seguimiento vive en el rail del editor (<a href="#7a">7a</a>) y en las tarjetas de los ocho (<a href="#7b">7b</a>). El sondeo que ya existe es lo único que hace falta — si en una ronda se mueve <span style="font-family:ui-monospace,Consolas,monospace">49 30 1A</span>, la app no sabe que estás mirando el OP4: sabe que <span style="color:#d6e2dd">acabas de tocar algo del OP4</span>, que es mejor.</div>
+    <div style="font-size:32px;color:#d6e2dd">Round 7 — the app can know where your hands are</div>
+    <div style="font-size:15px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Dos piezas de comportamiento, <span style="color:#d6e2dd">sin pantalla nueva</span>: following lives in the editor's rail (<a href="#7a">7a</a>) and in the ALL EIGHT cards (<a href="#7b">7b</a>). The polling that already exists is all it takes — if, in one round, <span style="font-family:ui-monospace,Consolas,monospace">49 30 1A</span> moves, the app does not know you are looking at OP4: it knows <span style="color:#d6e2dd">you just touched something on OP4</span>, que es mejor.</div>
   </div>
 
   <div id="7a" style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
     <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
       <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">7a</span>
-      <span style="font-size:26px;color:#d6e2dd">El rail que te sigue — sugerencia visible y reversible, no salto</span>
-      <span style="font-size:15px;color:#8fa39d">cabecera de <a href="#5a">5a</a> · 1280×58 + la banda de sugerencia</span>
+      <span style="font-size:26px;color:#d6e2dd">The rail that follows you — a visible, reversible suggestion, not a jump</span>
+      <span style="font-size:15px;color:#8fa39d">cabecera de <a href="#5a">5a</a> · 1280×58 + the suggestion band</span>
     </div>
-    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty">Elijo <span style="color:#d6e2dd">sugerir</span> y no saltar, incluso con el rail de los ocho a un toque. El motivo no es la reversibilidad —eso ya lo da el rail— es que <span style="color:#d6e2dd">el arrastre de un punto de envolvente no se puede interrumpir</span>: si el foco salta mientras tienes el dedo en la curva del OP3, el gesto se rompe a media curva. Una sugerencia espera; un salto no.</div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty">Elijo <span style="color:#d6e2dd">sugerir</span> and not jumping, even with the rail of the eight one touch away. The reason is not reversibility —the rail already gives that— it is that <span style="color:#d6e2dd">dragging an envelope point cannot be interrupted</span>: if focus jumps while your finger is on OP3's curve, the gesture breaks mid-curve. A suggestion waits; a jump does not.</div>
 
     <div style="display:flex;flex-direction:column;gap:22px">
 
       <div style="display:flex;flex-direction:column;gap:7px">
-        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#4f8f70">1 · SIGUIENDO, SIN NADA QUE DECIR — EL CONMUTADOR ESTÁ ENCENDIDO Y NO SE NOTA</div>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#4f8f70">1 · FOLLOWING, WITH NOTHING TO SAY — THE SWITCH IS ON AND YOU DO NOT NOTICE</div>
         <div style="width:1280px;box-sizing:border-box;height:58px;display:flex;align-items:center;gap:11px;padding:0 14px;border:1px solid rgba(255,255,255,.12);border-bottom:2px solid rgba(255,255,255,.09);background:linear-gradient(#0b0f11,#080b0d)">
           <button style="all:unset;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;padding:10px 13px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1px solid rgba(255,255,255,.14)">
-            <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">← LOS OCHO</span>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">← ALL EIGHT</span>
           </button>
           <div style="flex:0 0 auto;width:1px;height:28px;background:rgba(255,255,255,.1)"></div>
           <span style="flex:0 0 auto;font-size:17px;white-space:nowrap;color:#d6e2dd">OP3</span>
-          <span style="flex:0 0 auto;padding:5px 11px;border-radius:5px;border:1.5px solid #58c8f5;background:rgba(88,200,245,.1);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.14em;color:#bfe9fb;white-space:nowrap">MODULADOR</span>
+          <span style="flex:0 0 auto;padding:5px 11px;border-radius:5px;border:1.5px solid #58c8f5;background:rgba(88,200,245,.1);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.14em;color:#bfe9fb;white-space:nowrap">MODULATOR</span>
           <div style="flex:0 0 auto;display:flex;gap:5px;margin-left:6px">
             <span style="width:32px;height:32px;border-radius:16px;border:1.5px solid rgba(243,177,63,.5);display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445">1</span>
             <span style="width:32px;height:32px;border-radius:4px;border:1.5px dashed #3d4a48;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#4f5f5b">2</span>
@@ -60,31 +60,31 @@
               <path d="M27 14L23 10.5M27 14L23 17.5" stroke="#7df0b0" stroke-width="1.6" fill="none"></path>
               <circle cx="31" cy="14" r="2.6" fill="#7df0b0"></circle>
             </svg>
-            <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#7df0b0;white-space:nowrap">TE SIGO</span>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#7df0b0;white-space:nowrap">FOLLOW ME</span>
           </button>
           <div style="flex:1"></div>
           <div style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid rgba(125,240,176,.28);background:rgba(125,240,176,.06)">
             <span style="width:7px;height:7px;border-radius:50%;background:#7df0b0;animation:livePulse 1.4s ease-in-out infinite;display:block"></span>
-            <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#7df0b0;white-space:nowrap">MIRAR · 30 fps</span>
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#7df0b0;white-space:nowrap">LIVE · 30 fps</span>
           </div>
           <div style="flex:0 0 auto;width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:10px"></div>
           <span style="flex:0 0 auto;width:56px;height:56px;margin-left:16px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,122,92,.55);background:#140a08;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
             <span style="width:15px;height:15px;border:2.4px solid #ff7a5c;display:block"></span>
           </span>
         </div>
-        <div style="font-size:13px;color:#6f817c;line-height:1.5;max-width:1160px">El conmutador es <span style="color:#d6e2dd">el dibujo de lo que hace</span>: una tecla, una flecha y el punto del rail. Encendido va en fósforo, porque seguir es leer señal que entra; apagado es el mismo dibujo en gris sin flecha. Y en reposo <span style="color:#d6e2dd">no dice nada más</span>: «te sigo» y punto, sin contador de cambios.</div>
+        <div style="font-size:13px;color:#6f817c;line-height:1.5;max-width:1160px">El conmutador es <span style="color:#d6e2dd">a drawing of what it does</span>: a key, an arrow and the rail's dot. Lit, it is phosphor, because following is reading an incoming signal; off, it is the same drawing in grey with no arrow. And at rest <span style="color:#d6e2dd">no dice nada más</span>: “follow me” and nothing else — no change counter.</div>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:7px">
-        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#4f8f70">2 · HAS TOCADO ALGO DEL OP7 — Y LA FRASE NO DICE «ESTÁS EN EL OP7»</div>
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#4f8f70">2 · YOU TOUCHED SOMETHING ON OP7 — AND THE SENTENCE DOES NOT SAY “YOU ARE ON OP7”</div>
         <div style="width:1280px;box-sizing:border-box;border:1px solid rgba(255,255,255,.12);background:#080b0d">
           <div style="height:58px;box-sizing:border-box;display:flex;align-items:center;gap:11px;padding:0 14px;border-bottom:2px solid rgba(125,240,176,.3);background:linear-gradient(#0b1110,#080b0d)">
             <button style="all:unset;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;padding:10px 13px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1px solid rgba(255,255,255,.14)">
-              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">← LOS OCHO</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">← ALL EIGHT</span>
             </button>
             <div style="flex:0 0 auto;width:1px;height:28px;background:rgba(255,255,255,.1)"></div>
             <span style="flex:0 0 auto;font-size:17px;white-space:nowrap;color:#d6e2dd">OP3</span>
-            <span style="flex:0 0 auto;padding:5px 11px;border-radius:5px;border:1.5px solid #58c8f5;background:rgba(88,200,245,.1);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.14em;color:#bfe9fb;white-space:nowrap">MODULADOR</span>
+            <span style="flex:0 0 auto;padding:5px 11px;border-radius:5px;border:1.5px solid #58c8f5;background:rgba(88,200,245,.1);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.14em;color:#bfe9fb;white-space:nowrap">MODULATOR</span>
             <div style="flex:0 0 auto;display:flex;gap:5px;margin-left:6px">
               <span style="width:32px;height:32px;border-radius:16px;border:1.5px solid rgba(243,177,63,.5);display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#c69445">1</span>
               <span style="width:32px;height:32px;border-radius:4px;border:1.5px dashed #3d4a48;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#4f5f5b">2</span>
@@ -103,10 +103,10 @@
                 <path d="M27 14L23 10.5M27 14L23 17.5" stroke="#7df0b0" stroke-width="1.6" fill="none"></path>
                 <circle cx="31" cy="14" r="2.6" fill="#7df0b0"></circle>
               </svg>
-              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#eafff4;white-space:nowrap">TE SIGO</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#eafff4;white-space:nowrap">FOLLOW ME</span>
             </button>
             <div style="flex:1"></div>
-            <span style="flex:0 0 auto;padding:8px 13px;border-radius:999px;border:1px solid rgba(125,240,176,.4);background:rgba(125,240,176,.07);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#7df0b0;white-space:nowrap">TOCAS TÚ · 2 NOTAS</span>
+            <span style="flex:0 0 auto;padding:8px 13px;border-radius:999px;border:1px solid rgba(125,240,176,.4);background:rgba(125,240,176,.07);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#7df0b0;white-space:nowrap">YOU ARE PLAYING · 2 NOTES</span>
             <div style="flex:0 0 auto;width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:10px"></div>
             <span style="flex:0 0 auto;width:56px;height:56px;margin-left:16px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,122,92,.55);background:#140a08;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
               <span style="width:15px;height:15px;border:2.4px solid #ff7a5c;display:block"></span>
@@ -115,7 +115,7 @@
 
           <div style="box-sizing:border-box;display:flex;align-items:center;gap:16px;padding:12px 18px;background:rgba(125,240,176,.07);border-bottom:1px solid rgba(125,240,176,.28)">
             <span style="flex:0 0 auto;width:18px;height:18px;border-radius:50%;background:#7df0b0;box-shadow:0 0 14px #7df0b0;display:block"></span>
-            <div style="flex:0 0 auto;font-size:15px;color:#eafff4;white-space:nowrap">Acabas de tocar algo del <span style="font-family:ui-monospace,Consolas,monospace">OP7</span></div>
+            <div style="flex:0 0 auto;font-size:15px;color:#eafff4;white-space:nowrap">You just touched something on <span style="font-family:ui-monospace,Consolas,monospace">OP7</span></div>
             <div style="flex:0 0 auto;display:flex;align-items:baseline;gap:9px;padding:5px 11px;border-radius:9px;background:#0a0f10;border:1px solid rgba(125,240,176,.25)">
               <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.14em;color:#4f8f70">49 60 1A</span>
               <span style="font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#8fa39d">Level</span>
@@ -126,23 +126,23 @@
             </div>
             <div style="flex:1;min-width:0"></div>
             <button style="all:unset;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:12px 17px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1.5px solid #7df0b0;background:rgba(125,240,176,.14);box-shadow:0 0 24px -8px rgba(125,240,176,.8)">
-              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#eafff4;white-space:nowrap">IR AL OP7</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#eafff4;white-space:nowrap">GO TO OP7</span>
             </button>
-            <button style="all:unset;cursor:pointer;flex:0 0 auto;padding:12px 16px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1px solid rgba(255,255,255,.16);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">SIGO AQUÍ</button>
+            <button style="all:unset;cursor:pointer;flex:0 0 auto;padding:12px 16px;min-height:44px;box-sizing:border-box;border-radius:999px;border:1px solid rgba(255,255,255,.16);font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.1em;color:#8fa39d;white-space:nowrap">STAY HERE</button>
           </div>
 
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:rgba(255,255,255,.07)">
             <div style="background:#080b0d;padding:14px 16px;box-sizing:border-box;min-width:0">
               <div style="font-size:11px;letter-spacing:.2em;color:#c69445;margin-bottom:8px">SÓLO DETECTA CAMBIOS, NO VISITAS</div>
-              <div style="font-size:14px;color:#8fa39d;line-height:1.55;text-wrap:pretty">Si te vas al OP4 <span style="color:#d6e2dd">a mirar sin tocar nada</span>, la app sigue creyendo que estás en el OP3 — y tiene razón con lo que puede saber. No hay arreglo, así que la frase nunca dice «estás en»: dice <span style="color:#d6e2dd">«acabas de tocar algo de»</span>, que es exactamente lo medido.</div>
+              <div style="font-size:14px;color:#8fa39d;line-height:1.55;text-wrap:pretty">Si te vas al OP4 <span style="color:#d6e2dd">a mirar sin tocar nada</span>, the app still believes you are on OP3 — and it is right, given what it can know. There is no fix, so the sentence never says “you are on”: it says <span style="color:#d6e2dd">«acabas de tocar algo de»</span>, which is exactly what was measured.</div>
             </div>
             <div style="background:#080b0d;padding:14px 16px;box-sizing:border-box;min-width:0">
               <div style="font-size:11px;letter-spacing:.2em;color:#bfe9fb;margin-bottom:8px">LO SUYO NO LO CUENTA COMO TUYO</div>
-              <div style="font-size:14px;color:#8fa39d;line-height:1.55;text-wrap:pretty">Un cambio que coincide con una escritura propia <span style="color:#d6e2dd">pendiente de releer</span> no es tuyo: es el ciclo <span style="font-family:ui-monospace,Consolas,monospace">pendiente → releída → confirmada</span> haciendo su trabajo. Cuando el tutor escribe tres parámetros del OP5, el foco <span style="color:#d6e2dd">no se mueve</span> y el aviso que sale es el de siempre: <span style="font-family:ui-monospace,Consolas,monospace;color:#bfe9fb">ESCRITO Y VERIFICADO</span>.</div>
+              <div style="font-size:14px;color:#8fa39d;line-height:1.55;text-wrap:pretty">A change that coincides with the app's own write <span style="color:#d6e2dd">pendiente de releer</span> is not yours: it is the <span style="font-family:ui-monospace,Consolas,monospace">pendiente → releída → confirmada</span> cycle doing its job. When the tutor writes three of OP5's parameters, focus <span style="color:#d6e2dd">no se mueve</span> and the notice that appears is the usual one: <span style="font-family:ui-monospace,Consolas,monospace;color:#bfe9fb">WRITTEN AND VERIFIED</span>.</div>
             </div>
             <div style="background:#080b0d;padding:14px 16px;box-sizing:border-box;min-width:0">
-              <div style="font-size:11px;letter-spacing:.2em;color:#8fa39d;margin-bottom:8px">Y LA SUGERENCIA CADUCA SOLA</div>
-              <div style="font-size:14px;color:#8fa39d;line-height:1.55;text-wrap:pretty">A los <span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">6 s</span> sin más actividad ahí, la banda se va. Lo que <span style="color:#d6e2dd">no</span> hace es acumular: si tocas cinco cosas de cinco operadores, no salen cinco bandas — sale la última, y el rail marca los cinco. Un rastro es útil; una cola de avisos, no.</div>
+              <div style="font-size:11px;letter-spacing:.2em;color:#8fa39d;margin-bottom:8px">AND THE SUGGESTION CLEARS ITSELF</div>
+              <div style="font-size:14px;color:#8fa39d;line-height:1.55;text-wrap:pretty">A los <span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">6 s</span> with no further activity there, the band goes. What it does <span style="color:#d6e2dd">no</span> not do is accumulate: touch five things on five operators and you do not get five bands — you get the last one, and the rail marks all five. A trace is useful; a queue of notices is not.</div>
             </div>
           </div>
         </div>
@@ -153,21 +153,21 @@
   <div id="7b" style="display:flex;flex-direction:column;gap:12px;margin-top:34px">
     <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
       <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">7b</span>
-      <span style="font-size:26px;color:#d6e2dd">Los ocho como espejo — tú haces el sonido a mano y la app dibuja lo que haces</span>
+      <span style="font-size:26px;color:#d6e2dd">ALL EIGHT as a mirror — you make the sound by hand and the app draws what you do</span>
       <span style="font-size:15px;color:#8fa39d">estado nuevo de <a href="#3a">3a</a> · 1280×560</span>
     </div>
-    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty">Aquí <span style="color:#d6e2dd">no hace falta seguir a nadie</span>: los ocho ya están en pantalla. Así que el seguimiento no mueve el foco, <span style="color:#d6e2dd">deja rastro</span> — cada tarjeta muestra lo último que tocaste en ella y hace cuánto. Es el modo crear en su forma más pura: tú no tocas la app, la app es el espejo. Y por eso esta pantalla es donde el conmutador importa menos y el rastro importa más.</div>
+    <div style="font-size:14px;color:#8fa39d;line-height:1.6;max-width:1160px;text-wrap:pretty">Aquí <span style="color:#d6e2dd">no hace falta seguir a nadie</span>: all eight are already on screen. So following does not move focus, <span style="color:#d6e2dd">deja rastro</span> — each card shows the last thing you touched on it and how long ago. This is BUILD mode in its purest form: you do not play the app, the app is the mirror. Which is why this is the screen where the switch matters least and the trace matters most.</div>
 
     <div style="width:1280px;height:560px;box-sizing:border-box;overflow:hidden;background:#06080a;color:#d6e2dd;display:flex;flex-direction:column;border:1px solid rgba(255,255,255,.12)">
 
       <div style="flex:0 0 58px;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:2px solid rgba(255,255,255,.09);background:linear-gradient(#0b0f11,#080b0d)">
-        <span style="flex:0 0 auto;font-size:12px;letter-spacing:.22em;color:#8fa39d;white-space:nowrap">LOS OCHO OPERADORES</span>
-        <span style="flex:0 0 auto;padding:6px 11px;border-radius:999px;border:1px solid rgba(125,240,176,.45);background:rgba(125,240,176,.08);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#7df0b0;white-space:nowrap">HACIENDO UN SONIDO A MANO · 4 CAMBIOS TUYOS EN 40 s</span>
+        <span style="flex:0 0 auto;font-size:12px;letter-spacing:.22em;color:#8fa39d;white-space:nowrap">ALL EIGHT OPERADORES</span>
+        <span style="flex:0 0 auto;padding:6px 11px;border-radius:999px;border:1px solid rgba(125,240,176,.45);background:rgba(125,240,176,.08);font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.1em;color:#7df0b0;white-space:nowrap">MAKING A SOUND BY HAND · 4 CHANGES OF YOURS IN 40 s</span>
         <div style="flex:1"></div>
-        <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#4f8f70;white-space:nowrap">SONDEADO · 12.2 Hz · 40 DIRECCIONES</span>
+        <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.12em;color:#4f8f70;white-space:nowrap">POLLED · 12.2 Hz · 40 DIRECCIONES</span>
         <div style="flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid rgba(125,240,176,.28);background:rgba(125,240,176,.06)">
           <span style="width:7px;height:7px;border-radius:50%;background:#7df0b0;animation:livePulse 1.4s ease-in-out infinite;display:block"></span>
-          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#7df0b0;white-space:nowrap">MIRAR · 30 fps</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.12em;color:#7df0b0;white-space:nowrap">LIVE · 30 fps</span>
         </div>
         <div style="flex:0 0 auto;width:2px;height:36px;background:rgba(255,255,255,.1);margin-left:10px"></div>
         <span style="flex:0 0 auto;width:56px;height:56px;margin-left:16px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,122,92,.55);background:#140a08;clip-path:polygon(26% 0,74% 0,100% 26%,100% 74%,74% 100%,26% 100%,0 74%,0 26%)">
@@ -186,7 +186,7 @@
             </div>
             <div style="flex:1;min-width:0"><div style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#ffe0b0;line-height:1.1">99</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#8a7038">LEVEL</div></div>
           </div>
-          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;padding-top:7px;border-top:1px solid rgba(255,255,255,.07)">SIN CAMBIOS TUYOS</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;padding-top:7px;border-top:1px solid rgba(255,255,255,.07)">NOTHING FROM YOU</div>
         </div>
 
         <div style="flex:1;min-width:0;box-sizing:border-box;border:1.5px dashed #3d4a48;border-radius:5px;background:#070a0b;padding:12px 12px 11px;display:flex;flex-direction:column;gap:8px">
@@ -196,7 +196,7 @@
             <div style="flex:0 0 30px;height:100%;border-radius:6px;border:1px dashed rgba(255,255,255,.08)"></div>
             <div style="flex:1;min-width:0"><div style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#3f4d4a;line-height:1.1">0</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#3f4d4a">LEVEL</div></div>
           </div>
-          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b;padding-top:7px;border-top:1px solid rgba(255,255,255,.07)">SIN CAMBIOS TUYOS</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f5f5b;padding-top:7px;border-top:1px solid rgba(255,255,255,.07)">NOTHING FROM YOU</div>
         </div>
 
         <div style="flex:1.25;min-width:0;box-sizing:border-box;border:2px solid #7df0b0;border-radius:5px;background:linear-gradient(180deg,rgba(125,240,176,.12),rgba(88,200,245,.03));padding:12px 12px 11px;display:flex;flex-direction:column;gap:8px;animation:handsRing 1.6s ease-in-out infinite">
@@ -210,7 +210,7 @@
             </div>
             <div style="flex:1;min-width:0"><div style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#eafff4;line-height:1.1">71</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f8f70">LEVEL · ERA 56</div></div>
           </div>
-          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#7df0b0;padding-top:7px;border-top:1px solid rgba(125,240,176,.2)">LEVEL 56 → 71 · HACE 0.3 s</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#7df0b0;padding-top:7px;border-top:1px solid rgba(125,240,176,.2)">LEVEL 56 → 71 · AGO 0.3 s</div>
         </div>
 
         <div style="flex:1;min-width:0;box-sizing:border-box;border:2px solid rgba(243,177,63,.75);border-radius:22px;background:linear-gradient(180deg,rgba(243,177,63,.08),rgba(243,177,63,.02));padding:12px 12px 11px;display:flex;flex-direction:column;gap:8px">
@@ -223,7 +223,7 @@
             </div>
             <div style="flex:1;min-width:0"><div style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#ffe0b0;line-height:1.1">88</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#8a7038">LEVEL</div></div>
           </div>
-          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f8f70;padding-top:7px;border-top:1px solid rgba(255,255,255,.07)">COARSE 1 → 2 · HACE 12 s</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f8f70;padding-top:7px;border-top:1px solid rgba(255,255,255,.07)">COARSE 1 → 2 · AGO 12 s</div>
         </div>
 
         <div style="flex:1;min-width:0;box-sizing:border-box;border:1.5px solid rgba(88,200,245,.5);border-radius:5px;background:#0a1013;padding:12px 12px 11px;display:flex;flex-direction:column;gap:8px">
@@ -236,7 +236,7 @@
             </div>
             <div style="flex:1;min-width:0"><div style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#eaf7fd;line-height:1.1">72</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f7d8c">LEVEL</div></div>
           </div>
-          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#7fa7b6;padding-top:7px;border-top:1px solid rgba(88,200,245,.18)">LO ESCRIBIÓ EL TUTOR · 3 min</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#7fa7b6;padding-top:7px;border-top:1px solid rgba(88,200,245,.18)">THE TUTOR WROTE THIS · 3 min</div>
         </div>
 
         <div style="flex:1;min-width:0;box-sizing:border-box;border:1.5px solid rgba(88,200,245,.4);border-radius:5px;background:#0a1013;padding:12px 12px 11px;display:flex;flex-direction:column;gap:8px">
@@ -249,7 +249,7 @@
             </div>
             <div style="flex:1;min-width:0"><div style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#eaf7fd;line-height:1.1">64</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f7d8c">LEVEL</div></div>
           </div>
-          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;padding-top:7px;border-top:1px solid rgba(255,255,255,.07)">SIN CAMBIOS TUYOS</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;padding-top:7px;border-top:1px solid rgba(255,255,255,.07)">NOTHING FROM YOU</div>
         </div>
 
         <div style="flex:1;min-width:0;box-sizing:border-box;border:2px solid rgba(125,240,176,.6);border-radius:5px;background:linear-gradient(180deg,rgba(125,240,176,.07),rgba(255,255,255,.01));padding:12px 12px 11px;display:flex;flex-direction:column;gap:8px">
@@ -263,7 +263,7 @@
             </div>
             <div style="flex:1;min-width:0"><div style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#eafff4;line-height:1.1">34</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#4f8f70">LEVEL · ERA 0</div></div>
           </div>
-          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#7df0b0;padding-top:7px;border-top:1px solid rgba(125,240,176,.2)">LO HAS ENCENDIDO · HACE 4 s</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#7df0b0;padding-top:7px;border-top:1px solid rgba(125,240,176,.2)">LO HAS ENCENDIDO · AGO 4 s</div>
         </div>
 
         <div style="flex:1;min-width:0;box-sizing:border-box;border:2px solid rgba(243,177,63,.5);border-radius:22px;background:linear-gradient(180deg,rgba(243,177,63,.06),rgba(255,255,255,.01));padding:12px 12px 11px;display:flex;flex-direction:column;gap:8px">
@@ -276,37 +276,37 @@
             </div>
             <div style="flex:1;min-width:0"><div style="font-family:ui-monospace,Consolas,monospace;font-size:26px;color:#ffe0b0;line-height:1.1">55</div><div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#8a7038">LEVEL</div></div>
           </div>
-          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;padding-top:7px;border-top:1px solid rgba(255,255,255,.07)">SIN CAMBIOS TUYOS</div>
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;padding-top:7px;border-top:1px solid rgba(255,255,255,.07)">NOTHING FROM YOU</div>
         </div>
       </div>
 
       <div style="flex:0 0 auto;box-sizing:border-box;border-top:2px solid rgba(255,255,255,.09);display:grid;grid-template-columns:1fr 1fr 420px;gap:2px;background:rgba(255,255,255,.07)">
         <div style="background:#080b0d;padding:13px 16px;box-sizing:border-box;min-width:0">
-          <div style="font-size:11px;letter-spacing:.2em;color:#7df0b0;margin-bottom:8px">EL RASTRO ES DE UNA LÍNEA, Y ES LA ÚLTIMA</div>
-          <div style="font-size:13px;color:#8fa39d;line-height:1.5;text-wrap:pretty">Una tarjeta dice <span style="color:#d6e2dd">qué tocaste, de qué a qué y hace cuánto</span> — y en la columna de Level, el valor viejo queda como <span style="color:#d6e2dd">marca discontinua</span>. No es un historial: es el último gesto. Lo demás dice <span style="font-family:ui-monospace,Consolas,monospace">SIN CAMBIOS TUYOS</span>, que es información y no hueco.</div>
+          <div style="font-size:11px;letter-spacing:.2em;color:#7df0b0;margin-bottom:8px">THE TRACE IS ONE LINE, AND IT IS THE LAST ONE</div>
+          <div style="font-size:13px;color:#8fa39d;line-height:1.5;text-wrap:pretty">Una tarjeta dice <span style="color:#d6e2dd">what you touched, from what to what and how long ago</span> — and in the Level column the old value stays as <span style="color:#d6e2dd">marca discontinua</span>. It is not a history: it is the last gesture. The rest say <span style="font-family:ui-monospace,Consolas,monospace">NOTHING FROM YOU</span>, which is information and not a hole.</div>
         </div>
         <div style="background:#080b0d;padding:13px 16px;box-sizing:border-box;min-width:0">
-          <div style="font-size:11px;letter-spacing:.2em;color:#bfe9fb;margin-bottom:8px">TUS MANOS EN FÓSFORO, EL TUTOR EN CIAN</div>
-          <div style="font-size:13px;color:#8fa39d;line-height:1.5;text-wrap:pretty">La procedencia del cambio usa <span style="color:#d6e2dd">el vocabulario que ya existe</span>: fósforo lo que entra de fuera (tus manos, como toda señal medida), cian lo que escribió la app. Ni un color nuevo, y se lee sin leyenda.</div>
+          <div style="font-size:11px;letter-spacing:.2em;color:#bfe9fb;margin-bottom:8px">YOUR HANDS IN PHOSPHOR, THE TUTOR IN CYAN</div>
+          <div style="font-size:13px;color:#8fa39d;line-height:1.5;text-wrap:pretty">A change's provenance uses <span style="color:#d6e2dd">the vocabulary that already exists</span>: phosphor for what comes from outside (your hands, like every measured signal), cyan for what the app wrote. Not one new colour, and it reads without a legend.</div>
         </div>
         <div style="background:#080b0d;padding:13px 16px;box-sizing:border-box;min-width:0">
           <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:8px">
-            <div style="font-size:11px;letter-spacing:.2em;color:#c69445;white-space:nowrap">LOS DOS ANILLOS · SE DICE, NO SE CALLA</div>
-            <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69">el sello va por zona, no por cifra</div>
+            <div style="font-size:11px;letter-spacing:.2em;color:#c69445;white-space:nowrap">THE TWO RINGS · IT GETS SAID, NOT HIDDEN</div>
+            <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69">the stamp goes per zone, not per figure</div>
           </div>
           <div style="display:flex;flex-direction:column;gap:7px">
             <div style="display:flex;align-items:center;gap:10px;padding:8px 11px;border:1px solid rgba(125,240,176,.25);border-radius:10px;background:rgba(125,240,176,.04)">
               <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.12em;color:#4f8f70;width:88px">ANCHO · 40 dir</span>
               <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#7df0b0">12.2 Hz</span>
-              <span style="flex:1;min-width:0;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c;white-space:nowrap">los ocho · caduco a 0.33 s</span>
+              <span style="flex:1;min-width:0;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c;white-space:nowrap">all eight · stale at 0.40 s</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px;padding:8px 11px;border:1px solid rgba(88,200,245,.25);border-radius:10px;background:rgba(88,200,245,.04)">
               <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.12em;color:#4f7d8c;width:88px">ESTRECHO · 43 dir</span>
               <span style="flex:0 0 auto;font-family:ui-monospace,Consolas,monospace;font-size:15px;color:#58c8f5">6.1 Hz</span>
-              <span style="flex:1;min-width:0;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c;white-space:nowrap">el abierto · caduco a 0.66 s</span>
+              <span style="flex:1;min-width:0;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c;white-space:nowrap">the open one · stale at 0.80 s</span>
             </div>
           </div>
-          <div style="font-size:13px;color:#8fa39d;line-height:1.5;margin-top:9px;text-wrap:pretty"><span style="color:#d6e2dd">Abrir un operador ralentiza el seguimiento</span>, y el sello de cada zona lo dice en su cabecera — un umbral de <span style="font-family:ui-monospace,Consolas,monospace">CADUCO</span> por anillo, cuatro veces su propio periodo. Sin badge nuevo y sin repetirlo en cada cifra.</div>
+          <div style="font-size:13px;color:#8fa39d;line-height:1.5;margin-top:9px;text-wrap:pretty"><span style="color:#d6e2dd">Opening an operator slows following down</span>, and each zone's stamp says so in its header — one threshold <span style="font-family:ui-monospace,Consolas,monospace">STALE</span> per ring, four times its own period. No new badge and no repeating it on every figure.</div>
         </div>
       </div>
     </div>

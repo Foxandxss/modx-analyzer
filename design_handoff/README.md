@@ -1,1118 +1,1185 @@
-# Handoff: MODX Analyzer — fase 1 UI
+# Handoff: MODX Analyzer — phase 1 UI
 
 ## Overview
 
-Interfaz de una herramienta de escritorio (**Tauri + Angular, Windows**) para **aprender síntesis
-FM-X** mirando en vivo lo que sale de un Yamaha MODX8: forma de onda, espectro, armónicos,
-waterfall, diagrama de operadores leído del teclado por SysEx, y un panel que superpone teoría
-(funciones de Bessel) sobre la medición.
+The interface of a desktop tool (**Tauri + Angular, Windows**) for **learning FM-X synthesis** by
+watching, live, what comes out of a Yamaha MODX8: waveform, spectrum, harmonics, waterfall, the
+operator diagram read from the keyboard over SysEx, and a panel that overlays theory (Bessel
+functions) on the measurement.
 
-El usuario es un pianista que no sabe FM. La app enseña. Todo lo que se pinta corresponde a datos
-que los spikes de fase 0 ya demostraron que la app puede obtener.
+The user is a pianist who does not know FM. The app teaches. Everything drawn corresponds to data the
+phase-0 spikes already proved the app can obtain.
 
-**Restricción dura del dueño del proyecto:** es una app de audio, no una app de oficina. Nada de
-rejillas de formulario, `input type=number` como control principal, tablas de ajustes, checkboxes o
-selects nativos, cards blancas con sombra. Obligatorio: superficie oscura, color con intención,
-geometría con curvas, y estados que se comunican por **luz y forma** antes que por texto. Un ON/OFF
-no es un checkbox: es un dibujo que se enciende y se apaga.
+**Hard constraint from the project owner:** this is an audio app, not an office app. No form grids, no
+`input type=number` as a primary control, no settings tables, no native checkboxes or selects, no
+white cards with shadows. Mandatory: dark surface, colour with intent, curved geometry, and states
+communicated by **light and shape** before text. An ON/OFF is not a checkbox: it is a drawing that
+lights up and goes out.
 
-La dirección visual está **decidida: A · Bancada**. Este paquete contiene la **pantalla principal**,
-su hoja de sistema, **las cinco pantallas de la ronda 3** (los ocho operadores, la Part, copias y su
-resta, el índice del tutor), **las tres piezas de la ronda 4** (el reproductor, el pánico y el
-chequeo de arranque) **las tres de la ronda 5** (el editor de operador, el barrido y la consola
-SysEx) y **las cinco de la ronda 6** (el ancla, el momento del cambio de Performance, lo que queda
-invalidado, el estado de sólo lectura y los grados de confianza), más el **modo A/B**, los tokens, las reglas de implementación, las seis fuentes de datos y
-**`CONCERNS.md`** con lo que sigue en discusión.
+The visual direction is **decided: A · Bancada**.
 
-**Empieza por `CONCERNS.md`.** Es corto y dice qué no está cerrado, qué falta por diseñar y qué
-riesgo de datos hay. Ahorra suposiciones.
+## Precedence — read this before anything disagrees
 
-### Estado del paquete — 2026-09-07, tras la ronda 7
+When two parts of this handoff disagree:
 
-Todo lo que hay en `design/`, `design-tokens.css`, `DESIGN.md` y `CONCERNS.md` es idéntico a la
-carpeta de trabajo: el paquete no va por detrás. **Diecinueve puntos cerrados, cuatro abiertos**, y de
-los cuatro **ninguno bloquea la implementación**. Y una lectura que va con nombre y apellidos en
-`CONCERNS.md` §25: **la superficie de la fase 1 está completa; lo que falta es implementar.**
+1. **`GLOSSARY.md` §6 wins on any user-visible string.** It is the only authority on copy. If a
+   Spanish string is not in §6, it has no approved English form yet — **ask, never invent**. (One row
+   is deliberately open: `FE Line`, §4b.)
+2. **The current text of a section wins over any historical note inside it.** Where a section carries
+   a superseded figure or an earlier decision, it is labelled as such and the live rule is the one
+   stated in the section body.
+3. **`design-tokens.css` is the source of truth for values** — with one exception that exists right
+   now and should not last: five values in it are marked `STALE` because the running build measured
+   different figures and round 9 was not allowed to change values. Those five are listed in
+   `CONCERNS.md` §29, and until they are changed, **the prose figure is the correct one**.
+4. **Where the paper and the measurement disagree, the measurement wins.** Where the phase-0 spikes
+   and the running build disagree, **the build wins** — it is measuring the instrument on the desk.
 
-| abierto | qué falta | a quién le toca |
+**Reading order for whoever implements this**: `GLOSSARY.md` (the vocabulary and the renames) →
+`CONCERNS.md` (5 minutes, saves you from assumptions) → `DESIGN.md` (the "why" and the limits) →
+`design-tokens.css` → the system sheet open beside the code.
+
+## State of the package — 2026-09-09, after round 9
+
+Everything in `design/`, `design-tokens.css`, `DESIGN.md`, `GLOSSARY.md` and `CONCERNS.md` is
+identical to the working folder: the package is not behind.
+
+**The whole handoff is in English**, and that was a naming pass rather than a translation. The reason
+was never internationalisation: after using the running app the owner still could not say what
+`TEORÍA` meant on an operator node, and `THEORY` would have been exactly as opaque. So every term was
+re-derived from the fact its number represents. The decisions that carry the most weight:
+
+| was | is | why |
 |---|---|---|
-| §17 · sin diseñar | guardar en la memoria del MODX (hoy todo es buffer de edición) y la biblioteca de patches / corpus DX7. **No son huecos: son alcance**, fuera por decisión del dueño | fase posterior |
-| §19 · el aviso bloqueante | **decidido y defendido**: bloquea sólo lo que se rompió, y bloquear no es un modal. Regla general de la app | lectura |
-| §23 · riesgos de datos | cinco, ninguno bloquea. El primero es el único hueco real y está declarado abajo: **el ancla tiene un punto ciego de ~1,5 s** mientras corre la FFT de 65 536 | fase 1 / próxima sesión |
-| §24 · el seguimiento | **decidido**: sugerencia y no salto, la frase que no promete visitas, y los dos anillos con un umbral de `CADUCO` cada uno. Queda por si quieres discutir la marca `RECONFIRMADA` de §21 | lectura |
+| `MIRAR` / `MEDIR` | **`LIVE`** / **`CAPTURE`** | not two verbs from one family — a **state** and an **act**, so the grammar separates them before the reading does. And `CAPTURE` gives the app the noun it never had: *a capture*, with a window, an age and a note |
+| `TEORÍA` | **`PREDICTED`** | the only candidate that implies the number **can be wrong**, which is the entire point of stamping it |
+| `SONDEADO` / `CADUCO` | **`POLLED`** / **`POLLED · 0.40 s`** | stale is not a separate source: it is polled **plus age**, and both halves were already drawn |
+| `DOCUMENTADO` | **`DOCUMENTED`** | **the build's own word, and it was right** — the routes come from Yamaha's table, which is a fourth source. Neutral ink: *paper has no colour* |
+| `PÁNICO` / `CALLA` | **`HUSH`** | also the build's instinct, also right: *panic* names the user's emotion, and every other failure here names what happens |
+| `INVALIDADO` | *(a dash in a kept outline)* | round 6 already drew it; writing `VOID` next to a dash labels a blank |
+| `CREAR` | **`BUILD`** | `CREATE` is the vaguest verb in software; you are assembling a sound out of eight parts |
 
-Cerrado en la ronda 6: **cuántas medidas por paso** (§15), **`TOCAS TÚ` ya no es inferencia** (§16,
-medido) y **`48 00 52` → `48 00 48` explicado** (§18, dirección reservada). Cerrado en la ronda 7:
-**la lista de sólo lectura** (§21 — recordar **y reprobar en silencio una vez por sesión**, porque
-comprobarlo son 4 ms) y **el cero del cambio de Performance por papel** (§23.2 — el Reference Manual
-dice que `Bank Select` y `Pgm Change` gobiernan *both in transmission and reception*, y estaban los
-dos en `ON`: **el sondeo del ancla no es la mejor fuente, es la única**).
+**Provenance is four words and two shapes** — `MEASURED`, `PREDICTED`, `POLLED`, `DOCUMENTED`, plus a
+broken outline for stale and a dash for void. The distinction is untouched; only its ink cost changed.
+Full table and reasoning in `GLOSSARY.md` §1–§2, the implementer's table in `DESIGN.md` §20.7, drawn
+in `8b`.
 
-### La app tiene dos modos de primera clase
+**The `design/` files carry English names now** (`Main-screen`, `Round3-screens`, …, `Index`) and every
+cross-reference is updated. **Screen ids never changed** — `3a`…`8h` mean exactly what they always
+meant, in every document and in the pieces.
 
-- **Aprender** — el tutor lleva paso a paso y escribe él en el teclado. Densidad baja, y un
-  **sub-registro cálido** (serifa + tinta crema) en todo lo que se lee para *entender*. No es un
-  segundo tema: las cifras medidas siguen en mono y fósforo también ahí.
-- **Crear** — nadie lleva de la mano. Densidad alta, todo el FM a la vez, y la vista de **los ocho
-  operadores** como superficie principal. Es el modo que se va a usar más horas.
+**Round 8's design changes**, all resolved inside surfaces that already existed and two of them by
+**removing** things — no new screen in round 8, and nothing at all added in round 9:
 
-Y un tercero que es un **modo de la principal**, no una pantalla: **A/B**, para comparar dos valores
-del mismo parámetro. Se entra y se sale por un conmutador visible en la barra
-(`CREAR · A/B · APRENDER`), no por un selector escondido.
+| piece | what changed |
+|---|---|
+| `8a` | header: the naming pass on screen; the anchor's debug eyebrow **removed**; the two disabled mode buttons **removed** |
+| `8b` | the stamps reduced to four words and two shapes |
+| `8c` | the operator node gets its bars back, keeps a **linear 0–99** fill against one shared **ceiling datum**, draws the spectral form as a glyph instead of a name, drops the miniature AEG (six facts in a five-fact box), and grows **the corner** — the visible path to the operator editor |
+| `8d` | the measured column before the first capture: a **contract**, not a hole |
+| `8e` | the **scope contract** in writing (which period, how many cycles, what it draws when it cannot lock) and the waterfall's hardcoded prose caption **removed** |
+| `8f` | the algorithm becomes the primary surface — 1232×400 — **automatically** whenever nothing is measured, with `KEEP IT BIG` to pin it |
+| `8g` | the **bench drawer**: one 52 px handle for every temporary instrument, each wearing its ticket number |
+| `8h` | **every answer checked against the running build** — four figures and a count corrected, one answer changed |
 
-Dos piezas atraviesan **todas** las pantallas y hay que implementarlas una sola vez:
+**Checked against the running build.** Confirmed: six of the eight operator levels are identical to the
+eye, the ratio row reads `×0.50 ...` in **all eight** nodes, the scope is flat under `2 CYCLES ·
+43.8 Hz`, and role is genuinely unreadable from position in the 683 px diagram. **Corrected**: noise
+floor **−66 dB** (not −104), wide ring **10.0–10.4 Hz** (not 12.2), reread set **383 of 384** (not 416),
+bulk dump **19 003 B / 123 msg** (not 7 669 B), and the temporary readout is **five blocks** (not
+three) — so round 7's stale thresholds become 0.40 s and 0.80 s, while the *rule* behind them survives
+untouched. **One answer changed**: the build's `DOCUMENTADO` stamp is a provenance source the glossary
+was missing.
 
-- **El pánico** — el único octógono de la app, 56 px, en el extremo derecho de toda cabecera, sin
-  confirmación. Ver `4d` y `CONCERNS.md` §3.
-- **El reproductor** — con el que la app toca el teclado ella misma (note-on → sostener → medir →
-  note-off). Siete estados. Ver `4c`.
+**Round 9 was editorial**: the round-8 chapter was folded into the sections it corrected so that every
+rule is stated once, the remaining documents were translated, and **no rule changed**. What folding
+cost is `CONCERNS.md` §36 — four decisions the owner should check.
+
+**Open: §17, §23.1, §29 and §31.** None blocks implementation. §32 (the 125 % viewport) is deferred by
+the owner, which is not the same as open.
+
+| open | what is missing | whose it is |
+|---|---|---|
+| §17 · not designed | saving to the MODX's memory (today everything is the edit buffer) and the patch library / DX7 corpus. **Not holes: scope**, out by the owner's decision | later phase |
+| §23.1 · the anchor's blind spot | **the only real hole**: ~1.5 s per capture, during which the anchor cannot poll. Declared, not drawn, twice by decision | phase 1 |
+| §29 · five stale token values | the build's figures contradict five values in the token file. Marked, not changed, because round 9 could not change values. **Fix this first** | owner |
+| §31 · the worst-case algorithm | the depth/width histogram over the 88 FM-X algorithms would let the algorithm surface be tightened by ~80 px. Cheap, nobody's blocker | owner |
+
+### The app has two first-class modes
+
+- **LEARN** — the tutor leads step by step and writes to the keyboard itself. Low density, and a
+  **warm sub-register** (serif + cream ink) on everything read in order to *understand*. It is not a
+  second theme: measured figures stay in mono and phosphor there too.
+- **BUILD** — nobody holds your hand. High density, all the FM at once, and **ALL EIGHT** as the
+  primary surface. This is the mode that gets used for hours.
+
+And a third that is a **mode of the main screen**, not a screen: **A/B**, for comparing two values of
+the same parameter.
+
+**Only what exists is rendered.** Today that is one label, `BUILD` — not a three-way switch with two
+dead thirds. A mode with no code behind it is absent, not greyed out; see `DESIGN.md` §3.1.
+
+Two pieces cross **every** screen and must be implemented once:
+
+- **HUSH** — the app's only octagon, 56 px, at the far right of every header, no confirmation. See
+  `4d`.
+- **The player** — the app playing the keyboard itself (note-on → hold → capture → note-off). Seven
+  states. See `4c`.
 
 ## About the Design Files
 
-Los ficheros de `design/` son **referencias de diseño escritas en HTML** — prototipos que muestran el
-aspecto y el comportamiento previstos, **no código de producción para copiar**. Son estáticos: no hay
-lógica de audio, ni MIDI, ni estado real.
+The files in `design/` are **design references written in HTML** — prototypes showing the intended look
+and behaviour, **not production code to copy**. They are static: no audio logic, no MIDI, no real
+state.
 
-La tarea es **recrear estos diseños en el entorno del proyecto** (Angular sobre Tauri, con sus
-patrones y librerías establecidos). Si el proyecto aún no tiene UI montada, monta la de fase 1 en
-Angular siguiendo `design-tokens.css` como fuente de verdad de valores.
+The task is to **recreate these designs in the project's environment** (Angular on Tauri, with its
+established patterns and libraries). If the project has no UI yet, build the phase-1 UI in Angular
+following `design-tokens.css` as the source of truth for values.
 
-Nota técnica sobre el formato: los ficheros son HTML normales (abren con doble clic) pero se
-escribieron en un runtime de prototipado que carga `design/support.js`. **No portes ese runtime.**
-Lo que se lee de ellos es la maquetación, los valores y la jerarquía visual — el markup interno no
-es un objetivo de fidelidad.
+A technical note on the format: the files are ordinary HTML (they open on a double click) but they were
+written in a prototyping runtime that loads `design/support.js`. **Do not port that runtime.** What you
+read from them is the layout, the values and the visual hierarchy — the internal markup is not a
+fidelity target.
 
 ## Fidelity
 
-**Alta fidelidad (hifi).** Colores, tipografía, espaciado, radios, trazos e intensidades son
-definitivos y están en `design-tokens.css` con nombres semánticos. Recrea la UI con precisión usando
-los tokens, no los literales que veas en el HTML.
+**High fidelity.** Colours, typography, spacing, radii, strokes and intensities are final and live in
+`design-tokens.css` with semantic names. Recreate the UI precisely using the tokens, not the literals
+you see in the HTML.
 
-Dos cosas son de **datos reales, no decorativas**, y deben calcularse en la app en vez de copiarse:
+Two things are **real data, not decoration**, and must be computed in the app rather than copied:
 
-- La forma de onda es `sin(2πt + I·sin(2π·2t))` con I = 2.8.
-- El espectro son las amplitudes `|J_n(I)|` en `|fc ± k·fm|` (parciales en `1 ± 1.41n` y `2 ± 7n`).
-- El waterfall son 14 tramas con el índice decayendo `I(t) = 2.9·e^(−2t)` — el ataque brillante
-  apagándose.
+- The waveform is `sin(2πt + I·sin(2π·2t))` with I = 2.8.
+- The spectrum is the `|J_n(I)|` amplitudes at `|fc ± k·fm|` (partials at `1 ± 1.41n` and `2 ± 7n`).
+- The waterfall is the frames of an actual capture, with the index decaying. **Its caption is computed
+  from that capture** — frame count and duration — and says nothing about the shape of what is drawn.
 
-Los valores de ejemplo que aparecen en pantalla vienen de los spikes y sirven como caso de prueba:
-algoritmo 6, feedback 3 en Op5; Op1 portadora 99 ×1.00 Sine, Op2 a 0, Op3 modulador 90 ×1.41 Odd 1,
-Op4 portadora 99 ×2.00, Op5 modulador 72 ×2.00 Res 1, Op6 modulador 64 ×7.00, Op7 a 0, Op8
-portadora 55 ×0.50 All 1. fc = 261.763 Hz, fm = 369.175 Hz, ratio medido 1.4103 (la pantalla del
-teclado dice 1.41, Δ 0.4 ¢), I = 2.81, 11 parciales, suelo −104 dB, pico −18 dBFS, y un comb de
-2756.25 Hz que **se marca como artefacto** en vez de esconderse.
+The example values on screen come from the spikes and serve as a test case: algorithm 6, feedback 3 on
+Op5; Op1 carrier 99 ×1.00 Sine, Op2 at 0, Op3 modulator 90 ×1.41 Odd 1, Op4 carrier 99 ×2.00, Op5
+modulator 72 ×2.00 Res 1, Op6 modulator 64 ×7.00, Op7 at 0, Op8 carrier 55 ×0.50 All 1. fc = 261.763 Hz,
+fm = 369.175 Hz, measured ratio 1.4103 (the keyboard's screen says 1.41, Δ 0.4 ¢), I = 2.81, 11
+partials, peak −18 dBFS, and a 2756.25 Hz comb that is **marked `NOT A HARMONIC`** rather than hidden.
 
 ## Target canvas
 
-- **1280 × 800 CSS px**, ~**1280 × 740 útiles** a pantalla completa descontando el marco de la
-  ventana Tauri. Portátil de 14", panel 1920×1200 con escalado de Windows al 150 %.
-- Ese presupuesto de 740 px **está apurado en dos pantallas** (los ocho operadores y la Part). Ver
-  `CONCERNS.md` §4 antes de añadir nada a ellas.
-- **`devicePixelRatio` = 1.5.** Consecuencia dura: señal, diagrama, curvas y rejillas **vectoriales
-  (SVG) o canvas escalado por DPR**; cero bitmaps de tamaño fijo. Y **nada de filetes de 1 px** —
-  a 1.5× se ven sucios: separadores a 2 px (`--rule-min`) o separación por color de superficie y
-  aire.
-- **Pantalla táctil, y también ratón.** Ver "Interactions".
-- El objetivo Waveshare ESP32-S3 / 1024×600 **está cancelado**: no hay breakpoint pequeño. Escalar
-  hacia arriba en un monitor externo (>1600 CSS px) es caso de escape, no de diseño.
+- **1280 × 800 CSS px**, ~**1280 × 740 usable** full-screen once the Tauri window frame is deducted.
+  14" laptop, 1920×1200 panel at 150 % Windows scaling.
+- That 740 px budget **is tight on two screens** (ALL EIGHT and the Part). See `CONCERNS.md` before
+  adding anything to them.
+- **`devicePixelRatio` = 1.5.** Hard consequence: signal, diagram, curves and grids must be **vector
+  (SVG) or canvas scaled by DPR**; no fixed-size bitmaps. And **no 1 px hairlines** — at 1.5× they look
+  dirty: rules at 2 px (`--rule-min`) or separation by surface colour and air.
+- **Touchscreen, and mouse too.** See "Interactions".
+- The Waveshare ESP32-S3 / 1024×600 target **is cancelled**: there is no small breakpoint. Scaling up
+  on an external monitor (>1600 CSS px) is an escape case, not a design case.
+- **The 125 % option (1536 × 960) is deferred** by the owner and is not part of this package. Nothing
+  here assumes extra room. `CONCERNS.md` §32.
 
 ## Screens / Views
 
-### 1. Pantalla principal — "el instrumento"
+### 1. The main screen — "the instrument" (`4a`)
 
-Fichero: `design/Pantalla-principal.dc.html`, sección `4a`.
+File: `design/Main-screen.dc.html`, section `4a`. Composition after the round-3 rebalance, which is
+what gets implemented. (The first main screen is archived as `Direccion-A-Bancada.dc.html` and is not
+implemented; `3e` in `Round3-screens.dc.html` documents the rebalance that produced `4a`.)
 
-> **Nota de versión.** Esta descripción se escribió para la primera principal, hoy archivada. La
-> pantalla vigente es `4a`: **mismo vocabulario y mismos componentes**, con tres diferencias de
-> composición que se detallan en la sección 10 más abajo — diagrama de **700 px** con nodos de
-> 118×108, **armónicos como panel permanente** con Bessel superpuesto, y **waterfall compartido** con
-> el scope en 156 px. Y en la cabecera, dos cosas nuevas: el **pánico** y el conmutador
-> `CREAR · A/B · APRENDER`. Todo lo que sigue sobre nodos, rutas, transporte y marcado de artefactos
-> vale tal cual.
+**Purpose.** This is the screen you look at while playing. Three zones coexisting without any of them
+being a sidebar shoved into a corner.
 
-**Purpose.** Es la pantalla que se mira mientras se toca. Tres zonas conviviendo sin que ninguna sea
-un panel lateral arrinconado.
+**Layout.** A vertical column of 1280×800:
 
-**Layout.** Columna vertical de 1280×800:
+- **Top bar**, 58 px tall, `padding: 0 16px`, `border-bottom: 2px solid rgba(255,255,255,.09)`,
+  background `linear-gradient(#0b0f11,#080b0d)`, `display:flex; align-items:center; gap:18px`.
+  Left to right: connection dot (9 px, `--signal-primary`, 10 px glow) + a mono line with the port; the
+  **anchor** — the patch name at 17 px **and nothing else** (see `6a`); the algorithm pill
+  (`ALGORITHM 06`, border `rgba(243,177,63,.4)`, radius 999, figure at 15 px in `--carrier`);
+  `FB 3 · OP5` in mono 11 px; the **mode label**; flexible spacer; the **chain chip**; the
+  **transport** (below); and **HUSH**, isolated.
+- **Warning strip** (conditional, `flex: 0 0 auto`): 10 px 22 px, background `rgba(255,122,92,.1)`,
+  bottom border `1px solid rgba(255,122,92,.35)`, a 20 px square with a `--alert` border + glow, and
+  mono 12 px text. It appears in the unhappy states.
+- **Body**, `flex:1`, `display:grid; grid-template-columns: 700px 1fr 214px; gap:2px`, gap background
+  `rgba(255,255,255,.07)` (so the "rule" is a 2 px gap, not a 1 px border):
+  - **Column 1 — the operator diagram** (the hero), 700 px. `padding: 12px 16px 0`. Header:
+    `ALGORITHM` (12 px, tracking .22em, `--ink-secondary`), and on the right the provenance —
+    `POLLED · SysEx 49 op 1A · 10 Hz` for the parameters and **`ROUTES · DOCUMENTED`** for the
+    topology, which comes from Yamaha's table and not from the keyboard. Node canvas on an SVG of
+    routes. Legend foot: three samples (carrier / modulator / level 0), `5 of 43 facts shown · the
+    corner opens the other 38`, and the **ceiling datum** sample.
+  - **Column 2 — signal views**: two equal panels stacked (`flex:1` each, `padding: 12px 14px`),
+    separated by `border-bottom: 2px solid rgba(255,255,255,.09)`. **SCOPE** on top with its contract
+    caption (`LOCKED 349.23 Hz · 4 CYCLES · 11.5 ms`), **SPECTRUM** below (`LOG 1×–32× · FLOOR −66 dB`).
+    View frame: `border: 1px solid rgba(255,255,255,.07)`, `border-radius: 14px`, background
+    `linear-gradient(#0a0f10,#070a0b)`.
+  - **Column 3 — measured figures**: `padding: 12px 13px`, `gap: 10px`. The **HARMONICS** panel on top
+    (permanent, with the Bessel curve overlaid on the measured bars); below, a stack of cells separated
+    by 1 px gaps over `rgba(255,255,255,.05)`: `MEASURED RATIO` (29 px, `--signal-primary`, subtitle
+    `keyboard shows 1.41 · Δ 0.4 ¢`), `fc / fm`, `INDEX I · FITTED` (20 px, `--carrier`),
+    `WORST PARTIAL`, and `LAST CAPTURE` (`65536 · 14 s ago`, `C4 held · peak −18 dBFS`).
+    **Before the first capture this column is a contract, not a hole** — see `8d` and `DESIGN.md` §10.1.
+- **Waterfall / scope**, `flex: 0 0 156px`, shared in a tabbed panel of `--hit-tab` (44 px),
+  `border-top: 2px solid rgba(255,255,255,.09)`. Header: `WATERFALL · 22 FRAMES · 0 → 712 ms` — both
+  figures computed from the actual capture — and on the right `TIME ↓ · FREQUENCY →`. Ridgelines in an
+  SVG with `preserveAspectRatio="none"`, colour from `#eafff4` (newest) to `#1e7351` (oldest), stroke
+  1.4 → 1 px with `vector-effect: non-scaling-stroke`.
 
-- **Barra superior**, 58 px de alto, `padding: 0 16px`, `border-bottom: 2px solid rgba(255,255,255,.09)`,
-  fondo `linear-gradient(#0b0f11,#080b0d)`, `display:flex; align-items:center; gap:18px`.
-  De izquierda a derecha: punto de conexión (9 px, `--signal-primary`, glow 10 px) + línea mono
-  `MODX-1 · 44 100 Hz · MAIN L/R`; separador vertical 1×30; nombre del patch (`FM 2OP CHAIN`, 17 px);
-  pastilla de algoritmo (`ALGORITMO 06`, borde `rgba(243,177,63,.4)`, radio 999, cifra 15 px en
-  `--carrier`); `FB 3 · OP5` en mono 11 px; espaciador flexible; **transporte** (ver abajo).
-- **Franja de aviso** (condicional, `flex: 0 0 auto`): 10 px 22 px, fondo `rgba(255,122,92,.1)`,
-  borde inferior `1px solid rgba(255,122,92,.35)`, cuadrado de 20 px con borde `--alert` + glow, y
-  texto mono 12 px. Aparece en los estados no felices.
-- **Cuerpo**, `flex:1`, `display:grid; grid-template-columns: 556px 1fr 214px; gap:2px`, fondo del
-  gap `rgba(255,255,255,.07)` (así el "filete" es un hueco de 2 px, no un borde de 1 px):
-  - **Columna 1 — diagrama de operadores** (el héroe). `padding: 12px 16px 0`.
-    Cabecera: `DIAGRAMA DE OPERADORES` (12 px, tracking .22em, `--ink-secondary`) y a la derecha
-    `SONDEADO · SysEx 49 op 1A · 12 Hz` en mono 10 px `--ink-inert`.
-    Lienzo de nodos: 3 columnas × 3 filas sobre un SVG de rutas de 552×452, escalado a 0.935.
-    Nodos en `left: 50/220/390 px`, `top: 20/148/278 px`, tamaño **100×92**.
-    Pie de leyenda: tres muestras (portadora / modulador / level 0) y "toca un operador para
-    editarlo", separadas con `border-top: 2px solid rgba(255,255,255,.08)`.
-  - **Columna 2 — vistas de señal**: dos paneles iguales apilados (`flex:1` cada uno,
-    `padding: 12px 14px`), separados por `border-bottom: 2px solid rgba(255,255,255,.09)`.
-    Arriba **SCOPE** (`TRIGGER ↑0 · 2 CICLOS · 261.763 Hz`), abajo **ESPECTRO**
-    (`LOG 1×–32× · SUELO −104 dB`). Marco de vista: `border: 1px solid rgba(255,255,255,.07)`,
-    `border-radius: 14px`, fondo `linear-gradient(#0a0f10,#070a0b)`.
-  - **Columna 3 — cifras medidas**: `padding: 12px 13px`, `gap: 10px`. Arriba el panel **ARMÓNICOS**
-    (16 barras de 7 px de ancho, eje `n1 n4 n8 n12 n16`); debajo una pila de celdas separadas por
-    huecos de 1 px sobre `rgba(255,255,255,.05)`: `RATIO MEDIDO` (29 px, `--signal-primary`,
-    subtítulo `pantalla 1.41 · Δ 0.4 ¢`), `fc / fm`, `ÍNDICE I (Bessel)` (20 px, `--carrier`), y
-    `ÚLTIMA MEDIDA` (`65536 · hace 14 s`, `C4 sostenida · pico −18 dBFS`).
-- **Waterfall**, `flex: 0 0 194px`, `border-top: 2px solid rgba(255,255,255,.09)`,
-  `padding: 10px 18px 12px`. Cabecera: `WATERFALL` + "el ataque brillante apagándose · 14 tramas ·
-  0 → 460 ms", y a la derecha `TIEMPO ↓ · FRECUENCIA →`. Marco `border-radius: 16px`.
-  14 ridgelines en un SVG `viewBox="0 0 400 210"` con `preserveAspectRatio="none"`, cada traza en
-  `translate(0, 26 + r*13) scale(1,1.55)`, color de `#eafff4` (nueva) a `#1e7351` (vieja), grosor
-  1.4 → 1 px con `vector-effect: non-scaling-stroke`. Etiquetas `ATAQUE`, `460 ms`, `32×`.
+**Tab criterion**: the waterfall is the **default as soon as a note is sounding**; the scope is asked
+for.
 
-**Componentes clave de esta pantalla.**
+**Key components on this screen.**
 
-- **Nodo de operador** — 100×92 (que además es su objetivo de toque).
-  - *Portadora*: `border: 2px solid var(--carrier)`, `border-radius: 26px` (curva total),
-    fondo `#0d1214`, glow `0 0 30px -8px rgba(243,177,63,.7)` + `inset 0 0 0 1px rgba(243,177,63,.16)`.
-  - *Modulador*: `border: 1.5px solid var(--modulator)`, `border-radius: 5px` (esquina viva),
-    fondo `#0a1013`, glow `0 0 26px -7px rgba(88,200,245,.75)`.
-  - *Level 0*: `border: 1.5px dashed var(--inert)`, sin relleno, fondo `#070a0b`, cifras a `#3f4d4a`.
-  - *Relleno de nivel*: capa absoluta anclada abajo, `height: Level%`,
-    `background: linear-gradient(to top, <rol> .46–.50, <rol> .04)`. **El Level ES la altura del
-    relleno**; la cifra sólo confirma.
-  - Contenido: etiqueta `OP1` (mono 11 px) + rol (`PORT` / `MOD` / `INACTIVO`, 8 px, tracking .14em)
-    arriba; abajo cifra de Level (mono 25 px) y `×1.00 · Sine` (mono 10 px).
-- **Rutas del diagrama** — SVG. Modulación activa: `--modulator`, 2–2.6 px, con marcador de flecha.
-  Ruta desde un operador a 0: `--inert`, 1.5 px, `stroke-dasharray: 4 5`. Bus de salida:
-  `--signal-primary`, 2 px, hacia `OUT L/R`. Feedback: arco con etiqueta `FB 3`.
-- **Transporte — "mirar" y "medir" son dos actos distintos, y eso tiene que verse.**
-  - *Mirar*: pastilla `padding: 12px 16px`, `border: 1px solid rgba(125,240,176,.28)`, fondo
-    `rgba(125,240,176,.06)`, punto de 7 px con `animation: livePulse 1.4s ease-in-out infinite`
-    (opacidad .35 → 1), texto `MIRAR · 30 fps`.
-  - *Medir*: botón `padding: 13px 22px 13px 16px`, `border: 1.5px solid var(--carrier)`,
-    `border-radius: 999px 8px 8px 999px`, fondo `linear-gradient(180deg, rgba(243,177,63,.22),
-    rgba(243,177,63,.06))`, sombra `0 0 28px -8px rgba(243,177,63,.7)`; dentro, un "obturador"
-    (círculo de 26 px, borde 2 px, `radial-gradient(circle, #f3b13f 34%, transparent 36%)`),
-    el rótulo `MEDIR` (mono 14 px, tracking .2em, `#ffd08a`) y a la derecha, tras un filete
-    vertical, `65536 / NOTA SOST.` en mono 9 px.
-- **Marcado de artefactos** — las parciales no armónicas se pintan en `--alert` con
-  `stroke-dasharray: 3 3` y llevan un chip `ARTEFACTO 2756 Hz` (borde `rgba(255,122,92,.4)`, fondo
-  `rgba(255,122,92,.1)`) en la esquina superior derecha del panel. **No se ocultan y no se cuentan
-  como armónicos.** La etiqueta `9.º ARMÓNICO · PICO` va en la esquina izquierda para no chocar.
-  Y **ningún badge de artefacto sin su frecuencia**: el Hz es lo que distingue el comb del generador
-  de un armónico de red o de aliasing, así que un aviso sin número no se puede accionar.
+- **Operator node** — 118×108 (which is also its touch target), 116 tall for nodes carrying a measured
+  ratio. **Five facts, no more** — see `DESIGN.md` §9 for why the miniature AEG came out.
+  - *Carrier*: `border: 2px solid var(--carrier)`, `border-radius: 26px` (fully curved), background
+    `#0d1214`, glow `0 0 30px -8px rgba(243,177,63,.7)`.
+  - *Modulator*: `border: 1.5px solid var(--modulator)`, `border-radius: 5px` (live corner), background
+    `#0a1013`, glow `0 0 26px -7px rgba(88,200,245,.75)`.
+  - *Level 0*: `border: 1.5px dashed var(--inert)`, no fill, background `#070a0b`, figures at `#3f4d4a`.
+  - *Level fill*: an absolute layer anchored to the bottom, `height: Level%`,
+    `background: linear-gradient(to top, <role> .46–.50, <role> .04)`, **linear 0–99**. **Level IS the
+    fill height**; the figure only confirms.
+  - *The ceiling datum*: one 2 px dashed line across all eight nodes at the patch's highest Level. Real
+    patches cluster between 71 and 99, so the eye reads **the gaps**, not the heights.
+  - Content: `OP1` label (mono 11 px) + role (`CARR` / `MOD` / `ZERO`, 8 px, tracking .14em) on top;
+    below, the Level figure (mono 25 px), the ratio and the **spectral form as a glyph** (≤5 strokes at
+    18×14 — never a name, because a name ellipsises), and the operator's Hz stamped `PREDICTED`.
+  - *The corner*: a 44 × 44 open corner mark at the bottom right — two 2 px strokes, the visible path to
+    the operator editor. Same mark on all eight; the words appear once, in the legend.
+- **Diagram routes** — SVG. Active modulation: `--modulator`, 2–2.6 px, with an arrow marker. A route
+  from an operator at 0: `--inert`, 1.5 px, `stroke-dasharray: 4 5`. Output bus: `--signal-primary`,
+  2 px, to `OUT L/R`. Feedback: an arc labelled `FB 3`. **The routes are `DOCUMENTED`, not polled**: the
+  app polls which algorithm is loaded and reads who-feeds-whom out of the FM-X table.
+- **Transport — `LIVE` and `CAPTURE` are two different acts, and that has to be visible.**
+  - *LIVE (a state)*: pill `padding: 12px 16px`, `border: 1px solid rgba(125,240,176,.28)`, background
+    `rgba(125,240,176,.06)`, a 7 px dot with `animation: livePulse 1.4s ease-in-out infinite` (opacity
+    .35 → 1), text `LIVE · 30 fps`. Continuous, free, and **produces nothing you can quote**.
+  - *CAPTURE (an act)*: button `padding: 13px 22px 13px 16px`, `border: 1.5px solid var(--carrier)`,
+    `border-radius: 999px 8px 8px 999px`, background `linear-gradient(180deg, rgba(243,177,63,.22),
+    rgba(243,177,63,.06))`, shadow `0 0 28px -8px rgba(243,177,63,.7)`; inside, a "shutter" (26 px
+    circle, 2 px border, `radial-gradient(circle, #f3b13f 34%, transparent 36%)`), the label `CAPTURE`
+    (mono 14 px, tracking .2em, `#ffd08a`) and, past a vertical rule, `65536 / NEEDS A HELD NOTE` in
+    mono 9 px. One press, one artefact, with an age.
+- **Marking what is not a harmonic** — non-harmonic partials are painted in `--alert` with
+  `stroke-dasharray: 3 3` and carry a `NOT A HARMONIC · 2756 Hz` chip in the panel's top right corner.
+  **They are not hidden and are not counted as harmonics.** The `9TH HARMONIC · PEAK` label goes in the
+  left corner so they do not collide. And **never a chip without its frequency**: the Hz is what tells a
+  generator comb from mains hum or aliasing, so a warning without a number cannot be acted on.
 
-### 2. Direcciones B · Nébula y C · Plotter — ARCHIVADAS
+### 2. Directions B · Nébula and C · Plotter — ARCHIVED
 
-No van en el paquete y no hay que implementarlas. La dirección elegida es **A · Bancada**; los cuatro
-motivos están en `DESIGN.md`. Lo único que sobrevive de C es su **registro cálido** (serifa Georgia,
-tinta crema, acento vermellón), que es ahora el sub-registro de las pantallas de lección dentro de A
-— ver los tokens `--font-lesson` y `--lesson-*`, y la pantalla `3d`.
+Not in the package and not to be implemented. The chosen direction is **A · Bancada**; the four reasons
+are in `DESIGN.md` §2. The only thing that survives from C is its **warm register** (Georgia serif,
+cream ink, vermilion accent), now the sub-register of the lesson screens inside A — see the
+`--font-lesson` and `--lesson-*` tokens, and screen `3d`.
 
+### 3. System sheet (direction A)
 
-### 3. Hoja de sistema (dirección A)
+File: `design/System-sheet.dc.html` — a long page, scrolled. 1280 wide.
 
-Fichero: `design/Sistema-A-componentes.dc.html` — página larga, se baja con scroll. Ancho 1280.
+It contains, in this order: a cover with the three context chips (canvas, DPR, touch); palette and
+typography; **the operator in four states** (active carrier / active modulator / level 0 / focused, the
+last with a `--signal-primary` border and a 40 px glow); **controls** (continuous knob, bipolar, the
+Freq Mode drawing-toggle, the Spectral Form selector); **the operator editor** (AEG, PEG and Level
+Scaling); **theory versus measurement**; **state badges**; the "the tutor just touched your keyboard"
+state; the full **tutor mode**; **the four unhappy states**; and the **finger and mouse interaction**
+section.
 
-Contiene, en este orden: portada con los tres chips de contexto (lienzo, DPR, táctil); paleta y
-tipografía; **operador en cuatro estados** (portadora activa / modulador activo / level 0 /
-seleccionado en foco, este último con borde `--signal-primary` y glow 40 px); **controles**
-(mando continuo, bipolar, toggle-dibujo de Freq Mode, selector de Spectral Form); **editor de
-operador** (AEG, PEG y Level Scaling); **teoría contra medición**; **badges de estado**; el estado
-"el tutor acaba de tocar tu teclado"; **modo tutor** completo; **los cuatro estados no felices**; y
-la sección **interacción dedo y ratón**.
+Control details (each with its finger/mouse note on the sheet itself):
 
-Detalles de los controles (todos con su nota de dedo/ratón en la propia hoja):
+- **Continuous knob** — a 160×160 SVG. Track `rgba(255,255,255,.08)` at 10 px, value arc in the role's
+  colour with `stroke-dasharray` and `stroke-linecap: round`, inner cap r=44 at `#0d1416`, a 3 px index
+  mark rotated to the value, and **the value always visible in the centre** (mono 27 px) with the label
+  below (10 px). Drag grab 160 px (`--grip-knob`).
+- **Bipolar control (Detune, centre 15)** — a 58 px tall track (`--track-bipolar`),
+  `border-radius: 12px`, background `#0a1013`. Centre line `rgba(255,255,255,.28)` at 1 px, a deviation
+  bar from the centre with a gradient in the role's colour, a 3 px position mark with glow, the ends
+  `−15` / `+15` in mono 9 px and the value (`+7`, 20 px) centred above. **The centre is seen, not
+  remembered.**
+- **The Freq Mode drawing-toggle (the exemplary ON/OFF)** — two ~150×112 cards side by side. Lit:
+  `border: 2px solid var(--carrier)`, background `linear-gradient(180deg, rgba(243,177,63,.16),
+  rgba(243,177,63,.03))`, shadow `0 0 30px -10px`, and **a drawing of what Coarse and Fine are going to
+  mean**: six harmonic partials under a dashed envelope labelled `× fundamental`. Off (`FIXED`):
+  `border: 1.5px solid #2b3436`, background `#080c0d`, one grey partial and `absolute Hz`. Switching to
+  Fixed **also moves the Coarse** → warn on the switch.
+- **Spectral Form selector** — seven ~52×72 cells with `gap: 7px`; each is the **resulting spectrum**
+  drawn in a 44×34 SVG (Sine, All 1, All 2, Odd 1, Odd 2, Res 1, Res 2) with the name below in mono 9 px
+  (never in a tooltip). Selected: `border: 2px solid var(--modulator)`, role-gradient background, shadow
+  `0 0 26px -8px`. Skirt and Resonance **modify the selected drawing live** (Skirt widens the skirt,
+  Resonance moves the peak: 0 = fundamental, 99 = harmonic 100); only Res 1 / Res 2 enable them.
+- **Envelope editor** — panels of `border-radius: 16px`, background `#0a0f10`, with the SysEx address in
+  the header (AEG `49 op 10-18`, PEG `49 op 0C-0F`). *AEG*: a `--signal-primary` polyline at 2.4 px with
+  `rgba(125,240,176,.08)` fill, draggable r=11 points (`fill: #06080a; stroke: 2.4px`), a dashed `r=22`
+  grab halo on the active point, a vertical **key off** mark in dashed `rgba(243,177,63,.5)`, levels
+  labelled beside the point (99 / 72 / 58) and times as labels below (`ATK 18 · DEC1 42 · DEC2 55 ·
+  REL 30 · HOLD 0`) — **not as fields**. *PEG*: the same but in `--modulator`, with a dashed **centre
+  50** line at mid height and the bipolar value labelled (`+34`).
+- **Level Scaling** — **it is a curve over the keyboard and it is drawn as one**: two curve segments in
+  `--carrier` (2.2 px) meeting at the **Break Point**, marked with a dashed `--signal-primary` vertical
+  and the label `BREAK B3`; the curves labelled with their type and value (`−Exp · 32`, `+Lin · 48`);
+  and **a keyboard drawn below** (a 14 px rectangle with the black keys at `#1b2426`), ends `A-1` and
+  `C8`. Its own scale, base A-1, not MIDI.
+- **Theory versus measurement** — the project's reason to exist. Measurement bars
+  (`--signal-primary`, 7 px, opacity .85) and **on top of them** the predicted `|J_n(I)|` curve as a
+  `--carrier` polyline of 2 px with `stroke-dasharray: 5 4` and a hollow circle per point. The legend
+  tells the two apart with a line sample (`PREDICTED` dashed with a circle / `MEASURED · 65536` solid and
+  thick). **Where it does not match, it is boxed and explained**: a 1.4 px `--alert` rectangle around
+  n=2, a leader line, and two sentences: "n=2 · measured 10 dB low" / "the Part's filter is missing from
+  the model". Foot with `MEAN ERROR 1.8 dB`, `WORST PARTIAL n=2 · 10 dB`, `FITTED I 2.81`.
+- **Provenance badges** — pills of `padding: 6px 13px`, mono 10 px, tracking .12em: `LIVE · 30 fps`
+  (phosphor, with a beating dot), `MEASURED · 65536` (phosphor, solid), `POLLED · 10.4 Hz` (cyan),
+  `DOCUMENTED` (**neutral — paper has no colour**), `WRITTEN AND VERIFIED` (cyan),
+  `NOT A HARMONIC · 2756 Hz` (alert, square), `POLLED · 0.40 s` (**broken outline, no word for stale**),
+  `PREDICTED` (amber, dashed). Every figure on screen carries one. **Void has no badge at all**: the
+  dash inside the kept outline is the stamp.
 
-- **Mando continuo** — SVG de 160×160. Pista `rgba(255,255,255,.08)` de 10 px, arco de valor en el
-  color del rol con `stroke-dasharray` y `stroke-linecap: round`, tapa interior r=44 a `#0d1416`,
-  marca de índice de 3 px rotada según el valor, y **el valor siempre visible en el centro**
-  (mono 27 px) con la etiqueta debajo (10 px). Agarre de arrastre 160 px (`--grip-knob`).
-- **Control bipolar (Detune, centro 15)** — pista de 58 px de alto (`--track-bipolar`),
-  `border-radius: 12px`, fondo `#0a1013`. Línea de centro `rgba(255,255,255,.28)` de 1 px, barra de
-  desviación desde el centro con gradiente en el color del rol, marca de posición de 3 px con glow,
-  extremos `−15` / `+15` en mono 9 px y el valor (`+7`, 20 px) centrado arriba.
-  **El centro se ve, no se recuerda.**
-- **Toggle-dibujo de Freq Mode (el ON/OFF ejemplar)** — dos tarjetas de ~150×112 lado a lado.
-  Encendida: `border: 2px solid var(--carrier)`, fondo `linear-gradient(180deg, rgba(243,177,63,.16),
-  rgba(243,177,63,.03))`, sombra `0 0 30px -10px`, y **el dibujo de lo que Coarse y Fine van a
-  significar**: seis parciales armónicas bajo una envolvente discontinua rotulada `× fundamental`.
-  Apagada (`FIXED`): `border: 1.5px solid #2b3436`, fondo `#080c0d`, una sola parcial gris y
-  `Hz absolutos`. Cambiar a Fixed **también mueve el Coarse** → hay que avisar al conmutar.
-- **Selector de Spectral Form** — siete casillas de ~52×72 con `gap: 7px`; cada una es el **espectro
-  resultante** dibujado en un SVG de 44×34 (Sine, All 1, All 2, Odd 1, Odd 2, Res 1, Res 2) con el
-  nombre debajo en mono 9 px (nunca en un tooltip). Seleccionada: `border: 2px solid var(--modulator)`,
-  fondo con gradiente del rol, sombra `0 0 26px -8px`. Skirt y Resonance **modifican el dibujo
-  seleccionado en vivo** (Skirt ensancha la falda, Resonance mueve el pico: 0 = fundamental,
-  99 = armónico 100); sólo Res 1/Res 2 los habilitan.
-- **Editor de envolventes** — paneles de `border-radius: 16px`, fondo `#0a0f10`, con la dirección
-  SysEx en la cabecera (AEG `49 op 10-18`, PEG `49 op 0C-0F`).
-  *AEG*: polilínea `--signal-primary` de 2.4 px con relleno `rgba(125,240,176,.08)`, puntos
-  arrastrables de r=11 (`fill: #06080a; stroke: 2.4px`), halo de agarre `r=22` discontinuo en el
-  punto activo, marca de **key off** vertical en `rgba(243,177,63,.5)` discontinua, niveles
-  rotulados junto al punto (99 / 72 / 58) y tiempos como etiquetas debajo
-  (`ATK 18 · DEC1 42 · DEC2 55 · REL 30 · HOLD 0`) — **no como campos**.
-  *PEG*: igual pero en `--modulator`, con la línea de **centro 50** discontinua a media altura y el
-  valor bipolar rotulado (`+34`).
-- **Level Scaling** — **es una curva sobre el teclado y se dibuja como tal**: dos tramos de curva en
-  `--carrier` (2.2 px) que se juntan en el **Break Point**, marcado con una vertical
-  `--signal-primary` discontinua y la etiqueta `BREAK B3`; las curvas rotuladas con su tipo y valor
-  (`−Exp · 32`, `+Lin · 48`); y **un teclado dibujado debajo** (rectángulo de 14 px con las teclas
-  negras a `#1b2426`), extremos `A-1` y `C8`. Escala propia base A-1, no MIDI.
-- **Teoría contra medición** — la razón de existir del proyecto. Barras de medición
-  (`--signal-primary`, 7 px, opacidad .85) y **encima** la curva teórica `|J_n(I)|` como polilínea
-  `--carrier` de 2 px con `stroke-dasharray: 5 4` y un círculo hueco por punto. La leyenda distingue
-  las dos con muestra de línea (`TEORÍA` discontinua con círculo / `MEDIDO 65536` continua gruesa).
-  **Donde no cuadra se encierra y se explica**: rectángulo `--alert` de 1.4 px alrededor de n=2, una
-  línea guía, y dos frases: "n=2 · medido 10 dB por debajo" / "falta el filtro de la Part en el
-  modelo". Pie con `ERROR MEDIO 1.8 dB`, `PEOR PARCIAL n=2 · 10 dB`, `I AJUSTADO 2.81`.
-- **Badges de procedencia** — píldoras de `padding: 6px 13px`, mono 10 px, tracking .12em:
-  `MIRANDO · 30 fps` (fósforo, con punto que late), `MIDIENDO · 65536` (ámbar),
-  `SONDEANDO · 12 Hz` y `ESCRITO Y VERIFICADO` (cian), `ARTEFACTO · NO ARMÓNICO` (alerta, cuadrado),
-  `DATO CADUCO · 4 s` (contorno discontinuo), `TEORÍA · CALCULADO`, `MEDIDO · 11 PARCIALES`.
-  Cada cifra en pantalla lleva el suyo: **medido, calculado, sondeado o caduco**.
+### 4. Tutor mode
 
-### 4. Modo tutor
-
-En la hoja de sistema. Panel de `border-radius: 20px` en tres columnas
+On the system sheet. A `border-radius: 20px` panel in three columns
 (`grid-template-columns: 250px 1fr 330px`):
 
-- **Pasos**: lista de 5 con círculo de 26 px — hechos (`✓`, borde `rgba(125,240,176,.5)`), actual
-  (círculo relleno `--signal-primary` con número en `#06110a`, fila con fondo `rgba(125,240,176,.09)`
-  y borde), pendientes (borde `dashed --inert`). Debajo, **← VOLVER AL PASO 2**: volver es restaurar
-  un estado conocido, **sin castigo**.
-- **Paso actual**: título 26 px, explicación 15 px / 1.65 con la fórmula `|fc ± k·fm|` en mono, y dos
-  botones — `PONLO TÚ, YO ESCUCHO` (cian, encendido) y `LO HAGO YO A MANO` (neutro). Pie
-  comparativo: `OBJETIVO 1.41` (ámbar) vs `TU TECLADO AHORA 1.4103 medido` (fósforo) + badge
-  `COINCIDE`.
-- **Dónde mirar en el MODX**: la app **no puede navegar los menús del teclado**, así que muestra la
-  ruta como escalera indentada en mono 13 px (`[EDIT] → Part 1 → Operator 3 → [Form/Freq]`, el
-  último tramo en fósforo) y espera. Debajo, la precondición verificada al arrancar:
-  `Receive Bulk` no está en Protect.
-- **Estado "el tutor acaba de tocar tu teclado"** (columna de badges): tarjeta con
-  `border: 1.5px solid rgba(88,200,245,.55)` y `animation: writeFlash 2.2s ease-in-out infinite`
-  (la sombra late entre `0 0 0 1px rgba(88,200,245,.5), 0 0 30px -8px …4` y
-  `0 0 0 1px …9, 0 0 46px -6px …8`). Lista los tres parámetros escritos con `✓ releído` en fósforo
-  por línea, y ofrece "volver a lo mío". Es información que el usuario tiene que **percibir aunque
-  esté mirando otra cosa**.
+- **Steps**: a list of 5 with a 26 px circle — done (`✓`, border `rgba(125,240,176,.5)`), current
+  (filled `--signal-primary` circle with the number in `#06110a`, row with `rgba(125,240,176,.09)`
+  background and a border), pending (`dashed --inert` border). Below, **← BACK TO STEP 2**: going back
+  restores a known state, **with no penalty**.
+- **Current step**: title 26 px, explanation 15 px / 1.65 with the formula `|fc ± k·fm|` in mono, and two
+  buttons — `YOU DO IT, I'LL LISTEN` (cyan, lit) and `I'LL DO IT MYSELF` (neutral). Comparative foot:
+  `TARGET 1.41` (amber) vs `YOUR KEYBOARD NOW 1.4103 measured` (phosphor) + a `MATCHES` badge.
+- **Where to look on the MODX**: the app **cannot navigate the keyboard's menus**, so it shows the path
+  as an indented ladder in mono 13 px (`[EDIT] → Part 1 → Operator 3 → [Form/Freq]`, the last leg in
+  phosphor) and waits. Below, the precondition verified at startup: `Receive Bulk` is not in Protect.
+- **The "the tutor just touched your keyboard" state** (badge column): a card with
+  `border: 1.5px solid rgba(88,200,245,.55)` and `animation: writeFlash 2.2s ease-in-out infinite`. It
+  lists the three written parameters with `✓ read back` in phosphor per line, and offers "back to what I
+  was doing". It is information the user has to **notice even while looking at something else**.
 
-### 5. Estados que no son felices
+### 5. States that are not happy
 
-Cuatro tarjetas de `border-radius: 18px`, borde 1.5 px del color de su severidad, fondo
-`linear-gradient(180deg, <color> .09, <color> .02)`, `padding: 20px`, cada una con un dibujo SVG de
-formas primitivas arriba (nunca un icono inventado), título 18 px, explicación 13 px / 1.55, una
-línea de diagnóstico en mono 11 px y su acción.
+Four cards of `border-radius: 18px`, a 1.5 px border in their severity's colour, background
+`linear-gradient(180deg, <colour> .09, <colour> .02)`, `padding: 20px`, each with an SVG drawing of
+primitive shapes on top (never an invented icon), an 18 px title, a 13 px / 1.55 explanation, a mono
+11 px diagnostic line and its action.
 
-1. **Teclado no conectado / desconectado a mitad** (`--alert`). El puerto `MODX-1` no está o lo tiene
-   otra app en exclusiva. El audio sigue entrando: se puede mirar, no leer el patch. →
-   `DIAGRAMA CONGELADO · ÚLTIMO SONDEO 4 s`, botón `REINTENTAR`.
-2. **Sin audio entrando** (`--carrier`). **No es silencio: son ceros digitales exactos**, así que no
-   hay cable ni ruta. Casi siempre `Part Output = USB1&2`, que no existe fuera de ASIO. →
-   `SILENCIO REAL ≠ CABLE MAL PUESTO`, botón `VER LA DISCIPLINA DE INIT`.
-3. **La escritura no se aplicó** (`--alert`). El MODX **falla en silencio**: escribir con la longitud
-   equivocada no da error y no cambia nada. Toda escritura se verifica releyendo; aquí 1 de 3 no
-   volvió. → `49 20 09 · SIN CONFIRMAR`, botón `REPARAR Y VERIFICAR`.
-4. **Voy a pisar tu patch** (`--modulator`). El paso escribe 11 parámetros en el buffer de edición
-   que el usuario tiene a medias; antes se guarda un volcado de `0E 25 00` (7 669 bytes,
-   restauración byte a byte). → dos botones: `GUARDAR Y SEGUIR` / `NO TOQUES`.
+1. **Keyboard not connected / disconnected mid-session** (`--alert`). The `MODX-1` port is missing or
+   another app has it exclusively. Audio is still coming in: you can look, not read the patch. →
+   `DIAGRAM FROZEN · LAST POLL 4 s`, button `RETRY`.
+2. **No audio coming in** (`--carrier`). **It is not silence: it is exact digital zeroes**, so there is
+   no cable or no route. Almost always `Part Output = USB1&2`, which does not exist outside ASIO. →
+   `REAL SILENCE ≠ A CABLE IN THE WRONG PLACE`, button `SEE THE INIT DISCIPLINE`.
+3. **The write did not apply** (`--alert`). The MODX **fails silently**: writing with the wrong length
+   gives no error and changes nothing. Every write is verified by reading back; here 1 of 3 did not come
+   back. → `49 20 09 · UNCONFIRMED`, button `REPAIR AND VERIFY`.
+4. **I am about to overwrite your patch** (`--modulator`). The step writes 11 parameters into the edit
+   buffer the user has half-finished; a `0E 25 00` dump is saved first (byte-for-byte restoration). →
+   two buttons: `SAVE AND CONTINUE` / `DON'T TOUCH IT`.
 
-### 6. Los ocho operadores — la coreografía del patch (`3a`)
+### 6. ALL EIGHT — the choreography of the patch (`3a`)
 
-Fichero: `design/Ronda3-pantallas.dc.html`, sección con id `3a`. **La superficie principal del modo
-crear.**
+File: `design/Round3-screens.dc.html`, section `3a`. **The primary surface of BUILD mode.**
 
-**Purpose.** Un operador tiene 43 parámetros; la principal muestra tres y el editor completo muestra
-uno. Esta pantalla muestra **cinco hechos de los ocho a la vez**, y sobre todo la **comparación**:
-quién ataca antes, quién decae rápido, quién está más alto.
+**Purpose.** An operator has 43 parameters; the main screen shows five and the full editor shows one.
+This screen shows **five facts about all eight at once**, and above all the **comparison**: who attacks
+first, who decays fast, who is loudest.
 
-**Layout.** Barra de 58 px con un conmutador segmentado (AEG · NIVEL / PEG · FORM/FREQ / ESPECTRO POR
-OP); debajo, panel de curvas (`flex: 1`, ~330 px) y una fila de grupos de `flex: 0 0 296px`.
+**Layout.** A 58 px bar with a segmented switch (AEG · LEVEL / PEG · FORM/FREQ / SPECTRUM PER OP); below,
+a curve panel (`flex: 1`, ~330 px) and a row of groups of `flex: 0 0 296px`.
 
-- **Ocho AEG sobre un mismo par de ejes.** SVG `viewBox="0 0 1240 340"`, `preserveAspectRatio="none"`,
-  eje X = 0→2 000 ms, key-off vertical discontinua en ámbar a 1 400 ms. El operador en foco a
-  `--curve-focus-stroke` (3.4 px) con glow y **puntos arrastrables de `--grip-curve`** con halo
-  discontinuo de `--grip-halo`; los otros siete a `--curve-ghost-stroke` (1.4 px) y
-  `--curve-ghost-alpha` (.5), **en el color de su rol**. Los operadores a 0 son una línea
-  `--inert` discontinua sobre el cero: presentes, no borrados.
-- **El nombre va escrito sobre la curva, en su meseta** (`OP1 99`, `OP4 99`, `OP8 55`…), en el color
-  del rol. Sin leyenda que casar y sin tooltip — con dedo no existe el "por encima".
-- **Agrupados por el papel que da el algoritmo**, no por número: `PORTADORAS · SUENAN` (marco ámbar),
-  `MODULADORES · COLOREAN` (marco cian), `A CERO · CORTAN` (marco discontinuo), cada grupo con su
-  cuenta.
-- **Tarjeta de operador** de `--op-strip-w` (128 px): etiqueta + rol, ratio en mono 20 px, una
-  **columna de Level luminosa y arrastrable** de `--op-level-col-w` (30 px, altura del relleno =
-  Level, con marca de 2 px y glow en el valor), la cifra de Level en 26 px, la **forma espectral
-  dibujada** en un SVG de 76×34, y su nombre. Radio según rol: `--radius-carrier` 22 px vs
-  `--radius-modulator` 5 px.
+- **Eight AEGs on one pair of axes.** SVG `viewBox="0 0 1240 340"`, `preserveAspectRatio="none"`, X axis
+  = 0→2 000 ms, dashed amber key-off vertical at 1 400 ms. The focused operator at
+  `--curve-focus-stroke` (3.4 px) with a glow and **draggable `--grip-curve` points** with a dashed
+  `--grip-halo`; the other seven at `--curve-ghost-stroke` (1.4 px) and `--curve-ghost-alpha` (.5),
+  **in their role's colour**. Operators at 0 are a dashed `--inert` line along zero: present, not
+  deleted.
+- **The name is written on the curve, on its plateau** (`OP1 99`, `OP4 99`, `OP8 55`…), in the role's
+  colour. No legend to match and no tooltip — with a finger there is no "above".
+- **Grouped by the role the algorithm gives them**, not by number: `CARRIERS · YOU HEAR THESE` (amber
+  frame), `MODULATORS · THEY COLOUR IT` (cyan frame), `AT ZERO · SILENT` (dashed frame), each with its
+  count.
+- **Operator card** of `--op-strip-w` (128 px): label + role, ratio in mono 20 px, a **luminous
+  draggable Level column** of `--op-level-col-w` (30 px, fill height = Level, with a 2 px mark and a glow
+  on the value), the Level figure at 26 px, the **spectral form drawn** in a 76×34 SVG, its name, **and
+  its own miniature AEG** — this card has the room the main-screen node does not.
+- **This is also where following leaves a trace** rather than moving focus — see `7b`.
 
-**La trampa a esquivar era la hoja de cálculo**, y se esquiva así: **ninguna celda con número
-suelto**. Todo valor viene con su forma — altura de columna, posición en una curva, o dibujo del
-espectro. Si al implementarlo aparece una rejilla de celdas, está mal hecho.
+**The trap to avoid was the spreadsheet**, and it is avoided like this: **no cell holds a bare number**.
+Every value comes with its shape — column height, position on a curve, or the drawing of a spectrum. If
+a grid of cells appears when implementing it, it has been done wrong.
 
-**Editable desde aquí**: arrastrar la columna de Level lo cambia; tocar la tarjeta lleva el foco a su
-curva. El resto de los 43 vive en el editor del operador — esta pantalla **no es su sustituto**.
+**Editable from here**: dragging the Level column changes it; touching the card brings focus to its
+curve. The rest of the 43 live in the operator editor — this screen **is not its replacement**.
 
-### 7. La Part — lo que hay entre el FM y tus oídos (`3b`)
+### 7. The Part — what sits between the FM and your ears (`3b`)
 
-Sección con id `3b`. **Su función principal es avisar, no mezclar.**
+Section `3b`. **Its main job is to warn, not to mix.**
 
-El proyecto se sostiene en comparar el espectro medido contra Bessel. Un filtro con resonancia mueve
-las amplitudes sin que nadie lo pida, y entonces la teoría no cuadra y no sabes si el análisis está
-mal. Esta pantalla lo dice con luz y forma.
+The project rests on comparing the measured spectrum against Bessel. A filter with resonance moves
+amplitudes without anyone asking, and then the prediction does not match and you do not know whether the
+analysis is wrong. This screen says so with light and shape.
 
-- **La cadena como cinta horizontal** (`flex: 0 0 118px`): OPERADORES FM-X → FILTRO → INSERT A/B → EQ
-  → SENDS → MAIN L/R, con flechas entre etapas. Una etapa **transparente se dibuja recta** (una línea
-  horizontal) con contorno `--inert` discontinuo y la palabra `TRANSPARENTE`; una que **interviene se
-  dibuja con su forma** (la curva del filtro en miniatura) en `--chain-dirty` con glow y la palabra
-  `INTERVIENE`. La forma dice el estado antes que el color.
-- **Sello de cadena en la barra**: `CADENA LIMPIA` (filtro en Thru, sends a 0, inserts fuera, EQ
-  plano) o `CADENA SUCIA · NO ESTÁS MIDIENDO FM PURO` en `--alert` con glow, y al lado un botón
-  `LIMPIAR LA CADENA`. **El sello viaja a la principal como chip pequeño** (ver `3e`) y **el panel de
-  teoría contra medición lo lee**: con la cadena sucia el error medio es 1.8 dB y se atribuye al
-  filtro; limpia, la misma medida da 0.4 dB.
-- **El filtro se edita dibujando su respuesta.** SVG de 620×210 con la curva de `LPF12+HPF12`, el
-  **corte y la resonancia como puntos arrastrables** de `--grip-curve` con halo, y la **línea de Thru
-  como referencia plana discontinua en fósforo** ("plano = Thru = FM puro"). Los tipos son **chips
-  dibujados** de `--hit-chip` (36 px), no un desplegable de 19. Direcciones y ruta en la cabecera:
-  `48 00 0B / 0C(2) / 0F` · `[Pitch/Filter] → [Filter Type]`.
-- **Ojo con las unidades**: el Cutoff es **0-255 en dos bytes**, no hercios, y la Resonance es 0-127.
-  El eje de la curva sí es frecuencia (es una respuesta), pero **la cifra del control es el
-  parámetro**: `CORTE 178 · RES 42 / 127`.
-- **FEG** (`48 00 17–2C`): envolvente con puntos arrastrables y key-off. Su nivel es **bipolar en
-  cents, ±9 600** — se rotula `+52 · +3 931 ¢`, que es lo que de verdad le hace al espectro. Con la
-  FEG activa el espectro cambia con el tiempo por razones que no son FM: el waterfall lo verá y
-  Bessel no lo explicará.
-- **2.º LFO** (`48 00 47–4E`): onda dibujada, y `AMP MOD 18` marcado en alerta porque hace respirar
-  la amplitud — una medida sobre nota sostenida sale distinta según cuándo dispares.
-- **Límites de nota y velocidad** (`31 00 1C–1F`): la nota **sobre un teclado dibujado** con el rango
-  activo iluminado y sus dos marcas en fósforo; la velocidad como **cuña** con sus dos límites
-  discontinuos. No cuatro campos numéricos.
+- **The chain as a horizontal tape** (`flex: 0 0 118px`): FM-X OPERATORS → FILTER → INSERT A/B → EQ →
+  SENDS → MAIN L/R, with arrows between stages. A **transparent stage is drawn straight** (a horizontal
+  line) with a dashed `--inert` outline and the word `TRANSPARENT`; one that **intervenes is drawn with
+  its shape** (the filter curve in miniature) in `--chain-dirty` with a glow and the word `INTERVENES`.
+  The shape says the state before the colour does.
+- **Chain stamp in the bar**: `CLEAN CHAIN` (filter at Thru, sends at 0, inserts out, EQ flat) or
+  `DIRTY CHAIN · THIS IS NOT PURE FM` in `--alert` with a glow, and a `CLEAN THE CHAIN` button beside
+  it. **The stamp travels to the main screen as a small chip** and **the theory-versus-measurement panel
+  reads it**: with a dirty chain the mean error is 1.8 dB and is attributed to the filter; clean, the
+  same capture gives 0.4 dB.
+- **The filter is edited by drawing its response.** A 620×210 SVG with the `LPF12+HPF12` curve, **cutoff
+  and resonance as draggable `--grip-curve` points** with halos, and the **Thru line as a flat dashed
+  phosphor reference** ("flat = Thru = pure FM"). The types are **drawn chips** of `--hit-chip` (36 px),
+  not a dropdown of 19. Addresses and path in the header: `48 00 0B / 0C(2) / 0F` ·
+  `[Pitch/Filter] → [Filter Type]`.
+- **Watch the units**: Cutoff is **0-255 in two bytes**, not hertz, and Resonance is 0-127. The curve's
+  axis *is* frequency (it is a response), but **the control's figure is the parameter**:
+  `CUTOFF 178 · RES 42 / 127`.
+- **FEG** (`48 00 17–2C`): an envelope with draggable points and key-off. Its level is **bipolar in
+  cents, ±9 600** — labelled `+52 · +3 931 ¢`, which is what it actually does to the spectrum. With the
+  FEG active the spectrum changes over time for reasons that are not FM: the waterfall will see it and
+  Bessel will not explain it.
+- **2nd LFO** (`48 00 47–4E`): the wave drawn, and `AMP MOD 18` flagged in alert because it makes the
+  amplitude breathe — a capture on a held note comes out differently depending on when you trigger it.
+- **Note and velocity limits** (`31 00 1C–1F`): the note **on a drawn keyboard** with the active range
+  lit and its two marks in phosphor; velocity as a **wedge** with its two dashed limits. Not four numeric
+  fields.
 
-**No están** Arpeggio, Motion Seq, Part LFO, Control Assign ni Receive SW: no afectan a lo que se
-mide. EQ e inserts aparecen **solo como estado**, porque lo único que importa de ellos es si están en
-medio o no.
+**Not present**: Arpeggio, Motion Seq, Part LFO, Control Assign, Receive SW — they do not affect what is
+measured. EQ and inserts appear **only as state**, because the only thing that matters about them is
+whether they are in the way.
 
-### 8. Copias y la resta entre dos (`3c`)
+### 8. Copies and the diff between two (`3c`)
 
-Sección con id `3c`. Los snapshots que el aviso de "voy a pisar tu patch" promete, con su sitio.
-**La resta entre dos es la pantalla más valiosa del proyecto**, y está diseñada como lo que es: el
-guion de una lección.
+Section `3c`. The snapshots the "I am about to overwrite your patch" warning promises, given a home.
+**The diff between two is the most valuable screen in the project**, and it is designed as what it is:
+the script for a lesson.
 
-**Layout.** Grid `392px 1fr` con gap de 2 px sobre `rgba(255,255,255,.07)`.
+**Layout.** Grid `392px 1fr` with a 2 px gap over `rgba(255,255,255,.07)`.
 
-- **Columna izquierda, la lista.** Cada snapshot lleva **procedencia** (`ANTES DE QUE LA APP TOCARA
-  NADA`, `INIT`, `PASO n · LECCIÓN m`, `A MANO`), antigüedad, y **su forma**: bulk de 7 669 B o 416
-  parámetros — porque no restauran igual. Los dos elegidos para la resta se marcan `A · ORIGEN` en
-  ámbar y `B · DESTINO` en cian, con borde 2 px y glow.
-- **Restaurar es un toque, sin diálogo**: es un solo mensaje y 20 ms. Pero **un toque, no dos**, y lo
-  que estabas usando se guarda antes — nada destructivo pasa por un doble toque.
-- **Columna derecha, la resta.** Cabecera `Init FM-X → La campana que me gusta` y "14 parámetros
-  cambian, agrupados en cinco cosas que entender". Cada grupo es una tarjeta con **número de paso**
-  (círculo de 34 px), **frase en lenguaje humano** ("OP3 · el modulador que da la campana") y
-  **evidencia dibujada**: barras de delta con el valor antiguo en `--ink-inert` y el nuevo en
-  `--signal-primary`, la **envolvente antes y después superpuestas** (la vieja discontinua en gris,
-  la nueva en fósforo con glow), y el espectro de la forma nueva.
-- **Los 402 parámetros idénticos no se listan** — solo lo que cambia es información. Y el grupo que
-  **no es FM** (el filtro que se coló, el Amp Mod) se marca en `--alert` discontinuo con un botón
-  `EXCLUIR DE LA LECCIÓN`: es ruido de la sesión, no parte del sonido.
-- Botón `CONVERTIR EN LECCIÓN DE 5 PASOS` en la cabecera: cierra el círculo. Los pasos se reordenan
-  arrastrando.
+- **Left column, the list.** Each snapshot carries **provenance** (`BEFORE THE APP TOUCHED ANYTHING`,
+  `INIT`, `STEP n · LESSON m`, `BY HAND`), age, and **its form**: a bulk dump or a parameter set —
+  because they do not restore alike. The two chosen for the diff are marked `A · FROM` in amber and
+  `B · TO` in cyan, with a 2 px border and a glow.
+- **Copies carry Performance provenance** (round 6): one from another sound is **not disabled** — its
+  button changes text and says what it would overwrite.
+- **Restoring is one touch, no dialog**: a single message and 20 ms. But **one touch, not two**, and
+  what you were using is saved first — nothing destructive goes through a double tap.
+- **Right column, the diff.** Header `Init FM-X → The bell I like` and "14 parameters change, grouped
+  into five things to understand". Each group is a card with a **step number** (34 px circle), a
+  **sentence in human language** ("OP3 · the modulator that gives the bell") and **drawn evidence**:
+  delta bars with the old value in `--ink-inert` and the new one in `--signal-primary`, the **envelope
+  before and after superimposed** (the old one dashed in grey, the new one in phosphor with a glow), and
+  the spectrum of the new form.
+- **The 402 identical parameters are not listed** — only what changes is information. And the group that
+  **is not FM** (the filter that crept in, the Amp Mod) is marked in dashed `--alert` with an
+  `EXCLUDE FROM THE LESSON` button: it is session noise, not part of the sound.
+- A `TURN INTO A 5-STEP LESSON` button in the header closes the loop. Steps are reordered by dragging.
 
-**No es un `git diff`**: ni columnas, ni ± por línea, ni monoespaciado por defecto en la prosa.
+**It is not a `git diff`**: no columns, no ± per line, no monospace by default in the prose.
 
-### 9. El índice del tutor (`3d`)
+### 9. The tutor index (`3d`)
 
-Sección con id `3d`. El nivel que faltaba encima de los pasos: "paso 3 de 5 de la lección 2 de 9".
+Section `3d`. The level that was missing above the steps: "step 3 of 5 of lesson 2 of 9".
 
-- **Nueve lecciones como un camino con espina dorsal**, no una rejilla de tarjetas: una columna de
-  círculos de 34 px unidos por una línea vertical de 2 px que va de fósforo (hecho) a
-  `rgba(255,255,255,.09)` (pendiente).
-- **La lección en curso está abierta** (`flex: 1`) con sus **cinco pasos visibles** como tarjetas, el
-  actual relleno en fósforo, y dos botones: `SEGUIR EN EL PASO 3` y `← VOLVER AL PASO 2`. Volver es
-  restaurar un estado conocido, **sin castigo**. Las demás lecciones van cerradas con su cuenta
-  (`0 / 4`).
-- **Barra de progreso de nueve segmentos** en la cabecera, con el actual a medio llenar.
-- **Aquí vive el sub-registro cálido**: títulos y prosa en `--font-lesson` (Georgia) sobre
-  `--lesson-surface`, con `--lesson-ink` / `--lesson-ink-dim` y `--lesson-accent`. **Pero las cifras
-  medidas siguen en mono y fósforo** (`TU TECLADO 1.4103` frente a `OBJETIVO 1.41` en vermellón, con
-  badge `COINCIDE`). Serifa para lo que se lee, mono para lo que se mide — también dentro de una
-  lección.
-- La columna derecha explica **de dónde salen las lecciones que aún no están escritas**: de restar dos
-  copias, con enlace a `3c`. Y repite la precondición verificada al arrancar: `Receive Bulk` no está
-  en Protect (`[UTILITY]` → `[Settings]` → `[Advanced]`).
+- **Nine lessons as a path with a spine**, not a grid of cards: a column of 34 px circles joined by a
+  2 px vertical line running from phosphor (done) to `rgba(255,255,255,.09)` (pending).
+- **The lesson in progress is open** (`flex: 1`) with its **five steps visible** as cards, the current
+  one filled in phosphor, and two buttons: `RESUME AT STEP 3` and `← BACK TO STEP 2`. Going back restores
+  a known state, **with no penalty**. The other lessons are closed with their count (`0 / 4`).
+- **A nine-segment progress bar** in the header, with the current one half filled.
+- **This is where the warm sub-register lives**: titles and prose in `--font-lesson` (Georgia) over
+  `--lesson-surface`, with `--lesson-ink` / `--lesson-ink-dim` and `--lesson-accent`. **But measured
+  figures stay in mono and phosphor** (`YOUR KEYBOARD 1.4103` against `TARGET 1.41` in vermilion, with a
+  `MATCHES` badge). Serif for what is read, mono for what is measured — inside a lesson too.
+- The right column explains **where the unwritten lessons come from**: from subtracting two copies, with
+  a link to `3c`. And it repeats the precondition verified at startup: `Receive Bulk` is not in Protect
+  (`[UTILITY]` → `[Settings]` → `[Advanced]`).
 
-### 10. La principal rebalanceada (`3e`) — DECIDIDA: es la que se implementa
+### 10. The main screen when there is no capture on it
 
-Sección con id `3e`. Era una alternativa a la primera principal; **ganó y se promovió a `4a`**
-(`design/Pantalla-principal.dc.html`). Se documenta aquí porque explica los tres cambios de
-composición; **lo que se implementa es `4a`**, no la principal archivada.
+Not a separate screen: **the main screen has two compositions, and which one you get is decided by
+whether a capture exists.** The spectrum and harmonics panels say nothing until `CAPTURE` has been
+pressed, while the algorithm is legible the moment a patch loads — so the two panels that are empty most
+of the time were holding the space of the one that is always full.
 
-El waterfall baja de **194 px siempre** a **156 px compartidos** con el scope en un panel con
-pestañas de `--hit-tab` (44 px). Con lo que se libera:
+- The algorithm panel expands to **1232 × 400** when nothing is measured, and returns to 700 px when
+  there is a capture. Same panel, same component, two sizes.
+- **Automatic**, not a mode and not a toggle. A capture brings the panels back over `--dur-settle`
+  (420 ms). **`KEEP IT BIG`** in the algorithm's own header pins the big composition and persists.
+- Sized by the worst case eight operators can produce (up to 6 depth levels, up to 4 parallel branches).
+  Tightening it needs the histogram over the 88 algorithms — `CONCERNS.md` §31.
+- In the big composition, **role reads from position**: carriers touch the output bus, every arrow points
+  down, operators at zero are parked to the right on a dashed stub.
 
-- El **diagrama pasa de 556 a 700 px**. Nodos de `--op-node-w` × `--op-node-h` (118×108, y 116 de
-  alto para los que llevan ratio medido), que ya admiten **la forma espectral dibujada y el Hz real**
-  de cada operador (261.763 / 523.526 / 130.881 Hz), no solo el ratio nominal.
-- Los **armónicos dejan de ser una miniatura** y pasan a panel permanente, con la **curva de Bessel
-  superpuesta** encima de las barras medidas y su leyenda de línea (MEDIDO grueso continuo / TEORÍA
-  fino discontinuo).
-- Aparece el **chip `CADENA LIMPIA`** en la barra, alimentado por `3b`, y una celda `PEOR PARCIAL` en
-  la columna de cifras.
+Drawn in `8f`. Written up in `DESIGN.md` §10. The risk (the layout moves at the moment of the press) is
+`CONCERNS.md` §30.
 
-**Criterio de la pestaña**: el waterfall es el **por defecto en cuanto hay una nota sonando**; el
-scope se pide. Cerrado (`CONCERNS.md` §1–7).
+### 11. The player (`4c`) — a cross-cutting piece
 
-### 11. El reproductor (`4c`) — pieza transversal
+File: `design/Round4-pieces.dc.html`, section `4c`. **Implement once**: A/B, the audio check and any
+parameter sweep all use it.
 
-Fichero: `design/Ronda4-piezas.dc.html`, sección `4c`. **Implementar una sola vez**: lo usan el A/B,
-el chequeo de audio y cualquier barrido de parámetro.
+What it does: **note-on → hold → capture → note-off**. It does not play a file: **it performs a gesture
+on a physical instrument that is sounding in the room.**
 
-Lo que hace: **note-on → sostener → medir → note-off**. No reproduce un archivo: **ejecuta un gesto
-sobre un instrumento físico que está sonando en la habitación**.
+**Seven states**, drawn in a row with their transitions:
 
-**Siete estados**, dibujados en fila con sus transiciones (`flex: 0 0 316px`, tarjetas de `flex:1` con
-flecha de 30 px entre ellas):
-
-| estado | forma | qué es verdad |
+| state | shape | what is true |
 |---|---|---|
-| 1 · reposo | triángulo hueco en `--inert` | nadie toca; el teclado es del dueño |
-| 2 · armado | triángulo `--carrier` con glow | parámetro escrito **y verificado releyendo**; aún no suena |
-| 3 · sosteniendo | pausa en `--modulator`, la tarjeta **late** (`holdGlow` 1.6 s) | hay una nota viva puesta por la app |
-| 4 · midiendo | obturador `--carrier` relleno | FFT 65536 sobre la nota sostenida |
-| 5 · soltando | curva de release con marca de key-off | note-off enviado, **la cola de la AEG sigue sonando** (~460 ms) |
-| 6 · en bucle | flecha circular `--modulator` | vuelve al 2 con el otro valor; `--play-hold` / `--play-gap` |
-| 7 · fallido | **octógono** `--alert` | la escritura no volvió al releer. **Se suelta la nota primero, se avisa después** |
+| 1 · rest | hollow triangle in `--inert` | nobody is playing; the keyboard belongs to its owner |
+| 2 · armed | `--carrier` triangle with a glow | the parameter is written **and verified by reading back**; nothing sounds yet |
+| 3 · holding | pause in `--modulator`, the card **beats** (`holdGlow` 1.6 s) | there is a live note put there by the app |
+| 4 · capturing | filled `--carrier` shutter | FFT 65536 over the held note |
+| 5 · releasing | release curve with a key-off mark | note-off sent, **the AEG tail is still sounding** (~460 ms) |
+| 6 · looping | circular `--modulator` arrow | back to 2 with the other value; `--play-hold` / `--play-gap` |
+| 7 · failed | **octagon** in `--alert` | the write did not come back on the read. **The note is released first, the warning second** |
 
-El estado 5 existe por una razón de diseño, no de ingeniería: **el waterfall está viendo esa cola**,
-así que soltar no es lo mismo que estar en reposo.
+State 5 exists for a design reason, not an engineering one: **the waterfall is watching that tail**, so
+releasing is not the same as being at rest.
 
-**Qué se va a tocar, sin formulario**: la nota se elige **tocando un teclado dibujado** (340×52, la
-tecla activa iluminada en `--modulator` con sus dos marcas) y la velocidad **arrastrando una cuña**
-(1→127, marca de 2.6 px y el valor en una pastilla encima, nunca debajo del dedo). Referencia de los
-spikes: C4 sostenida, velocidad 100.
+**What gets played, without a form**: the note is chosen by **touching a drawn keyboard** (340×52, the
+active key lit in `--modulator` with its two marks) and velocity by **dragging a wedge** (1→127, a 2.6 px
+mark and the value in a pill above, never under the finger). The spikes' reference: C4 held, velocity
+100.
 
-**Quién está tocando** — la parte no obvia. `Local Control` sigue en `on`: el teclado suena por su
-cuenta mientras la app le escribe, y el dueño puede estar tocando a la vez. Tres estados con color
-propio:
+**Who is playing** — the non-obvious part. `Local Control` stays `on`: the keyboard sounds on its own
+while the app writes to it, and the owner may be playing at the same time. Three states with their own
+colour:
 
-- `TOCA LA APP · C4` en `--who-app` (cian) — y este chip **vive en la cabecera**, no aquí.
-- `TOCAS TÚ · 3 NOTAS` en `--who-hands` (fósforo, como toda señal que entra).
-- **`HAY UNA NOTA MÍA VIVA Y NO DEBERÍA`** en `--alert` con contorno discontinuo — el único estado
-  que **enciende el pánico por su cuenta**.
+- `THE APP IS PLAYING · C4` in `--who-app` (cyan) — and this chip **lives in the header**, not here.
+- `YOU ARE PLAYING · 3 NOTES` in `--who-hands` (phosphor, like every incoming signal). **Counted by
+  pitch, not by message**: a key on four channels in 28 ms is one note.
+- **`A NOTE OF MINE IS STILL SOUNDING`** in `--alert` with a dashed outline — the only state that
+  **lights HUSH on its own**.
 
-**Mirar ≠ medir sigue vigente**: el reproductor alimenta las dos, pero mientras sostiene la vista
-viva corre a 30 fps y la medida es el obturador del paso 4, deliberado y con su sello.
+**`LIVE` ≠ `CAPTURE` still holds**: the player feeds both, but while it holds the note the live view runs
+at 30 fps and the capture is the shutter of step 4 — deliberate, and stamped.
 
-**Y el coste que se muestra en vez de disimularse**: leer las 416 direcciones son **0,9 s en
-silencio y 5,5 s con notas** (medido, fase 0c). Así que el badge del diagrama **baja de
-`--probe-idle` (12 Hz) a `--probe-playing` (2 Hz)** mientras el reproductor sostiene, y se dice.
-Nada de animación que finja fluidez.
+**And the cost is shown rather than hidden**: rereading the watch set costs **~0.9 s in silence and
+~5.5 s with notes** (measured, phase 0c). So the diagram's poll badge **drops from `--probe-idle` to
+`--probe-playing`** while the player holds, and it is said. No animation faking fluency.
 
-### 12. El pánico (`4d`) — pieza transversal
+### 12. HUSH (`4d`) — a cross-cutting piece
 
-Sección `4d`. **No es un control del reproductor**: es el botón de cuando todo lo demás ha fallado.
-Las notas colgadas de la fase 0c no las dejó nadie tocando — las dejó un bug del código que las
-generaba, así que un botón que dependiera del reproductor habría estado tan roto como él.
+Section `4d`. **It is not a player control**: it is the button for when everything else has failed. The
+stuck notes in phase 0c were not left by anyone playing — they were left by a bug in the code that
+generated them, so a button depending on the player would have been as broken as it was.
 
-**Especificación que no se negocia:**
+**Non-negotiable specification:**
 
-- `--hit-panic` (56×56) en **el extremo derecho de la cabecera de TODAS las pantallas**, incluidas
-  las que no tocan notas.
-- `--shape-panic` — un octógono por `clip-path`. Es la **única forma octogonal de la app**; todo lo
-  demás es píldora, círculo o rectángulo. La forma lo identifica sin leer.
-- **Aislamiento en vez de confirmación**: filete de 2 px + `--gap-isolate` (16 px, el doble del
-  `--hit-gap` normal) a su izquierda, nada accionable dentro de esa franja, y es el último elemento
-  antes del borde de la ventana.
-- **Tres estados**: hueco sobre `--panic-idle-bg` en reposo; **relleno con glow** sobre
-  `--panic-live-bg` cuando hay una nota viva; y `HECHO` en `--signal-primary` durante
-  `--panic-ack` (1.5 s) tras pulsarlo.
-- **Sin confirmación.** Un «¿seguro?» convierte una emergencia en dos pasos.
-- **Actúa al levantar el dedo dentro** (`pointerup` dentro del objetivo). Si se toca sin querer y se
-  arrastra fuera antes de soltar, no pasa nada. Única concesión, y no cuesta tiempo: el gesto natural
-  es tocar y levantar.
-- **Qué hace**: `All Sound Off` + `All Notes Off` + 2 048 `Note Off` explícitos (medido, fase 0c). Y
-  **ni un parámetro**: no pierde el patch, no cancela una medida guardada, no cierra el puerto, no
-  cambia de modo.
-- **Qué dice después**: «Silenciadas 3 notas · tu patch está intacto». Sin nada que deshacer, y el
-  aviso **se va solo** — no pide un segundo toque para cerrarse.
-- **Sobrevive al estado de error**: la cabecera es lo último que se sustituye, y las cuatro tarjetas
-  de estado no felices se dibujan **debajo** de ella, nunca encima. Si el teclado se desconecta, el
-  botón sigue ahí y sigue mandando los mensajes por si el puerto vuelve.
+- `--hit-panic` (56×56) at **the far right of the header of EVERY screen**, including those that play no
+  notes.
+- `--shape-panic` — an octagon by `clip-path`. It is the **only octagonal shape in the app**; everything
+  else is a pill, a circle or a rectangle. The shape identifies it without reading.
+- **Isolation instead of confirmation**: a 2 px rule + `--gap-isolate` (16 px, twice the normal
+  `--hit-gap`) to its left, nothing actionable inside that strip, and it is the last element before the
+  window edge.
+- **Three states**: hollow over `--panic-idle-bg` at rest; **filled with a glow** over `--panic-live-bg`
+  when a note is live; and `DONE` in `--signal-primary` for `--panic-ack` (1.5 s) after pressing it.
+- **No confirmation.** An "are you sure?" turns an emergency into two steps.
+- **It acts on finger-up inside** (`pointerup` within the target). Touch it by accident and drag off
+  before releasing and nothing happens. The one concession, and it costs no time: the natural gesture is
+  touch and lift.
+- **What it does**: `All Sound Off` + `All Notes Off` + 2 048 explicit `Note Off` (measured, phase 0c).
+  And **not one parameter**: it does not lose the patch, does not cancel a saved capture, does not close
+  the port, does not change mode.
+- **What it says afterwards**: "3 notes silenced · your patch is intact". Nothing to undo, and the
+  acknowledgement **clears itself** — it does not ask for a second touch to close.
+- **It survives the error state**: the header is the last thing replaced, and the four unhappy-state
+  cards are drawn **below** it, never over it. If the keyboard disconnects, the button is still there and
+  still sends the messages in case the port comes back.
+- **The word is `HUSH`, not `PANIC`**: *panic* names the user's emotion, and every other failure state in
+  this app names what happens.
 
-### 13. Conexión y chequeo de arranque (`4e`) — dos caras
+### 13. Connection and startup check (`4e`) — two faces
 
-Sección `4e`. Es el sitio al que lleva el `REINTENTAR` del estado «teclado no conectado».
+Section `4e`. It is where `RETRY` on the "keyboard not connected" state leads.
 
-**Cara 1 — la secuencia.** Corre al arrancar y cuando algo se rompe. Grid `1fr 452px`. Seis
-comprobaciones **ordenadas de más grave a menos**; las que pasan se colapsan a una línea de ~62 px
-con su cifra medida, y **la que falla se queda al final y grande** (`flex: 1`), con la ruta de menú
-completa dentro:
+**Face 1 — the sequence.** Runs at startup and when something breaks. Grid `1fr 452px`. Six checks
+**ordered from most to least serious**; the ones that pass collapse to a ~62 px line with their measured
+figure, and **the one that fails stays at the end and large** (`flex: 1`), with the full menu path
+inside:
 
-| prueba | dato real en pantalla |
+| test | real datum on screen |
 |---|---|
-| Puerto MIDI | `MODX-1` abierto · Device Number `all` |
-| Responde y acepta escrituras | mediana **2.0 ms** · peor caso 22.6 · timeout 100 |
-| Fiabilidad del sondeo | **0 perdidas de 24 320** |
-| Entra audio de verdad | `Line (MODX)` 2 ch · 44 100 · pico −18 dBFS · suelo −104 |
-| Cadena limpia | 4 de 4 · `48 00 0B = 15` (Thru) |
-| `Receive Bulk` | **falla** — sondeado, porque no se puede leer por SysEx |
+| MIDI port | `MODX-1` open · Device Number `all` |
+| Responds and accepts writes | median **2.0 ms** · worst case 22.6 · timeout 100 |
+| Poll reliability | **0 lost of 24 320** |
+| Audio really coming in | `Line (MODX)` 2 ch · 44 100 · peak −18 dBFS · floor −66 |
+| Clean chain | 4 of 4 · `48 00 0B = 15` (Thru) |
+| `Receive Bulk` | **fails** — probed, because it cannot be read over SysEx |
 
-La tarjeta del fallo lleva la ruta literal en mono sobre fondo cálido:
-`[UTILITY]` → `[Settings]` → `[Advanced]` → `Receive Bulk` = `On`. Y el razonamiento diagnóstico,
-porque es lo que evita buscar a ciegas: **las escrituras de parámetro no pasan por Receive Bulk**, así
-que «escribir funciona y restaurar no» aísla al culpable sin ambigüedad.
+The failure card carries the literal path in mono on a warm background:
+`[UTILITY]` → `[Settings]` → `[Advanced]` → `Receive Bulk` = `On`. And the diagnostic reasoning, because
+it is what stops you searching blind: **parameter writes do not go through Receive Bulk**, so "writing
+works and restoring does not" isolates the culprit unambiguously.
 
-**Cara 2 — el reposo.** Es **un chip en la cabecera**, el que ya existía (`CADENA LIMPIA`), y tocarlo
-abre esta pantalla. **No hay panel de estado permanente**: seis luces verdes ocupando sitio no
-informan de nada. Cuando algo falla, el chip **dice la consecuencia y no el fallo** —
-`NO PUEDO DEVOLVERTE TU PATCH`, no `Receive Bulk en Protect`.
+**This face is also the anchor's home for debug provenance** — poll rate and `31 00 00`, plus
+`TEMPO 90 BPM · background 40 msg/s`, which are properties of the loaded sound. Touching the anchor opens
+this screen.
 
-**Orden de gravedad, que es criterio de diseño y no adorno:**
+**Face 2 — rest.** It is **a chip in the header**, the one that already existed, and touching it opens
+this screen. **There is no permanent status panel**: six green lights taking up space inform nobody. When
+something fails, the chip **says the consequence, not the fault** — `I CAN'T GIVE YOU YOUR PATCH BACK`,
+not `Receive Bulk in Protect`.
 
-- **Sin puerto MIDI** — la app no hace nada. La única que bloquea.
-- **Sin audio** — funciona a medias: el diagrama sirve, las cuatro vistas de señal no.
-- **`Receive Bulk` en Protect** — funciona todo **menos devolverte tu patch**, que es justo lo que la
-  app prometió antes de tocarlo. **El peor**, porque no se nota hasta que quieres volver atrás.
-- **Cadena sucia** — no es un fallo, es un aviso: no estás midiendo FM puro.
+**Order of seriousness, which is a design criterion and not decoration:**
 
-**Ningún fallo dice «error».** Todos dicen qué hacer, y los que se arreglan en el teclado traen la
-ruta de menú entera. La cabecera tampoco dice «5 de 6 correcto»: un contador es un dato, una
-consecuencia es información.
+- **No MIDI port** — the app does nothing. The only one that blocks.
+- **No audio** — it half works: the diagram serves, the four signal views do not.
+- **`Receive Bulk` in Protect** — everything works **except giving you your patch back**, which is
+  exactly what the app promised before touching it. **The worst**, because it is not noticed until you
+  want to go back.
+- **Dirty chain** — not a failure, a warning: you are not measuring pure FM.
 
-**Lo que se elige aquí**: puerto MIDI y dispositivo de audio, como **chips de 44 px**, no
-desplegables — son dos o tres opciones, no una lista.
+**No failure says "error".** They all say what to do, and the ones fixed on the keyboard bring the whole
+menu path. The header does not say "5 of 6 OK" either: a counter is a datum, a consequence is
+information.
 
-### 14. El modo A/B (`4b`)
+**What is chosen here**: MIDI port and audio device, as **44 px chips**, not dropdowns — they are two or
+three options, not a list.
 
-Fichero: `design/Pantalla-principal.dc.html`, sección `4b`. **Es un modo de la principal, no una
-pantalla aparte** — la decisión y su defensa están en `CONCERNS.md` §8 (cerrado).
+### 14. A/B mode (`4b`)
 
-Reutiliza el armazón de `4a` y cambia sólo tres cosas: los paneles de señal pasan a comparación, la
-columna de cifras pasa a deltas, y la franja inferior aloja el reproductor en bucle + los dos
-waterfalls.
+File: `design/Main-screen.dc.html`, section `4b`. **A mode of the main screen, not a separate screen.**
 
-- **Selector del parámetro** (`flex: 0 0 auto`, marco `--signal-primary`): el nombre del parámetro,
-  y una **pista con los dos extremos arrastrables** — A a la izquierda con su valor apagado, B a la
-  derecha luminoso, y la banda entre ambos rellena. Su dirección SysEx al lado (`49 20 1A`). Más un
-  botón `BARRER 0→99 en 8 pasos` para el caso de más de dos valores.
-- **Espectro A sobre B, superpuestos**: A en barras de 7 px `--ab-a-ink` al `--ab-a-alpha`; B en
-  barras de 3 px `--ab-b-ink` con glow. **Mismas frecuencias, reparto de amplitudes radicalmente
-  distinto** — que es literalmente lo que midió la fase 0.
-- **Armónicos A contra B**: pares de barras de `--ab-bar-w` por armónico (A hueca y apagada, B sólida
-  y luminosa) **y las dos curvas teóricas**, `|J_n(0.62)|` y `|J_n(2.81)|`, ambas discontinuas en
-  `--theory` — la de B más marcada. El discontinuo **sigue siendo de la teoría**; A y B se distinguen
-  por relleno, no por color.
-- **La diferencia se rotula, no se deduce**: pastillas «la fundamental PIERDE 14 dB» y «el 9.º GANA
-  31 dB» ancladas a los picos implicados.
-- **La columna dice lo que NO cambia** — fc 261.763, fm 369.175, ratio 1.4103, C4 vel 100, idénticos
-  en A y B — porque eso es lo que hace válida la comparación. Y los deltas: I de 0.62 a 2.81, pico de
-  «fundamental» a «9.º armónico», parciales de 3 a 11.
-- **Las dos son medidas**, cada una con su badge `65536` y su antigüedad. Nunca una medida contra una
-  estimación.
-- `CONGELAR Y GUARDAR · como paso de lección`: un A/B bueno **es** un paso de lección.
-- **Franja inferior**: el reproductor en bucle (`A · 20` apagado / `B · 90 · SOSTENIENDO` encendido,
-  vuelta 7, sostén 1.4 s, pausa 0.4 s) y los **dos waterfalls enfrentados** — el de A casi plano, el
-  de B con el ataque brillante. Ahí se ve la lección sin leer una cifra.
+It reuses the `4a` frame and changes only three things: the signal panels become a comparison, the
+figures column becomes deltas, and the bottom strip hosts the looping player + the two waterfalls.
 
-### 15. El editor de operador (`5a`)
+- **Parameter selector** (`flex: 0 0 auto`, `--signal-primary` frame): the parameter's name, and a
+  **track with two draggable ends** — A on the left with its value dimmed, B on the right luminous, and
+  the band between them filled. Its SysEx address beside it (`49 20 1A`). Plus a
+  `SWEEP 0→99 IN 8 STEPS` button for the more-than-two-values case.
+- **Spectrum A over B, superimposed**: A in 7 px bars at `--ab-a-ink` with `--ab-a-alpha`; B in 3 px bars
+  at `--ab-b-ink` with a glow. **Same frequencies, radically different amplitude distribution** — which
+  is literally what phase 0 measured.
+- **Harmonics A against B**: pairs of `--ab-bar-w` bars per harmonic (A hollow and dimmed, B solid and
+  luminous) **and the two predicted curves**, `|J_n(0.62)|` and `|J_n(2.81)|`, both dashed in
+  `--theory` — B's more pronounced. Dashed **still means predicted**; A and B are told apart by fill, not
+  by colour.
+- **The difference is labelled, not deduced**: pills reading "the fundamental LOSES 14 dB" and "the 9th
+  GAINS 31 dB" anchored to the peaks involved.
+- **The column says what does NOT change** — fc 261.763, fm 369.175, ratio 1.4103, C4 vel 100, identical
+  in A and B — because that is what makes the comparison valid. And the deltas: I from 0.62 to 2.81, peak
+  from "fundamental" to "9th harmonic", partials from 3 to 11.
+- **Both are captures**, each with its `MEASURED · 65536` badge and its age. Never a measurement against
+  an estimate.
+- `FREEZE AND KEEP · as a lesson step`: a good A/B **is** a lesson step.
+- **Bottom strip**: the looping player (`A · 20` off / `B · 90 · HOLDING` lit, pass 7, hold 1.4 s, pause
+  0.4 s) and the **two waterfalls facing each other** — A's nearly flat, B's with the bright attack. The
+  lesson is visible there without reading a figure.
 
-Fichero: `design/Ronda5-pantallas.dc.html`, sección `5a`. Se abre al tocar un operador desde `3a` o
-desde el diagrama de `4a`. **Es la pantalla donde se vive en modo crear.**
+### 15. The operator editor (`5a`)
 
-**Layout.** Cabecera 58 px · cuerpo `grid-template-columns: 296px 1fr 316px` · franja inferior de
+File: `design/Round5-screens.dc.html`, section `5a`. It opens by touching an operator from `3a`, from the
+diagram in `4a`, or **by the node's corner**. **This is the screen you live in in BUILD mode.**
+
+**Layout.** 58 px header · body `grid-template-columns: 296px 1fr 316px` · bottom strip of
 `--editor-once-h` (172 px).
 
-- **Cabecera**: `← LOS OCHO`, el nombre (`OP3`) con su chip de rol, y el **rail de los ocho
-  operadores** — ocho objetivos de `--op-rail-hit` (32 px) con la forma de su rol (píldora =
-  portadora, esquina viva = modulador, discontinuo = a cero) y el actual encendido. Luego MIRAR,
-  MEDIR y el pánico.
-- **Columna 1 — el contexto y el Level.** Arriba `DÓNDE ESTÁS`: un mini-diagrama de 186 px con
-  **sólo tu rama** (OP5 → OP3 → OP1) y las flechas del algoritmo real; a los lados, en 9 px,
-  `te modula OP5` / `modulas a OP1`, y abajo `y OP1 sale`. Debajo, el **mando de Level** de
-  `--knob-level` (190 px) con la cifra en 40 px **en el centro** y el arco en el color del rol.
-- **Columna 2 — las dos envolventes a lo ancho.** AEG arriba (`flex: 1.15`, marco `--modulator`,
-  rótulo «en un modulador, esto *es* la envolvente del timbre») y PEG debajo (`flex: 1`, neutra,
-  bipolar con su línea de centro 50). Puntos de `--grip-curve` con halo, key-off en `--carrier`
-  discontinuo, tiempos como etiquetas bajo la curva.
-- **Columna 3 — forma y frecuencia.** Los siete **Spectral Form dibujados** en `grid` de 4 columnas
-  (más una celda que dice «se elige el dibujo»); el **Skirt como ocho anchos de falda**
-  (`--skirt-steps`), **apagado al 45 % porque la forma es Odd 1** — presente, no ausente; y el
-  bloque de **Freq Mode** con sus dos dibujos, Coarse/Fine y el ratio medido.
-- **Franja inferior — `SE PONE UNA VEZ Y SE OLVIDA`**, con el rótulo diciéndolo: **Level Scaling
-  sobre un teclado dibujado** (break point arrastrable, curvas rotuladas), el **bipolar de Detune**
-  con su centro visible, y cuatro chips para Time/Key, Lvl/Vel, Pitch/Vel y Key On Reset.
+- **Header**: `← ALL EIGHT`, the name (`OP3`) with its role chip, and the **rail of the eight
+  operators** — eight `--op-rail-hit` (32 px) targets carrying their role's shape (pill = carrier, live
+  corner = modulator, dashed = at zero), the current one lit. Then LIVE, CAPTURE and HUSH.
+- **Column 1 — context and Level.** At the top, `WHERE YOU ARE`: a 186 px mini-diagram with **only your
+  branch** (OP5 → OP3 → OP1) and the real algorithm's arrows; at the sides, at 9 px, `OP5 modulates you`
+  / `you modulate OP1`, and below, `and OP1 goes out`. Under it, the **Level knob** of `--knob-level`
+  (190 px) with the figure at 40 px **in the centre** and the arc in the role's colour.
+- **Column 2 — the two envelopes, full width.** AEG on top (`flex: 1.15`, `--modulator` frame, labelled
+  "in a modulator, this *is* the timbre's envelope") and PEG below (`flex: 1`, neutral, bipolar with its
+  centre-50 line). `--grip-curve` points with halos, key-off in dashed `--carrier`, times as labels under
+  the curve.
+- **Column 3 — form and frequency.** The seven **Spectral Forms drawn** in a 4-column `grid` (plus a cell
+  saying "you pick the drawing"); **Skirt as eight skirt widths** (`--skirt-steps`), **disabled because
+  the form is Odd 1** — present, not absent, and **not dimmed with container opacity**; and the
+  **Freq Mode** block with its two drawings, Coarse/Fine and the measured ratio.
+- **Bottom strip — `SET ONCE, THEN FORGET`**, with the label saying so: **Level Scaling over a drawn
+  keyboard** (draggable break point, labelled curves), the **bipolar Detune** with its visible centre,
+  and four chips for Time/Key, Lvl/Vel, Pitch/Vel and Key On Reset.
 
-**Las cuatro reglas que esta pantalla tiene que respetar:**
+**The four rules this screen has to respect:**
 
-1. **Jerarquía en la composición, no en pestañas.** Lo diario se lleva el 78 % del alto; lo de una
-   vez vive abajo, pequeño **y tocable**. Nada escondido.
-2. **El dedo tapa lo que arrastra.** El valor del punto activo va en una pastilla **arriba y al
-   lado** (`ATK · nivel 99 · tiempo 18`), nunca bajo el punto; el del mando, en su centro.
-3. **El contexto no se pierde**: tu rama siempre visible + el rail de los ocho.
-4. **Cero formulario.** No hay ni una lista de `etiqueta: campo` en toda la pantalla. Si aparece,
-   está mal hecho.
+1. **Hierarchy in the composition, not in tabs.** The daily stuff takes 78 % of the height; the
+   set-once stuff lives at the bottom, small **and touchable**. Nothing hidden.
+2. **The finger covers what it drags.** The active point's value goes in a pill **above and to the side**
+   (`ATK · level 99 · time 18`), never under the point; the knob's goes in its centre.
+3. **Context is never lost**: your branch always visible + the rail of the eight.
+4. **Zero forms.** There is not one `label: field` list on the whole screen. If one appears, it has been
+   done wrong.
 
-**El aviso de Freq Mode** es didáctico, no de error: con Fixed, Coarse y Fine **no cambian de valor,
-cambian de significado** — de múltiplo a hercios — y el teclado además **moverá el Coarse**. Medido
-en la fase 0c. Recuadro discontinuo en `--carrier`, no en `--alert`.
+**The Freq Mode warning** is didactic, not an error: with Fixed, Coarse and Fine **do not change value,
+they change meaning** — from multiplier to hertz — and the keyboard will also **move the Coarse**.
+Measured in phase 0c. A dashed box in `--carrier`, not in `--alert`.
 
-### 16. El barrido (`5b`)
+### 16. The sweep (`5b`)
 
-Sección `5b`. Es el resultado del `BARRER 0→99 en 8 pasos` de `4b`.
+Section `5b`. The result of `SWEEP 0→99 IN 8 STEPS` in `4b`.
 
-- **El eje es la trayectoria por armónico**, no el espectro por paso: ocho polilíneas (n0…n7) sobre
-  `viewBox="0 0 900 340"`, x = Level 0→99 (los ocho pasos), y = amplitud con **el cero a media
-  altura** para que las curvas puedan cruzarlo. n0 en blanco y `--traj-stroke`; el resto en la escala
-  de fósforo, adelgazando.
-- **La teoría va superpuesta sobre la misma curva**, en `--theory` con `--dash-theory`, una por
-  armónico. Porque esas trayectorias **son** las funciones de Bessel: no se comparan dos gráficos,
-  se compara una línea con otra encima.
-- **El momento que enseña**: hacia Level 77 la traza de n0 **cruza el cero** — primer cero de J₀ en
-  `--bessel-zero` (I ≈ 2.405). Se encierra en `--alert` y se explica en una frase: *no es un fallo de
-  medida, es la lección*.
-- **Una línea vertical arrastrable** (en `--carrier`) marca el paso mostrado y **saca su espectro** al
-  panel derecho, con su `|J_n|` encima. Del mapa se baja al detalle sólo cuando hace falta.
-- **El estado «corriendo»** ocupa una franja de 64 px: ocho tarjetas, las hechas en fósforo, **la que
-  corre ensanchada (`flex: 1.6`) y latiendo** (`stepGlow`) con su barra de progreso interna, y al
-  lado las subfases con sus tiempos reales (escribir ✓ · verificar ✓ · sostener 1.4 s · medir 1.5 s ·
-  soltar 0.46 s · pausa 0.4 s). La cabecera dice `PASO 6 DE 8 · MIDIENDO` y `QUEDAN ~8 s`.
-- **Si se cancela a mitad**: los pasos medidos **se quedan** y el mapa se dibuja con ellos marcado
-  como incompleto, se puede reanudar desde el siguiente, **y el Level vuelve a donde estaba** — el
-  barrido guarda copia antes del primer paso.
-- **Duración**: `--sweep-step-s` (~3,1 s) × `--sweep-steps` ≈ **25 s** con una medida por paso. Ver
-  `CONCERNS.md` §15: si se promedian varias medidas cerca de los ceros sube a minutos, y el diseño
-  del progreso aguanta las dos escalas sin cambiar.
+- **The axis is the trajectory per harmonic**, not the spectrum per step: eight polylines (n0…n7) over
+  `viewBox="0 0 900 340"`, x = Level 0→99 (the eight steps), y = amplitude with **zero at mid height** so
+  the curves can cross it. n0 in white at `--traj-stroke`; the rest in the phosphor scale, thinning.
+- **Prediction is overlaid on the same curve**, in `--theory` with `--dash-theory`, one per harmonic.
+  Because those trajectories **are** the Bessel functions: you are not comparing two charts, you are
+  comparing one line with another on top of it.
+- **The moment that teaches**: around Level 77 the n0 trace **crosses zero** — the first zero of J₀ at
+  `--bessel-zero` (I ≈ 2.405). It is boxed in `--alert` and explained in one sentence: *this is not a
+  measurement failure, it is the lesson*.
+- **A draggable vertical line** (in `--carrier`) marks the shown step and **pulls its spectrum** into the
+  right-hand panel, with its `|J_n|` on top. You go from the map down to the detail only when needed.
+- **The "running" state** takes a 64 px strip: eight cards, the done ones in phosphor, **the running one
+  widened (`flex: 1.6`) and beating** (`stepGlow`) with its internal progress bar, and beside it the
+  sub-phases with their real times (write ✓ · verify ✓ · hold 1.4 s · capture 1.5 s · release 0.46 s ·
+  pause 0.4 s). The header says `STEP 6 OF 8 · CAPTURING` and `~8 s LEFT`.
+- **If cancelled halfway**: the captured steps **stay** and the map is drawn with them marked as
+  incomplete, it can be resumed from the next one, **and Level goes back where it was** — the sweep saves
+  a copy before the first step.
+- **Duration**: `--sweep-step-s` (~3.1 s) × `--sweep-steps` ≈ **25 s** with one capture per step. See
+  `CONCERNS.md` §15: averaging several captures near the zeros pushes it to minutes, and the progress
+  design holds both scales without changing.
+- **Confidence grades** (`6e`) belong to this screen: the map is drawn complete, with doubtful points as
+  **a hollow circle with a dashed halo** in prediction amber, and a refined point shows `×3 AVERAGED`
+  **with its spread** (`−43.8 ±0.6`).
 
-### 17. La consola SysEx (`5c`) — un cajón
+### 17. The SysEx console and the bench drawer (`5c`)
 
-Sección `5c`. **Cajón, no pantalla**: se abre desde un chip de la cabecera y se despliega sobre la
-franja inferior **sin sustituir la pantalla de detrás** — hay que ver la verificación mientras pasa,
-porque si no, no se ve la causa (el mando que acabas de girar).
+Section `5c`. **A drawer, not a screen**: it opens from a chip in the header and unfolds over the bottom
+strip **without replacing the screen behind it** — you have to see the verification while it happens, or
+you cannot see the cause (the knob you just turned).
 
-- **Asa de `--drawer-grab` (52 px)**, sombra `--drawer-lift` hacia arriba y borde superior en
-  `--signal-primary` al 28 %.
-- **Por defecto no es un log.** Abre en la pestaña `SIN CONFIRMAR · 2`: una tarjeta por escritura no
-  confirmada, con **la frase humana** («OP3 · Level = 90 no volvió al releer»), **los bytes que se
-  mandaron**, **lo que devolvió el teclado** y su botón `REPARAR Y VERIFICAR` de 44 px. El caso del
-  no-op por longitud equivocada tiene su propia tarjeta («el parámetro es de 1 byte, no de 2»).
-- **`TODO EL TRÁFICO · 1 216`** es la segunda pestaña. Nunca lo primero.
-- **Tres cifras estables**: mediana 2.0 ms, p99 3.3 ms, perdidas 0. **Ni contadores vivos, ni
-  gráficas de latencia, ni volcado corriendo solo** — nada que se mueva compitiendo con la señal.
-- **Anota cada reparación con quién pisó a quién**: «48 00 48 · 2.º LFO Speed · 00 → 1E — lo había
-  puesto a cero escribir 48 00 52». Es el par de `CONCERNS.md` §18 hecho visible, y el sitio donde
-  aparecerían los que falten.
-- **El chip de la cabecera sólo llama cuando hay algo**: `SysEx` neutro si no hay nada pendiente,
-  `SysEx · 2 SIN CONFIRMAR` en `--alert` con borde de 2 px si sí.
-- **La propina didáctica**: los once bytes **en cajas etiquetadas** de `--byte-box` — `F0` inicio ·
-  `43` Yamaha · `10` escribir · `7F` a todos · `1C 07` MODX · `49` operador · `20` op3·part1 · `1A`
-  Level · `5A` = 90 · `F7` fin — con el byte del valor destacado en fósforo, justo al lado de
-  «OP3 · Level = 90». Es la única lección de la app que enseña **cómo habla** con el teclado.
-- **Lo que NO es**: el sitio de `Receive Bulk`. Eso es un fallo con consecuencia y vive en `4e`.
-  Aquí sólo lo que se repara de un toque.
+- **A `--drawer-grab` (52 px) handle**, `--drawer-lift` shadow upward and a top border in
+  `--signal-primary` at 28 %.
+- **By default it is not a log.** It opens on the `UNCONFIRMED · 2` tab: one card per unconfirmed write,
+  with **the human sentence** ("OP3 · Level = 90 did not come back on the read"), **the bytes sent**,
+  **what the keyboard returned** and its 44 px `REPAIR AND VERIFY` button. The wrong-length no-op case has
+  its own card ("the parameter is 1 byte, not 2").
+- **`ALL TRAFFIC · 1 216`** is the second tab. Never the first thing.
+- **Three stable figures**: median 2.0 ms, p99 3.3 ms, lost 0. **No live counters, no latency graphs, no
+  dump scrolling by itself** — nothing moving in competition with the signal.
+- **It records each repair with who overwrote whom**: "48 00 48 · 2nd LFO Speed · 00 → 1E — writing
+  48 00 52 had zeroed it". It is `CONCERNS.md` §18 made visible, and the place where any missing pairs
+  would appear.
+- **The header chip only calls when there is something**: `SysEx` neutral when nothing is pending,
+  `SysEx · 2 UNCONFIRMED` in `--alert` with a 2 px border when there is.
+- **The didactic bonus**: the eleven bytes **in labelled `--byte-box` boxes** — `F0` start · `43` Yamaha ·
+  `10` write · `7F` to all · `1C 07` MODX · `49` operator · `20` op3·part1 · `1A` Level · `5A` = 90 · `F7`
+  end — with the value byte highlighted in phosphor, right beside "OP3 · Level = 90". It is the app's only
+  lesson in **how it talks** to the keyboard.
+- **What it is NOT**: the home of `Receive Bulk`. That is a failure with a consequence and lives in `4e`.
+  Here only what is repaired with one touch.
 
-### 18. La ronda 6 — el patch cambia debajo
+**The bench drawer** (`8g`) generalises this affordance. The bridge, startup, audio and port readouts
+(#16, #5) and the sweep readout (#8) are declared temporary and are the largest blocks of text in the app
+today — **five of them in the running build**. Same handle, same lift, same rule about opening over the
+bottom strip. **One chip per instrument, wearing its ticket number**: a panel labelled `#5` is visibly on
+its way out, so nobody designs around it, and closing the ticket has an obvious consequence — the chip
+disappears and the drawer gets one item shorter. **The console is the one chip with no ticket**, because
+it is permanent. Alert behaviour belongs to the console alone: a bridge log with 0 drops has nothing to
+say and stays quiet. When the last ticket closes, the handle goes with it and no layout is rethought — it
+was always 52 px on the outside.
 
-Fichero: `design/Ronda6-pantallas.dc.html`. Cinco piezas, y **es el trabajo grande de la ronda**.
+### 18. Round 6 — the patch changes underneath
 
-El punto de partida es un cero medido dos veces (fase 0d y 0e): **cargar otra Performance no emite un
-solo byte** — ni Program Change, ni Bank Select, ni SysEx, con `Bank Select` y `Pgm Change` en `ON`,
-en modo crudo, y con el nombre de la Part verificado antes y después de la ventana. Así que la app
-**no tiene ningún evento** que le avise de que le han cambiado el sonido debajo, y sondea el nombre de
-la Part 1 (`31 00 00`–`13`, 20 direcciones ASCII, ~40 ms) a **1 Hz** como ancla.
+File: `design/Round6-screens.dc.html`. Five pieces, and **the big work of that round**.
 
-**`6a` · El ancla.** El nombre de la Performance **no es mobiliario nuevo**: ya estaba en la cabecera y
-ahora lleva su procedencia (`ANCLA · 1 Hz · 31 00 00`), con peso bajo a propósito — 17 px de tinta y el
-sello en 8 px. Tres estados: reposo; **acaba de cambiar** (nombre nuevo con el viejo tachado al lado,
-el destello de 2 200 ms que ya usa la escritura del tutor, y todo lo sondeado puesto a raya); y
-**releído**, que **no vuelve al reposo** — se queda pidiendo `SIN MEDIR EN ESTE SONIDO`. Tocar el ancla
-abre el chequeo, donde vive lo que es propiedad del sonido cargado: `TEMPO 90 BPM · fondo 40 msg/s`.
+The starting point is a zero measured twice (phases 0d and 0e): **loading another Performance emits not
+one byte** — no Program Change, no Bank Select, no SysEx, with `Bank Select` and `Pgm Change` `ON`, in raw
+mode, and with the Part name verified before and after the window. So the app **has no event** telling it
+the sound was changed underneath, and it polls the Part 1 name (`31 00 00`–`13`, 20 ASCII addresses,
+~40 ms) at **1 Hz** as an anchor.
 
-**Propiedades conocidas del ancla**, las tres juntas para que no haya sorpresas en fase 1: cuesta
-**~40 ms cada segundo** (20 direcciones ASCII a 1 Hz); detecta el cambio **en menos de un segundo**; y
-tiene **un punto ciego de ~1,5 s por medida** — el sondeo del nombre **no puede correr dentro de la
-ventana de FFT de 65 536** (1,486 s) sin meter tráfico en la medida, así que si el sonido cambia justo
-ahí, la app se enterará **al acabar la medida**, no durante. El diseño lo aguanta sin pantalla extra:
-en cuanto el ancla vuelve, la medida queda marcada como de otro sonido, que es el comportamiento
-correcto. Es el único hueco real de la ronda 6 y está aquí a propósito — un hueco documentado es una
-decisión.
+**`6a` · The anchor.** The Performance name **is not new furniture**: it was already in the header. What
+changed is that it is now the thing everything else is judged against, at a deliberately low weight —
+17 px of ink. **In rest it is the name and nothing else**: the poll rate and `31 00 00` are debug
+provenance and live in the check screen (`4e`), which the anchor already opens on touch. Three states:
+rest; **just changed** (the new name with the old struck through beside it, the 2 200 ms flash the tutor's
+writes already use, and everything polled put on hold); and **reread**, which **does not return to rest**
+— it stays at `NOT MEASURED IN THIS SOUND`.
 
-**`6b` · El momento del cambio.** La regla que ordena la pantalla: **muere el mapa** (sondeado) y
-**muere la medida** (era de otro sonido), pero **la vista viva no muere nunca**, porque es audio que
-entra ahora mismo — scope y espectro siguen en fósforo con su chip `ESTO NO HA MUERTO · ES AUDIO`; lo
-que desaparece del espectro es la curva de Bessel, porque no hay I hasta que haya medida. Un valor
-muerto **conserva su forma y pierde su cifra** (contorno neutro y una raya): nada se apaga con
-opacidad. Franja de relectura con la cuenta real (`118 DE 416`, ~0,9 s en silencio, ~5,5 s sonando) y
-el corte dibujado en el waterfall. **Sin nada en curso no bloquea nada**, no hay botón de «releer», y
-los números no se sustituyen sin pasar por la raya.
+**Known properties of the anchor**, all three together so there are no surprises in phase 1: it costs
+**~40 ms every second** (20 ASCII addresses at 1 Hz); it detects the change **in under a second**; and it
+has **a ~1.5 s blind spot per capture** — the name poll **cannot run inside the 65 536-sample window**
+(1.486 s) without putting traffic into the capture, so if the sound changes exactly there the app finds
+out **when the capture ends**, not during. The design survives it without an extra screen: as soon as the
+anchor comes back the capture is marked as belonging to another sound, which is the correct behaviour. It
+is the only real hole and it is here deliberately — a documented hole is a decision. `CONCERNS.md` §23.1.
 
-**`6c` · El caso feo.** Cuatro cosas quedan **invalidadas, no pausadas**, y la asimetría manda en las
-cuatro salidas: **la app puede escribir parámetros pero no cargar Performances**. Barrido: vertical de
-corte, **no hay «reanudar»**, tres salidas. A/B: la premisa se rompió, y repetir A cuesta ~3 s, así que
-no se ofrece descartar primero. Lección: la app dice **la ruta literal de lo que sólo él puede hacer**.
-Copias: los snapshots llevan procedencia de Performance y el botón **no se desactiva** — cambia de
-texto y dice qué pisaría. Bloquea **sólo lo que se rompió**, anclado a esa cosa, nunca un modal.
+**`6b` · The moment of the change.** The rule that orders the screen: **the map dies** (polled) and **the
+capture dies** (it belonged to another sound), but **the live view never dies**, because it is audio
+arriving right now — scope and spectrum stay in phosphor with their `STILL TRUE · THIS IS AUDIO` chip;
+what disappears from the spectrum is the Bessel curve, because there is no I until there is a capture. A
+void value **keeps its shape and loses its figure** (neutral outline and a dash): nothing is dimmed with
+opacity. A reread strip with the real count, and the cut drawn on the waterfall. **With nothing in
+progress it blocks nothing**, there is no "reread" button, and numbers are not replaced without passing
+through the dash.
 
-**`6d` · Sólo lectura.** Tercer modo de fallo de la consola `5c`. `30 4B 00` (Super Knob) se lee,
-emite y no acepta escritura, así que `REPARAR Y VERIFICAR` **no aparece**: reintentar no funcionaría
-nunca. Estado propio en **ámbar discontinuo, no en alerta** (no está roto, es que no se puede), y
-**la app lo aprende**, porque al teclado no se le puede preguntar: las reservadas contestan a una
-lectura igual que las reales. Dos intentos y para, nunca un tercero automático. Al lado, la lista de
-reservadas del papel (`48 0p 51–55`). Y el vocabulario del control observable: **mando sin marca de
-agarre**, chip `EMITE · NO ACEPTA`.
+**`6c` · The ugly case.** Four things end up **voided, not paused**, and the asymmetry governs all four
+exits: **the app can write parameters but cannot load Performances**. Sweep: a cut vertical, **no
+"resume"**, three exits. A/B: the premise broke, and repeating A costs ~3 s, so discarding is not offered
+first. Lesson: the app states **the literal path for what only the user can do**. Copies: snapshots carry
+Performance provenance and the button **is not disabled** — it changes text and says what it would
+overwrite. It blocks **only what broke**, anchored to that thing, never a modal.
 
-**`6e` · Grados de confianza.** Una medida por paso (~25 s) y segunda pasada **sólo sobre los dudosos**.
-El mapa se dibuja completo con los puntos dudosos como **círculo hueco con halo** en el ámbar de la
-teoría, y el punto afinado muestra `×3 PROMEDIADAS` **con su dispersión** (`−43.8 ±0.6`).
+**`6d` · Read-only.** The console's third failure mode. `30 4B 00` (Super Knob) reads, transmits and will
+not accept a write, so `REPAIR AND VERIFY` **does not appear**: retrying would never work. Its own state in
+**dashed amber, not alert** (it is not broken, it just cannot be done), and **the app learns it**, because
+the keyboard cannot be asked: reserved addresses answer a read exactly like real ones. Two tries and stop,
+never an automatic third. **It remembers and re-probes once per session** (4 ms); the re-probe is silent
+when it confirms and reported when the address turns out to accept — the app had learned something false
+and corrected itself. Beside it, the reserved list from the paper (`48 0p 51–55`). And the vocabulary of
+the observable control: **a knob with no grip mark**, chip `SENDS · WON'T TAKE`.
 
-### 19. La ronda 7 — el seguimiento: la app sabe dónde tienes las manos
+### 19. Round 7 — following: the app knows where your hands are
 
-Fichero: `design/Ronda7-piezas.dc.html`. **Dos piezas de comportamiento, sin pantalla nueva.**
+File: `design/Round7-pieces.dc.html`. **Two behaviour pieces, no new screen.**
 
-El teclado **no notifica nada de navegación** (fase 0d, punto 2, en crudo): cambiar de operador en
-foco, de página o de Part no emite un byte. Pero el conjunto de vigilancia que la app ya sondea son
-**40 direcciones — cinco parámetros por los ocho operadores** a 12,2 Hz. Si en una ronda se mueve
-`49 60 1A`, la app no sabe que estás mirando el OP7: sabe que **acabas de tocar algo del OP7**. El
-seguimiento **no cuesta ni una petición más**.
+The keyboard **notifies nothing about navigation** (phase 0d, raw): changing the focused operator, the page
+or the Part emits not one byte. But the watch set the app already polls is **40 addresses — five parameters
+across the eight operators**. If `49 60 1A` moves in one round, the app does not know you are looking at
+OP7: it knows you **just touched something on OP7**. Following **costs not one extra request**.
 
-**`7a` · El rail que te sigue.** Conmutador `TE SIGO` con el dibujo de lo que hace (una tecla, una
-flecha, el punto del rail), en fósforo porque seguir es leer señal que entra; en reposo no dice nada
-más. El operador con actividad se marca en el rail con un anillo que late, y una banda ofrece
-`IR AL OP7` / `SIGO AQUÍ` (44 px los dos). **Sugerencia y no salto**, y el motivo no es la
-reversibilidad —el rail ya la da— sino que **el gesto no se puede interrumpir**: un salto de foco a
-mitad de un arrastre de la AEG rompe la curva a medias. Tres reglas escritas en la propia pieza:
-**sólo detecta cambios, no visitas** (así que la frase nunca dice «estás en», dice «acabas de tocar
-algo de»); **lo suyo no lo cuenta como tuyo** (un cambio que coincide con una escritura propia
-pendiente de releer no es del usuario, y cuando el tutor escribe el foco **no se mueve**); y **una
-sugerencia por vez, la última**, que se va sola a los 6 s.
+**`7a` · The rail that follows you.** A `FOLLOW ME` switch with a drawing of what it does (a key, an arrow,
+the rail's dot), in phosphor because following is reading an incoming signal; at rest it says nothing else.
+The operator with activity is marked on the rail with a beating ring, and a band offers `GO TO OP7` /
+`STAY HERE` (both 44 px). **Suggestion, not jump**, and the reason is not reversibility — the rail already
+gives that — but that **a gesture cannot be interrupted**: a focus jump halfway through dragging an AEG
+point breaks the curve mid-stroke. Three rules written on the piece itself: **it detects changes, not
+visits** (so the sentence never says "you are on", it says "you just touched something on"); **its own
+writes do not count as yours** (a change coinciding with a pending read-back is not the user's, and when
+the tutor writes, focus **does not move**); and **one suggestion at a time, the last one**, clearing itself
+after 6 s.
 
-**`7b` · Los ocho como espejo.** En `3a` el seguimiento no mueve nada —los ocho ya están en
-pantalla— así que **deja rastro**: cada tarjeta dice qué tocaste, de qué a qué y hace cuánto
-(`LEVEL 56 → 71 · HACE 0.3 s`), y en la columna de Level el valor viejo queda como **marca
-discontinua**. No es un historial: es el último gesto; las demás dicen `SIN CAMBIOS TUYOS`. La
-procedencia usa el vocabulario que ya existe — **fósforo lo que entra de fuera** (tus manos, como toda
-señal medida), **cian lo que escribió la app**. Es el modo crear en su forma más pura: el usuario hace
-el sonido a mano y la app es el espejo.
+**`7b` · ALL EIGHT as a mirror.** In `3a` following moves nothing — all eight are already on screen — so it
+**leaves a trace**: each card says what you touched, from what to what and how long ago
+(`LEVEL 56 → 71 · 0.3 s AGO`), and in the Level column the old value stays as a **dashed mark**. It is not
+a history: it is the last gesture; the others say `NOTHING FROM YOU`. Provenance uses the vocabulary that
+already exists — **phosphor for what comes from outside** (your hands, like every measured signal),
+**cyan for what the app wrote**. This is BUILD mode in its purest form: the user makes the sound by hand
+and the app is the mirror.
 
-**Los dos anillos, y la consecuencia que se dice.** Para saber dónde están las manos hay que vigilar
-los ocho; para que el operador abierto esté al día, sus 43 parámetros. Dos conjuntos, dos cadencias, y
-**comparten canal**: los 12,2 Hz del anillo ancho bajan a ~6 Hz con un operador abierto, así que
-**abrir un operador ralentiza el seguimiento**. Por tanto `CADUCO` es **cuatro veces el periodo de su
-propio anillo** (0,33 s el ancho, 0,66 s el estrecho), la cadencia se rotula **una vez por zona en su
-cabecera**, y **no hay badge nuevo** — un segundo sello por cifra es lo que ya se rechazó para el
-tempo.
+**The two rings, and the consequence that gets said.** To know where the hands are you have to watch all
+eight; to keep the open operator current, its 43 parameters. Two sets, two cadences, and **they share the
+channel**, so **opening an operator slows following down**. Therefore **stale is four times the period of
+its own ring** — written as a rule and not as two numbers, which is exactly why the corrected poll rate
+changed the labels and nothing else. The cadence is labelled **once per zone in its header**
+(`ALL EIGHT · 10 Hz`), and **there is no new badge** — a second stamp per figure is what was already
+rejected for the tempo.
 
 ## Interactions & Behavior
 
-**Táctil como base, ratón como superconjunto.** Un solo diseño para los dos punteros; **no** hay
-"modo táctil" y "modo escritorio" que mantener por separado. La mano izquierda está en el MODX.
+**Touch as the base case, mouse as a superset.** One design for both pointers; there is **no** "touch mode"
+and "desktop mode" to maintain separately. The left hand is on the MODX.
 
-- **Objetivos de toque**: mínimo **44 px** (`--hit-min`) para cualquier cosa accionable; **56 px**
-  (`--hit-touch`) en los controles que se usan tocando a menudo; separación mínima **8 px**
-  (`--hit-gap`). Los operadores del diagrama son objetivos de 100×92. En este panel (14" @ 150 %)
-  44 px CSS ≈ 9 mm físicos: **no hay que inflar nada**.
-- **Nada depende de `:hover`** — ni para descubrirse, ni para mostrar un valor, ni para revelar un
-  control. El patrón habitual de app de audio ("paso por encima del mando y sale el número") está
-  **prohibido**: el valor está **siempre visible** o aparece **al tocar**.
-- **El dedo tapa lo que arrastra.** En mandos, sliders y editores de curva, el valor y el punto
-  activo van **arriba y al lado** (`--value-offset: -34px`), nunca bajo el punto. El punto de
-  arrastre se dibuja a 22 px (`--grip-handle`) con zona de agarre de 44 (`--grip-hit`).
-- **Sin clic derecho como vía única** y **sin gestos ocultos**. Si hay menú contextual o gesto, es
-  atajo de algo que ya tiene su botón tocable.
-- **Sin doble toque para nada destructivo.** Pisar el patch pasa siempre por el aviso con snapshot.
-- **El hover existe, como refinamiento**: resalta, previsualiza o adelanta un desglose que **también**
-  se abre al tocar (`--hover-lift`). Nunca es portador único de un valor, un control o un estado.
-- **Extras de ratón, siempre capa adicional**: rueda ±1 en un mando, modificador (Alt) para paso
-  fino ×0.1, doble clic para volver al default, atajos de teclado para MEDIR y para cambiar de
-  vista. **Quitar el ratón no quita ninguna función.**
+- **Touch targets**: minimum **44 px** (`--hit-min`) for anything actionable; **56 px** (`--hit-touch`) on
+  controls used by touch often; minimum separation **8 px** (`--hit-gap`). On this panel (14" @ 150 %)
+  44 CSS px ≈ 9 mm physical: **nothing needs inflating**.
+- **Nothing depends on `:hover`** — not for discovery, not to show a value, not to reveal a control. The
+  usual audio-app pattern ("move over the knob and the number appears") is **forbidden**: the value is
+  **always visible** or appears **on touch**.
+- **The finger covers what it drags.** On knobs, sliders and curve editors the value and the active point
+  go **above and to the side** (`--value-offset: -34px`), never under the point. The drag point is drawn at
+  22 px (`--grip-handle`) with a 44 px grab zone (`--grip-hit`).
+- **No right-click as the only route** and **no hidden gestures**. If there is a context menu or a gesture,
+  it is a shortcut for something that already has a touchable button.
+- **No double tap for anything destructive.** Overwriting the patch always goes through the warning with a
+  snapshot.
+- **Hover exists, as refinement**: it highlights, previews or brings forward a breakdown that **also**
+  opens on touch (`--hover-lift`). It is never the only carrier of a value, a control or a state.
+- **Mouse extras, always an additional layer**: wheel ±1 on a knob, a modifier (Alt) for ×0.1 fine steps,
+  double click to return to the default, keyboard shortcuts for `CAPTURE` and for switching views.
+  **Removing the mouse removes no function.**
 
-**Gestos por control**
+**A disabled control is not dimmed with container opacity.** It is drawn dashed in `--inert` at full
+opacity, and its explanatory text stays readable. Container opacity multiplies over descendants and takes
+the prose down with it. Fractional opacity is legitimate only on **signal strokes**, where there is no text
+inside. *(A mode with no code behind it is a different case: it is absent from the switch, not disabled in
+it.)*
 
-| control | dedo | ratón añade |
+**Gestures per control**
+
+| control | finger | mouse adds |
 |---|---|---|
-| mando continuo | arrastre vertical, agarre 160 px | rueda ±1, Alt ×0.1, doble clic = default |
-| bipolar | tocar salta a ese valor, arrastrar afina | rueda ±1, doble clic vuelve a 15 |
-| punto de envolvente | arrastre, valor arriba del punto | arrastre con modificador para precisión |
-| Spectral Form | tocar la casilla | hover previsualiza el espectro |
-| operador | tocar para editar | hover resalta su rama de rutas |
-| MEDIR | tocar | atajo de teclado |
+| continuous knob | vertical drag, 160 px grab | wheel ±1, Alt ×0.1, double click = default |
+| bipolar | tap jumps to that value, drag refines | wheel ±1, double click returns to 15 |
+| envelope point | drag, value above the point | drag with a modifier for precision |
+| Spectral Form | tap the cell | hover previews the spectrum |
+| operator | tap to edit | hover highlights its route branch |
+| the corner | tap opens the operator editor | — |
+| CAPTURE | tap | keyboard shortcut |
 
-**Animación.** Nada animado compite con la señal — aquí lo que se mueve de verdad es la señal.
-Sólo existen: el latido de "mirando" (`--dur-heartbeat` 1400 ms) y el destello del aviso de
-escritura del tutor (2200 ms). Transiciones de estado ≤ 180 ms (`--dur-state`) con
-`--ease-instrument`; llegada de una medida nueva 420 ms (`--dur-settle`).
-**Prohibido** un número de medida que parpadee solo.
+**Animation.** Nothing animated competes with the signal — what really moves here is the signal. Only two
+exist: the `LIVE` heartbeat (`--dur-heartbeat` 1400 ms) and the tutor-write flash (2200 ms). State
+transitions ≤ 180 ms (`--dur-state`) with `--ease-instrument`; a new capture landing 420 ms
+(`--dur-settle`), which is also the algorithm surface's transition. **Forbidden**: a measured number that
+blinks on its own.
 
-**Presupuesto de frame.** Ninguna operación de UI puede costar más de **33 ms**
-(`--frame-live`, 30 fps). Si un panel no cabe en el presupuesto, se simplifica el panel.
+**Frame budget.** No UI operation may cost more than **33 ms** (`--frame-live`, 30 fps). If a panel does
+not fit the budget, the panel is simplified.
 
 ## State Management
 
-Los prototipos son estáticos, pero la dirección A declara los estados que la implementación necesita
-(en el prototipo son props del componente raíz):
+The prototypes are static, but direction A declares the states the implementation needs:
 
-- `estado: 'vivo' | 'sin-audio' | 'desconectado' | 'patch-sucio'` — controla la franja de aviso
-  superior y qué tarjeta de estado no feliz aplica.
-- `marcarArtefactos: boolean` — pinta o no las parciales no armónicas en `--alert`.
+- `state: 'live' | 'no-audio' | 'disconnected' | 'dirty-patch'` — controls the top warning strip and which
+  unhappy-state card applies.
+- `markNonHarmonics: boolean` — whether non-harmonic partials are painted in `--alert`.
+- `hasCapture: boolean` — **this is the one that decides the main screen's composition** (§10) and whether
+  the measured column shows figures or its contract.
 
-Lo que la app real tendrá que sostener, por zonas:
+What the real app will have to hold, by zone:
 
-- **Patch sondeado** (SysEx, 12 Hz): algoritmo, feedback, y por operador — rol (portadora/modulador,
-  derivado de la topología), Level 0-99, Coarse, Fine, Detune, Freq Mode, Spectral Form, Skirt,
-  Resonance, AEG, PEG, Level Scaling. Con **marca de tiempo por lectura**: pasados unos segundos el
-  dato pasa a `CADUCO` y se pinta como tal.
-- **Vista viva** (30 fps): buffer de forma de onda, FFT 4096, cola de 14 tramas para el waterfall.
-- **Medida** (disparo explícito): FFT 65536 sobre nota sostenida → parciales, fc, fm, ratio medido,
-  índice I ajustado, lista de artefactos, antigüedad de la medida.
-- **Teoría**: `|J_n(I)|` calculado, error medio y peor parcial contra la medida.
-- **Tutor**: paso actual, pasos completados, snapshot del patch previo (`0E 25 00`, 7 669 bytes),
-  y cola de escrituras con su verificación por relectura.
-- **Escritura**: toda escritura al teclado es *pendiente → releída → confirmada | fallida*. Una
-  escritura sin confirmación **se pinta en alerta, no en verde**.
+- **Polled patch** (SysEx): algorithm, feedback, and per operator — role (carrier/modulator, derived from
+  the topology), Level 0-99, Coarse, Fine, Detune, Freq Mode, Spectral Form, Skirt, Resonance, AEG, PEG,
+  Level Scaling. With **a timestamp per read**: after a few seconds the datum becomes stale and is painted
+  as such (broken outline + the seconds, no word).
+- **Documented topology**: who feeds whom, read from Yamaha's FM-X table given the polled algorithm number.
+  **Not polled and not measured** — its own provenance.
+- **Live view** (30 fps): waveform buffer, FFT 4096, frame queue for the waterfall.
+- **Capture** (explicit trigger): FFT 65536 over a held note → partials, fc, fm, measured ratio, fitted
+  index I, list of non-harmonics, and the capture's age.
+- **Prediction**: `|J_n(I)|` computed, mean error and worst partial against the capture.
+- **Tutor**: current step, completed steps, the previous patch's snapshot (`0E 25 00`), and a write queue
+  with its read-back verification.
+- **Writing**: every write to the keyboard is *pending → read back → confirmed | failed*. An unconfirmed
+  write **is painted in alert, not in green**.
 
 ## Design Tokens
 
-Fuente de verdad: **`design-tokens.css`** (nombres semánticos, no literales). Resumen:
+Source of truth: **`design-tokens.css`** (semantic names, not literals). Its comments are English; **no
+name and no value changed in rounds 8 or 9**, and five values are marked `STALE` — see the precedence rule
+above and `CONCERNS.md` §29. Summary:
 
-**Superficies** — `--surface-base #06080a`, `--surface-panel #0a0f10`, `--surface-raised #0f1417`,
-`--surface-sunken`. Separadores: `--rule-min: 2px`, `--rule-color: oklch(1 0 0 / .09)`,
-`--rule-color-strong: … / .16`; alternativa preferida `--rule-by-space`.
+**Surfaces** — `--surface-base #06080a`, `--surface-panel #0a0f10`, `--surface-raised #0f1417`,
+`--surface-sunken`. Rules: `--rule-min: 2px`, `--rule-color: oklch(1 0 0 / .09)`,
+`--rule-color-strong: … / .16`; preferred alternative `--rule-by-space`.
 
-**Tinta** — `--ink-primary #d6e2dd`, `--ink-secondary #8fa39d`, `--ink-tertiary #6f817c`,
+**Ink** — `--ink-primary #d6e2dd`, `--ink-secondary #8fa39d`, `--ink-tertiary #6f817c`,
 `--ink-inert #5d6d69`.
 
-**Roles FM** (los tres acentos comparten croma y claridad, sólo cambia el tono) —
-`--signal-primary oklch(.87 .155 155)` ≈ `#7df0b0` (audio medido, fósforo);
-`--carrier oklch(.80 .150 75)` ≈ `#f3b13f` (portadora: suena);
-`--modulator oklch(.79 .140 235)` ≈ `#58c8f5` (modulador: colorea);
-`--inert #3d4a48` (Level 0); `--alert oklch(.72 .160 35)` ≈ `#ff7a5c`;
-`--theory: var(--carrier)`. Más los gradientes de relleno de nivel
-`--carrier-fill` / `--modulator-fill` / `--signal-fill`.
+**FM roles** (the three accents share chroma and lightness, only the hue changes) —
+`--signal-primary oklch(.87 .155 155)` ≈ `#7df0b0` (measured audio, phosphor);
+`--carrier oklch(.80 .150 75)` ≈ `#f3b13f` (carrier: you hear it);
+`--modulator oklch(.79 .140 235)` ≈ `#58c8f5` (modulator: it colours);
+`--inert #3d4a48` (Level 0); `--alert oklch(.72 .160 35)` ≈ `#ff7a5c`; `--theory: var(--carrier)`
+(**PREDICTED**). Plus the level fill gradients `--carrier-fill` / `--modulator-fill` / `--signal-fill`.
+**`DOCUMENTED` uses neutral ink** — paper has no colour — and needs no accent of its own.
 
-**Tipografía** — `--font-ui: 'Helvetica Neue', Helvetica, Arial, sans-serif`;
-`--font-num: ui-monospace, 'Cascadia Mono', Consolas, monospace` para **toda cifra medida**
-(tabular). Escala: display 44 / title 26 / section 20 / body 15 / label 12 / **micro 10 (piso
-absoluto)**; readout-xl 30, readout 22, node 25. Tracking: label .14em, eyebrow .24em; leading .55.
+**Typography** — `--font-ui: 'Helvetica Neue', Helvetica, Arial, sans-serif`;
+`--font-num: ui-monospace, 'Cascadia Mono', Consolas, monospace` for **every measured figure** (tabular).
+Scale: display 44 / title 26 / section 20 / body 15 / label 12 / **micro 10 (absolute floor)**; readout-xl
+30, readout 22, node 25. Tracking: label .14em, eyebrow .24em; leading 1.55.
 
-**Espaciado** — base 4: 4 / 8 / 12 / 16 / 20 / 26 / 34 / 44.
+**Spacing** — base 4: 4 / 8 / 12 / 16 / 20 / 26 / 34 / 44.
 
-**Toque** — `--hit-min 44px`, `--hit-touch 56px`, `--hit-gap 8px`, `--grip-handle 22px`,
-`--grip-hit 44px`, `--grip-knob 160px`, `--track-bipolar 58px`, `--value-offset -34px`.
+**Touch** — `--hit-min 44px`, `--hit-touch 56px`, `--hit-gap 8px`, `--grip-handle 22px`, `--grip-hit 44px`,
+`--grip-knob 160px`, `--track-bipolar 58px`, `--value-offset -34px`.
 
-**Radios (con significado)** — `--radius-carrier 26px` (curva total = portadora) y
-`--radius-modulator 5px` (esquina viva = modulador) son **semánticos, no decorativos**; además
-`--radius-panel 16px`, `--radius-view 14px`, `--radius-pill 999px`.
+**Radii (meaningful)** — `--radius-carrier 26px` (fully curved = carrier) and `--radius-modulator 5px`
+(live corner = modulator) are **semantic, not decorative**; plus `--radius-panel 16px`, `--radius-view
+14px`, `--radius-pill 999px`.
 
-**Elevación: luz, no sombra negra** — `--glow-carrier`, `--glow-modulator`, `--glow-signal`,
-`--glow-alert`, `--glow-trace` (filter para trazas), `--inset-panel`, `--hover-lift`.
+**Elevation: light, not a black shadow** — `--glow-carrier`, `--glow-modulator`, `--glow-signal`,
+`--glow-alert`, `--glow-trace` (a filter for traces), `--inset-panel`, `--hover-lift`.
 
-**Trazos de señal** — `--stroke-trace 2px`, `--stroke-partial 3px`, `--stroke-ridge 1.2px`,
-`--stroke-theory 2px`; `--dash-theory: 5 4` (**la teoría SIEMPRE discontinua**),
-`--dash-inactive: 4 5` (ruta con Level 0). En SVG, `vector-effect: non-scaling-stroke` para que la
-traza no engorde al estirar el viewBox.
+**Signal strokes** — `--stroke-trace 2px`, `--stroke-partial 3px`, `--stroke-ridge 1.2px`,
+`--stroke-theory 2px`; `--dash-theory: 5 4` (**PREDICTED is ALWAYS dashed**), `--dash-inactive: 4 5` (a
+route from an operator at Level 0). In SVG, `vector-effect: non-scaling-stroke` so the stroke does not
+fatten when the viewBox stretches.
 
-**Movimiento** — `--ease-instrument cubic-bezier(.2,.8,.2,1)`,
-`--ease-mechanical cubic-bezier(.4,0,.2,1)`; `--dur-instant 90ms`, `--dur-state 180ms`,
-`--dur-settle 420ms`, `--dur-heartbeat 1400ms`, `--frame-live 33.3ms`.
+**Motion** — `--ease-instrument cubic-bezier(.2,.8,.2,1)`, `--ease-mechanical cubic-bezier(.4,0,.2,1)`;
+`--dur-instant 90ms`, `--dur-state 180ms`, `--dur-settle 420ms`, `--dur-heartbeat 1400ms`,
+`--frame-live 33.3ms`.
 
-**Diagrama** — `--op-node-w 118px`, `--op-node-h 108px` (`--op-node-h-tall 116px` para los nodos con
-ratio medido), `--op-col-gap 82px`, `--op-row-gap 28px`, `--op-bus-offset 30px`.
+**Diagram** — `--op-node-w 118px`, `--op-node-h 108px` (`--op-node-h-tall 116px` for nodes with a measured
+ratio), `--op-col-gap 82px`, `--op-row-gap 28px`, `--op-bus-offset 30px`. **Not yet a token**: the ceiling
+datum's stroke and colour — proposed in `CONCERNS.md` §29 rather than added unilaterally.
 
-**El pánico** — `--hit-panic 56px`, `--gap-isolate 16px`, `--shape-panic` (el único octógono),
+**HUSH** — `--hit-panic 56px`, `--gap-isolate 16px`, `--shape-panic` (the only octagon),
 `--panic-idle-bg` / `--panic-live-bg`, `--panic-ack 1500ms`.
 
-**El reproductor** — `--play-hold 1400ms`, `--play-gap 400ms`, `--probe-idle 12` / `--probe-playing 2`
-(Hz de sondeo en silencio y sosteniendo), `--who-app` (cian: toca la app) / `--who-hands` (fósforo:
-tocas tú).
+**The player** — `--play-hold 1400ms`, `--play-gap 400ms`, `--probe-idle` / `--probe-playing` (poll rate in
+Hz when silent and when holding — **both marked `STALE`**), `--who-app` (cyan: the app is playing) /
+`--who-hands` (phosphor: you are playing).
 
-**Comparación A/B** — `--ab-a-ink` + `--ab-a-alpha` (hueca y apagada), `--ab-b-ink` (sólida y
-luminosa), `--ab-bar-w 13px`. **A y B se distinguen por relleno, no por color**: el discontinuo
-sigue reservado a la teoría.
+**A/B comparison** — `--ab-a-ink` + `--ab-a-alpha` (hollow and dimmed), `--ab-b-ink` (solid and luminous),
+`--ab-bar-w 13px`. **A and B are told apart by fill, not by colour**: dashed stays reserved for prediction.
 
-**Los ocho / comparación** — `--op-strip-w 128px`, `--op-level-col-w 30px`,
-`--curve-focus-stroke 3.4px`, `--curve-ghost-stroke 1.4px`, `--curve-ghost-alpha .5`.
+**ALL EIGHT / comparison** — `--op-strip-w 128px`, `--op-level-col-w 30px`, `--curve-focus-stroke 3.4px`,
+`--curve-ghost-stroke 1.4px`, `--curve-ghost-alpha .5`.
 
-**Registro de lección** — `--font-lesson` (Georgia), `--lesson-surface`, `--lesson-ink`,
-`--lesson-ink-dim`, `--lesson-accent`. **Nunca en una cifra medida.**
+**The drawer** — `--drawer-grab 52px`, `--drawer-lift`, `--byte-box 6px`. Round 8 generalises these into
+the bench drawer; no new token was needed.
+
+**Lesson register** — `--font-lesson` (Georgia), `--lesson-surface`, `--lesson-ink`, `--lesson-ink-dim`,
+`--lesson-accent`. **Never on a measured figure.**
 
 ## Assets
 
-**Ninguno.** No hay imágenes, ni iconos de librería, ni fuentes que descargar:
+**None.** There are no images, no library icons, no fonts to download:
 
-- Tipografía **del sistema** (Helvetica Neue / Helvetica / Arial, Georgia en la dirección C, y la
-  mono del sistema). Sin webfonts, sin CDN.
-- Toda la gráfica es **SVG inline de formas primitivas** (círculo, rectángulo, línea, arco,
-  polilínea) o CSS (gradientes, `repeating-linear-gradient` para la trama de C). Sin iconografía
-  dibujada a mano más allá de eso.
-- Sin emoji.
+- **System** typefaces (Helvetica Neue / Helvetica / Arial, Georgia in direction C, and the system mono).
+  No webfonts, no CDN.
+- All graphics are **inline SVG of primitive shapes** (circle, rectangle, line, arc, polyline) or CSS
+  (gradients, `repeating-linear-gradient` for C's hatching). No hand-drawn iconography beyond that.
+- No emoji.
 
-Donde en el futuro haga falta una imagen de verdad, va un hueco marcado — no un icono inventado.
+Where a real image is needed in future, a marked gap goes in — not an invented icon.
 
 ## Files
 
-En `design/`:
+In `design/`:
 
-| fichero | qué es |
+| file | what it is |
 |---|---|
-| `Indice.dc.html` | índice con enlaces a todas las pantallas — **empieza aquí** |
-| `Pantalla-principal.dc.html` | **la pantalla principal** (`4a`) y **el modo A/B** (`4b`) |
-| `Ronda4-piezas.dc.html` | `4c` el reproductor y sus siete estados · `4d` el pánico · `4e` conexión y chequeo de arranque |
-| `Ronda7-piezas.dc.html` | **ronda 7** — `7a` el rail que te sigue · `7b` los ocho como espejo. Dos piezas de comportamiento, sin pantalla nueva |
-| `Ronda6-pantallas.dc.html` | **ronda 6** — `6a` el ancla en la cabecera · `6b` el momento del cambio de Performance · `6c` las cuatro cosas invalidadas · `6d` sólo lectura · `6e` grados de confianza |
-| `Ronda5-pantallas.dc.html` | `5a` el editor de operador a pantalla completa · `5b` el resultado del barrido · `5c` la consola SysEx |
-| `Ronda3-pantallas.dc.html` | **cinco pantallas** en un lienzo paneable: `3a` los ocho operadores · `3b` la Part · `3c` copias y su resta · `3d` índice del tutor · `3e` la principal rebalanceada, que es la que se promovió a `4a` |
-| `Sistema-A-componentes.dc.html` | hoja de sistema: componentes, editor de operador, teoría vs medición, tutor, estados no felices, interacción dedo/ratón |
-| `support.js` | runtime del prototipo — **no portar** |
+| `Index.dc.html` | the index, with links to every screen — **start here** |
+| `Main-screen.dc.html` | **the main screen** (`4a`) and **A/B mode** (`4b`) |
+| `Round3-screens.dc.html` | **five screens** on a pannable canvas: `3a` ALL EIGHT · `3b` the Part · `3c` copies and their diff · `3d` the tutor index · `3e` the rebalanced main screen, promoted to `4a` |
+| `Round4-pieces.dc.html` | `4c` the player and its seven states · `4d` HUSH · `4e` connection and startup check |
+| `Round5-screens.dc.html` | `5a` the full-screen operator editor · `5b` the sweep result · `5c` the SysEx console |
+| `Round6-screens.dc.html` | **round 6** — `6a` the anchor in the header · `6b` the moment the Performance changes · `6c` the four voided things · `6d` read-only · `6e` confidence grades |
+| `Round7-pieces.dc.html` | **round 7** — `7a` the rail that follows you · `7b` ALL EIGHT as a mirror. Two behaviour pieces, no new screen |
+| `Round8-pieces.dc.html` | **round 8** — `8a` the header and the naming pass · `8b` the stamps · `8c` the operator node · `8d` the unmeasured column · `8e` the scope contract · `8f` the algorithm surface · `8g` the bench drawer · `8h` checked against the running build |
+| `System-sheet.dc.html` | system sheet: components, operator editor, theory vs measurement, tutor, unhappy states, finger/mouse interaction |
+| `support.js` | prototype runtime — **do not port** |
 
-**Archivadas y fuera del paquete**: las direcciones B · Nébula y C · Plotter, y también la primera
-pantalla principal (`Direccion-A-Bancada.dc.html`), sustituida por `4a`. De C sobrevive su
-**registro cálido** como sub-registro de las pantallas de lección (tokens `--font-lesson` y
+**Archived, not implemented**: directions B · Nébula and C · Plotter, and the first main screen
+(`Direccion-A-Bancada.dc.html`), replaced by `4a`. They ship in the folder only so the index's links
+resolve, and they **keep their Spanish filenames** deliberately — they are dated artefacts nobody
+builds from. From C, its **warm register** survives as the lesson sub-register (`--font-lesson` and
 `--lesson-*`).
 
-En `screenshots/` (capturas de referencia, por si no quieres abrir los HTML):
+In `screenshots/` (reference captures, in case you would rather not open the HTML): one PNG per screen at
+2× (`4a-principal.png`, `4b-modo-ab.png`, `4c-reproductor.png`, `4d-panico.png`, `4e-arranque.png`,
+`5a-editor-operador.png`, `5b-barrido.png`, `5c-consola-sysex.png`, `6a-ancla.png`, `6b-cambio.png`,
+`6c-invalidado.png`, `6d-solo-lectura.png`, `6e-confianza.png`, `7a-rail-que-te-sigue.png`,
+`7b-espejo.png`, `R3a-los-ocho.png`, `R3b-la-part.png`, `R3c-copias-y-resta.png`, `R3d-indice-tutor.png`,
+`R3e-principal-rebalanceada.png`) plus `Sistema-A-componentes.png` (the full system sheet at 1×).
 
-| fichero | qué es |
+**The screenshot filenames stay in Spanish**: they are dated artefacts of the rounds that produced them,
+nothing links to them by name, and renaming binary files buys nothing an implementer can use. The screen
+ids in them are the stable reference.
+
+Two of them are not mockups:
+
+| file | what it is |
 |---|---|
-| `4a-principal.png` | **la pantalla principal**, 2× |
-| `4b-modo-ab.png` | el modo A/B, 2× |
-| `4c-reproductor.png` | los siete estados del reproductor, 2× |
-| `4d-panico.png` | anatomía del pánico, 2× |
-| `4e-arranque.png` | conexión y chequeo, 2× |
-| `5a-editor-operador.png` | el editor de operador, 2× |
-| `5b-barrido.png` | el barrido y las trayectorias de Bessel, 2× |
-| `5c-consola-sysex.png` | la consola SysEx, 2× |
-| `6a-ancla.png` | los tres estados del ancla en la cabecera, 2× |
-| `6b-cambio.png` | el momento del cambio de Performance, 2× |
-| `6c-invalidado.png` | las cuatro cosas que quedan invalidadas, 2× |
-| `6d-solo-lectura.png` | el tercer modo de fallo de la consola, 2× |
-| `6e-confianza.png` | grados de confianza en el barrido, 2× |
-| `7a-rail-que-te-sigue.png` | el rail con seguimiento y la banda de sugerencia, 2× |
-| `7b-espejo.png` | los ocho con rastro de tus manos y los dos anillos, 2× |
-| `R3a-los-ocho.png` | los ocho operadores comparados, 2× |
-| `R3b-la-part.png` | la cadena que ensucia la medida, 2× |
-| `R3c-copias-y-resta.png` | snapshots y el diff como guion de lección, 2× |
-| `R3d-indice-tutor.png` | las nueve lecciones, 2× |
-| `R3e-principal-rebalanceada.png` | la alternativa a la principal, 2× |
-| `Sistema-A-componentes.png` | hoja de sistema completa, página larga a 1× |
+| `RUNNING-app-scope.jpg` | **the running app** — SCOPE tab, showing `2 CICLOS · 43.8 Hz` over a flat line |
+| `RUNNING-app-waterfall.jpg` | **the running app** — WATERFALL tab, with the hardcoded caption sitting on live data |
 
-Las capturas son **referencia visual, no la especificación**: los valores exactos están en
-`design-tokens.css` y en este README. Para inspeccionar medidas, abre los HTML.
+They are **captures of the real build** (Tauri + Angular against the MODX8) and are the evidence behind
+round 8 and `CONCERNS.md` §35. **The captures predate the round-8 changes**, so they still show the
+Spanish copy — that is the point of them.
 
-En `sources/` van las fuentes de datos, sin modificar: `modx.md` (documento maestro, **actualizado en la ronda 6**: cabecera, clock, latencias y secciones nuevas),
-`datalist_fmx_tables.md` (tablas oficiales de Yamaha: offsets, rangos, enums y defaults),
-`rm_pantallas_fmx.md` (qué pantalla del MODX corresponde a cada dirección),
-`fase0c_RESULTS_mapa.md` (SysEx medido contra el teclado real), `fase0_RESULTS.md` (el spike de
-audio: dispositivo, formato, niveles de trabajo, suelo de ruido y el origen del artefacto de
-2756 Hz) y `spm_conceptos_fmx.md` (definiciones de Yamaha: la analogía del filtro y las siete formas
-espectrales). Y las dos de la ronda 6: `fase0d_RESULTS_notificaciones.md` (qué notifica el teclado y
-qué no — las teclas sí, la navegación no, el cambio de Performance **no**; la verificación del mapa
-fuera del Op3, 12 de 12; el Feedback en `48 0p 50`; y la cadencia real del conjunto de vigilancia) y
-`fase0e_RESULTS_falsacion.md` (la falsación de ese cero en modo crudo, la primera dirección de sólo
-lectura, y el descubrimiento de que el emisor de Parameter Change del MODX existe y funciona pero
-Yamaha sólo lo cableó al Super Knob). **Cuando el papel y la medida discrepen, manda la medida.**
+The captures are **visual reference, not the specification**: the exact values are in `design-tokens.css`
+and in this README. To inspect measurements, open the HTML.
 
-Con las tres correcciones de dato ya aplicadas (Skirt 0-7, Cutoff 0-255 en dos bytes, FEG bipolar en
-cents) **no queda ningún valor marcado como provisional en las pantallas**: lo que sigue sin cerrar
-es de decisión o de hardware, no de fuente.
+In `sources/` are the data sources, unmodified: `modx.md` (master document), `datalist_fmx_tables.md`
+(Yamaha's official tables: offsets, ranges, enums and defaults), `rm_pantallas_fmx.md` (which MODX screen
+corresponds to each address), `fase0c_RESULTS_mapa.md` (SysEx measured against the real keyboard),
+`fase0_RESULTS.md` (the audio spike: device, format, working levels, noise floor and the origin of the
+2756 Hz artefact), `spm_conceptos_fmx.md` (Yamaha's definitions: the filter analogy and the seven spectral
+forms), `fase0d_RESULTS_notificaciones.md` (what the keyboard notifies and what it does not — keys yes,
+navigation no, the Performance change **no**; the map verified outside Op3, 12 of 12; Feedback at
+`48 0p 50`; and the watch set's real cadence) and `fase0e_RESULTS_falsacion.md` (the falsification of that
+zero in raw mode, the first read-only address, and the discovery that the MODX's Parameter Change
+transmitter exists and works but Yamaha only wired it to the Super Knob).
 
-Dos cosas de `spm_conceptos_fmx.md` que son material de diseño y no de ingeniería:
+**When the paper and the measurement disagree, the measurement wins. When the spikes and the running build
+disagree, the build wins.**
 
-- **La analogía del filtro**: el nivel del modulador hace de frecuencia de corte y su envolvente de
-  envolvente de filtro. Es el guion literal del A/B canónico de `4b` y la razón de que la lección 2
-  sea esa y no otra. Está citada en `3d`.
-- **Las siete formas espectrales están definidas de forma comprobable** (Sine sin armónicos, All/Odd
-  anchos o estrechos, Res con pico desplazado). Cada definición es una afirmación que el analizador
-  puede verificar, así que **el panel de teoría contra medición vale tal cual para el Spectral
-  Form**, no sólo para Bessel.
+Two things from `spm_conceptos_fmx.md` are design material rather than engineering material:
 
-No va `fase0b_RESULTS_sysex.md`: está superado por la 0c y contiene una latencia de 14-21 ms que
-resultó ser artefacto de medición (son 2 ms). Lo que sobrevive de él ya está en `modx.md`.
+- **The filter analogy**: the modulator's level acts as a cutoff frequency and its envelope as a filter
+  envelope. It is the literal script of the canonical A/B in `4b` and the reason lesson 2 is that one and
+  not another. Cited in `3d`.
+- **The seven spectral forms are defined in a checkable way** (Sine with no harmonics, All/Odd wide or
+  narrow, Res with a displaced peak). Each definition is a claim the analyzer can verify, so **the
+  theory-versus-measurement panel works as-is for Spectral Form**, not only for Bessel.
 
-En la raíz del paquete:
+`fase0b_RESULTS_sysex.md` is not included: it is superseded by 0c and contains a 14-21 ms latency that
+turned out to be a measurement artefact (it is 2 ms). What survives of it is already in `modx.md`.
 
-| fichero | qué es |
+At the package root:
+
+| file | what it is |
 |---|---|
-| `CONCERNS.md` | **léelo primero.** Lo que no está cerrado, lo que falta por diseñar, y el riesgo de datos |
-| `design-tokens.css` | **fuente de verdad** de valores; la fase 1 lo consume tal cual |
-| `DESIGN.md` | la dirección elegida y por qué, las reglas a respetar, la procedencia de cada dato, y lo que se decidió **no** hacer |
-| `README.md` | este documento |
+| `GLOSSARY.md` | **read this first.** The product's vocabulary: one term per row with its definition and where it appears on screen, the defence of each chosen word, and in §6 **the rename list the code follows** |
+| `CONCERNS.md` | **read this second.** What is not closed, what is still to be designed, and the data risk |
+| `DESIGN.md` | the chosen direction and why, the rules to respect, the provenance of every datum, and what was deliberately **not** done |
+| `design-tokens.css` | **source of truth** for values; phase 1 consumes it as-is |
+| `README.md` | this document |
 
-Orden de lectura para quien implemente: `CONCERNS.md` (5 min, evita suposiciones) → `DESIGN.md`
-(el "por qué" y los límites) → `design-tokens.css` → la hoja de sistema abierta al lado del código.
+**Start implementing here**, in this order, because each step unblocks the next:
 
-**Empezar a implementar por aquí**, en este orden, porque cada paso desbloquea al siguiente:
+1. **The `4a` frame** with its header — including **HUSH**, which crosses everything else.
+2. **The operator node** and the polled diagram: it is the most reused component (`4a`, `3a`, `3c`). Five
+   facts, the ceiling datum, and the corner.
+3. **The signal views** and every figure's provenance stamp — the four words and two shapes of
+   `DESIGN.md` §20.7. **Do this once, properly**: it is the app's spine and retrofitting it is what
+   produced the round-8 corrections.
+4. **The anchor** (`6a`) and the reread of `6b`. It goes here, early and before the player, because it is
+   **cheap** (one address, 1 Hz) and because **everything drawn afterwards has to know how to die**: if the
+   void state does not exist from the start, it creeps into every panel as a patch.
+5. **The player** (`4c`), which unblocks A/B and the audio check.
+6. **The check** (`4e`) and the chain chip, which is what makes the theory panel credible.
+7. **The operator editor** (`5a`), where BUILD mode lives, reusing every control from the system sheet.
+8. **The sweep** (`5b`) with its **confidence grades** (`6e`) and the **SysEx console** (`5c`) with its
+   **three** failure modes (`6d`), the two that depend on everything above working.
+9. **What gets voided** (`6c`), which can only be done once the things that get voided exist: sweep, A/B,
+   lesson and copies.
+10. **Following** (`7a`, `7b`), last and not because it is unimportant: it **needs not one new request**, so
+    it can be added once polling and the write cycle already work. Before that there would be nothing to
+    tell your change from the app's own.
 
-1. **El armazón de `4a`** con su cabecera — incluido el **pánico**, que atraviesa todo lo demás.
-2. **El nodo de operador** y el diagrama sondeado: es el componente que más se reutiliza (`4a`, `3a`,
-   `3c`).
-3. **Las vistas de señal** y el sello de procedencia de cada cifra.
-4. **El ancla** (`6a`) y la relectura de `6b`. Va aquí, temprano y antes del reproductor, porque es
-   **barata** (una dirección, 1 Hz) y porque **todo lo que se dibuje después tiene que saber morir**:
-   si el estado de «muerto» no existe desde el principio, se cuela en cada panel como un parche.
-5. **El reproductor** (`4c`), que desbloquea el A/B y el chequeo de audio.
-6. **El chequeo** (`4e`) y el chip de cadena, que es lo que hace creíble el panel de teoría.
-7. **El editor de operador** (`5a`), que es donde se vive en modo crear y reutiliza todos los
-   controles de la hoja de sistema.
-8. **El barrido** (`5b`) con sus **grados de confianza** (`6e`) y la **consola SysEx** (`5c`) con sus
-   **tres** modos de fallo (`6d`), que son las dos que dependen de que todo lo anterior funcione.
-9. **Lo que queda invalidado** (`6c`), que sólo se puede hacer cuando existen las cosas que se
-   invalidan: barrido, A/B, lección y copias.
-10. **El seguimiento** (`7a`, `7b`), al final y no por poco importante: **no necesita ni una petición
-    nueva**, así que se puede añadir cuando el sondeo y el ciclo de escritura ya funcionen. Antes de
-    eso no habría con qué distinguir un cambio tuyo de uno propio.
+The two round-8 pieces that are not on this list because they are properties of the pieces above rather
+than steps of their own: **the algorithm surface** (§10, part of step 1) and **the bench drawer** (part of
+whichever step first needs a temporary instrument — in practice step 1, since the bridge log exists
+already).
 
-## Qué se decidió NO hacer
+## What was decided NOT to do
 
-Resumido de `DESIGN.md`, para que no se reintroduzca por inercia:
+Summarised from `DESIGN.md` §21, so it does not creep back in:
 
-- **No hay panel lateral de ajustes.** Todo parámetro vive junto a la cosa que cambia — dentro del
-  nodo o sobre su curva. En cuanto exista una columna de "propiedades", la app es una app de oficina.
-- **No hay breakpoint pequeño** ni layout empotrado: un solo lienzo, 1280×800, y escalado hacia
-  arriba.
-- **No están dibujados los 88 algoritmos.** El diagrama es un layout por profundidad de cadena que
-  sirve para cualquier topología leída del teclado; dibujar 88 láminas es trabajo de datos.
-- **Ni matriz de rutado ni editor de algoritmo**: el algoritmo es un número que se escribe.
-- **No hay tema claro.** Una app de audio con un teclado delante no se mira en blanco.
-- **Nada de skeuomorfismo de rack**: sin tornillos, sin metal cepillado, sin cuero.
-- **Sin waterfall en 3D**: el ridgeline plano enseña más y la perspectiva miente sobre las
-  amplitudes.
-- **Sin tooltips como portadores de información** — con dedo no existen.
-- **Sin corpus DX7 ni biblioteca de patches**: última fase.
+- **No settings sidebar.** Every parameter lives next to the thing it changes — inside the node or on its
+  curve. The moment a "properties" column exists, the app is an office app.
+- **No small breakpoint** and no embedded layout: one canvas, 1280×800, scaling upward.
+- **The 88 algorithms are not drawn.** The diagram is a layout by chain depth that serves any topology read
+  from the keyboard; drawing 88 plates is data work.
+- **No routing matrix and no algorithm editor**: the algorithm is a number that gets written.
+- **No light theme.** An audio app with a keyboard in front of it is not looked at in white.
+- **No rack skeuomorphism**: no screws, no brushed metal, no leather.
+- **No 3D waterfall**: the flat ridgeline teaches more and perspective lies about amplitudes.
+- **No tooltips as carriers of information** — with a finger they do not exist.
+- **No DX7 corpus and no patch library**: last phase.
+- **No prose caption anywhere.** The one that existed was removed rather than recomputed.
+- **No settings surface for the temporary instruments.** The bench drawer holds them and does not grow
+  options.
 
-## Nota de procedencia
+## Provenance note
 
-Las ocho fuentes van en `sources/`. Con ellas, **casi nada de lo que se pinta es invención** —
-pero conviene saber qué es qué:
+The eight sources are in `sources/`. With them, **almost nothing drawn is invention** — but it is worth
+knowing which is which:
 
-- **Medido contra el teclado** (`fase0c_RESULTS_mapa.md`, y el maestro): ratio 1.4103 frente a 1.41
-  en la pantalla del MODX, fc 261.763 / fm 369.175 ±0.005, 11 parciales, I = 2.81, el comb de
-  2756.25 Hz como artefacto, el bulk `0E 25 00` de 7 669 B en 123 mensajes, los 416 parámetros del
-  snapshot con su pasada de reparación, `48 00 4F` para el algoritmo, latencia mediana de 2.0 ms y
-  timeout recomendado de 100 ms.
-- **Documentado, no medido** (`datalist_fmx_tables.md`, `rm_pantallas_fmx.md`): los 47 offsets del
-  operador con rango y default, los 86 del bloque de Part, los 19 tipos de filtro, la FEG entera, el
-  2.º LFO, el feedback en `48 0p 50`, y las rutas de menú. **Escribir con la longitud equivocada es
-  un no-op silencioso**, así que nada de aquí se da por bueno hasta que el teclado conteste.
-- **Invención verosímil, dentro de rangos documentados**: los valores del ejemplo sucio de la
-  pantalla de la Part, los tiempos de las ocho AEG, los operadores Op5–Op8 del patch de ejemplo, y
-  los títulos de las nueve lecciones. Listado completo en `DESIGN.md`, sección "Procedencia de los
-  datos".
-- **Medido en la ronda 6** (`fase0d`, `fase0e`): el cero del cambio de Performance (dos veces, en
-  crudo, con ancla dentro de la ventana), que **el MODX sí transmite las teclas por USB** (11 On /
-  11 Off en canal 1, velocity de 32 a 106, pitch bend de 14 bits reales, CC 1 completo), que una tecla
-  en `MIDI I/O = Multi` **da un Note On por Part** (cuatro en 28 ms), el sondeo efectivo de 12,22 Hz y
-  2,43 Hz con **0 perdidas de 4 000**, el tráfico de fondo de 40 msg/s a 90 BPM (**escala con el
-  tempo**), la semántica del mapa verificada en Op5 y Op7 (12 de 12, con la predicción escrita antes de
-  mirar), el Feedback en `48 0p 50` **por Part**, que las direcciones reservadas **contestan a una
-  lectura**, y que `30 4B 00` es de **sólo lectura**.
+- **Measured against the keyboard** (`fase0c_RESULTS_mapa.md`, and the master): ratio 1.4103 against 1.41
+  on the MODX's screen, fc 261.763 / fm 369.175 ±0.005, 11 partials, I = 2.81, the 2756.25 Hz comb as a
+  non-harmonic, the `0E 25 00` bulk dump, the snapshot's parameter set with its repair pass, `48 00 4F` for
+  the algorithm, median latency 2.0 ms and a recommended timeout of 100 ms.
+- **Documented, not measured** (`datalist_fmx_tables.md`, `rm_pantallas_fmx.md`): the 47 operator offsets
+  with range and default, the 86 of the Part block, the 19 filter types, the whole FEG, the 2nd LFO,
+  feedback at `48 0p 50`, the menu paths, **and the algorithm topology itself** — which is why
+  `DOCUMENTED` is a provenance stamp and not a footnote. **Writing with the wrong length is a silent
+  no-op**, so nothing here is taken as true until the keyboard answers.
+- **Plausible invention, inside documented ranges**: the dirty-example values on the Part screen, the eight
+  AEG times, operators Op5–Op8 of the example patch, and the titles of the nine lessons. Full list in
+  `DESIGN.md` §24.
+- **Measured in round 6** (`fase0d`, `fase0e`): the zero on a Performance change (twice, raw, with the
+  anchor inside the window), that **the MODX does transmit keys over USB** (11 On / 11 Off on channel 1,
+  velocity 32 to 106, real 14-bit pitch bend, full CC 1), that one key in `MIDI I/O = Multi` **gives one
+  Note On per Part** (four in 28 ms), the effective poll rates with **0 lost of 4 000**, background traffic
+  of 40 msg/s at 90 BPM (**it scales with tempo**), the map's semantics verified on Op5 and Op7 (12 of 12,
+  with the prediction written before looking), Feedback at `48 0p 50` **per Part**, that reserved addresses
+  **answer a read**, and that `30 4B 00` is **read-only**.
+- **Measured by the running build** (round 8, the two `RUNNING-app-*.jpg` captures): noise floor −66 dB,
+  wide ring 10.0–10.4 Hz, reread set 383 of 384, bulk dump 19 003 B in 123 messages. **These supersede the
+  spike figures** wherever they conflict; the superseded values are listed once, in `DESIGN.md` §22.
 
-  Con esto **se cae la única inferencia grande que quedaba**: `TOCAS TÚ · 3 NOTAS` ya no está apoyado en
-  una suposición, y su recuadro ámbar de `4c` pasa a `MEDIDO · fase 0e`. La propuesta de derivarlo del
-  audio se conserva **como respaldo degradado** (`ENTRA AUDIO QUE NO HE PEDIDO`) para cuando el MIDI de
-  entrada esté cerrado, no como fuente: el MIDI da la cuenta de notas y la velocity, que es lo que hace
-  del chip información en vez de un piloto.
-
-Tres correcciones de dato que las fuentes destaparon y que ya están aplicadas: **Spectral Skirt es
-0-7** (no 0-99, y eso cambia el control: ocho posiciones, no un mando continuo), **el Cutoff del
-filtro es 0-255 en dos bytes** (no hercios) y **el nivel de la FEG es bipolar en cents, ±9 600**.
-Detalle en `CONCERNS.md` §1–7.
+Three data corrections the sources uncovered and that are already applied: **Spectral Skirt is 0-7** (not
+0-99, and that changes the control: eight positions, not a continuous knob), **the filter Cutoff is 0-255
+in two bytes** (not hertz) and **the FEG level is bipolar in cents, ±9 600**.
