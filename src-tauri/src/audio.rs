@@ -15,18 +15,33 @@ use std::thread;
 
 use modx_audio::{encode_mono, AudioBlock, Bloques, Capture, RING_SAMPLES};
 use tauri::ipc::{Channel, InvokeResponseBody, Response};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, Webview};
 
 use crate::connection::Connection;
+
+/// A webview listening to the bloques, and the channel it listens on.
+///
+/// **The label is what makes a reload survivable.** `Channel::send` is a
+/// `webview.eval`, and an eval into a webview that merely *navigated* still
+/// succeeds: the script runs in the new page, finds no callback of that id, and
+/// does nothing. So a channel left behind by a reload never errors, never falls
+/// out of the `retain` in [`Audio::broadcast`], and goes on costing every bloque
+/// a second encode, a second eval and a second fetch for the life of the process
+/// — once per reload, which under `tauri dev`'s live reload is once per file
+/// saved. A webview has exactly one audio subscription, so its label is the
+/// identity: subscribing again replaces what that webview had.
+struct Subscriber {
+    webview: String,
+    channel: Channel<InvokeResponseBody>,
+}
 
 /// The open device and whoever is listening to it.
 #[derive(Default)]
 pub struct Audio {
     capture: Mutex<Option<Capture>>,
-    /// One per `subscribe_audio_blocks`. In practice there is exactly one — the
-    /// front's audio service — but a channel that outlived a reload would
-    /// otherwise silently keep a dead webview's callback alive.
-    subscribers: Mutex<Vec<Channel<InvokeResponseBody>>>,
+    /// One per webview. In practice there is exactly one — the front's audio
+    /// service — and a reload replaces its entry rather than adding one.
+    subscribers: Mutex<Vec<Subscriber>>,
 }
 
 impl Audio {
@@ -41,7 +56,12 @@ impl Audio {
             .subscribers
             .lock()
             .expect("the audio subscribers lock is not held across a panic");
-        subscribers.retain(|channel| channel.send(InvokeResponseBody::Raw(bytes.clone())).is_ok());
+        subscribers.retain(|subscriber| {
+            subscriber
+                .channel
+                .send(InvokeResponseBody::Raw(bytes.clone()))
+                .is_ok()
+        });
     }
 }
 
@@ -158,13 +178,28 @@ pub fn measure_window(app: AppHandle, samples: u32) -> Result<Response, String> 
 
 /// Start receiving bloques on this channel. The front calls it once, from the
 /// service that owns the worker.
+///
+/// It takes the [`Webview`] rather than the [`AppHandle`] so that the caller can
+/// be told apart from itself across a reload: see [`Subscriber`] for why a
+/// channel the front has walked away from cannot be detected any other way.
 #[tauri::command]
-pub fn subscribe_audio_blocks(app: AppHandle, channel: Channel<InvokeResponseBody>) {
-    app.state::<Audio>()
+pub fn subscribe_audio_blocks(webview: Webview, channel: Channel<InvokeResponseBody>) {
+    let label = webview.label().to_owned();
+    let app = webview.app_handle();
+    let audio = app.state::<Audio>();
+    let mut subscribers = audio
         .subscribers
         .lock()
-        .expect("the audio subscribers lock is not held across a panic")
-        .push(channel);
+        .expect("the audio subscribers lock is not held across a panic");
+
+    // The page that had this webview is gone, and so is the callback its channel
+    // was eval-ing into. Dropped here rather than left to the broadcast, which
+    // has no way of knowing.
+    subscribers.retain(|subscriber| subscriber.webview != label);
+    subscribers.push(Subscriber {
+        webview: label,
+        channel,
+    });
 }
 
 /// Write one 65 536 window to disk, labelled by whether the app was polling.
