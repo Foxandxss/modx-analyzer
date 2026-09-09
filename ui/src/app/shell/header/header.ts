@@ -168,11 +168,23 @@ export class Header {
     }
   }
 
+  /**
+   * The second line of the `LIVE` pill: what stream is being watched.
+   *
+   * Three facts, all three off the device the app actually opened — the name it
+   * reported, the rate it is running at and how many channels it delivers. None
+   * of them is written here: a pill saying `44100 Hz` over a stream running at
+   * 48 000 would be the header lying about the one thing it exists to state.
+   *
+   * `null` when the device is not open, and the template draws the dash for it.
+   * The three arrive together and leave together on the native side, so there is
+   * no state in which two of them are drawn and the third is a hole.
+   */
   protected readonly audioLine = computed(() => {
-    const { audioDevice, sampleRate } = this.connection();
-    if (audioDevice === null || sampleRate === null) {
+    const { audioDevice, sampleRate, channels } = this.connection();
+    if (audioDevice === null || sampleRate === null || channels === null) {
       return null;
     }
-    return `${audioDevice} · ${sampleRate} Hz`;
+    return `${audioDevice} · ${sampleRate} Hz · ${channels} ch`;
   });
 }

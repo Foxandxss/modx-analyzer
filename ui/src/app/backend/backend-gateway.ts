@@ -263,6 +263,15 @@ export interface ConnectionView {
   readonly audioDevice: string | null;
   /** 44 100, or `null` while the audio device is not open. */
   readonly sampleRate: number | null;
+  /**
+   * 2, or `null` while the audio device is not open.
+   *
+   * The three audio fields are one fact: they are set together by the Rust side
+   * when the stream opens and dropped together when it closes, so the `LIVE`
+   * pill's second line is either all three or the dash. Never a count without a
+   * device to have counted.
+   */
+  readonly channels: number | null;
 }
 
 export interface PatchHeaderView {

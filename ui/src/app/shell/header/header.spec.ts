@@ -52,7 +52,52 @@ describe('Header', () => {
     expect(host.querySelector('.anchor__name')?.textContent?.trim()).toBe(DEAD_MARK);
     expect(host.querySelector('.pill--algorithm')?.textContent).toContain(DEAD_MARK);
     expect(host.querySelector('.feedback')?.textContent).toContain(DEAD_MARK);
-    expect(host.querySelector('.audio')?.textContent?.trim()).toBe(DEAD_MARK);
+    expect(host.querySelector('.look__audio')?.textContent?.trim()).toBe(DEAD_MARK);
+  });
+
+  /**
+   * The bar's order is a design decision and not an accident of the template, so
+   * it is asserted as a list rather than one neighbour at a time. `HUSH` last,
+   * behind the rule, is the part of it that has already cost this app a bug.
+   */
+  it('draws the bar in its canonical order, left to right', async () => {
+    const { host } = await renderHeader();
+
+    const slots = [...host.querySelector('.bar')!.children].map(
+      (child) => child.className.split(' ')[0] || child.tagName.toLowerCase(),
+    );
+
+    expect(slots).toEqual([
+      'port',
+      // El filete que separa el puerto del ancla: mobiliario, no una ranura.
+      'gap',
+      'anchor',
+      'pill',
+      'feedback',
+      'mode',
+      'spacer',
+      'look',
+      'app-capture-button',
+      'isolate',
+      'panic',
+    ]);
+  });
+
+  /**
+   * The bar carries the facts of the patch and the transport, and nothing that
+   * only a debugger reads. The anchor's poll rate and its SysEx address were the
+   * last of that, and they belong to the check screen (#52), which does not
+   * exist — so they are simply not drawn anywhere.
+   */
+  it('carries no poll rate and no SysEx address', async () => {
+    const { host, fixture, backend } = await renderHeader();
+    backend.anchorReads('Init Normal (FM-X)');
+    await fixture.whenStable();
+
+    expect(host.querySelector('.anchor__eyebrow')).toBeNull();
+    expect(host.textContent).not.toContain('ANCLA');
+    expect(host.textContent).not.toContain('31 00 00');
+    expect(host.textContent).not.toContain('1 Hz');
   });
 
   it('shows the connection dot unlit until the port is open', async () => {
@@ -60,17 +105,44 @@ describe('Header', () => {
 
     expect(host.querySelector('.dot')?.classList.contains('dot--on')).toBe(false);
 
-    backend.connection.set({
-      port: 'connected',
-      loss: null,
-      portName: 'MODX-1',
-      audioDevice: 'Line (MODX)',
-      sampleRate: 44100,
-    });
+    backend.portFound();
     await fixture.whenStable();
 
     expect(host.querySelector('.dot')?.classList.contains('dot--on')).toBe(true);
-    expect(host.querySelector('.audio')?.textContent).toContain('Line (MODX) · 44100 Hz');
+  });
+
+  /**
+   * The three stream facts, all three off the device the app opened. Nothing
+   * here is a constant: the test proves it by making the gateway report another
+   * rate and another channel count and reading the pill again.
+   */
+  it('says what stream is being watched, and says what the stream reported', async () => {
+    const { backend, fixture, host } = await renderHeader();
+    const line = () => host.querySelector('.look__audio')?.textContent?.trim();
+
+    backend.audioOpen();
+    await fixture.whenStable();
+    expect(line()).toBe('Line (MODX) · 44100 Hz · 2 ch');
+
+    backend.audioOpen('Line (MODX)', 48_000, 4);
+    await fixture.whenStable();
+    expect(line()).toBe('Line (MODX) · 48000 Hz · 4 ch');
+  });
+
+  it('goes back to the dash when the device closes, and never to a placeholder', async () => {
+    const { backend, fixture, host } = await renderHeader();
+    backend.audioOpen();
+    await fixture.whenStable();
+
+    backend.audioClosed();
+    await fixture.whenStable();
+
+    const line = host.querySelector('.look__audio')!;
+    expect(line.textContent?.trim()).toBe(DEAD_MARK);
+    // No half a fact either: a rate with no device to have reported it would be
+    // the same lie the `LIVE` stamp over a dead stream is (#22).
+    expect(line.textContent).not.toContain('Hz');
+    expect(line.textContent).not.toContain('ch');
   });
 
   it('draws the algorithm and the feedback the anillo ancho read, zero-padded', async () => {
@@ -360,8 +432,9 @@ describe('Header · el ancla', () => {
     // nombre nuevo (#19). El destello sigue diciendo que acaba de cambiar.
     expect(anchor().textContent).not.toContain('Init Normal (FM-X)');
     expect(anchor().classList.contains('anchor--changed')).toBe(true);
-    // La procedencia va al lado del nombre, con peso bajo: 1 Hz y la dirección.
-    expect(anchor().querySelector('.anchor__eyebrow')?.textContent).toBe('ANCLA · 1 Hz · 31 00 00');
+    // Y en reposo el ancla es el nombre y nada más: la cejilla con la cadencia
+    // y la dirección SysEx se fue con #35, sin sitio al que ir (#52).
+    expect(anchor().querySelector('.anchor__eyebrow')).toBeNull();
   });
 
   // El criterio de #19: el nombre más largo que admite el MODX —20 caracteres,

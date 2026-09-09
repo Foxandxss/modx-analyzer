@@ -142,6 +142,7 @@ export class TauriBackendGateway implements BackendGateway {
     portName: null,
     audioDevice: null,
     sampleRate: null,
+    channels: null,
   });
 
   readonly patch = signal<PatchHeaderView>(noPatch());

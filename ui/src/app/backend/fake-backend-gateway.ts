@@ -42,6 +42,7 @@ export class FakeBackendGateway implements BackendGateway {
     portName: null,
     audioDevice: null,
     sampleRate: null,
+    channels: null,
   });
 
   readonly patch = signal<PatchHeaderView>(noPatch());
@@ -230,6 +231,28 @@ export class FakeBackendGateway implements BackendGateway {
       port: 'disconnected',
       loss,
       portName: view.portName ?? 'MODX-1',
+    }));
+  }
+
+  /**
+   * Test driver: the audio device opened and said what it is.
+   *
+   * The three facts go in together because that is how the native side sets
+   * them, and the point of the pill's second line is that all three came off
+   * the stream the app actually opened. Defaults are this hardware's, so a test
+   * that cares about one of them states only that one.
+   */
+  audioOpen(device = 'Line (MODX)', sampleRate = 44_100, channels = 2): void {
+    this.connection.update((view) => ({ ...view, audioDevice: device, sampleRate, channels }));
+  }
+
+  /** Test driver: the device stopped being open, and takes all three facts. */
+  audioClosed(): void {
+    this.connection.update((view) => ({
+      ...view,
+      audioDevice: null,
+      sampleRate: null,
+      channels: null,
     }));
   }
 

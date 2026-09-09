@@ -109,7 +109,7 @@ pub fn start(app: &AppHandle) {
                 device.sample_rate,
                 device.channels
             );
-            Connection::set_audio(app, Some((device.name, device.sample_rate)));
+            Connection::set_audio(app, Some(device));
 
             app.state::<Audio>()
                 .capture

@@ -77,15 +77,6 @@
   background: var(--anchor-changed-bg);
 }
 
-.anchor__eyebrow {
-  font-size: var(--text-micro);
-  letter-spacing: var(--tracking-eyebrow);
-  color: var(--anchor-eyebrow);
-  /* Sin esto la procedencia se partía en dos líneas y empujaba
-     `SIN MEDIR EN ESTE SONIDO` fuera de los 58 px de la barra (#19). */
-  white-space: nowrap;
-}
-
 .anchor__name {
   display: flex;
   align-items: baseline;
@@ -126,8 +117,7 @@
   color: var(--carrier-dim);
 }
 
-.feedback,
-.audio {
+.feedback {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -136,23 +126,21 @@
   letter-spacing: 0.08em;
   color: var(--ink-inert);
   white-space: nowrap;
-  /* These two yield first, and they yield to the pánico.
+  /* This slot yields, and it yields to the pánico.
    *
    * A flex item defaults to `min-width: auto`, which means it refuses to shrink
    * below its own text — so a long line here does not wrap or clip, it pushes
    * the row wider than the window and the last child off the right edge. The
    * last child is the pánico.
    *
-   * That is not hypothetical: `Line (MODX) · 44100 Hz` reached this slot for the
+   * That is not hypothetical: `Line (MODX) · 44100 Hz` reached the bar for the
    * first time when #18 was fixed (until then the connection event never arrived
    * and it drew a dash), and it pushed `CALLA` clean out of the window on the
    * target laptop. The one control that exists to stop a note that will not stop
-   * was unreachable, and nothing said so.
+   * was unreachable, and nothing said so. That line now lives inside the `LIVE`
+   * pill, which carries the same guard for the same reason.
    *
-   * So the two informational slots are the ones that lose room. Everything from
-   * `.mode` rightwards is `flex: 0 0 auto` and keeps its size.
-   *
-   * Clipped and not ellipsised on purpose: these are flex containers, and
+   * Clipped and not ellipsised on purpose: this is a flex container, and
    * `text-overflow` does nothing to a flex container's own text. An ellipsis
    * here would be a line of CSS that reads as a promise and is not one. */
   min-width: 0;
@@ -196,9 +184,18 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 12px 16px;
+  padding: 8px 16px;
   border-radius: var(--radius-pill);
   border: var(--rule-min) solid var(--dead-border);
+  /* La pastilla es ahora la ranura que cede.
+   *
+   * Lleva dentro la única cadena de anchura variable que queda a la derecha del
+   * muelle —el nombre que reporte el dispositivo—, y a su derecha está el
+   * pánico. Sin `min-width: 0` un nombre largo empuja el octágono fuera de la
+   * ventana, que es exactamente lo que pasó con `.audio` cuando se arregló #18.
+   * Se recorta, no se elipsa: la elipsis prometería que hay más y no la hay. */
+  min-width: 0;
+  overflow: hidden;
 
   // Mirar late en continuo: es el acto que no se pulsa. El latido sólo existe
   // mientras llegan bloques; sin puente, la pastilla está muerta.
@@ -219,11 +216,20 @@
 }
 
 .look__dot {
+  flex: 0 0 auto;
   width: 7px;
   height: 7px;
   border-radius: 50%;
   border: var(--rule-min) solid var(--dead-ink);
   box-sizing: border-box;
+}
+
+/* Dos líneas, no dos ranuras: el estado y el stream que ese estado mira. */
+.look__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 @keyframes livePulse {
@@ -245,6 +251,22 @@
   letter-spacing: var(--tracking-label);
   color: var(--ink-inert);
   white-space: nowrap;
+}
+
+/* Los tres datos del stream, en el peso de una procedencia: se leen cuando se
+   buscan y no compiten con la cadencia de encima. `--text-micro` es el piso de
+   lo que se lee, y esto se lee. */
+.look__audio {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  letter-spacing: 0.06em;
+  color: var(--ink-inert);
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
 }
 
 // El único aire que no se negocia: filete + 16 px sin nada que se pueda tocar.

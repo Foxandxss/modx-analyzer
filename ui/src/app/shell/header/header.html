@@ -13,9 +13,13 @@
        El nombre viejo tachado al lado ya no se dibuja: con los 20 caracteres que
        admite el MODX se metía debajo del chip `ALG` y de `FB`, y lo que hay que
        leer en esos 2 200 ms es el nombre nuevo (#19). El destello sigue diciendo
-       que acaba de cambiar; lo que se va es qué era antes. -->
+       que acaba de cambiar; lo que se va es qué era antes.
+
+       Y encima ya no hay cejilla: `ANCLA · 1 Hz · 31 00 00` era una cadencia de
+       sondeo y una dirección SysEx en los 200 px más caros de la pantalla. En
+       reposo el ancla es el nombre y nada más; la procedencia es de la pantalla
+       de chequeo (#52), y hasta que exista no se dibuja en ningún sitio. -->
   <div class="anchor" [class.anchor--changed]="justChanged()">
-    <span class="anchor__eyebrow">ANCLA · 1 Hz · 31 00 00</span>
     <span class="anchor__name">
       <app-figure [value]="patch().performanceName" />
     </span>
@@ -34,16 +38,6 @@
     <app-figure [value]="feedbackOperator()" />
   </div>
 
-  <div class="audio">
-    @if (audioLine(); as line) {
-      {{ line }}
-    } @else {
-      <app-figure [value]="dead" />
-    }
-  </div>
-
-  <div class="spacer"></div>
-
   <!-- Un modo sin construir no es un botón inhabilitado (DESIGN.md §3.1): la regla
        de que un control inhabilitado se lee entero es para el control que
        funcionará cuando se cumpla su condición, y un modo sin código detrás no
@@ -55,11 +49,29 @@
     <span class="mode__line">the only mode built</span>
   </div>
 
+  <div class="spacer"></div>
+
   <!-- Transporte. Mirar late y medir es un obturador: dos actos distintos, y aquí
-       los dos son ranuras — laten y disparan cuando llegue el audio. -->
+       los dos son ranuras — laten y disparan cuando llegue el audio.
+
+       La pastilla dice dos cosas y ninguna es de la misma clase: arriba, la
+       cadencia medida del puente; debajo, qué stream se está mirando —nombre,
+       frecuencia de muestreo y canales, los tres leídos del dispositivo que la
+       app abrió de verdad, ninguno escrito a mano. Sin dispositivo la segunda
+       línea es la raya, no un texto de relleno: lo que falta se dibuja como lo
+       que falta. -->
   <div class="look" [class.look--on]="looking()">
     <span class="look__dot" aria-hidden="true"></span>
-    <span class="look__text">LIVE · {{ fps() === null ? '—' : fps()!.toFixed(1) }} fps</span>
+    <span class="look__lines">
+      <span class="look__text">LIVE · {{ fps() === null ? '—' : fps()!.toFixed(1) }} fps</span>
+      <span class="look__audio">
+        @if (audioLine(); as line) {
+          {{ line }}
+        } @else {
+          <app-figure [value]="dead" />
+        }
+      </span>
+    </span>
   </div>
 
   <!-- El mismo componente que se repite al pie de la columna medida: un control,

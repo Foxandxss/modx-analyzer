@@ -7,6 +7,7 @@
 
 use std::sync::Mutex;
 
+use modx_audio::DeviceInfo;
 use modx_midi::link::Link;
 use modx_midi::port::PORT_NAME;
 use tauri::{AppHandle, Emitter, Manager};
@@ -28,6 +29,13 @@ pub struct ConnectionView {
     /// draws the dash rather than a zero.
     pub audio_device: Option<String>,
     pub sample_rate: Option<u32>,
+    /// How many channels the open stream delivers, 2 on this hardware.
+    ///
+    /// It is the third of the three facts the `LIVE` pill states, and it is here
+    /// rather than hardcoded on the front for the same reason as the other two:
+    /// what the pill says has to be what the app actually opened. `CHANNELS` is
+    /// what [`modx_audio`] *asks* for; this is what the device answered.
+    pub channels: Option<u16>,
 }
 
 impl Default for ConnectionView {
@@ -41,6 +49,30 @@ impl Default for ConnectionView {
             port_name: None,
             audio_device: None,
             sample_rate: None,
+            channels: None,
+        }
+    }
+}
+
+impl ConnectionView {
+    /// Take the three audio facts from the open stream, or drop all three.
+    ///
+    /// One function and not three assignments, because the failure it exists to
+    /// prevent is a field left behind: a device that closed while the pill kept
+    /// saying `2 ch` would be the `LIVE` stamp over a stream that ended (#22),
+    /// one field down. They arrive together and they leave together.
+    fn set_audio(&mut self, device: Option<DeviceInfo>) {
+        match device {
+            Some(device) => {
+                self.audio_device = Some(device.name);
+                self.sample_rate = Some(device.sample_rate);
+                self.channels = Some(device.channels);
+            }
+            None => {
+                self.audio_device = None;
+                self.sample_rate = None;
+                self.channels = None;
+            }
         }
     }
 }
@@ -89,17 +121,12 @@ impl Connection {
     }
 
     /// Say what the audio device reports, leaving the port fields as they were.
-    pub fn set_audio(app: &AppHandle, device: Option<(String, u32)>) {
-        Self::update(app, |view| match device {
-            Some((name, rate)) => {
-                view.audio_device = Some(name);
-                view.sample_rate = Some(rate);
-            }
-            None => {
-                view.audio_device = None;
-                view.sample_rate = None;
-            }
-        });
+    ///
+    /// The whole [`DeviceInfo`] and not a tuple of the fields the header happens
+    /// to draw today: the pill states what the stream answered, so the stream's
+    /// own report is what crosses.
+    pub fn set_audio(app: &AppHandle, device: Option<DeviceInfo>) {
+        Self::update(app, |view| view.set_audio(device));
     }
 
     /// The merged view as it stands right now.
@@ -144,4 +171,54 @@ impl Connection {
 #[tauri::command]
 pub fn connection_state(app: AppHandle) -> ConnectionView {
     app.state::<Connection>().view()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The three audio facts are one fact with three fields.
+    ///
+    /// The header states all three in one line, so a device that closes has to
+    /// take all three with it: a rate or a channel count that outlived its
+    /// device would be drawn beside the dash of the name it belonged to.
+    #[test]
+    fn the_three_audio_facts_arrive_and_leave_together() {
+        let mut view = ConnectionView::default();
+        assert_eq!(
+            (view.audio_device.clone(), view.sample_rate, view.channels),
+            (None, None, None)
+        );
+
+        view.set_audio(Some(DeviceInfo {
+            name: "Line (MODX)".to_owned(),
+            sample_rate: 44_100,
+            channels: 2,
+        }));
+        assert_eq!(view.audio_device.as_deref(), Some("Line (MODX)"));
+        assert_eq!(view.sample_rate, Some(44_100));
+        assert_eq!(view.channels, Some(2));
+
+        view.set_audio(None);
+        assert_eq!(view.audio_device, None);
+        assert_eq!(view.sample_rate, None);
+        assert_eq!(view.channels, None);
+    }
+
+    /// The port fields are not the audio fields: the two devices are opened by
+    /// two modules and neither may erase the other's half of the view.
+    #[test]
+    fn closing_the_audio_device_keeps_the_port_name() {
+        let mut view = ConnectionView {
+            port: "connected",
+            loss: None,
+            port_name: Some(PORT_NAME.to_owned()),
+            ..ConnectionView::default()
+        };
+
+        view.set_audio(None);
+
+        assert_eq!(view.port, "connected");
+        assert_eq!(view.port_name.as_deref(), Some(PORT_NAME));
+    }
 }
