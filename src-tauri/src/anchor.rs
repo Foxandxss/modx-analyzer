@@ -17,6 +17,17 @@
 //! it lives: [`Patch::set_anchor`] bumps a generation, and the anillo ancho empties
 //! itself between two steps. Two places that both blanked the diagram would be two
 //! places that could disagree about which patch it belongs to.
+//!
+//! **Nothing here draws anything either, and that is newer.** A beat that finds
+//! the same name is the **aval** (ADR-0005): it is what lets the anillo ancho put
+//! up a number that changed, because a reading taken before this beat started and
+//! a name that has not moved since bracket that number inside one Performance.
+//! Without it the ring holds the reading rather than stamping it `SONDEADO`, which
+//! is #20 — a pass that straddled a Performance change used to be drawn as a
+//! confident diagram of a patch that exists on no keyboard. The ring can ask for a
+//! beat ahead of the second when it is holding something; how often that is
+//! answered is decided here, because the port is the ancla's before it is the
+//! ring's (ADR-0004).
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -42,6 +53,23 @@ const PART: u8 = 1;
 /// asks for is a beat a second, not a second of silence between beats. Twenty
 /// ASCII addresses cost ~40 ms of it.
 const BEAT: Duration = Duration::from_secs(1);
+
+/// The shortest gap between two beats when the anillo ancho asks for one out of
+/// turn, and how many times the last beat's own cost that gap has to be.
+///
+/// The ring asks because it is holding a number it will not draw until the name
+/// has been confirmed (ADR-0005), and the sooner the beat the shorter the wait.
+/// The multiple is what keeps that from eating the port: idle, a beat costs
+/// ~40 ms and the gap stays at the floor of 250 ms; under notes it costs ~200 ms
+/// and the gap goes to ~1 s, so the out-of-turn beats **fade out by themselves
+/// exactly when the channel is disputed**. The ancla keeps its slot, which is
+/// ADR-0004's rule; it does not grow it.
+const AVAL_GAP_FLOOR: Duration = Duration::from_millis(250);
+const AVAL_GAP_BEATS: u32 = 5;
+
+/// How often the wait between two beats looks up to see whether it is still
+/// wanted. Short enough not to add anything anyone can see to the 250 ms floor.
+const WAIT_SLICE: Duration = Duration::from_millis(20);
 
 /// How long to wait before looking again when there is no port to ask.
 const NO_PORT_PATIENCE: Duration = Duration::from_millis(500);
@@ -88,9 +116,13 @@ fn run(app: &AppHandle) {
         // The watchdog rides on the ancla and is not a thread of its own: the two
         // facts it needs are the enumeration and this loop's own count of passes
         // with a hole, and a second thread would only be a second opinion about
-        // the same second. It looks once per turn of this loop — every second
-        // while the keyboard answers, and every two while it is timing out, which
-        // is the cadence the card's `ÚLTIMO SONDEO N s` is drawn against.
+        // the same second. It looks once per turn of this loop — at most every
+        // second while the keyboard answers, and every two while it is timing
+        // out, which is the cadence the card's `ÚLTIMO SONDEO N s` is drawn
+        // against. A turn can come round sooner than the second when the anillo
+        // ancho pulls a beat forward for an aval; looking more often than the
+        // card can move is free, because `LinkWatch` only speaks when something
+        // actually changed.
         watch(app, &mut link, &anchor);
 
         // `REINTENTAR` threw the port away and opened another one. The passes
@@ -124,12 +156,27 @@ fn run(app: &AppHandle) {
         let beat = anchor.beat(&mut |address| owner.read(Priority::Anchor, address));
         let read_at = Instant::now();
 
+        let cost = read_at.duration_since(started);
+        // A beat that came back with a hole has nothing to vouch for, so there is
+        // nothing to be gained by pulling the next one forward — and something to
+        // lose: `DESCONECTADO` is three holes in a row, and at 250 ms apart that
+        // verdict would be about three quarters of a second instead of about
+        // three seconds. A hole keeps its full second.
+        let complete = !matches!(&beat, Ok(Beat::Incomplete));
+
         match beat {
-            // The name it already had, or a pass with a hole in it. A hole is
-            // compared with nothing at all: `Init Normal (FM-X)` missing a letter
-            // reads as a different name, and a different name would throw away
-            // every figure on the screen over one lost byte.
-            Ok(Beat::Same | Beat::Incomplete) => {}
+            // The same name, and that is the aval (ADR-0005): every reading the
+            // ring took before this beat *started* is bracketed inside one
+            // Performance, so those numbers can be drawn. It is the ordinary
+            // outcome, and it is what turns a held reading into a figure.
+            Ok(Beat::Same) => Patch::vouch(app, started),
+            // A pass with a hole in it is compared with nothing at all:
+            // `Init Normal (FM-X)` missing a letter reads as a different name,
+            // and a different name would throw away every figure on the screen
+            // over one lost byte. It cannot vouch for anything either — it did
+            // not read a name, so it has nothing to say about which sound the
+            // ring was talking to.
+            Ok(Beat::Incomplete) => {}
             Ok(Beat::First(name)) => {
                 log::info!("ancla: «{name}»");
                 Patch::set_anchor(app, name, None, anchor.changes(), read_at);
@@ -149,9 +196,34 @@ fn run(app: &AppHandle) {
             }
         }
 
+        wait_for_next_beat(app, started, cost, complete);
+    }
+}
+
+/// Hold until the next beat is due — or until the anillo ancho says one would put
+/// a figure on the screen and enough time has passed to give it one.
+///
+/// The second is still measured from the **start** of the last beat, as it always
+/// was: what the design asks for is a beat a second, not a second of silence
+/// between beats.
+fn wait_for_next_beat(app: &AppHandle, started: Instant, cost: Duration, complete: bool) {
+    if !complete {
         if let Some(rest) = BEAT.checked_sub(started.elapsed()) {
             std::thread::sleep(rest);
         }
+        return;
+    }
+
+    let gap = AVAL_GAP_FLOOR.max(cost * AVAL_GAP_BEATS);
+
+    loop {
+        let Some(rest) = BEAT.checked_sub(started.elapsed()) else {
+            return;
+        };
+        if started.elapsed() >= gap && Patch::aval_wanted(app) {
+            return;
+        }
+        std::thread::sleep(WAIT_SLICE.min(rest));
     }
 }
 

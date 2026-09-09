@@ -80,6 +80,16 @@ Performance cambió por debajo. Una pasada a la que le falte una letra no es un 
 descarta entera, porque un blanco por un timeout invalidaría toda la pantalla. Su agujero conocido:
 dos Performances cuyo nombre de Part 1 coincida son, para el ancla, la misma.
 
+**Aval**:
+El latido del ancla que convierte una lectura del anillo en cifra dibujada. Una lectura cuyo valor
+difiere del que ya está en pantalla no se pinta hasta que un latido **empezado después de ella**
+conteste que el nombre no ha cambiado; si contesta que sí cambió, esa lectura se tira sin haberse
+visto nunca. Una lectura que repite el número dibujado no necesita aval: si viniera de otra
+Performance diría de ella exactamente lo mismo, y por eso un teclado en reposo no pide ninguno. El
+anillo puede pedir un latido fuera de turno mientras retiene algo, y el ancla se lo da o no según el
+puerto (ADR-0005). Un aval no sabe más que el ancla que lo firma: hereda su agujero entero.
+_Avoid_: confirmación, validación
+
 **Relectura**:
 La lectura completa del patch —una petición por parámetro de `48 0p` y de los ocho `49 op`— al
 arrancar y después de cada cambio de ancla. Se ve ocurrir (`118 DE 384`); después toma el relevo el
@@ -138,7 +148,9 @@ Sale de una Medida sobre audio real.
 Calculado a partir de parámetros (Bessel, formas espectrales). Nunca se confunde con medido.
 
 **Sondeado**:
-Leído del teclado por SysEx, con marca de tiempo.
+Leído del teclado por SysEx, con marca de tiempo, y avalado. Una lectura sin Aval no lleva este
+sello porque no llega a pintarse: no hay un sexto sello para «leído pero todavía no sé de qué
+sonido».
 
 **Caduco**:
 Sondeado hace más de cuatro periodos de su propio anillo. Sigue siendo de este patch.

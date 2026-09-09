@@ -17,7 +17,7 @@
 //! and for the same reason: two unrelated clocks cannot be subtracted, but an
 //! elapsed time can be carried across.
 
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
@@ -221,6 +221,17 @@ pub struct Patch {
     /// copy between steps and empties itself when they differ: the readings live
     /// in the ring, so that is where they are thrown away.
     generation: AtomicU64,
+    /// When the last ancla beat that came back `Same` **began** (ADR-0005).
+    ///
+    /// It is the aval: a ring reading taken before this instant is bracketed
+    /// inside a stretch the ancla has confirmed is one Performance, and only then
+    /// does it become a figure on the screen. The instant matters and not a
+    /// counter — a beat can only speak for what was read before it started.
+    vouched_before: Mutex<Option<Instant>>,
+    /// Set by the anillo ancho while it is holding a reading nothing has vouched
+    /// for. The ancla reads it to decide whether to beat out of turn: there is a
+    /// figure behind, and the beat is what brings it up.
+    aval_wanted: AtomicBool,
 }
 
 impl Patch {
@@ -289,6 +300,39 @@ impl Patch {
         app.state::<Patch>().generation.load(Ordering::Acquire)
     }
 
+    /// The ancla beat, it began at `beat_started`, and the name had not moved.
+    ///
+    /// Only a `Same` beat says this. `First` names a Performance for the first
+    /// time and so speaks for nothing read before it, and `Changed` empties the
+    /// diagram instead of vouching for it.
+    pub fn vouch(app: &AppHandle, beat_started: Instant) {
+        *app.state::<Patch>()
+            .vouched_before
+            .lock()
+            .expect("the patch lock is not held across a panic") = Some(beat_started);
+    }
+
+    /// The start of the last confirming beat, for the ring to measure its held
+    /// readings against.
+    pub fn vouched_before(app: &AppHandle) -> Option<Instant> {
+        *app.state::<Patch>()
+            .vouched_before
+            .lock()
+            .expect("the patch lock is not held across a panic")
+    }
+
+    /// Say whether the ring is holding anything that a beat would bring up.
+    pub fn set_aval_wanted(app: &AppHandle, wanted: bool) {
+        app.state::<Patch>()
+            .aval_wanted
+            .store(wanted, Ordering::Release);
+    }
+
+    /// Whether a beat out of turn would put a figure on the screen.
+    pub fn aval_wanted(app: &AppHandle) -> bool {
+        app.state::<Patch>().aval_wanted.load(Ordering::Acquire)
+    }
+
     fn update(app: &AppHandle, change: impl FnOnce(&mut PatchView)) {
         let state = app.state::<Patch>();
         let read_at = *state
@@ -338,6 +382,20 @@ fn run(app: &AppHandle) {
             ring.forget();
             publish(app, &ring);
         }
+
+        // The aval (ADR-0005). The ring is holding every reading whose number
+        // differs from the one on screen, because these forty-two answers cannot
+        // say whether a hand moved or the sound did. A beat that began after such
+        // a reading and found the same name settles it, and the figure goes up.
+        if let Some(before) = Patch::vouched_before(app) {
+            if ring.vouch(before) {
+                publish(app, &ring);
+            }
+        }
+        // And this is the ring asking for that beat sooner than the ancla's own
+        // second. It is a hint and not a demand: the ancla owns its cadence, and
+        // it costs port time in the lane that already goes ahead of this one.
+        Patch::set_aval_wanted(app, ring.waiting_on_aval());
 
         // #14's pause. The figures already on screen age to `CADUCO` by
         // themselves while it lasts, which is what the stamps are for and is the
@@ -448,7 +506,10 @@ mod tests {
     use modx_midi::port::PortError;
     use modx_midi::sysex::Address;
 
-    /// A ring that has read the fase 0c Performance once, off the fake.
+    /// A ring that has read the fase 0c Performance once, off the fake, with an
+    /// ancla that beat afterwards and found the same name. Without that beat
+    /// nothing is a figure yet (ADR-0005) and every assertion below would be
+    /// about an empty diagram.
     fn read_once() -> WideRing {
         let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
         let mut ring = WideRing::new(PART);
@@ -459,6 +520,7 @@ mod tests {
             }
         })
         .unwrap();
+        ring.vouch(Instant::now());
         ring
     }
 
@@ -528,6 +590,9 @@ mod tests {
     fn an_algorithm_changed_underneath_redraws_the_roles_and_the_routes() {
         let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
         let mut ring = WideRing::new(PART);
+        // A pass and the ancla beat that follows it, finding the same name: the
+        // ordinary turn of the app. Without the aval the algorithm read below is
+        // held rather than drawn, which is #20's whole point (ADR-0005).
         let turn = |owner: &mut PortOwner<FakeModx>, ring: &mut WideRing| {
             ring.pass(&mut |address| -> Result<Option<Vec<u8>>, PortError> {
                 match owner.serve(Request::Read(address))? {
@@ -536,6 +601,7 @@ mod tests {
                 }
             })
             .unwrap();
+            ring.vouch(Instant::now());
         };
 
         turn(&mut owner, &mut ring);
@@ -657,6 +723,7 @@ mod tests {
             }
         })
         .unwrap();
+        ring.vouch(Instant::now());
 
         let drawn = node(1, ring.operator(1), ring.algorithm(), Instant::now());
         assert_eq!(drawn.frequency_mode.expect("read").value, "fixed");

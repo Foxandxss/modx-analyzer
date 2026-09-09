@@ -18,6 +18,16 @@
 //! blank it: one timeout is anomalous but is not news (0 losses in 27 000 requests,
 //! fase 0c), and the value ageing on its own is a better account of it than a dash
 //! that appears and disappears.
+//!
+//! **A reading is not a figure until the ancla vouches for it** (ADR-0005). The
+//! ring turns at 5-10 Hz and the ancla beats at 1 Hz, so a pass can straddle a
+//! Performance change and come back half one sound and half the other. Nothing in
+//! the answers tells the two apart, so this module does not try: a reading whose
+//! value *differs* from the one on screen is held out of sight until a beat
+//! started after it says the name has not changed. That is the **aval**. A reading
+//! that repeats what is on screen needs none — it may well come from another
+//! Performance, but it says of that one exactly what it said of this one, and a
+//! number true of both sounds is a lie about neither.
 
 use std::time::{Duration, Instant};
 
@@ -111,11 +121,77 @@ pub fn ratio(coarse: u32, fine: u32) -> f32 {
     base * (1.0 + fine as f32 / 100.0)
 }
 
+/// The readings at one address that no beat has vouched for yet.
+///
+/// Two of them, and not one — and not all of them either. The **newest** is what
+/// the screen wants: it is the number the keyboard is on now. The **oldest** is
+/// what guarantees the screen gets anything at all, because a beat that began
+/// after it can always speak for it however fast newer numbers arrive behind it.
+///
+/// Keeping only the newest starves a dial that is still turning, and it is not a
+/// rare race: a beat costs ~40 ms and a pass ~100 ms, so something like two
+/// beats in five land after the ring has already replaced the very reading they
+/// were about to speak for. Keep losing that race and the figure sits still for
+/// as long as the hand keeps moving, which is exactly what #20's fix must not do
+/// to the screen it was fixing.
+#[derive(Clone, Copy, Default, Debug)]
+struct Waiting {
+    oldest: Option<Reading>,
+    newest: Option<Reading>,
+}
+
+impl Waiting {
+    fn is_waiting(&self) -> bool {
+        self.newest.is_some()
+    }
+
+    fn clear(&mut self) {
+        *self = Self::default();
+    }
+
+    /// Hold a reading nothing has vouched for. The first is both ends at once;
+    /// each one after it displaces the newest and leaves the oldest — the one
+    /// with the best claim on the next beat — where it is.
+    fn push(&mut self, reading: Reading) {
+        if self.oldest.is_none() {
+            self.oldest = Some(reading);
+        }
+        self.newest = Some(reading);
+    }
+
+    /// What a beat that began at `beat_started` can put on the screen: the newest
+    /// reading that beat can speak for, or nothing at all.
+    fn release(&mut self, beat_started: Instant) -> Option<Reading> {
+        let spoken_for =
+            |reading: Option<Reading>| reading.filter(|reading| reading.at < beat_started);
+
+        if let Some(newest) = spoken_for(self.newest) {
+            self.clear();
+            return Some(newest);
+        }
+
+        // The beat was overtaken: something newer arrived while it was still
+        // reading the name. The reading behind it is one this beat *can* speak
+        // for, and putting it up is what keeps a moving figure moving. What
+        // overtook it waits for the next beat, as the oldest.
+        let oldest = spoken_for(self.oldest)?;
+        self.oldest = self.newest;
+        Some(oldest)
+    }
+}
+
 /// The cycle itself: the addresses, what each last answered, and how long the last
 /// complete turn around them took.
 pub struct WideRing {
     polled: Vec<Polled>,
+    /// What each address last said **and the ancla vouched for**. This is the
+    /// diagram: nothing else is ever drawn.
     readings: Vec<Option<Reading>>,
+    /// What each address has said that nothing has vouched for yet, because it
+    /// differs from the figure on screen and so might belong to a sound the ancla
+    /// has not noticed. Held, never drawn, and thrown away rather than shown if
+    /// the beat that arrives says the Performance changed.
+    waiting: Vec<Waiting>,
     /// Index of the address the next step will ask for.
     next: usize,
     pass_started: Instant,
@@ -130,9 +206,11 @@ impl WideRing {
     pub fn new(part: u8) -> Self {
         let polled = table::wide_ring(part);
         let readings = vec![None; polled.len()];
+        let waiting = vec![Waiting::default(); polled.len()];
         Self {
             polled,
             readings,
+            waiting,
             next: 0,
             pass_started: Instant::now(),
             last_pass: None,
@@ -165,6 +243,9 @@ impl WideRing {
     /// closed a pass, which is when the front has a whole new picture to draw.
     ///
     /// A timeout keeps the previous reading and lets it age.
+    ///
+    /// What came back is drawn straight away only if it repeats what is drawn
+    /// already; anything else waits for a [`WideRing::vouch`] (ADR-0005).
     pub fn step<F>(&mut self, ask: &mut F) -> Result<bool, PortError>
     where
         F: FnMut(Address) -> Result<Option<Vec<u8>>, PortError>,
@@ -172,10 +253,29 @@ impl WideRing {
         let asked = self.next;
         let answered = ask(self.polled[asked].address)?;
         if let Some(value) = answered.as_deref().and_then(sysex::decode_value) {
-            self.readings[asked] = Some(Reading {
+            let reading = Reading {
                 value,
                 at: Instant::now(),
-            });
+            };
+            match self.readings[asked] {
+                // The same number the screen already carries. It asserts nothing
+                // the screen was not asserting a moment ago, so it goes straight
+                // on and takes the fresh stamp with it — and if it did come from
+                // another Performance, it is a number that sound has as well.
+                // This is what keeps the port quiet: a keyboard nobody is
+                // touching answers this way forty-two times a pass and never
+                // asks for an aval.
+                Some(drawn) if drawn.value == value => {
+                    self.readings[asked] = Some(reading);
+                    // A change that reverted before anyone vouched for it never
+                    // happened as far as the screen is concerned.
+                    self.waiting[asked].clear();
+                }
+                // A different number, or the first at an empty address. Either
+                // somebody turned something or the sound changed underneath, and
+                // these forty-two answers cannot tell those apart. It waits.
+                _ => self.waiting[asked].push(reading),
+            }
         }
 
         self.next += 1;
@@ -212,13 +312,48 @@ impl WideRing {
     /// patch arrives — a number that replaced another without passing through the
     /// dash could not be told from one somebody had just turned by hand.
     ///
+    /// What is waiting on an aval goes with it, and that is the whole of #20: a
+    /// reading taken across the change is exactly the one that was being held
+    /// back, and it is discarded here without ever having been a figure.
+    ///
     /// The cadence survives: `last_pass` is what `CADUCO` and `LOS OCHO · N Hz`
     /// are computed from, and how fast the port answers has nothing to do with
     /// which Performance is loaded.
     pub fn forget(&mut self) {
         self.readings.iter_mut().for_each(|reading| *reading = None);
+        self.waiting.iter_mut().for_each(Waiting::clear);
         self.next = 0;
         self.pass_started = Instant::now();
+    }
+
+    /// Whether anything is held waiting for the ancla to speak.
+    ///
+    /// The app reads it to ask for a beat out of turn: the sooner that beat, the
+    /// less time a figure spends behind. It costs port time in the lane that
+    /// already has priority over this one, so how often that is worth paying is
+    /// the ancla's call (ADR-0004, ADR-0005) and not this module's.
+    pub fn waiting_on_aval(&self) -> bool {
+        self.waiting.iter().any(Waiting::is_waiting)
+    }
+
+    /// The ancla says the loaded Performance is still the one the header names,
+    /// and its beat began at `beat_started`. Every address puts up the newest
+    /// reading that beat can speak for.
+    ///
+    /// The instant is the whole of the guarantee. A beat that began after a
+    /// reading and found the same name brackets that reading inside one sound; a
+    /// beat that began before it says nothing about it, so that one stays held
+    /// for the next beat. Returns whether anything moved, so a caller only
+    /// redraws when there is something to redraw.
+    pub fn vouch(&mut self, beat_started: Instant) -> bool {
+        let mut drew = false;
+        for (slot, waiting) in self.waiting.iter_mut().enumerate() {
+            if let Some(reading) = waiting.release(beat_started) {
+                self.readings[slot] = Some(reading);
+                drew = true;
+            }
+        }
+        drew
     }
 
     /// The five figures of one operator, 1-8.
@@ -262,6 +397,15 @@ mod tests {
     use crate::owner::{PortOwner, Request, Served};
     use crate::table::Provenance;
 
+    /// One whole pass, vouched for by an ancla that found the same name — the
+    /// steady state of a keyboard sitting there with nobody changing anything.
+    /// Written out here so that every test below has to say which of the two it
+    /// wants: forty-two answers, or forty-two figures.
+    fn vouched_pass(ring: &mut WideRing, owner: &mut PortOwner<FakeModx>) {
+        ring.pass(&mut asking(owner)).unwrap();
+        ring.vouch(Instant::now());
+    }
+
     /// Drive a ring off a `PortOwner`, the way the app does.
     fn asking(
         owner: &mut PortOwner<FakeModx>,
@@ -304,7 +448,7 @@ mod tests {
         let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
         let mut ring = WideRing::new(1);
 
-        ring.pass(&mut asking(&mut owner)).unwrap();
+        vouched_pass(&mut ring, &mut owner);
 
         // The fase 0c Performance: algorithm byte `01` (algorithm 2 on the screen)
         // and Op3 at 75, Op4 at 99, the other six at 0.
@@ -377,7 +521,7 @@ mod tests {
     fn keeps_the_last_reading_when_an_address_does_not_answer() {
         let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
         let mut ring = WideRing::new(1);
-        ring.pass(&mut asking(&mut owner)).unwrap();
+        vouched_pass(&mut ring, &mut owner);
         let first = ring.operator(1).level.expect("Op1's Level answered");
 
         // The next address the ring asks for is Op1's Level, and it goes
@@ -415,7 +559,7 @@ mod tests {
     fn forgetting_empties_every_figure_at_once_and_keeps_the_cadence() {
         let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
         let mut ring = WideRing::new(1);
-        ring.pass(&mut asking(&mut owner)).unwrap();
+        vouched_pass(&mut ring, &mut owner);
         assert!(ring.algorithm().is_some());
         let cadence = ring.last_pass().expect("one pass closed");
 
@@ -436,6 +580,276 @@ mod tests {
         // How fast the port answers has nothing to do with which sound is loaded.
         assert_eq!(ring.last_pass(), Some(cadence));
         assert_eq!(ring.next_address(), ring.addresses()[0].address);
+    }
+
+    /// #20, the whole of it: the pass that straddles a Performance change.
+    ///
+    /// The capture on the real MODX8 showed OP1 and OP2 carrying the old sound's
+    /// Levels, re-roled by the new sound's algorithm, in the new sound's layout,
+    /// under the old sound's name — every card stamped `SONDEADO`. This drives
+    /// exactly that: half a pass answered by one Performance and half by another,
+    /// with the ancla none the wiser. Nothing the second half said may reach the
+    /// screen.
+    #[test]
+    fn a_pass_that_straddles_a_performance_change_draws_nothing_of_the_new_sound() {
+        let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
+        let mut ring = WideRing::new(1);
+        vouched_pass(&mut ring, &mut owner);
+
+        // What is on screen, and what the header's name belongs to.
+        let before: Vec<u32> = (1..=OPERATORS)
+            .map(|op| ring.operator(op).level.unwrap().value)
+            .collect();
+        assert_eq!(before, vec![0, 0, 75, 99, 0, 0, 0, 0]);
+        assert_eq!(ring.algorithm().unwrap().value, 0x01);
+
+        // Twenty steps of the next pass: operators 1 to 4, all answered by the
+        // Performance that is loaded now.
+        {
+            let mut ask = asking(&mut owner);
+            for _ in 0..20 {
+                assert!(!ring.step(&mut ask).unwrap());
+            }
+        }
+
+        // Somebody loads another Performance. Not one byte is emitted, so the
+        // ancla will not know for up to a second — and the ring keeps asking.
+        {
+            let fake = owner.port_mut();
+            fake.load_performance("FM Warm Brass");
+            fake.set(Address::new(0x48, 0x00, 0x4F), &[0x10]);
+            fake.set(Address::operator(3, 1, 0x1A), &[96]);
+            fake.set(Address::operator(5, 1, 0x1A), &[77]);
+            fake.set(Address::operator(7, 1, 0x1A), &[87]);
+        }
+
+        // The other twenty-two: operators 5 to 8, the algorithm and the feedback,
+        // all answered by a sound the header is not naming.
+        ring.pass(&mut asking(&mut owner)).unwrap();
+
+        // The chimera, refused. Every figure on the diagram is still one the old
+        // Performance answered, and the algorithm the layout is drawn from has
+        // not moved either — so no Level can be re-roled by a topology that
+        // belongs to a different sound.
+        let after: Vec<u32> = (1..=OPERATORS)
+            .map(|op| ring.operator(op).level.unwrap().value)
+            .collect();
+        assert_eq!(after, before, "a Level of the new sound reached the screen");
+        assert_eq!(ring.algorithm().unwrap().value, 0x01);
+        assert!(
+            ring.waiting_on_aval(),
+            "the new sound's answers were drawn instead of held",
+        );
+
+        // And when the ancla finally notices, they go out with everything else
+        // without ever having been a figure.
+        ring.forget();
+        assert!(!ring.waiting_on_aval());
+        assert!(ring.algorithm().is_none());
+        assert!(!ring.vouch(Instant::now()), "a discarded reading came back");
+    }
+
+    /// The same straddled pass, with the algorithm byte holding still.
+    ///
+    /// This is the case that separates the aval from the cheap fix #20 also
+    /// weighed — letting the ring invalidate itself when the algorithm number
+    /// moves. Two Performances can share an algorithm and differ in every Level,
+    /// and then that fix sees nothing at all and draws the chimera in full. The
+    /// aval never looks at the algorithm: it holds whatever changed, and the
+    /// algorithm is just one of the forty-two addresses it holds.
+    #[test]
+    fn a_performance_change_that_keeps_the_algorithm_is_held_back_all_the_same() {
+        let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
+        let mut ring = WideRing::new(1);
+        vouched_pass(&mut ring, &mut owner);
+
+        let before: Vec<u32> = (1..=OPERATORS)
+            .map(|op| ring.operator(op).level.unwrap().value)
+            .collect();
+        assert_eq!(before, vec![0, 0, 75, 99, 0, 0, 0, 0]);
+
+        // Operators 1 to 4, answered by the Performance that is loaded now.
+        {
+            let mut ask = asking(&mut owner);
+            for _ in 0..20 {
+                assert!(!ring.step(&mut ask).unwrap());
+            }
+        }
+
+        // Another Performance, on the same algorithm. The one byte a canary
+        // would have watched does not move.
+        {
+            let fake = owner.port_mut();
+            fake.load_performance("FM Warm Brass");
+            fake.set(Address::operator(5, 1, 0x1A), &[77]);
+            fake.set(Address::operator(6, 1, 0x1A), &[64]);
+            fake.set(Address::operator(7, 1, 0x1A), &[87]);
+            fake.set(Address::operator(8, 1, 0x1A), &[42]);
+        }
+        ring.pass(&mut asking(&mut owner)).unwrap();
+
+        // Four Levels of a sound the header is not naming, and not one of them
+        // on the screen — with the algorithm exactly where it was throughout.
+        let after: Vec<u32> = (1..=OPERATORS)
+            .map(|op| ring.operator(op).level.unwrap().value)
+            .collect();
+        assert_eq!(after, before, "a Level of the new sound reached the screen");
+        assert_eq!(
+            ring.algorithm().unwrap().value,
+            0x01,
+            "the algorithm moved, so this test proved the wrong thing",
+        );
+        assert!(ring.waiting_on_aval());
+    }
+
+    #[test]
+    fn a_reading_that_repeats_the_drawn_number_asks_for_no_aval() {
+        let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
+        let mut ring = WideRing::new(1);
+        vouched_pass(&mut ring, &mut owner);
+
+        // The keyboard sitting there, answering the same forty-two numbers. Not
+        // one of them waits on anything: this is the steady state, and it costs
+        // the ancla nothing.
+        let stamped = ring.operator(3).level.unwrap();
+        ring.pass(&mut asking(&mut owner)).unwrap();
+
+        assert!(!ring.waiting_on_aval());
+        let again = ring.operator(3).level.unwrap();
+        assert_eq!(again.value, stamped.value);
+        assert!(
+            again.at >= stamped.at,
+            "the figure did not take a fresh stamp"
+        );
+    }
+
+    #[test]
+    fn a_changed_number_waits_for_the_ancla_and_the_old_one_stays_up() {
+        let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
+        let mut ring = WideRing::new(1);
+        vouched_pass(&mut ring, &mut owner);
+
+        // Somebody turns Op3's Level. Whether that was a hand or a new sound is
+        // exactly what these forty-two addresses cannot say.
+        owner.port_mut().set(Address::operator(3, 1, 0x1A), &[42]);
+        ring.pass(&mut asking(&mut owner)).unwrap();
+
+        assert!(ring.waiting_on_aval());
+        assert_eq!(
+            ring.operator(3).level.unwrap().value,
+            75,
+            "an unvouched number was drawn",
+        );
+
+        // The ancla beats, finds the same name, and the number is a figure.
+        assert!(ring.vouch(Instant::now()));
+        assert!(!ring.waiting_on_aval());
+        assert_eq!(ring.operator(3).level.unwrap().value, 42);
+    }
+
+    /// A hand that keeps moving must not outrun the aval.
+    ///
+    /// A beat costs ~40 ms and a pass ~100 ms, so a beat that starts after one
+    /// reading routinely lands after the *next* one has already arrived. If the
+    /// ring kept only the newest, every one of those beats would be handed a
+    /// reading it cannot speak for, the one it could speak for would be gone, and
+    /// the figure would sit still for as long as the dial kept turning. The
+    /// figure lags by a beat — that is the price in ADR-0005 — but it moves.
+    #[test]
+    fn a_dial_that_keeps_turning_is_not_starved_by_the_beat_it_waits_for() {
+        let mut owner = PortOwner::new({
+            let mut fake = FakeModx::init_normal_fmx();
+            fake.set_latency(Latency::Idle);
+            fake
+        });
+        let mut ring = WideRing::new(1);
+        vouched_pass(&mut ring, &mut owner);
+        assert_eq!(ring.operator(3).level.unwrap().value, 75);
+
+        // Four turns of the dial, each with a beat that begins before the pass
+        // that reads it and finishes after — the losing race, every time.
+        let mut drawn = Vec::new();
+        for level in [70u8, 65, 60, 55] {
+            let beat_started = Instant::now();
+            owner
+                .port_mut()
+                .set(Address::operator(3, 1, 0x1A), &[level]);
+            ring.pass(&mut asking(&mut owner)).unwrap();
+            ring.vouch(beat_started);
+            drawn.push(ring.operator(3).level.unwrap().value);
+        }
+
+        // One behind the hand throughout, and never stuck.
+        assert_eq!(drawn, vec![75, 70, 65, 60], "the figure stopped following");
+
+        // The hand stops. The next beat puts the figure on the number the dial
+        // is actually on, and there is nothing left waiting.
+        assert!(ring.vouch(Instant::now()));
+        assert_eq!(ring.operator(3).level.unwrap().value, 55);
+        assert!(!ring.waiting_on_aval());
+    }
+
+    #[test]
+    fn an_aval_does_not_reach_a_reading_taken_after_the_beat_began() {
+        let mut owner = PortOwner::new({
+            let mut fake = FakeModx::init_normal_fmx();
+            // Two milliseconds a reply, so the pass below is unambiguously later
+            // than the instant taken before it.
+            fake.set_latency(Latency::Idle);
+            fake
+        });
+        let mut ring = WideRing::new(1);
+        vouched_pass(&mut ring, &mut owner);
+
+        // The beat starts here — before the reading it is being asked to vouch
+        // for, so it brackets nothing and says nothing about it.
+        let beat_started = Instant::now();
+        owner.port_mut().set(Address::operator(3, 1, 0x1A), &[42]);
+        ring.pass(&mut asking(&mut owner)).unwrap();
+
+        assert!(
+            !ring.vouch(beat_started),
+            "a beat vouched for its own future"
+        );
+        assert_eq!(ring.operator(3).level.unwrap().value, 75);
+
+        // The next one began after it, and that one can.
+        assert!(ring.vouch(Instant::now()));
+        assert_eq!(ring.operator(3).level.unwrap().value, 42);
+    }
+
+    #[test]
+    fn a_change_that_reverts_before_an_aval_never_happened() {
+        let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
+        let mut ring = WideRing::new(1);
+        vouched_pass(&mut ring, &mut owner);
+
+        owner.port_mut().set(Address::operator(3, 1, 0x1A), &[42]);
+        ring.pass(&mut asking(&mut owner)).unwrap();
+        assert!(ring.waiting_on_aval());
+
+        owner.port_mut().set(Address::operator(3, 1, 0x1A), &[75]);
+        ring.pass(&mut asking(&mut owner)).unwrap();
+
+        assert!(!ring.waiting_on_aval(), "the ring is still waiting on a 42");
+        assert_eq!(ring.operator(3).level.unwrap().value, 75);
+    }
+
+    #[test]
+    fn nothing_is_drawn_before_the_first_aval_of_the_session() {
+        let mut owner = PortOwner::new(FakeModx::init_normal_fmx());
+        let mut ring = WideRing::new(1);
+
+        // Forty-two answers and an empty diagram: a first reading fills a dash
+        // rather than replacing a number, but a dash is not a sound either, and
+        // until the ancla has named one there is nothing to hang it on.
+        ring.pass(&mut asking(&mut owner)).unwrap();
+        assert!(ring.waiting_on_aval());
+        assert!(ring.algorithm().is_none());
+        assert!(ring.operator(3).level.is_none());
+
+        assert!(ring.vouch(Instant::now()));
+        assert_eq!(ring.operator(3).level.unwrap().value, 75);
     }
 
     #[test]
