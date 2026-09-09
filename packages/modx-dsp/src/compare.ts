@@ -15,7 +15,7 @@ import { spectrum } from './spectrum';
  * a different result from a hundred of them, and a maximum cannot tell those two
  * apart — nor can it say whether the difference sits on the peak or down in the
  * noise. What decides the ticket is where the differences live relative to fase
- * 0's floor (−100 to −109 dB) and its oscillator spurs (−72 dB).
+ * 0's floor (−100 to −109 dB rel. al pico) and its oscillator spurs (−72 dB).
  *
  * It is deliberately **not** a verdict. Whether a given difference means «pause
  * the ancla» is a decision that gets written down with the numbers beside it, and
@@ -28,9 +28,15 @@ export interface WindowComparison {
   readonly bins: number;
   readonly peakDbA: number;
   readonly peakDbB: number;
-  /** The noise floor of each, relative to its own peak, as fase 0 reports it. */
-  readonly floorDbA: number;
-  readonly floorDbB: number;
+  /**
+   * The noise floor of each **relative to its own peak**, as fase 0 reports it —
+   * not the app's `FLOOR`, which is absolute dBFS. The qualifier is in the name
+   * and in the printed row because these two figures exist to be read beside
+   * fase 0's −100 to −109 dB rel. al pico, and two windows of the same note
+   * played a decibel apart have to be comparable.
+   */
+  readonly relFloorDbA: number;
+  readonly relFloorDbB: number;
   /** Absolute dB difference per bin: p50, p99, p99.9 and the largest. */
   readonly p50Db: number;
   readonly p99Db: number;
@@ -78,10 +84,11 @@ const THRESHOLDS_DB = [0.1, 1, 6];
  * floor.
  *
  * **Not fase 0's number.** The spike's −100 to −109 dB floor is a figure of the
- * **4 096** window; at 65 536 each bin gathers a sixteenth of the bandwidth and
- * the median goes down with it, which #10 measured over the golden vectors:
- * −129,9 dB for the sine, −123,9 for `modlow`, −111,4 for `modhigh` and −100,6
- * for `ratio1414`. So −100 sits at or above the worst of the four and comfortably
+ * **4 096** window, rel. al pico; at 65 536 each bin gathers a sixteenth of the
+ * bandwidth and the median goes down with it, which #10 measured over the golden
+ * vectors, also rel. al pico: −129,9 dB for the sine, −123,9 for `modlow`,
+ * −111,4 for `modhigh` and −100,6 for `ratio1414`. So −100 sits at or above the
+ * worst of the four and comfortably
  * above the rest — conservative in the direction that matters, since a bin it
  * keeps is unambiguously content while a bin it drops might merely be quiet.
  *
@@ -151,8 +158,8 @@ export function compareWindows(
     bins: left.db.length,
     peakDbA: left.peakDb,
     peakDbB: right.peakDb,
-    floorDbA: left.floorDb,
-    floorDbB: right.floorDb,
+    relFloorDbA: left.floorDb - left.peakDb,
+    relFloorDbB: right.floorDb - right.peakDb,
     p50Db: percentile(sorted, 0.5),
     p99Db: percentile(sorted, 0.99),
     p999Db: percentile(sorted, 0.999),
@@ -173,7 +180,10 @@ export function formatComparison(found: WindowComparison): string {
     ['Hz por bin', found.binHz.toFixed(3)],
     ['bins comparados', `${found.bins}`],
     ['pico A / B (dBFS)', `${found.peakDbA.toFixed(2)} / ${found.peakDbB.toFixed(2)}`],
-    ['suelo A / B (dB)', `${found.floorDbA.toFixed(2)} / ${found.floorDbB.toFixed(2)}`],
+    [
+      'suelo A / B (dB rel. al pico)',
+      `${found.relFloorDbA.toFixed(2)} / ${found.relFloorDbB.toFixed(2)}`,
+    ],
     ['diferencia p50 (dB)', found.p50Db.toFixed(3)],
     ['diferencia p99 (dB)', found.p99Db.toFixed(3)],
     ['diferencia p99,9 (dB)', found.p999Db.toFixed(3)],

@@ -198,7 +198,7 @@ export class AudioService {
   /** The frequency the trace was triggered at, or `null` with no note. Tenths. */
   readonly frequencyHz = signal<number | null>(null);
 
-  /** The noise floor of the vista viva relative to its peak, whole decibels. */
+  /** The noise floor of the vista viva in absolute dBFS, whole decibels. */
   readonly floorDb = signal<number | null>(null);
 
   /** The comb line the chip names, or `null` when the comb is not in this sound. */

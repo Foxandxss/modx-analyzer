@@ -94,9 +94,15 @@ export class SignalViews {
     this.stopped() ? 'STOPPED · NO DEVICE' : `LIVE · ${this.fps()}`,
   );
 
+  /**
+   * `FLOOR −66 dBFS`: the median bin, absolute, so this figure can be read
+   * beside the floor of any other panel and beside the peak above it. It does
+   * not move when the same sound is played louder — that was the old
+   * relative-to-peak reading, which made a floor that never changed appear to.
+   */
   protected readonly floor = computed(() => {
     const db = this.audio.floorDb();
-    return db === null ? `${DEAD_MARK} dB` : `${db} dB`;
+    return db === null ? `${DEAD_MARK} dBFS` : `${db} dBFS`;
   });
 
   /**

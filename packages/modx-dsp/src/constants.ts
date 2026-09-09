@@ -67,7 +67,8 @@ export const HARMONIC_BARS = 16;
 
 /**
  * How far down a bar is drawn from the loudest line of the frame before it is
- * nothing: 72 dB. It puts the fase 0 noise floor (−100 to −109 dB) off the
+ * nothing: 72 dB. It puts the fase 0 noise floor (−100 to −109 dB rel. al pico,
+ * which is the same reference the bars are drawn against) off the
  * bottom, so a harmonic that is not there has no bar at all rather than a stub
  * of floor — and it keeps the whole odd skeleton of the modhigh vector, whose
  * quietest drawn harmonic is the 15th at −25 dB, comfortably on.

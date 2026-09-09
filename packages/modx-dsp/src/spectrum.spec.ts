@@ -62,7 +62,38 @@ describe('spectrum', () => {
   it('will not make a spectrum out of fewer samples than the window', () => {
     expect(() => spectrum(new Float32Array(1024))).toThrow();
   });
+
+  it('reports the floor in dBFS, so playing the same sound louder does not move it', () => {
+    // The noise is the same noise in both windows — one cable, one converter —
+    // and only the note is 12 dB louder, which is what «played louder» means on
+    // a keyboard. An absolute floor says so; the old relative reading moved by
+    // the whole 12 dB and made a floor that never changed appear to.
+    const quiet = spectrum(noisyTone(0.1));
+    const loud = spectrum(noisyTone(0.4));
+
+    expect(loud.peakDb - quiet.peakDb).toBeCloseTo(12, 0);
+    expect(loud.floorDb).toBeCloseTo(quiet.floorDb, 1);
+    expect(loud.floorDb - loud.peakDb).toBeLessThan(quiet.floorDb - quiet.peakDb - 11);
+  });
 });
+
+/**
+ * A tone of the given amplitude over a fixed noise floor.
+ *
+ * The noise is deterministic and identical in every call: what varies between
+ * two of these windows is only how hard the note was played.
+ */
+function noisyTone(amplitude: number): Float32Array {
+  const samples = new Float32Array(LIVE_WINDOW);
+  let seed = 1;
+  for (let index = 0; index < LIVE_WINDOW; index += 1) {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    const noise = (seed / 2147483648 - 0.5) * 2e-4;
+    const tone = amplitude * Math.sin((2 * Math.PI * LIVE_BIN_HZ * 93 * index) / SAMPLE_RATE);
+    samples[index] = tone + noise;
+  }
+  return samples;
+}
 
 function naiveDft(values: Float64Array): { re: Float64Array; im: Float64Array } {
   const size = values.length;

@@ -68,7 +68,11 @@ export interface Partial {
  */
 export function findPartials(spectrum: Spectrum, fundamentalHz: number | null): Partial[] {
   const { db, binHz, peakDb, floorDb } = spectrum;
-  const cutoff = Math.max(peakDb + CANDIDATE_FLOOR_DB, peakDb + floorDb + OVER_FLOOR_DB);
+  // `floorDb` is absolute dBFS and so is `OVER_FLOOR_DB` above it; only the
+  // candidate cutoff is relative to the peak. The comb still fires under a live
+  // floor that sits sixty decibels above the golden vectors' because this
+  // threshold is the signal's own, not a share of how loud somebody played.
+  const cutoff = Math.max(peakDb + CANDIDATE_FLOOR_DB, floorDb + OVER_FLOOR_DB);
 
   const candidates: { bin: number; hz: number; db: number }[] = [];
   for (let bin = 1; bin + 1 < db.length; bin += 1) {

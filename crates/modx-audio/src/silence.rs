@@ -60,8 +60,9 @@ mod tests {
     }
 
     fn quiet_music() -> Vec<f32> {
-        // −120 dBFS: far below anything the fase 0 floor saw (−104 dB), and still
-        // not silence. A threshold detector would call this a dead cable.
+        // −120 dBFS: far below anything the fase 0 floor saw (−104 dB rel. al
+        // pico, which on those vectors is about −130 dBFS), and still not
+        // silence. A threshold detector would call this a dead cable.
         vec![1e-6; BLOCK_FRAMES as usize * CHANNELS as usize]
     }
 

@@ -6,7 +6,7 @@ cadena limpia; cada cifra que los tests afirman tiene detrás una línea de
 
 | fichero | qué es | lo que fija |
 | --- | --- | --- |
-| `fmx-1op-sine.wav` | un operador, ratio 1.0 | suelo de ruido −105 dB; el 3.er armónico a −84 dB es el único contenido armónico real; **los dos picos más altos después de la fundamental son el comb del generador**, a −72 dB |
+| `fmx-1op-sine.wav` | un operador, ratio 1.0 | suelo de ruido −105 dB rel. al pico (−130 dBFS, que es lo que dice `FLOOR`); el 3.er armónico a −84 dB es el único contenido armónico real; **los dos picos más altos después de la fundamental son el comb del generador**, a −72 dB |
 | `fmx-ratio2-modlow.wav` | ratio 2:1, modulador `Level ≈ 40` | sólo armónicos impares: 1 a 0 dB, 3 a −29,5, 5 a −68, 7 a −82 |
 | `fmx-ratio2-modhigh.wav` | ratio 2:1, modulador `Level ≈ 90` | el pico ya no es la fundamental sino el **9.º armónico**; impares hasta el 21 |
 | `fmx-ratio1414.wav` | `Coarse 1`/`Fine 41`, ratio medido 1,4103 | once parciales inarmónicas en `\|fc ± k·fm\|`, ninguna de ellas armónico |
@@ -21,8 +21,9 @@ escribe `node golden/trim.mjs <carpeta wav del spike>`, y hace tres cosas, cada 
   después del ataque del más lento de los cuatro —la senoide no arranca hasta 0,844 s— así que el
   vector es régimen permanente desde su primera muestra. Deja sitio para la ventana de 65 536 de la
   Medida con una ventana entera de margen.
-- **Se mantiene float32.** Estos vectores tienen el suelo de ruido en −105 dB; 16 bits pone el suyo
-  en −96 dB y sustituiría al número que se está midiendo.
+- **Se mantiene float32.** Estos vectores tienen el suelo de ruido en −105 dB rel. al pico, que
+  sobre un pico de −25 dBFS son unos −130 dBFS; 16 bits pone el suyo en −96 dBFS y sustituiría al
+  número que se está midiendo.
 
 ## Dos cosas que conviene saber antes de usarlos
 

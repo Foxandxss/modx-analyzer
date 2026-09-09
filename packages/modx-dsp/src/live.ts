@@ -29,7 +29,7 @@ export interface LiveTrama {
   readonly fundamentalHz: number | null;
   /** The strongest bin, in dBFS. The working level of fase 0 is −15 to −25. */
   readonly peakDb: number;
-  /** The noise floor relative to the peak: what the readout says as `SUELO`. */
+  /** The noise floor in absolute dBFS: what the readout says as `FLOOR`. */
   readonly floorDb: number;
   /**
    * The curve on the `1×–32×` log axis, in dB relative to the peak, or `null`
@@ -49,7 +49,9 @@ export interface LiveTrama {
 export const NO_TRAMA: LiveTrama = {
   fundamentalHz: null,
   peakDb: -Infinity,
-  floorDb: 0,
+  // Not 0: in absolute dBFS that is full scale, and a dead frame claiming a
+  // full-scale floor is a claim. Nothing entered, so there is no level to report.
+  floorDb: -Infinity,
   curve: null,
   harmonics: null,
   partials: [],

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ARTEFACT_HZ, MEASURE_WINDOW } from './constants';
 import { GOLDEN_F0, GoldenName, readGolden } from './golden';
+import { liveTrama } from './live';
 import { Medida, medida } from './measure';
 import { Partial } from './partials';
 
@@ -20,9 +21,11 @@ import { Partial } from './partials';
  *   bins that goes away with the window. These tests read 261.763 Hz on all four
  *   vectors, which is the number fase 0 published, to the milli-hertz.
  * - **The noise floor does not.** «−100 a −109 dB» is a figure of the 4 096
- *   window: at 65 536 each bin holds a sixteenth of the bandwidth and the median
- *   drops with it, to −100 … −130 dB. It is the same silence measured with a
- *   finer instrument, and the two numbers must never be compared.
+ *   window and rel. al pico: at 65 536 each bin holds a sixteenth of the
+ *   bandwidth and the median drops with it, by some twenty-five decibels. It is
+ *   the same silence measured with a finer instrument, and the two numbers must
+ *   never be compared. What `floorDb` carries here is absolute dBFS, so the
+ *   figure to hold it against is the same vector's floor at 4 096, not fase 0's.
  */
 
 const NAMES: readonly GoldenName[] = [
@@ -37,6 +40,11 @@ const INHARMONIC_LINES = [
   107.404, 630.93, 845.761, 1214.944, 1369.287, 1584.127, 1738.47, 1953.287, 2107.653, 2322.483,
   2476.813,
 ];
+
+/** The same vector's floor at 4 096, so the two windows can be compared. */
+function liveFloorDb(name: GoldenName): number {
+  return liveTrama(readGolden(name), GOLDEN_F0).floorDb;
+}
 
 function measured(name: GoldenName): Medida {
   const taken = medida(readGolden(name), GOLDEN_F0);
@@ -95,12 +103,15 @@ describe('la medida', () => {
 
   it('mide un suelo más bajo que a 4 096, porque el bin es más estrecho', () => {
     // No es menos ruido: es el mismo silencio medido con un bin dieciséis veces
-    // más estrecho. Nunca se compara con el −105.4 dB de la fase 0.
+    // más estrecho. En dBFS absolutos —lo que dice `FLOOR`— los cuatro caen
+    // entre −155 y −124; el −105.4 dB de la fase 0 es rel. al pico y a 4 096, y
+    // no se compara con ninguno de estos.
     for (const name of NAMES) {
       const taken = measured(name);
 
-      expect(taken.floorDb, name).toBeLessThan(-99);
-      expect(taken.floorDb, name).toBeGreaterThan(-135);
+      expect(taken.floorDb, name).toBeLessThan(-120);
+      expect(taken.floorDb, name).toBeGreaterThan(-160);
+      expect(taken.floorDb, name).toBeLessThan(liveFloorDb(name));
     }
   });
 
@@ -130,7 +141,8 @@ describe('fmx-1op-sine a 65 536', () => {
 
   it('destapa el 5.º y el 7.º, que a 4 096 estaban bajo el suelo', () => {
     // Lo que compra la ventana larga: a 4 096 el suelo de esta senoide está en
-    // −105 dB y estas dos líneas, a −85, quedaban dentro de la falda de fuga.
+    // −105 dB rel. al pico y estas dos líneas, a −85, quedaban dentro de la
+    // falda de fuga.
     // No contradice a la fase 0: la contesta con más resolución.
     expect(lineAt(taken, 1308.82)?.harmonic).toBe(5);
     expect(lineAt(taken, 1832.34)?.harmonic).toBe(7);

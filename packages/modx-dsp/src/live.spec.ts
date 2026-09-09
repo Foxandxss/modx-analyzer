@@ -79,11 +79,23 @@ describe('el comb del generador', () => {
 describe('fmx-1op-sine — un operador, ratio 1.0', () => {
   const trama = analyse('fmx-1op-sine');
 
-  it('tiene el suelo de ruido que midió la fase 0', () => {
-    // −105.4 dB rel. al pico, sección 3. Two decibels of room for a window that
-    // is not the same window.
-    expect(trama.floorDb).toBeGreaterThan(-107.5);
-    expect(trama.floorDb).toBeLessThan(-103);
+  it('da el suelo en dBFS absolutos, no relativo al pico', () => {
+    // `FLOOR` is one word with one meaning: the median bin in dBFS. On this
+    // vector, whose peak sits at −25.6 dBFS, that is about −130 — sixty
+    // decibels under the live USB stream's floor, which is exactly why the two
+    // can only be compared once both are absolute.
+    expect(trama.floorDb).toBeGreaterThan(-133);
+    expect(trama.floorDb).toBeLessThan(-128);
+    expect(trama.floorDb).toBeLessThan(trama.peakDb);
+  });
+
+  it('vuelve a la cifra de la fase 0 cuando se le devuelve el pico', () => {
+    // −105.4 dB **rel. al pico**, sección 3: the qualifier is one subtraction.
+    // Two decibels of room for a window that is not the same window.
+    const relativeToPeak = trama.floorDb - trama.peakDb;
+
+    expect(relativeToPeak).toBeGreaterThan(-107.5);
+    expect(relativeToPeak).toBeLessThan(-103);
   });
 
   it('es una senoide: la fundamental y, muy abajo, el tercer armónico', () => {

@@ -62,7 +62,7 @@ describe('SignalViews', () => {
   it('claims no floor and no rate before a single bloque', async () => {
     const { text } = await renderViews();
 
-    expect(text('.view__readout')).toContain(`FLOOR ${DEAD_MARK} dB`);
+    expect(text('.view__readout')).toContain(`FLOOR ${DEAD_MARK} dBFS`);
     expect(text('.view__live')).toBe(`LIVE · ${DEAD_MARK} fps`);
   });
 
@@ -72,9 +72,10 @@ describe('SignalViews', () => {
     await hold(261.626);
 
     // A synthetic tone has no floor to speak of; what is asserted is that the
-    // readout stopped being a dash and became a number of decibels under the
-    // peak, which is what `FLOOR` means.
-    expect(text('.view__readout')).toMatch(/FLOOR -\d+ dB/);
+    // readout stopped being a dash and became a level in dBFS, which is what
+    // `FLOOR` means everywhere — the level-independence of that reading is the
+    // DSP package's test, on a signal that has a floor.
+    expect(text('.view__readout')).toMatch(/FLOOR -\d+ dBFS/);
   });
 
   it('names the comb with its frequency instead of hiding it', async () => {

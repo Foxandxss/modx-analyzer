@@ -5,12 +5,13 @@ import { fft } from './fft';
  * The spectrum of a window of samples: one Hann window, one FFT, magnitudes in
  * decibels.
  *
- * **Two references, and they are not the same thing.** The bins are in dBFS —
- * a full-scale sine reads 0 dB — because that is a property of the signal and
- * does not move when the note does. The floor is reported **relative to the
- * peak**, which is how fase 0 measured it (`suelo de ruido (mediana de bins):
- * −105.4 dB rel. al pico`) and how the readout says it (`SUELO −104 dB`). Mixing
- * the two is how a floor that never changed appears to.
+ * **One reference: full scale.** Both the bins and the floor are in dBFS — a
+ * full-scale sine reads 0 dB — because that is a property of the signal and does
+ * not move when somebody plays louder. Fase 0 published its floors the other way
+ * (`suelo de ruido (mediana de bins): −105.4 dB rel. al pico`), and every quote
+ * of those figures carries that qualifier: subtract {@link Spectrum.peakDb} from
+ * the floor below and the fase 0 number comes back. Comparing the two references
+ * without the qualifier is how a floor that never changed appears to.
  *
  * The window is Hann, cached per size, and its amplitude correction is applied so
  * that a sine of amplitude A lands at A and not at A/2: the coherent gain of a
@@ -46,8 +47,12 @@ export interface Spectrum {
   /** The bin the peak fell in, before any interpolation. */
   readonly peakBin: number;
   /**
-   * The noise floor **relative to the peak**: the median bin, which is what fase
-   * 0 §3 reports for each of the four vectors (−100 to −109 dB).
+   * The noise floor: the median bin, in **absolute dBFS**.
+   *
+   * One word, one meaning — the readout, the live frame and the capture all say
+   * `FLOOR` about this figure, so a floor from one panel can be compared with a
+   * floor from another. Fase 0 §3's −100 to −109 dB are the same medians taken
+   * `rel. al pico`; this figure minus {@link peakDb} is that one.
    */
   readonly floorDb: number;
 }
@@ -95,7 +100,7 @@ export function spectrum(
     }
   }
 
-  return { db, binHz: sampleRate / window, peakDb, peakBin, floorDb: medianOf(db) - peakDb };
+  return { db, binHz: sampleRate / window, peakDb, peakBin, floorDb: medianOf(db) };
 }
 
 /**

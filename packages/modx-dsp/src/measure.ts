@@ -38,7 +38,11 @@ export interface Medida {
   readonly fundamentalHz: number | null;
   /** The strongest bin, in dBFS. Fase 0's working level is −15 to −25. */
   readonly peakDb: number;
-  /** The noise floor relative to the peak, the way fase 0 §3 reports it. */
+  /**
+   * The noise floor in absolute dBFS, the same word and the same figure as the
+   * vista viva's `FLOOR`. Fase 0 §3's `rel. al pico` numbers are this minus
+   * {@link peakDb}.
+   */
   readonly floorDb: number;
   /** The lines found, strongest first, each one content or comb. */
   readonly partials: readonly Partial[];
