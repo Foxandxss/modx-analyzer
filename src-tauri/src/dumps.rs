@@ -59,7 +59,7 @@ pub struct DumpView {
     /// From the Bulk Dump Request to the end of the stream. `None` when the dump
     /// never ran, so the front draws the dash and not a zero.
     pub took_ms: Option<u64>,
-    /// One line in Spanish saying what went wrong, or nothing when nothing did.
+    /// One line saying what went wrong, or nothing when nothing did.
     pub reason: Option<String>,
     /// What the 123 messages and 7 669 bytes of fase 0c were, so the front can
     /// say `123 DE 123` without hardcoding the pair.
@@ -155,14 +155,14 @@ fn take_and_file(app: &AppHandle) -> DumpView {
     let taken = match keyboard.dump(dump::EDIT_BUFFER) {
         Ok(taken) => taken,
         Err(error) => {
-            return DumpView::failed(&folder, format!("no se pudo pedir el volcado: {error}"))
+            return DumpView::failed(&folder, format!("could not request the dump: {error}"))
         }
     };
 
     if taken.is_empty() {
         return DumpView::failed(
             &folder,
-            "el teclado no contestó al volcado de 0E 25 00".to_owned(),
+            "the keyboard did not answer the 0E 25 00 dump".to_owned(),
         );
     }
 
@@ -185,7 +185,7 @@ fn take_and_file(app: &AppHandle) -> DumpView {
             took_ms: Some(taken.took.as_millis() as u64),
             reason: taken.is_short().then(|| {
                 format!(
-                    "volcado corto: {} de {} bytes. Mira Bulk Interval en [UTILITY] → MIDI I/O",
+                    "short dump: {} of {} bytes. Check Bulk Interval in [UTILITY] → MIDI I/O",
                     taken.bytes.len(),
                     dump::DOCUMENTED_BYTES
                 )
@@ -193,7 +193,7 @@ fn take_and_file(app: &AppHandle) -> DumpView {
             expected_messages: dump::DOCUMENTED_MESSAGES,
             expected_bytes: dump::DOCUMENTED_BYTES,
         },
-        Err(error) => DumpView::failed(&folder, format!("no se pudo escribir el volcado: {error}")),
+        Err(error) => DumpView::failed(&folder, format!("could not write the dump: {error}")),
     }
 }
 

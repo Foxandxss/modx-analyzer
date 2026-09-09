@@ -87,7 +87,7 @@ const LATENCY_HISTORY = 65536;
  * five seconds of them.
  *
  * **This is #23.** Some launches deliver a bloque hundreds of milliseconds late
- * and lose none of them (`HUECOS 0`, `DESORDEN 0` every time). A percentile taken
+ * and lose none of them (`GAPS 0`, `OUT OF ORDER 0` every time). A percentile taken
  * over a window that still contains one of those is reporting the launch and not
  * the bridge: at 132 bloques `p99` read 167,9 ms, and at 4 917 it still read
  * 150,2 ms, because a burst only falls under the 1 % once the run is a hundred

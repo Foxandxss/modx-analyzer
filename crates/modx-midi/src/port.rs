@@ -18,14 +18,14 @@ pub const PORT_NAME: &str = "MODX-1";
 pub enum PortError {
     /// The port is gone from enumeration, which is one of the two roads to
     /// `DESCONECTADO` (the other is three ancla timeouts in a row).
-    #[error("el puerto {0} no está en la enumeración")]
+    #[error("port {0} is not in the enumeration")]
     NotFound(String),
-    #[error("no se pudo abrir {port}: {reason}")]
+    #[error("could not open {port}: {reason}")]
     Open { port: String, reason: String },
-    #[error("no se pudo enviar: {0}")]
+    #[error("could not send: {0}")]
     Send(String),
     /// The owner thread died. Nothing recovers from this but a restart.
-    #[error("el dueño del puerto ya no está")]
+    #[error("the port owner is gone")]
     OwnerGone,
 }
 

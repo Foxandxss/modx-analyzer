@@ -379,7 +379,7 @@ export function fakeSweep(part: number, operator: number, changed: number[] = []
       al,
       address: terna(part, operator, al),
       value: answers ? 0 : null,
-      name: al < NAMED_OFFSETS ? `Parámetro ${hex(al)}` : null,
+      name: al < NAMED_OFFSETS ? `Parameter ${hex(al)}` : null,
       provenance: al >= RESERVED_AT ? 'documentado' : 'medido',
       reserved: al >= RESERVED_AT,
       changed: changed.includes(al),

@@ -65,7 +65,7 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
          cuerpo se encoge hasta lo que quede. Sólo aparece si las tiras fijas
          llegasen a no caber, y entonces vale más una barra que recortar en
          silencio lo que se pulsa, que es como se perdieron el pánico y
-         EXPORTAR. */
+         EXPORT. */
       overflow-y: auto;
     }
 

@@ -63,7 +63,7 @@ describe('AlertStrip', () => {
         bytes: 0,
         messages: 0,
         tookMs: null,
-        reason: 'el teclado no contestó al volcado de 0E 25 00',
+        reason: 'the keyboard did not answer the 0E 25 00 dump',
       }),
     );
 
@@ -79,7 +79,7 @@ describe('AlertStrip', () => {
     const { show } = await renderStrip();
 
     const text = await show(
-      dump({ state: 'short', bytes: 2480, messages: 40, reason: 'volcado corto' }),
+      dump({ state: 'short', bytes: 2480, messages: 40, reason: 'short dump' }),
     );
 
     expect(text).toContain('SHORT DUMP');

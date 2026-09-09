@@ -6,8 +6,8 @@ import { MEASURE_WINDOW } from './constants';
 /**
  * #14's runner, wearing a test's clothes.
  *
- * The two files come from the `EXPORTAR` button in the dev readout, taken on the
- * **same held note** — one with `SONDEO` running and one with it stopped — and
+ * The two files come from the `EXPORT` button in the dev readout, taken on the
+ * **same held note** — one with `POLLING` running and one with it stopped — and
  * they are raw `f32` little-endian mono, the same `encode_mono` the bloques cross
  * with and the same shape as the golden vectors.
  *

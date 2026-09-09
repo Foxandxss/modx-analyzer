@@ -40,18 +40,18 @@ describe('SweepReadout', () => {
   it('claims nothing before the first barrido', async () => {
     const { text, cells } = await renderSweep();
 
-    expect(text()).toContain('BARRIDO');
-    expect(text()).toContain('— · sin barrer');
+    expect(text()).toContain('SWEEP');
+    expect(text()).toContain('— · not swept');
     expect(cells()).toHaveLength(0);
   });
 
   it('sweeps the Part and the operator the buttons say', async () => {
     const sweep = await renderSweep();
 
-    await sweep.press('PARTE 1');
+    await sweep.press('PART 1');
     await sweep.press('OP 1');
     await sweep.press('OP 2');
-    await sweep.press('BARRER');
+    await sweep.press('SWEEP');
 
     expect(sweep.backend.sweepCalls).toEqual([{ part: 2, operator: 3 }]);
   });
@@ -59,8 +59,8 @@ describe('SweepReadout', () => {
   it('says at which block it went looking, in the keyboard own hex', async () => {
     const sweep = await renderSweep();
 
-    await sweep.press('PARTE 1');
-    const text = await sweep.press('BARRER');
+    await sweep.press('PART 1');
+    const text = await sweep.press('SWEEP');
 
     // Op1 of Part 2: `am = (0 << 4) | 1`.
     expect(text).toContain('49 01');
@@ -69,10 +69,10 @@ describe('SweepReadout', () => {
   it('draws every offset of the block, dashes and all', async () => {
     const sweep = await renderSweep();
 
-    await sweep.press('BARRER');
+    await sweep.press('SWEEP');
 
     expect(sweep.cells()).toHaveLength(47);
-    expect(sweep.text()).toContain('39 DE 47');
+    expect(sweep.text()).toContain('39 OF 47');
     // The eight the fake does not answer keep their shape and show the dash.
     const silent = sweep
       .cells()
@@ -90,10 +90,10 @@ describe('SweepReadout', () => {
     const sweep = await renderSweep();
     sweep.backend.sweepResult = (part, operator) => fakeSweep(part, operator, [0x1a]);
 
-    await sweep.press('BARRER');
+    await sweep.press('SWEEP');
 
-    expect(sweep.alerts()).toContain('CAMBIÓ 1A');
-    expect(sweep.alerts()).toContain('Parámetro 1A');
+    expect(sweep.alerts()).toContain('CHANGED 1A');
+    expect(sweep.alerts()).toContain('Parameter 1A');
     expect(
       sweep.cells().filter((cell) => cell.classList.contains('sweep__cell--changed')),
     ).toHaveLength(1);
@@ -103,13 +103,13 @@ describe('SweepReadout', () => {
   it('does not claim a comparison it never made', async () => {
     const sweep = await renderSweep();
 
-    const first = await sweep.press('BARRER');
-    expect(first).not.toContain('SIN CAMBIOS');
+    const first = await sweep.press('SWEEP');
+    expect(first).not.toContain('NO CHANGES');
 
     sweep.backend.sweep.update((pass) => (pass === null ? pass : { ...pass, compared: true }));
     await sweep.fixture.whenStable();
 
-    expect(sweep.text()).toContain('SIN CAMBIOS');
+    expect(sweep.text()).toContain('NO CHANGES');
   });
 
   it('shows the count climbing while the barrido is going and no table yet', async () => {
@@ -128,11 +128,11 @@ describe('SweepReadout', () => {
     });
     await sweep.fixture.whenStable();
 
-    expect(sweep.text()).toContain('12 DE 47');
+    expect(sweep.text()).toContain('12 OF 47');
     expect(sweep.cells()).toHaveLength(0);
     const barrer = Array.from(
       (sweep.fixture.nativeElement as HTMLElement).querySelectorAll('button'),
-    ).find((button) => (button.textContent ?? '').includes('BARRER'));
+    ).find((button) => (button.textContent ?? '').includes('SWEEP'));
     expect(barrer?.disabled).toBe(true);
   });
 
@@ -149,9 +149,9 @@ describe('SweepReadout', () => {
       offsets: fakeSweep(part, operator).offsets.map((offset) => ({ ...offset, value: null })),
     });
 
-    const text = await sweep.press('BARRER');
+    const text = await sweep.press('SWEEP');
 
-    expect(text).toContain('0 DE 47');
+    expect(text).toContain('0 OF 47');
     expect(sweep.cells()).toHaveLength(47);
   });
 });

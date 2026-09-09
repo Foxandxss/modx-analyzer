@@ -78,12 +78,12 @@ describe('FiguresColumn', () => {
         bytes: 0,
         messages: 0,
         tookMs: null,
-        reason: 'el teclado no contestó al volcado de 0E 25 00',
+        reason: 'the keyboard did not answer the 0E 25 00 dump',
       }),
     );
 
     expect(text).toContain('—');
-    expect(text).toContain('el teclado no contestó');
+    expect(text).toContain('the keyboard did not answer');
     expect(text).toContain(FOLDER);
     expect(text).not.toContain('0 B · 0 MSG');
   });

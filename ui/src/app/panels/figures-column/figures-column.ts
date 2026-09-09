@@ -69,7 +69,7 @@ export class FiguresColumn {
     return state === 'short' || state === 'failed';
   });
 
-  /** `7669 B · 123 MSJ`, or the dash while the keyboard has not answered. */
+  /** `7669 B · 123 MSG`, or the dash while the keyboard has not answered. */
   protected readonly line = computed(() => {
     const taken = this.dump();
     if (taken === null || taken.state === 'failed') {

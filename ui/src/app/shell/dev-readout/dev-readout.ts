@@ -23,40 +23,40 @@ import { DEAD_MARK } from '../../provenance/provenance';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="dev">
-      <span class="dev__label">PUENTE</span>
+      <span class="dev__label">BRIDGE</span>
       <span>{{ line() }}</span>
-      <span class="dev__label">LATENCIA</span>
+      <span class="dev__label">LATENCY</span>
       <span [class.dev__alert]="overBudget()">{{ latencyLine() }}</span>
       @if (brokenClock()) {
-        <span class="dev__alert">RELOJ ROTO</span>
+        <span class="dev__alert">BROKEN CLOCK</span>
       }
       @if (exactZeros()) {
-        <span class="dev__alert">CEROS EXACTOS</span>
+        <span class="dev__alert">EXACT ZEROS</span>
       }
       <span class="dev__label">AUDIO</span>
       <span [class.dev__alert]="audioState() !== 'alive'">{{ audioState().toUpperCase() }}</span>
-      <span class="dev__label">TRAMA</span>
+      <span class="dev__label">FRAME</span>
       <span>{{ tramaLine() }}</span>
-      <span class="dev__label">MEDIDA</span>
+      <span class="dev__label">CAPTURE</span>
       <span>{{ medidaLine() }}</span>
-      <span class="dev__label">VOLCADO</span>
+      <span class="dev__label">DUMP</span>
       <span>{{ dumpLine() }}</span>
-      <span class="dev__label">RELECTURA</span>
+      <span class="dev__label">REREAD</span>
       <span>{{ rereadLine() }}</span>
-      <span class="dev__label">ENLACE</span>
+      <span class="dev__label">LINK</span>
       <span [class.dev__alert]="linkLost()">{{ linkLine() }}</span>
-      <span class="dev__label">GENERADOR</span>
+      <span class="dev__label">GENERATOR</span>
       <span [class.dev__alert]="starved()">{{ generatorLine() }}</span>
       <button type="button" class="dev__button" (click)="toggleGenerator()">
-        {{ generator().running ? 'PARAR' : 'NOTAS DENSAS' }}
+        {{ generator().running ? 'STOP' : 'DENSE NOTES' }}
       </button>
-      <span class="dev__label">SONDEO</span>
+      <span class="dev__label">POLLING</span>
       <span [class.dev__alert]="paused()">{{ pollingLine() }}</span>
       <button type="button" class="dev__button" (click)="togglePolling()">
-        {{ paused() ? 'SONDEAR' : 'PARAR SONDEO' }}
+        {{ paused() ? 'POLL' : 'STOP POLLING' }}
       </button>
       <button type="button" class="dev__button" [disabled]="exporting()" (click)="exportWindow()">
-        EXPORTAR
+        EXPORT
       </button>
     </div>
   `,
@@ -65,7 +65,7 @@ import { DEAD_MARK } from '../../provenance/provenance';
      *
      * A flex item defaults to min-width auto and refuses to shrink below its own
      * text, so one long unbroken string — an exported file's path — made this row
-     * wider than the window and carried EXPORTAR off the right edge with it.
+     * wider than the window and carried EXPORT off the right edge with it.
      * Exactly what happened to the pánico in the header, twice in one session, so
      * the rule is written down here too: what is read yields, what is pressed
      * does not. */
@@ -131,11 +131,11 @@ export class DevReadout {
   protected readonly dumpLine = computed(() => {
     const taken = this.backend.dump();
     if (taken === null) {
-      return `${DEAD_MARK} · en curso`;
+      return `${DEAD_MARK} · in progress`;
     }
     return [
       `${taken.bytes} B`,
-      `${taken.messages} DE ${taken.expectedMessages} MSJ`,
+      `${taken.messages} OF ${taken.expectedMessages} MSG`,
       taken.tookMs === null ? DEAD_MARK : `${(taken.tookMs / 1000).toFixed(2)} s`,
       taken.state.toUpperCase(),
     ].join(' · ');
@@ -163,7 +163,7 @@ export class DevReadout {
    */
   protected readonly medidaLine = computed(() => {
     const cost = this.audio.measureMs();
-    return cost === null ? `${DEAD_MARK} · sin medir` : `65536 · ${cost.toFixed(1)} ms`;
+    return cost === null ? `${DEAD_MARK} · no capture` : `65536 · ${cost.toFixed(1)} ms`;
   });
 
   /**
@@ -176,17 +176,17 @@ export class DevReadout {
   protected readonly rereadLine = computed(() => {
     const pass = this.backend.reread();
     if (pass === null) {
-      return `${DEAD_MARK} · sin releer`;
+      return `${DEAD_MARK} · no reread`;
     }
-    const cost = pass.tookMs === null ? 'en curso' : `${(pass.tookMs / 1000).toFixed(2)} s`;
-    return `${pass.answered} DE ${pass.total} · ${cost}`;
+    const cost = pass.tookMs === null ? 'in progress' : `${(pass.tookMs / 1000).toFixed(2)} s`;
+    return `${pass.answered} OF ${pass.total} · ${cost}`;
   });
 
   /**
-   * Which of the two roads to `DESCONECTADO` the app took, and how long ago the
+   * Which of the two roads to `DISCONNECTED` the app took, and how long ago the
    * keyboard last answered anything.
    *
-   * The card says the same thing in Spanish and without the word `timeouts`;
+   * The card says the same thing in prose and without the word `timeouts`;
    * this line is what #15 asks to be written down after pulling the USB cable,
    * because «it went red» is not a result and «enumeration, 4 s» is.
    */
@@ -195,11 +195,11 @@ export class DevReadout {
   protected readonly linkLine = computed(() => {
     const connection = this.backend.connection();
     if (connection.port === 'connected') {
-      return `${connection.portName ?? DEAD_MARK} · ABIERTO`;
+      return `${connection.portName ?? DEAD_MARK} · OPEN`;
     }
     const at = lastPollAt(this.backend.patch(), this.backend.operators());
     const since = at === null ? DEAD_MARK : `${pollAgeSeconds(at, this.clock.now()).toFixed(1)} s`;
-    return `DESCONECTADO · ${connection.loss ?? DEAD_MARK} · ÚLTIMO SONDEO ${since}`;
+    return `DISCONNECTED · ${connection.loss ?? DEAD_MARK} · LAST POLL ${since}`;
   });
 
   protected readonly generator = this.backend.generator;
@@ -221,22 +221,22 @@ export class DevReadout {
   /**
    * What the note generator has done, and what came back.
    *
-   * The two counts are #8's self-verification: `ENVIADAS` is what the port took,
-   * `TRÁFICO` is what the **keyboard** said on its own. Under real hands the
+   * The two counts are #8's self-verification: `SENT` is what the port took,
+   * `TRAFFIC` is what the **keyboard** said on its own. Under real hands the
    * second climbs with the playing; under generated notes it only climbs if the
    * MODX echoes them, which nobody has checked.
    */
   protected readonly generatorLine = computed(() => {
     const run = this.generator();
     if (!run.running && run.asked === 0) {
-      return `PARADO · ${DEAD_MARK}`;
+      return `STOPPED · ${DEAD_MARK}`;
     }
     return [
-      run.running ? `NOTAS CADA ${run.stepMs} ms` : 'PARADO',
-      `${run.sent} DE ${run.asked} ENVIADAS`,
-      `${run.held} VIVAS`,
-      `RECHAZOS ${run.refused}`,
-      `TRÁFICO ${run.traffic}`,
+      run.running ? `A NOTE EVERY ${run.stepMs} ms` : 'STOPPED',
+      `${run.sent} OF ${run.asked} SENT`,
+      `${run.held} HELD`,
+      `REJECTED ${run.refused}`,
+      `TRAFFIC ${run.traffic}`,
     ].join(' · ');
   });
 
@@ -272,13 +272,13 @@ export class DevReadout {
    * The state, and the **file name** of the last export rather than its path.
    *
    * The folder is the same for every window and is already on screen under
-   * `VOLCADO`; the name is the half that identifies which of the two this was,
+   * `DUMP`; the name is the half that identifies which of the two this was,
    * because the native side puts the polling state in it. Printing the whole path
-   * made this row wider than the window and pushed `EXPORTAR` out of reach.
+   * made this row wider than the window and pushed `EXPORT` out of reach.
    */
   protected readonly pollingLine = computed(() => {
     const where = this.exported();
-    const state = this.paused() ? 'PARADO · EL ANCLA NO MIRA' : 'CORRIENDO';
+    const state = this.paused() ? 'STOPPED · THE ANCHOR IS NOT LOOKING' : 'RUNNING';
     if (where === null) {
       return state;
     }
@@ -317,18 +317,20 @@ export class DevReadout {
         : `${stats.minCallbackFrames}–${stats.maxCallbackFrames}`;
 
     return [
-      `${stats.blocks} BLOQUES`,
-      `HUECOS ${stats.gaps}`,
-      `DESORDEN ${stats.outOfOrder}`,
+      `${stats.blocks} BLOCKS`,
+      `GAPS ${stats.gaps}`,
+      `OUT OF ORDER ${stats.outOfOrder}`,
       `CALLBACK ${stats.blocks === 0 ? DEAD_MARK : callback} f`,
-      // **Which bloques the three figures below are about.** #23 is what happens
-      // when nothing says: read early enough and `p99` reports the launch burst
-      // and calls it the bridge. The count is next to the percentiles rather than
-      // anywhere else because it is the sentence they are only true inside.
-      `SOBRE ${stats.measuredBlocks}`,
       `p50 ${millis(stats.p50Ms)}`,
       `p99 ${millis(stats.p99Ms)}`,
       `max ${millis(stats.maxMs)}`,
+      // **Which bloques the three figures above are about.** #23 is what happens
+      // when nothing says: read early enough and `p99` reports the launch burst
+      // and calls it the bridge. The count is next to the percentiles rather than
+      // anywhere else because it is the sentence they are only true inside, and
+      // it reads *after* them — `p99 12.4 ms OVER 300 BLOCKS` is the sentence;
+      // a count in front of them looked like a fourth figure (ADR-0006).
+      `OVER ${stats.measuredBlocks} BLOCKS`,
     ].join(' · ');
   });
 
@@ -343,21 +345,21 @@ export class DevReadout {
    * real failure is the second figure, and that is the one drawn in alert.
    *
    * The split is what makes the burst attributable rather than merely observed:
-   * `COLA` is the wait between the audio thread and the IPC, `IPC` the crossing
+   * `QUEUE` is the wait between the audio thread and the IPC, `IPC` the crossing
    * itself, `WORKER` the wait behind the tramas already queued in the worker.
    * Two of the three are exact; only `IPC` spans the two clocks.
    */
   protected readonly latencyLine = computed(() => {
     const stats = this.audio.stats();
     return [
-      `ARRANQUE ${stats.warmupBlocks} BLOQUES max ${legs(stats.worstWarmup)}`,
-      `DESPUÉS max ${legs(stats.worstMeasured)}`,
+      `LAUNCH ${stats.warmupBlocks} BLOCKS max ${legs(stats.worstWarmup)}`,
+      `AFTER max ${legs(stats.worstMeasured)}`,
       // The two that say whether any of the above is about the bridge at all: how
       // long the front went blind, and how late the main thread was to its own
       // timer over the same run. If those two agree, the thread was blocked and
       // the delivery figures are a symptom of it.
-      `PARÓN ${millis(stats.worstGapMs)} A LOS ${stats.worstGapAtSeconds.toFixed(1)} s`,
-      `BUCLE ${millis(this.mainThreadLag())} A LOS ${this.mainThreadLagAt().toFixed(1)} s`,
+      `STALL ${millis(stats.worstGapMs)} AT ${stats.worstGapAtSeconds.toFixed(1)} s`,
+      `LOOP ${millis(this.mainThreadLag())} AT ${this.mainThreadLagAt().toFixed(1)} s`,
     ].join(' · ');
   });
 
@@ -406,14 +408,14 @@ function legs(split: LatencyLegs | null): string {
     return DEAD_MARK;
   }
   const where = [
-    `COLA ${split.queueMs.toFixed(1)}`,
+    `QUEUE ${split.queueMs.toFixed(1)}`,
     `IPC ${split.ipcMs.toFixed(1)}`,
     `WORKER ${split.workerMs.toFixed(1)}`,
   ].join(' · ');
   // **When**, and not only how much. A worst bloque three seconds in is the
   // launch and one four minutes in is the bridge, and #23 is precisely the
   // question of which of those a figure is reporting.
-  return `${split.totalMs.toFixed(1)} ms A LOS ${split.atSeconds.toFixed(1)} s (${where})`;
+  return `${split.totalMs.toFixed(1)} ms AT ${split.atSeconds.toFixed(1)} s (${where})`;
 }
 
 function millis(value: number | null): string {

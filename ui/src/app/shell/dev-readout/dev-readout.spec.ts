@@ -45,7 +45,7 @@ describe('DevReadout', () => {
   it('claims nothing before the first bloque', async () => {
     const { text } = await renderReadout();
 
-    expect(text()).toContain('0 BLOQUES');
+    expect(text()).toContain('0 BLOCKS');
     expect(text()).toContain('p99 —');
     expect(text()).toContain('CALLBACK — f');
   });
@@ -59,8 +59,8 @@ describe('DevReadout', () => {
       ),
     );
 
-    expect(text).toContain('3 BLOQUES');
-    expect(text).toContain('HUECOS 0');
+    expect(text).toContain('3 BLOCKS');
+    expect(text).toContain('GAPS 0');
     expect(text).toContain('CALLBACK 441 f');
   });
 
@@ -72,8 +72,8 @@ describe('DevReadout', () => {
       ...[0, 1, 4].map((sequence) => fakeBlock({ sequence, sentAtMicros: sequence * 30_000 })),
     );
 
-    expect(text).toContain('3 BLOQUES');
-    expect(text).toContain('HUECOS 2');
+    expect(text).toContain('3 BLOCKS');
+    expect(text).toContain('GAPS 2');
   });
 
   /**
@@ -91,9 +91,9 @@ describe('DevReadout', () => {
       ...[0, 1, 2, 3].map((sequence) => fakeBlock({ sequence, sentAtMicros: sequence * 30_000 })),
     );
 
-    expect(text).toContain('SOBRE 0');
-    expect(text).toContain('ARRANQUE 4 BLOQUES');
-    expect(text).toMatch(/SOBRE 0 · p50 — · p99 — · max —/);
+    expect(text).toContain('OVER 0 BLOCKS');
+    expect(text).toContain('LAUNCH 4 BLOCKS');
+    expect(text).toMatch(/p50 — · p99 — · max — · OVER 0 BLOCKS/);
   });
 
   it('shows the spread of the delivery once the launch is over', async () => {
@@ -106,8 +106,8 @@ describe('DevReadout', () => {
     );
 
     const text = (await push()).replace(/\s+/g, ' ');
-    expect(text).toContain(`ARRANQUE ${WARMUP_BLOCKS} BLOQUES`);
-    expect(text).toMatch(/SOBRE 5 · p50 \d+\.\d ms · p99 \d+\.\d ms/);
+    expect(text).toContain(`LAUNCH ${WARMUP_BLOCKS} BLOCKS`);
+    expect(text).toMatch(/p50 \d+\.\d ms · p99 \d+\.\d ms · max \d+\.\d ms · OVER 5 BLOCKS/);
   });
 
   /**
@@ -121,12 +121,12 @@ describe('DevReadout', () => {
 
     const text = await push(fakeBlock({ sequence: 0, sentAtMicros: 30_000 }));
 
-    expect(text).toContain('COLA');
+    expect(text).toContain('QUEUE');
     expect(text).toContain('IPC');
     expect(text).toContain('WORKER');
     // And when it was, because a max the launch explains and one it does not are
     // two different answers wearing the same number.
-    expect(text).toContain('A LOS 0.0 s');
+    expect(text).toContain('AT 0.0 s');
   });
 
   /**
@@ -148,12 +148,12 @@ describe('DevReadout', () => {
     TestBed.inject(AudioService).stats.set({ ...NO_STATS, blocks: 1, worstWarmup: broken });
     await fixture.whenStable();
 
-    expect(fixtureAlerts()).toContain('RELOJ ROTO');
+    expect(fixtureAlerts()).toContain('BROKEN CLOCK');
   });
 
   /**
    * The dev strip is the one place the **raw** fact is drawn, separately from
-   * what it means: `CEROS EXACTOS` is what Rust saw in the samples, and `AUDIO`
+   * what it means: `EXACT ZEROS` is what Rust saw in the samples, and `AUDIO`
    * is the state that comes of combining it with the notes and with whether
    * bloques are arriving at all. Before #21 the two were one word, and the word
    * was wrong in both directions.
@@ -162,11 +162,11 @@ describe('DevReadout', () => {
     const { push, text } = await renderReadout();
 
     await push(fakeBlock({ sequence: 0, mono: new Float32Array(BLOCK_FRAMES) }));
-    expect(text()).not.toContain('CEROS EXACTOS');
+    expect(text()).not.toContain('EXACT ZEROS');
     expect(text()).toContain('ALIVE');
 
     await push(fakeBlock({ sequence: 1, silent: true }));
-    expect(text()).toContain('CEROS EXACTOS');
+    expect(text()).toContain('EXACT ZEROS');
     // Zeros with nobody playing is the MODX idling, not a fault.
     expect(text()).toContain('IDLE');
   });
@@ -174,8 +174,8 @@ describe('DevReadout', () => {
   it('has the volcado on screen so its time can be written down', async () => {
     const { backend, fixture, text } = await renderReadout();
 
-    expect(text()).toContain('VOLCADO');
-    expect(text()).toContain('en curso');
+    expect(text()).toContain('DUMP');
+    expect(text()).toContain('in progress');
 
     backend.dump.set({
       state: 'saved',
@@ -190,15 +190,15 @@ describe('DevReadout', () => {
     });
     await fixture.whenStable();
 
-    expect(text()).toContain('7669 B · 123 DE 123 MSJ · 2.41 s · SAVED');
+    expect(text()).toContain('7669 B · 123 OF 123 MSG · 2.41 s · SAVED');
   });
 
   it('claims no load before the generator has been started', async () => {
     const { text } = await renderReadout();
 
-    expect(text()).toContain('GENERADOR');
-    expect(text()).toContain('PARADO · —');
-    expect(text()).toContain('NOTAS DENSAS');
+    expect(text()).toContain('GENERATOR');
+    expect(text()).toContain('STOPPED · —');
+    expect(text()).toContain('DENSE NOTES');
   });
 
   it('starts and stops the generator from the one control there is', async () => {
@@ -210,14 +210,14 @@ describe('DevReadout', () => {
     await fixture.whenStable();
 
     expect(backend.generatorStarts).toBe(1);
-    expect(text()).toContain('NOTAS CADA 40 ms');
-    expect(button().textContent).toContain('PARAR');
+    expect(text()).toContain('A NOTE EVERY 40 ms');
+    expect(button().textContent).toContain('STOP');
 
     button().click();
     await fixture.whenStable();
 
     expect(backend.generatorStops).toBe(1);
-    expect(button().textContent).toContain('NOTAS DENSAS');
+    expect(button().textContent).toContain('DENSE NOTES');
   });
 
   it('puts the load and the keyboard’s own traffic side by side', async () => {
@@ -228,7 +228,7 @@ describe('DevReadout', () => {
 
     // What the port took, what is being held, and what the keyboard said back:
     // the load is counted at both ends and nothing here is assumed.
-    expect(text()).toContain('1248 DE 1248 ENVIADAS · 4 VIVAS · RECHAZOS 0 · TRÁFICO 0');
+    expect(text()).toContain('1248 OF 1248 SENT · 4 HELD · REJECTED 0 · TRAFFIC 0');
   });
 
   it('says so in alert when the load did not happen', async () => {
@@ -240,7 +240,7 @@ describe('DevReadout', () => {
     backend.generatorRuns({ asked: 1_000, sent: 640, refused: 12 });
     await fixture.whenStable();
 
-    expect(fixtureAlerts()).toContain('640 DE 1000 ENVIADAS');
+    expect(fixtureAlerts()).toContain('640 OF 1000 SENT');
   });
 
   it('shows the run stopped the moment the pánico takes the keyboard back', async () => {
@@ -248,12 +248,12 @@ describe('DevReadout', () => {
 
     backend.generatorRuns({ asked: 500, held: 4 });
     await fixture.whenStable();
-    expect(text()).toContain('4 VIVAS');
+    expect(text()).toContain('4 HELD');
 
     await backend.panic();
     await fixture.whenStable();
 
-    expect(text()).toContain('PARADO · 500 DE 500 ENVIADAS · 0 VIVAS');
+    expect(text()).toContain('STOPPED · 500 OF 500 SENT · 0 HELD');
   });
 });
 
@@ -275,28 +275,28 @@ describe('DevReadout · el sondeo de #14', () => {
   it('stops the two loops and says what that costs, in alert', async () => {
     const { backend, fixture, text, fixtureAlerts } = await renderReadout();
 
-    expect(text()).toContain('CORRIENDO');
-    expect(fixtureAlerts()).not.toContain('EL ANCLA NO MIRA');
+    expect(text()).toContain('RUNNING');
+    expect(fixtureAlerts()).not.toContain('THE ANCHOR IS NOT LOOKING');
 
-    press(fixture, 'PARAR SONDEO');
+    press(fixture, 'STOP POLLING');
     await fixture.whenStable();
 
     expect(backend.polling().paused).toBe(true);
-    // Not «PARADO» on its own: a paused app cannot see a Performance change, and
+    // Not «STOPPED» on its own: a paused app cannot see a Performance change, and
     // the readout is the only thing that can say so.
-    expect(fixtureAlerts()).toContain('PARADO · EL ANCLA NO MIRA');
+    expect(fixtureAlerts()).toContain('STOPPED · THE ANCHOR IS NOT LOOKING');
   });
 
   it('goes back to polling on the second press', async () => {
     const { backend, fixture, text } = await renderReadout();
 
-    press(fixture, 'PARAR SONDEO');
+    press(fixture, 'STOP POLLING');
     await fixture.whenStable();
-    press(fixture, 'SONDEAR');
+    press(fixture, 'POLL');
     await fixture.whenStable();
 
     expect(backend.polling().paused).toBe(false);
-    expect(text()).toContain('CORRIENDO');
+    expect(text()).toContain('RUNNING');
   });
 
   /**
@@ -307,14 +307,14 @@ describe('DevReadout · el sondeo de #14', () => {
   it('labels each exported window by the polling state and not by the caller', async () => {
     const { backend, fixture, text } = await renderReadout();
 
-    press(fixture, 'EXPORTAR');
+    press(fixture, 'EXPORT');
     await fixture.whenStable();
     expect(backend.exported.at(-1)).toContain('-sondeo-');
     expect(text()).toContain('-sondeo-');
 
-    press(fixture, 'PARAR SONDEO');
+    press(fixture, 'STOP POLLING');
     await fixture.whenStable();
-    press(fixture, 'EXPORTAR');
+    press(fixture, 'EXPORT');
     await fixture.whenStable();
 
     expect(backend.exported.at(-1)).toContain('-sin-sondeo-');
@@ -324,7 +324,7 @@ describe('DevReadout · el sondeo de #14', () => {
   it('exports the window the medida analyses and no other size', async () => {
     const { backend, fixture } = await renderReadout();
 
-    press(fixture, 'EXPORTAR');
+    press(fixture, 'EXPORT');
     await fixture.whenStable();
 
     expect(backend.exported.at(-1)).toContain(`-${MEASURE_WINDOW}.f32`);

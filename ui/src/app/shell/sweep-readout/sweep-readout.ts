@@ -12,7 +12,7 @@ const OPERATORS = [1, 2, 3, 4, 5, 6, 7, 8];
  * Every operator parameter the app reads is addressed with
  * `am = (op << 4) | part`, and that rule was measured on the Part 1 and on the
  * Part 1 only. This is where it gets checked past it: pick a Part and an
- * operator, press `BARRER`, and every offset of the block is asked for one at a
+ * operator, press `SWEEP`, and every offset of the block is asked for one at a
  * time and drawn with what came back — including the dashes, which are the half
  * that matters. The Data List accounts for 39 of the 47 as parameters and the
  * fase 0c blind sweep counted 43 answering; only the keyboard can say which.
@@ -34,17 +34,17 @@ const OPERATORS = [1, 2, 3, 4, 5, 6, 7, 8];
   template: `
     <div class="sweep">
       <div class="sweep__line">
-        <span class="sweep__label">BARRIDO</span>
-        <button type="button" class="sweep__button" (click)="nextPart()">PARTE {{ part() }}</button>
+        <span class="sweep__label">SWEEP</span>
+        <button type="button" class="sweep__button" (click)="nextPart()">PART {{ part() }}</button>
         <button type="button" class="sweep__button" (click)="nextOperator()">
           OP {{ operator() }}
         </button>
         <button type="button" class="sweep__button" [disabled]="running()" (click)="take()">
-          BARRER
+          SWEEP
         </button>
         <span>{{ line() }}</span>
         @if (changes(); as moved) {
-          <span class="sweep__alert">CAMBIÓ {{ moved }}</span>
+          <span class="sweep__alert">CHANGED {{ moved }}</span>
         }
       </div>
       @if (offsets().length > 0) {
@@ -162,15 +162,15 @@ export class SweepReadout {
   protected readonly line = computed(() => {
     const pass = this.sweep();
     if (pass === null) {
-      return `${DEAD_MARK} · sin barrer`;
+      return `${DEAD_MARK} · not swept`;
     }
     const block = `49 ${hex(((pass.operator - 1) << 4) | (pass.part - 1))}`;
     if (pass.running) {
-      return `${block} · ${pass.done} DE ${pass.total}`;
+      return `${block} · ${pass.done} OF ${pass.total}`;
     }
     const cost = pass.tookMs === null ? DEAD_MARK : `${(pass.tookMs / 1000).toFixed(2)} s`;
-    const compared = pass.compared && pass.changed.length === 0 ? ' · SIN CAMBIOS' : '';
-    return `${block} · ${pass.answered} DE ${pass.total} · ${cost}${compared}`;
+    const compared = pass.compared && pass.changed.length === 0 ? ' · NO CHANGES' : '';
+    return `${block} · ${pass.answered} OF ${pass.total} · ${cost}${compared}`;
   });
 
   /**
@@ -216,7 +216,7 @@ export class SweepReadout {
   protected take(): void {
     void this.backend
       .sweepOperator(this.part(), this.operator())
-      .catch((reason: unknown) => console.warn('modx: el barrido no salió', reason));
+      .catch((reason: unknown) => console.warn('modx: the sweep did not run', reason));
   }
 }
 

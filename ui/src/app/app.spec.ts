@@ -77,7 +77,7 @@ describe('App (4a)', () => {
     backend.reread.set({ done: 384, total: 384, answered: 383, tookMs: 912 });
     await fixture.whenStable();
     expect(host.querySelector('.strip__text')).toBeNull();
-    expect(host.querySelector('app-dev-readout')?.textContent).toContain('383 DE 384 · 0.91 s');
+    expect(host.querySelector('app-dev-readout')?.textContent).toContain('383 OF 384 · 0.91 s');
   });
 
   it('takes every polled figure to the dash when the Performance changes underneath', async () => {
