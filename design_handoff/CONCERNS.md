@@ -248,6 +248,17 @@ The second-order effect is the one I would watch: the sound changing underneath 
 movement at a moment already full of movement (the change flash, the reread strip). If those two collide
 badly, the algorithm's regrowth should wait for the reread to finish rather than race it.
 
+**Decided in session 2: it waits, for both of them.** The regrowth is held until the change flash *and*
+the reread strip are done, not the strip alone — they are named in the same sentence and they are the
+same problem. A Performance change already puts two things on screen, and a panel resizing under them
+would be a third with nothing to say which of the three was about which. Both ends terminate on their
+own, so the wait cannot hang. **Shrinking never waits**: the panels come back the instant a vouched
+capture lands, because that is the consequence of the press and should read as one.
+
+The other conditional in this section — making `KEEP IT BIG` default to *on* after the first capture of
+a session — is **not** decided and stays as written. The pin defaults to up, and it persists in
+`localStorage` behind a `try`.
+
 ### 33 · What I could not settle — **all three resolved or moved**
 
 **33.1 · ~~The real screenshots never arrived~~ — closed.** They arrived, every answer was checked
@@ -287,10 +298,16 @@ colour rule follows from what it is — **paper has no colour**.
 emotion; every other failure state in this app names what happens. English: **`HUSH`**, imperative, four
 letters at 56 px. `SILENCE` is the alternate if `HUSH` reads too soft.
 
-**35.3 · Four figures and one count were the spikes', not the app's.** Noise floor **−66 dB**, not −104.
-Wide ring **10.0–10.4 Hz**, not 12.2. Reread set **383 of 384**, not 416. Bulk dump **19 003 B in 123
+**35.3 · Four figures and one count were the spikes', not the app's.** Noise floor **−58 to −66 dB**, not −104.
+Wide ring **10.0–10.4 Hz**, not 12.2. Reread set **384** requests, not 416. Bulk dump **19 003 B in 123
 messages**, not 7 669 B. Temporary readout: **five blocks**, not three. All are propagated through the
-round-8 pieces and the documents; the four that still sit in `design-tokens.css` are §29.
+round-8 pieces and the documents, and the four that sat in `design-tokens.css` were applied in
+session 2 — see §29, resolved.
+
+Two of these figures needed a second look and got one. The **noise floor** was never two formulas: one
+computation (median of all bins, Hann 4096) answers −104 on the golden WAVs offline and −58 to −66 on
+the live USB stream, and both are right for their signal. The **reread set** is **384** requests, of
+which 383 answer; "383 of 384" was the answered count being quoted as the size of the set.
 
 The one with a design consequence is folded into §24: the stale thresholds become 0.40 s and 0.80 s, and
 **the rule survives untouched**.
@@ -305,6 +322,12 @@ cell's own unit.
 
 ## OPEN
 
+**Three items on this page were resolved in session 2 and are marked in place rather than moved**, so
+that the reasoning that produced them stays attached to the correction: **§23.1** (the blind spot as
+described does not exist; the capture Aval closes the real hole), **§29** (the token values, applied)
+and **§31** (the 88-algorithm maxima, measured — and my bound was low). §30's conditional on the
+algorithm's regrowth is decided, in §30.
+
 ### 17 · What is still not designed — unchanged, and I agree with your ordering
 
 - **Saving to the MODX's memory.** All the work is on the edit buffer, which is what makes none of this
@@ -315,22 +338,31 @@ cell's own unit.
 
 Ordered by what it would cost if they come out the other way.
 
-**23.1 · The anchor has a ~1.5 s blind spot per capture — declared, not drawn. Still open, and still the
-only real hole.** The name poll at 1 Hz cannot run inside the 65 536-sample window (1.486 s) without
-putting traffic into the capture. So if the sound changes exactly there, the app finds out **when the
-capture ends**, not during. The design survives it (the capture is marked as belonging to another sound
-as soon as the anchor comes back), but it is not drawn on any screen, and a documented hole is a decision
-while a hole that only exists in the complaints file is a surprise waiting for phase 1. It is in
-`README.md` as a known property of the anchor, alongside its cadence and its cost.
+**23.1 · The blind spot as described does not exist in the build — and the real hole is now closed.
+Resolved in session 2.** The premise was that the name poll at 1 Hz cannot run inside the 65 536-sample
+window without putting traffic into the capture, so the app would find out about a change **when the
+capture ends**. The build does not work that way and never did: **the capture takes the
+already-recorded last 1.5 s out of the ring**, and the anchor keeps polling throughout. Nothing is
+paused, so there is no window in which the anchor is blind, and the drawing this section offered would
+have marked a hole that is not there.
 
-Round 8 gave it one new consequence worth writing down: with `LIVE` and `CAPTURE` named as a state and an
-act, **the blind spot is now easy to say** — "the anchor cannot poll inside a capture" is a sentence a
-user can understand, where "el sondeo no puede correr dentro de la ventana de FFT" was not.
+**What actually leaked is the other end of the same window.** Because the capture reaches 1.486 s into
+the *past* while the anchor's detection lags up to a second, a Performance change in the second before
+the press yields a capture of the **old** sound attributed to the **new** patch, and nothing killed it.
+That is the one failure this application exists to prevent, and it is closed by extending ADR-0005's
+rule from polled figures to captures — **the capture Aval**: the window is stamped with the wall-clock
+span it covers, and it is drawn `MEASURED` only when a beat that *started after* its last sample
+answers `Same` **and** the beat that *completed before* its first sample read the same name. If the
+post-window beat answers `Changed` the capture is discarded unseen and the column returns to the
+resting state of `DESIGN.md` §10.1. The hold is one beat at most, because the press files the same
+out-of-turn request the wide ring already makes.
 
-If you want it drawn rather than declared, the honest place is the `CAPTURE` button itself: for the 1.5 s
-the shutter is open, the anchor's dot goes to the void vocabulary (shape kept, figure gone) and comes back
-when the window closes. **That is one small piece of drawing and I have not done it, because you have
-twice decided this should be declared and not drawn.** Say the word and it is a ten-minute change.
+Round 8's observation survives and is worth keeping: with `LIVE` and `CAPTURE` named as a state and an
+act, this whole family of problems became sayable in a sentence a user can understand, where "el sondeo
+no puede correr dentro de la ventana de FFT" was not.
+
+**The anchor's one genuine hole is unchanged and is not this one**: two Performances whose Part 1 name
+coincides are, to the anchor, the same sound.
 
 2. ~~If `Bank Select` / `Pgm Change` are receive-only~~ — **closed by the paper, and you corrected me
    well**: the Reference Manual says they govern *both in transmission and reception*, and both were
@@ -346,30 +378,30 @@ twice decided this should be declared and not drawn.** Say the word and it is a 
 6. **WinMM and 2-byte messages** are still unverified end to end. That is a listener risk, not a design
    risk.
 
-### 29 · Token values: four are stale, one is missing, and this needs your decision
+### 29 · Token values: four were stale, one was missing — **resolved, applied in session 2**
 
 **No token name or value changed in rounds 8 or 9.** The names were already semantic and already English,
 so the language pass did not touch running code — only the file's comments, which are now English along
 with everything else.
 
-But §35.3 leaves the file carrying four figures the running build has since contradicted. I have **marked
-them `STALE` in a comment and changed nothing**, because you said no value changes and because
-`design-tokens.css` is the single source of truth — I would rather you change it than find that I did:
+§35.3 left the file carrying four figures the running build had contradicted, and round 9 **marked them
+`STALE` in a comment and changed nothing**, because no value changes were allowed and because
+`design-tokens.css` is the single source of truth. **Session 2 applied them.** What was raised, and
+what is in the file now:
 
 ```
---probe-idle: 12          the build achieves 10.0–10.4
---ring-wide-hz: 12.2      same
---stale-wide-s: 0.33      derived from 12.2; at a real 10 Hz it is 0.40
---stale-narrow-s: 0.66    same; at a real 10 Hz it is 0.80
---reread-total: 416       the build rereads 383 of 384
+--probe-idle:      12   -> 10     the build achieves 10.0-10.4
+--ring-wide-hz:    12.2 -> 10     same
+--stale-wide-s:    0.33 -> 0.40   four periods of the wide ring at a real 10 Hz
+--stale-narrow-s:  0.66 -> 0.80   the same derivation on the narrow ring
+--reread-total:    416  -> 384    the requests the build issues; 383 of them answer
 ```
 
-This is the one place in the handoff where two documents now disagree on purpose: `DESIGN.md` §20.7 says
-`POLLED · 0.40 s` and the token file says `0.33`. **The precedence rule in `README.md` resolves it in the
-prose's favour**, but an implementer consuming the token file directly would not read the prose, so this
-should not be left standing for long.
+`--reread-total` is **384 and not 383** on purpose: the token is the number of requests the build
+issues, and the one address that answers nothing is documented in the file's own comment rather than
+hidden in an off-by-one. The TypeScript twin of the stale-wide floor moved with its token, to 400 ms.
 
-And one token is genuinely new. I am **proposing rather than adding it**, for the same reason:
+The token round 9 proposed rather than added is **added**, with the same values:
 
 ```
 --datum-ceiling-stroke: 2px;            /* dashed line across the eight nodes at the patch max */
@@ -380,17 +412,47 @@ Everything else in rounds 8 and 9 reuses existing tokens: `--drawer-grab` and `-
 bench drawer, `--dur-settle` for the algorithm swap, `--hit-min` for the corner, `--theory` +
 `--dash-theory` for the no-lock scope.
 
-### 31 · The worst case across the 88 algorithms is a data task, not a drawing task
+**The deliberate disagreement is gone.** `DESIGN.md` §20.7 said `POLLED · 0.40 s` while the token file
+said `0.33`; both say 0.40 now, both copies of the file carry identical values, the accidental third
+copy under `design/` is deleted, and **no `STALE` marker is left anywhere in the handoff**. No token
+name changed, then or since.
 
-I have sized the algorithm surface by **the bound eight operators can produce** — up to 6 depth levels
-with up to 4 parallel branches at one level, which at 150 px nodes and 30 px rows is 1232 × 400 with the
-bus. That is arithmetic on eight nodes and it is safe: no real algorithm can exceed it.
+**One comment in the file was wrong in the other direction and is corrected too.** `--text-micro`
+carried "absolute floor; nothing is set below it", while §3.1 asks for the mode's roadmap line at 8 px
+and the node's role word and `HUSH`'s label were already there. The floor is for anything a **figure**
+is read from; the three label exceptions are now named in §20 rule 17 and in the token's own comment.
+A comment, not a value: nothing about the compiled output changes.
 
-What I have **not** done is claim which of the 88 is the worst case, because that needs the depth/width
-histogram over the FM-X algorithm table, and inventing it would break the round-1 rule. **If somebody
-extracts that histogram, the surface can probably be tightened** — if the real maximum is 4 deep and 3
-wide, the panel gets ~80 px of height back, which is 80 px the eight AEGs would like. Cheap task, real
-payoff, nobody's blocker. It is the owner's side.
+### 31 · The worst case across the 88 algorithms — **resolved: measured, and my bound was low**
+
+I sized the algorithm surface by **the bound eight operators can produce** — up to 6 depth levels with
+up to 4 parallel branches at one level, which at 150 px nodes and 30 px rows is 1232 × 400 with the bus
+— and called it safe: "no real algorithm can exceed it". I also hoped the histogram would let the
+surface be **tightened**.
+
+**Both halves are low.** The histogram was extracted in session 2 from the 88 topologies transcribed
+out of the Data List's Algorithm Chart, so the figures are `DOCUMENTED`, computed rather than measured
+on the keyboard, and they speak for all 88. Depth is chain depth (a carrier is 0; an operator is one
+deeper than the deepest thing it modulates); a branch is the undirected reading of the routes, so the
+feedback loop — drawn as a rectangle around boxes already joined — is an edge in neither:
+
+| maximum | value | reached by |
+|---|---|---|
+| depth | **7** — eight rows | the **66** alone, the single chain of eight |
+| operators on one row | **8** | the **1** alone, eight carriers on the bus |
+| operators of one branch on one row | **7** | the **68** alone, seven modulators into Op8 |
+| branches side by side on one row | **8** | the **1** alone |
+
+Histograms over the 88 — depth: 0×1, 1×26, 2×37, 3×17, 4×5, 5×1 (the 37), 7×1 (the 66); branches:
+1×6, 2×11, 3×26, 4×29, 5×11, 6×3, 7×1, 8×1.
+
+**So the surface is corrected rather than tightened, and only in one dimension.** The width holds —
+eight columns at 142 units of the 1232 is about 119 px of real panel, over the 118 px the node's five
+facts are fitted to — but eight rows of a 120 px node is 960 px of the 400 there are. The node is what
+gives: the row pitch is what the algorithm's own depth leaves, and below the height five stacked facts
+need, the node lays them in a row. `DESIGN.md` §10 is corrected with these figures. A test asserts
+each bound **and asserts it is reached**, so a constant no algorithm touches fails as loudly as one an
+algorithm exceeds. There are no ~80 px for the eight AEGs; there were −560 px to find.
 
 ---
 
@@ -443,9 +505,12 @@ the token file is the one an implementer keeps open beside the code — 288 line
 would have undone the point of the pass. **No name and no value changed**; comments only. If you want the
 Spanish comments back, they are one revert.
 
-**36.4 · The token file now contradicts the prose on four values, and I left it that way.** See §29. It
-is the only deliberate disagreement in the handoff, it exists because "no value changes" and "the build's
-figures win" cannot both hold, and it is the one item on this page I would fix first.
+**36.4 · The token file contradicted the prose on four values, and I left it that way.** See §29. It was
+the only deliberate disagreement in the handoff, it existed because "no value changes" and "the build's
+figures win" cannot both hold, and it was the one item on this page I would have fixed first.
+**Session 2 fixed it**: the five values are applied, the ceiling-datum tokens are added, both copies of
+the file carry identical values and no marker is left. `README.md`'s precedence exception for it is
+gone with it.
 
 **36.5 · Two things kept their Spanish names on purpose.** The three archived direction sheets, and
 the twenty-two screenshot files. Both are dated artefacts: nothing is built from them, nothing links

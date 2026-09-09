@@ -121,13 +121,21 @@ you enter and leave through a visible button in the bar (`GO TO BUILD →` / `GO
 ### 3.1 · An unbuilt mode is not a disabled button
 
 Three buttons with two of them disabled reads as a broken control, and it is. The app's own rule
-(§16.4) that a disabled control keeps full opacity and stays readable is for a control that **will
-work once its precondition is met** — a mode with no code behind it has no precondition.
+(§20 · *Rules an implementer must respect*, rule 4) that a disabled control keeps full opacity and
+stays readable is for a control that **will work once its precondition is met** — a mode with no code
+behind it has no precondition.
 
 So **the switch renders only what exists.** Today that is one label, `BUILD`, and not a segmented
 control with two dead thirds. When A/B lands the label becomes a two-way switch; when LEARN lands,
 three. The roadmap line sits under the label at 8 px (`the only mode built`), where it costs nothing
-and promises nothing.
+and promises nothing. That 8 px is one of the three deliberate exceptions to the type floor of §20,
+rule 17 — see the rule, which now names them.
+
+**What the build removed with the two dead thirds: the frame around them.** A segmented-control
+border and a filled *selected* state around one static label still read as something that can be
+pressed, which is the same lie the disabled thirds told at a third of the size. So the switch is
+typography in the vocabulary of the readouts beside it — the mono label, the roadmap line under it —
+and not a pill with one item in it.
 
 ---
 
@@ -236,6 +244,20 @@ Left to right: port, the anchor (§17.1), the algorithm pill, the mode label (§
 the `LIVE` pill with its frame rate, the `CAPTURE` shutter with `65536` and `NEEDS A HELD NOTE`, and
 — isolated by `--gap-isolate` and a 2 px rule — the one octagon, `HUSH`.
 
+**The chain chip's slot is reserved and empty in the build.** `CLEAN CHAIN` reads four conditions
+that live in the Part common block; the wide ring watches none of them, and adding the addresses
+costs about 1.6 Hz of its cadence. A chip that can be minutes stale is worse than no chip, so the
+slot in the order above holds nothing until the ring budget is decided. Nothing is drawn void there —
+that would be §3.1's rule about the unbuilt mode applied to a readout. It goes between the mode label
+and the `LIVE` pill when it lands.
+
+**The `LIVE` pill's second line is the audio the app actually opened**, and it is kept: `Line (MODX) ·
+44100 Hz · 2 ch` — the device name the stream reported, the rate it is running at, the channel count
+it delivers. All three are **measured**, none is hardcoded, and if the stream says 48 000 the pill
+says 48 000. **`MAIN L/R` is not shown and cannot be**: that is the keyboard's own routing, which the
+audio stream has no way to report. It is `DOCUMENTED` routing and belongs on the check screen (§13)
+beside the anchor's poll rate and address, and it renders nowhere until that screen exists.
+
 **`LIVE` and `CAPTURE` are a state and an act, and that is the point of the pair.** The live view is
 continuous, free, always on, and produces **nothing you can quote**. The capture is one 65 536-sample
 window on a held note and is the **only** thing that produces the partials table, fc, fm, the measured
@@ -258,11 +280,24 @@ the scope states what it guarantees and **the caption is the specification**.
    two periods of bright FM is 5.7 ms and does not visibly repeat — it cannot show the one thing a
    scope is for, which is that the waveform *is* periodic.
 3. **When it cannot lock.** It says `NO LOCK`, draws the raw window in the predicted register
-   (amber-dashed, because the time axis has become a claim), and names the reason: `no held note` /
-   `pitch unstable` / `no capture yet`. And if peak-to-peak sits under floor + 6 dB it draws the noise
-   floor band and says `SIGNAL BELOW FLOOR` — **the flat line gets labelled flat.**
+   (amber-dashed, because the time axis has become a claim), and names the reason. And if peak-to-peak
+   sits under floor + 6 dB it draws the noise floor band and says `SIGNAL BELOW FLOOR` — **the flat
+   line gets labelled flat.**
 
 Caption in the locked case: `LOCKED 349.23 Hz · 4 CYCLES · 11.5 ms`.
+
+**The reasons the build ships are three, and `no capture yet` is not one of them.** They are `no held
+note`, `pitch unstable` and `MORE THAN ONE NOTE` — the last because with two distinct held pitches
+there is no fundamental to lock to. `no capture yet` cannot fire until fc-from-capture exists, and a
+string that no state can produce is dead copy the next sweep has to explain; it ships in the same
+commit as the fit. The build also **verifies** the lock rather than asserting it: autocorrelation at
+the lag of the locked period has to clear the periodicity threshold, and `pitch unstable` is what it
+says when it does not.
+
+**`FLOOR` is absolute dBFS, here and everywhere else the word appears.** One word, one meaning, so a
+floor figure on the spectrum can be compared with the floor the scope tests against. It is the median
+bin level of a Hann 4096 in dBFS — *not* relative to the peak, which is how the phase-0 figures were
+quoted; every one of those keeps its "relative to the peak" qualifier where it appears.
 
 ### 8.3 · The waterfall caption is computed, and short
 
@@ -271,6 +306,13 @@ Caption in the locked case: `LOCKED 349.23 Hz · 4 CYCLES · 11.5 ms`.
 ```
 WATERFALL · 22 FRAMES · 0 → 712 ms          TIME ↓ · FREQUENCY →
 ```
+
+**Both figures above are an illustration, not a specification.** The panel keeps **14 rows**, and the
+count is how many are actually drawn — fewer than 14 early in a session and after a silence. The span
+is computed from **per-row time stamps**, last minus first, and not from count × hop: rows are only
+pushed when there is a curve, so a played phrase with pauses in it spans more than 14 × 30 ms. Nobody
+should implement `22` or `712`, and nobody should implement `460`/`462 ms` either — those were the
+same arithmetic done on paper. The two numbers are whatever the stamps say.
 
 Nothing describes the *shape* of what is drawn. Whether an attack is bright is a property of the
 sound, not of the panel, so a sentence like "the bright attack dying away" cannot survive live data —
@@ -324,11 +366,31 @@ descending = All, gapped = Odd, one tall stroke offset right = Res, with Skirt a
 learns the families from an 18 px glyph — they learn them once in the editor and **recognise** them
 here, which is all this drawing has to do. **A word that ellipsises is worse than no word.**
 
+**Skirt as stroke width cannot be built yet, and the build draws a constant instead.** `Spectral
+Skirt` (`49 op 0A`) is **not on the wide ring**, which reads five addresses per operator — Level,
+Coarse, Fine, Frequency Mode, Spectral Form — and nothing else. A stroke width drawn off a value
+nobody polled is exactly the failure the provenance rules exist to prevent, so all four family glyphs
+are drawn at `--rule-min` until the Skirt is actually read. The channel is designed, dormant and
+documented; it is not eight widths waiting in the code.
+
+**And a spectral form nobody read draws a dash, not a Sine.** `Sine` is the form every operator of
+`Init Normal (FM-X)` starts in, which is precisely why falling back to it would be a claim about the
+patch instead of a blank.
+
 **The corner.** Every node carries a 44 × 44 open corner at the bottom right — two 2 px strokes, the
 mark for *there is more behind this*. It is the visible path from a node to its editor, and it is not
 an icon, not a menu and not a chevron. Touching the node body still opens the editor as it always
 did; the corner is what makes that discoverable without teaching it. **The words appear once**, in the
 diagram legend: `5 of 43 facts shown · the corner opens the other 38`.
+
+**In the build the corner is drawn and inert, and the legend line is held back.** The operator editor
+is not built, so the node body opens nothing either; a caption naming a path no press can walk is the
+same lie as a disabled mode button (§3.1), one register quieter. The 44 px zone is what becomes the
+control when the editor lands — not the 22 px mark — and the line ships in that same commit.
+
+**The legend has four entries, not three.** The ceiling datum is a 2 px dashed line crossing all eight
+nodes with nothing on it to say what it is of, so it gets its own swatch and its own words beside the
+carrier, modulator and level-0 samples: `THE LOUDEST OPERATOR IN THIS PATCH`.
 
 ---
 
@@ -349,18 +411,59 @@ whether a capture exists.**
   argument, and a manual switch would make the user do bookkeeping the app can do from state it
   already holds. A capture brings the panels back over `--dur-settle` (420 ms), slow enough to read as
   a consequence of the press. **`KEEP IT BIG`** in the algorithm's own header pins the big composition
-  and persists. Risk noted in `CONCERNS.md` §30.
-- **Sized by the worst case, which is arithmetic on eight nodes.** Drawability is settled — the MODX
-  draws all 88 algorithms on a smaller screen. What varies is room, so the surface is sized by the
-  bound eight operators can produce: **up to 6 depth levels with up to 4 parallel branches at one
-  level**, which at 150 px nodes and 30 px rows is 1232 × 400 with the bus. Which of the 88 is actually
-  worst needs the depth/width histogram over the algorithm table — a data task, open as
-  `CONCERNS.md` §31, and **not invented here**.
+  and persists — in `localStorage`, behind a `try`, because it is a UI preference and not data; a
+  webview that refuses storage costs the pin and nothing else. Risk noted in `CONCERNS.md` §30.
+- **Shrinking is immediate; regrowth waits.** The panels come back the instant a capture lands,
+  because that is the consequence of the press and should read as one. Growing back after a
+  Performance change **waits for the change flash and the reread strip to finish** rather than racing
+  them — §30's conditional, now decided. Two things are already on screen at that moment and a panel
+  resizing under them would be a third, with nothing to say which of the three was about which. Both
+  ends terminate on their own, so the wait cannot hang.
+- **Sized by the worst case, which is now measured rather than assumed.** Drawability was never in
+  question — the MODX draws all 88 algorithms on a smaller screen. What varies is room, and the bound
+  this section used to assume (**up to 6 depth levels with up to 4 parallel branches at one level**,
+  which at 150 px nodes and 30 px rows is 1232 × 400 with the bus) is **low in both halves**. The
+  histogram over the transcribed FM-X table has since been taken — `CONCERNS.md` §31, now resolved —
+  and the real maxima are **8 rows** (algorithm **66**, the single chain of eight), **8 operators on
+  one row** (algorithm **1**, eight carriers on the bus), 7 operators of one branch on one row
+  (algorithm **68**) and 8 branches side by side (again the **1**).
+
+  **The width survives; the height does not.** Eight columns at 142 units of the 1232 is about 119 px
+  of real panel, which clears the 118 px the node's five facts are fitted to. But eight rows of a
+  120 px node is 960 px of the 400 there are, so either the rows or the node has to give — and it is
+  the node. **The row pitch is what the algorithm's own depth leaves, and the node takes it**; below
+  the height the five facts need in order to stack, the node **lays them in a row** and is given the
+  width to do it. Under three rows it stops growing, three being the narrow composition's own row
+  count, and the room a shallow algorithm does not use is air rather than eight nodes as tall as the
+  panel. **The layout decides this and not a CSS container query**: the layout is the only thing that
+  knows how many rows had to share the height, and one rule in units beats a rule in units plus a
+  second one in pixels that can disagree about the same node.
+
+  **`1232` is the drawing's coordinate space, not its width on screen.** The figures column stays in
+  this composition — it is the one thing that says what a capture would fill (§10.1), and `before any
+  capture` is exactly the state that produces it — so 1232 + 208 does not fit the 1280 the viewport is
+  fixed at. What the algorithm takes is the two live views' room and no more, which is 1 070 px; the
+  1232 × 400 viewBox stretches into it.
 - **Role reads from position, and shape confirms it.** At 700 px the node had to carry its own role;
   with room the layout carries it. **Who is a carrier: it touches the output bus** — that is the
-  definition, drawn. **Who feeds whom: one downward read** — every arrow points down, depth is height.
-  **Who is at zero: parked to the right on a dashed stub**, off the branches, drawn and never deleted.
+  definition, drawn, and it has **no exception**: a test over the transcribed table asserts that in
+  all 88 the operators at chain depth 0 are exactly the carrier list. **Who feeds whom: one downward
+  read** — every arrow points down, depth is height. **Who is at zero: parked to the right on a dashed
+  stub**, off the branches, drawn and never deleted.
   The round-3 vocabulary survives underneath, so there is nothing new to learn.
+- **The stub ends nowhere, and a parked operator's routes are not drawn at all.** The narrow grid
+  draws them cut; here the node is off the branches, so a line from the stub back into the grid would
+  cross the whole drawing to claim a path that carries nothing. What it gets is `8f`'s own drawing: a
+  dashed drop closed by a short bar. **It never reaches the bus and never takes the bus row**, because
+  touching the bus is the entire definition of a carrier in this composition and a dead end touching
+  it would put a hole in the one thing the drawing says. The stub takes as many columns as it needs to
+  keep the row pitch, and the total never passes eight.
+- **`8f`'s annotations are the sheet teaching its own reader, and none of them is app copy.**
+  `ABOVE THE BUS — THESE FEED SOMEBODY`, `DOWN ON THE BUS — THESE ARE THE CARRIERS`, `STUB ENDS
+  NOWHERE — AT ZERO, ON NO BRANCH` and `THE OUTPUT BUS — TOUCHING IT IS WHAT MAKES AN OPERATOR A
+  CARRIER` are drawn in the ink of the thing each one points at, and none ships. The composition
+  exists precisely so that position says it without a caption. Same standing as the waterfall
+  caption's `22 FRAMES` (§8.3): an illustration on the sheet, not a string to implement.
 
 ### 10.1 · The measured column before the first capture
 
@@ -449,6 +552,13 @@ and clean chain 4 of 4.
 **This screen is also where the anchor's debug provenance lives** — poll rate and `31 00 00`, plus the
 figures that are properties of the loaded sound: `TEMPO 90 BPM · background 40 msg/s`. Touching the
 anchor opens this screen, so nothing became unreachable when the header eyebrow was removed (§17.1).
+
+**It is also the only home `MAIN L/R` can have.** The audio stream reports its device name, its rate
+and its channel count and the `LIVE` pill shows those three as measured facts (§8.1); where the
+keyboard is routing its Part output is not observable from the stream at all. So `MAIN L/R` is
+`DOCUMENTED` routing and is drawn here, next to the datum it qualifies — and **nowhere** until this
+screen exists. Inventing that fourth fact in the one line whose point is that nothing in it is
+invented would be the exact failure the provenance rules are for.
 
 **Rest is a chip in the header** — the one that already existed. No permanent status panel: six green
 lights taking up space inform nobody. When something fails the chip **says the consequence, not the
@@ -542,7 +652,31 @@ They do not need a design each; they need one affordance, and this drawer is it,
   affordance: a panel labelled `#5` is visibly on its way out, so nobody designs around it, and closing
   the ticket has an obvious consequence — the chip disappears and the drawer gets one item shorter.
   When the last one goes, the handle goes with it and no layout is rethought: it was always 52 px on
-  the outside.
+  the outside. **The numbers in `8g` are illustrative** — `#16`, `#5` and `#8` are the phase-1
+  defaults the sheet was drawn with, and what a chip actually wears is the number of the ticket that
+  retires it.
+- **Each chip has a retirement condition, and it is not "the end of phase 1".** An instrument retires
+  when the question it was built to answer is answered *and written somewhere permanent*. That is what
+  makes the number on the chip mean something rather than decorate it:
+
+  | chip | retires when |
+  |---|---|
+  | **SWEEP** (#43) | the `op` / `part` addressing rule (`op<<4` plus the part index) is confirmed on a Part other than 1 and the result is written into `CONTEXT.md` |
+  | **BRIDGE** (#44) | the capture path is trusted end to end: the scope contract and the harmonics rule are closed and `CAPTURE` fills the figures column on demand |
+  | **STARTUP** (#45) | the copies screen lands, where the safety dump's size, time and state are drawn (the reread already has its designed strip) |
+  | **AUDIO** (#46) | the check screen lands, where `Line (MODX) · 2 ch · 44 100 · peak · floor` is a designed datum |
+  | **PORT** (#47) | the check screen lands **and** no pending measurement needs the polling switch or the note generator |
+
+- **The chips are tabs: one instrument is on screen at a time.** That is what `8g` draws — one chip
+  lit, one body under it — and it is what lets the open handle carry a retirement line that is only
+  true of one panel. It also keeps retirement a **deletion** rather than a refactor: closing a ticket
+  removes one case and one entry, and nothing else moves.
+- **Nothing inside the drawer is rendered while it is shut.** Not hidden — absent. A readout nobody
+  can see is still work done on every pass, and these are fed at the audio rate. It is also what makes
+  "the body regains the height the readouts took" structural rather than a stylesheet promise.
+- **The ticket number sits at the type floor (10 px), like the instrument's name, and steps down in
+  ink rather than in size.** `8g` sets it a pixel smaller; a number whose whole job is to say which
+  ticket to close is read, and §20 rule 17 puts the floor for anything read at 10 px.
 - **The SysEx console is the one chip with no ticket**, because it is permanent. That is how you tell
   the one that stays from the five that go.
 - **Closed by default**, and nothing inside animates or counts up. Nothing in a drawer competes with
@@ -803,7 +937,13 @@ mode" and no "desktop mode" to maintain separately. The left hand is on the MODX
     flash for "the tutor just wrote to your keyboard". State transitions ≤ 180 ms.
 16. No UI operation may cost more than `--frame-live` (33 ms). If a panel does not fit the budget, the
     panel is simplified.
-17. Type floor `--text-micro` 10 px. The grid and axis labels may disappear; the figures may not.
+17. Type floor `--text-micro` 10 px **for anything a figure is read from**. The grid and axis labels
+    may disappear; the figures may not. **Three labels sit at 8 px on purpose** and are the whole list
+    of exceptions: the node's role word (`CARR` / `MOD` / `ZERO`), the mode's roadmap line (§3.1) and
+    `HUSH`'s own label. None of the three carries a figure — each names a thing that is also drawn —
+    which is the test. The token's comment used to call 10 px an absolute floor with nothing below it,
+    and that comment was the thing that was wrong: it is corrected in `design-tokens.css` rather than
+    the design being bent to match it.
 
 ## 21 · What I decided **not** to do
 
@@ -859,9 +999,9 @@ spikes and the app is measuring its own reality:
 
 | where it appears | spike figure | the running build |
 |---|---|---|
-| noise floor | −104 dB | **−66 dB** |
+| noise floor | −104 dB, relative to the peak | **−58 to −66 dB**, relative to the peak |
 | wide ring poll rate | 12.2 Hz | **10.0–10.4 Hz** |
-| reread set | 416 addresses | **383 of 384** |
+| reread set | 416 addresses | **384** requests |
 | bulk dump | 7 669 B | **19 003 B in 123 messages** |
 | temporary readout blocks | three | **five** |
 
@@ -870,14 +1010,29 @@ The one with a design consequence: round 7's stale thresholds were derived from 
 untouched** — four times its own ring period — which is exactly why it was written as a rule and not as
 two numbers.
 
+**On the floor: it was never two formulas, it was two signals.** There is one floor computation —
+median of all bins, Hann 4096 — and −104 is what it answers on the golden WAVs offline while −58 to
+−66 is what it answers on the live USB stream. Both are right for what they were measured on, and the
+figures in this table are quoted **relative to the peak**, which is how the spikes reported them.
+**The word `FLOOR` on screen means absolute dBFS** (§8.2), so a figure from this table and a figure
+from the app cannot be compared until the peak is added back. And the floor is not what decides the
+non-harmonic chips: the generator's comb sits *below* the live floor and the chips still fire,
+because the partial picker has its own absolute threshold and never consults this number.
+
+**On the reread: 384 is the total, and 383 is the answered count.** The token and the readout are the
+number of requests the build issues; exactly one of those addresses answers nothing, which is
+documented here rather than hidden in an off-by-one. Anywhere the reread *set* is quoted, it is 384.
+
 **Where the build and the spikes disagree, this document follows the build**, because the build is
 measuring the instrument that is actually on the desk. The spike figures are kept in this table rather
 than deleted, because they are what the earlier rounds were reasoning from and a reader who finds the
 old number somewhere should be able to see that it was superseded and not invented.
 
-Four values in `design-tokens.css` still carry the spike figures and are marked `STALE` in the file
-rather than changed, because round 9 was not allowed to change values. See `CONCERNS.md` §29 — it
-needs one decision from the owner.
+**Session 2 applied all of it to `design-tokens.css`**, in both copies of the file and identically:
+`--probe-idle` 12 → 10, `--ring-wide-hz` 12.2 → 10, `--stale-wide-s` 0.33 → 0.40, `--stale-narrow-s`
+0.66 → 0.80, `--reread-total` 416 → 384, plus the two ceiling-datum tokens the round proposed. **No
+value in either file is stale and no marker is left**, so the precedence exception `README.md` carried
+for them is gone: the token file and the prose agree. See `CONCERNS.md` §29, resolved.
 
 ## 23 · Viewport
 

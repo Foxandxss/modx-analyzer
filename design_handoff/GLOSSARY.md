@@ -9,7 +9,7 @@ See **§2 · The stamps become four words and two shapes**.
 
 **This file is the authority on every user-visible string.** Where any other document disagrees with
 §6, §6 wins. If a Spanish string is not in §6, it has no approved English form yet — **ask, never
-invent**; §4b is the one such row today.
+invent**. §4b was the one such row and **it is closed**: there is no open row today.
 
 ---
 
@@ -38,7 +38,7 @@ weight over the Bessel overlay, so one word covers the node stamp and the theory
 | current (es) | new (en) | what it means | where |
 |---|---|---|---|
 | `ANCLA` | **ANCHOR** | The name of the loaded Performance, polled at 1 Hz. It is the only way the app can tell the sound changed, because loading a Performance emits nothing. "Anchor" survives translation because it says its job: the one fixed thing everything else is judged against. | primary header, left of the algorithm pill |
-| `ANCLA · 1 Hz · 31 00 00` | *(removed from the header — see `DESIGN.md` §8.3)* | Poll rate and SysEx address are debug provenance. They keep their home in the check screen, which the anchor already opens on touch. | check screen only |
+| `ANCLA · 1 Hz · 31 00 00` | *(removed from the header — see `DESIGN.md` · **The anchor (`6a`) — the Performance name, promoted to data**)* | Poll rate and SysEx address are debug provenance. They keep their home in the check screen, which the anchor already opens on touch. | check screen only |
 | `SIN MEDIR EN ESTE SONIDO` | **NOT MEASURED IN THIS SOUND** | The polls recovered by themselves after the sound changed; the capture did not, and cannot until a note is held again. This is the state the header stays in — it does not return to rest. | anchor eyebrow, after a reread |
 | the 2 200 ms flash | **the change flash** | The same flash the tutor's writes use. It is not a term the user reads; it is named here so the two uses stay one implementation. | anchor; tutor write notice |
 
@@ -131,10 +131,10 @@ the two that lost their word are the two that were already unmistakable by shape
 
 | term | what it means | where |
 |---|---|---|
-| **the ceiling datum** | One dashed 2 px line drawn across all eight operator nodes at the patch's highest Level. Real patches cluster their operators between 71 and 99, so eight independent fills look identical; against one shared line the eye reads the **gaps**, which is the comparison that matters. The fill stays linear 0–99 — see `DESIGN.md` §8.1. | operator nodes on the main screen; the eight |
-| **the corner** | A 44 × 44 open corner mark (two 2 px strokes) at the bottom-right of every operator node. It is the visible path from the node to the operator editor. Not an icon, not a menu, not a chevron: the same mark on all eight, and the words appear **once** in the diagram legend. | operator nodes |
+| **the ceiling datum** | One dashed 2 px line drawn across all eight operator nodes at the patch's highest Level. Real patches cluster their operators between 71 and 99, so eight independent fills look identical; against one shared line the eye reads the **gaps**, which is the comparison that matters. The fill stays linear 0–99 — see `DESIGN.md` · **The operator node**. | operator nodes on the main screen; the eight |
+| **the corner** | A 44 × 44 open corner mark (two 2 px strokes) at the bottom-right of every operator node. It is the visible path from the node to the operator editor. Not an icon, not a menu, not a chevron: the same mark on all eight, and the words appear **once** in the diagram legend. **The running build draws the corner and holds the legend line back**, because the operator editor does not exist yet and a caption promising a path nobody can walk is a caption lying; the line joins in the same commit as the editor. | operator nodes |
 | **the bench drawer** | One bottom drawer holding every temporary instrument (bridge, startup, audio and port readouts #16 / #5, sweep readout #8 — five today, N tomorrow), each as a chip on the 52 px handle **with its ticket number showing**. Closed by default. Same vocabulary as the SysEx console drawer. A temporary instrument that shows its ticket is visibly on its way out. | every screen, bottom edge |
-| **the scope contract** | The three things the scope guarantees in writing: which period it locked to, how many cycles it shows, and what it draws when it cannot lock. See `DESIGN.md` §8.4. | scope panel caption |
+| **the scope contract** | The three things the scope guarantees in writing: which period it locked to, how many cycles it shows, and what it draws when it cannot lock. See `DESIGN.md` · **The scope contract**. | scope panel caption |
 
 ---
 
@@ -150,12 +150,20 @@ the two that lost their word are the two that were already unmistakable by shape
 
 ---
 
-## 4b · The one open row
+## 4b · The one open row — **closed by the running build**
 
-`FE Line` — the small grey readout beside `ALG 37` in the running build's header. **I do not know what
-it reads out**, so it is left verbatim on screen and unrenamed here. The round-1 rule applies to names
-as much as to values: I do not rename what I cannot define. Tell me what it is and it gets a row and a
-word like everything else.
+`FE Line` — the small grey readout beside `ALG 37` in the running build's header — **is the feedback
+row**. It reads `FB n · OP n`: the Performance's feedback amount and the operator carrying it, both
+polled on the wide ring beside the eight operators' parameters. The round-1 rule is satisfied rather
+than suspended — the readout has a definition, so it can be named.
+
+**The words do not change.** `Feedback` is Yamaha's own name for the parameter (`48 0p 50`, per Part)
+and `OP` is how the instrument numbers its operators, so both fall under §5 and are left exactly as
+the hardware spells them. What changed is that the app no longer prints `FE Line`, which was a label
+for a fact nobody could state.
+
+**There is no open row left.** Every string the running build renders has either a §6 entry or a form
+quoted in the current text of a `DESIGN.md` section.
 
 ## 5 · Out of scope — **do not translate these**
 
@@ -174,6 +182,15 @@ matters.
 ---
 
 ## 6 · Renames — the list running code follows
+
+**One note before the list, because a later pass will otherwise collapse them.** `MEASURED` and
+`CAPTURE` are **two words for two different things** and neither is a synonym of the other.
+`CAPTURE` is the **act and its noun** — the press, the 65 536-sample window it takes, and the artefact
+it leaves behind with a size, an age and a note. `MEASURED` is the **provenance stamp** on a figure
+that came out of one. So `MEDIDA` (the readout label, a noun for the thing) becomes `CAPTURE`, while
+`RATIO MEDIDO` (a figure and where it came from) becomes `MEASURED RATIO`. Translating them to one
+word would take the stamp with it and leave every figure on screen unable to say what kind of claim it
+is, which is the distinction §2 exists to keep.
 
 **Copy strings** (user-visible):
 
@@ -199,9 +216,10 @@ RUTAS · DOCUMENTADO                     → ROUTES · DOCUMENTED
 ALGORITMO 06 / ALG 37                   → ALGORITHM 06 / ALG 37
 LOS OCHO · 10 Hz                        → ALL EIGHT · 10 Hz
 VIVO                                    → LIVE
-SUELO                                   → FLOOR
+SUELO                                   → FLOOR   (absolute dBFS, one meaning everywhere)
 PARCIALES                               → PARTIALS
-los ajustes no entran en esta sesión    → (removed — see DESIGN.md §8.2)
+los ajustes no entran en esta sesión    → (removed — see DESIGN.md · The measured column
+                                           before the first capture)
 hay que volver a medir                  → NOT MEASURED IN THIS SOUND
 CADENA LIMPIA                           → CLEAN CHAIN
 CADENA SUCIA · NO ESTÁS MIDIENDO FM PURO→ DIRTY CHAIN · THIS IS NOT PURE FM
@@ -213,7 +231,7 @@ A CERO · CORTAN                         → AT ZERO · SILENT
 CREAR                                   → BUILD
 APRENDER                                → LEARN
 PORT / MOD / INACTIVO  (node role)      → CARR / MOD / ZERO
-FE Line                                 → (unrenamed — see §4b, meaning unknown)
+FE Line                                 → FB n · OP n   (the feedback row; FB and OP are Yamaha's — §4b)
 DIAGRAMA DE OPERADORES                  → ALGORITHM
 ESPECTRO / ARMÓNICOS / WATERFALL        → SPECTRUM / HARMONICS / WATERFALL
 CIFRAS MEDIDAS                          → MEASURED
@@ -267,6 +285,8 @@ misleading and are the only edits: `--theory` is described as "la teoría" (now:
 `--probe-idle` / `--probe-playing` as "sondeo" (now: *poll rate*). **No value changes, no name
 changes, no consumer breaks.**
 
-One token is worth adding rather than renaming, and it is listed in `CONCERNS.md` §29 rather than
-applied unilaterally: `--stale-*` already exists but there is no token for the **ceiling datum**
-stroke, because the datum is new in this round.
+One token was worth adding rather than renaming, and round 9 listed it in `CONCERNS.md` §29 rather
+than applying it unilaterally: `--stale-*` already existed but there was no token for the **ceiling
+datum** stroke, because the datum was new in that round. **Session 2 applied it** —
+`--datum-ceiling-stroke` and `--datum-ceiling-color` are in both copies of the file, along with the
+five values §29 raised. No token name changed, then or since.

@@ -23,15 +23,15 @@ The visual direction is **decided: A · Bancada**.
 When two parts of this handoff disagree:
 
 1. **`GLOSSARY.md` §6 wins on any user-visible string.** It is the only authority on copy. If a
-   Spanish string is not in §6, it has no approved English form yet — **ask, never invent**. (One row
-   is deliberately open: `FE Line`, §4b.)
+   Spanish string is not in §6, it has no approved English form yet — **ask, never invent**. (The one
+   deliberately open row, `FE Line`, is **closed**: it is the feedback row, `FB n · OP n`. §4b.)
 2. **The current text of a section wins over any historical note inside it.** Where a section carries
    a superseded figure or an earlier decision, it is labelled as such and the live rule is the one
    stated in the section body.
-3. **`design-tokens.css` is the source of truth for values** — with one exception that exists right
-   now and should not last: five values in it are marked `STALE` because the running build measured
-   different figures and round 9 was not allowed to change values. Those five are listed in
-   `CONCERNS.md` §29, and until they are changed, **the prose figure is the correct one**.
+3. **`design-tokens.css` is the source of truth for values**, with no exception. The five values
+   round 9 had to leave marked stale were **applied in session 2** along with the two ceiling-datum
+   tokens it proposed; both copies of the file carry identical values, the accidental third copy under
+   `design/` is deleted, and no marker is left. See `CONCERNS.md` §29, resolved.
 4. **Where the paper and the measurement disagree, the measurement wins.** Where the phase-0 spikes
    and the running build disagree, **the build wins** — it is measuring the instrument on the desk.
 
@@ -85,11 +85,12 @@ meant, in every document and in the pieces.
 **Checked against the running build.** Confirmed: six of the eight operator levels are identical to the
 eye, the ratio row reads `×0.50 ...` in **all eight** nodes, the scope is flat under `2 CYCLES ·
 43.8 Hz`, and role is genuinely unreadable from position in the 683 px diagram. **Corrected**: noise
-floor **−66 dB** (not −104), wide ring **10.0–10.4 Hz** (not 12.2), reread set **383 of 384** (not 416),
-bulk dump **19 003 B / 123 msg** (not 7 669 B), and the temporary readout is **five blocks** (not
-three) — so round 7's stale thresholds become 0.40 s and 0.80 s, while the *rule* behind them survives
-untouched. **One answer changed**: the build's `DOCUMENTADO` stamp is a provenance source the glossary
-was missing.
+floor **−58 to −66 dB** on the live stream (not −104, which is the same formula on the golden WAVs
+offline — both relative to the peak), wide ring **10.0–10.4 Hz** (not 12.2), reread set **384**
+requests of which 383 answer (not 416), bulk dump **19 003 B / 123 msg** (not 7 669 B), and the
+temporary readout is **five blocks** (not three) — so round 7's stale thresholds become 0.40 s and
+0.80 s, while the *rule* behind them survives untouched. **One answer changed**: the build's
+`DOCUMENTADO` stamp is a provenance source the glossary was missing.
 
 **Round 9 was editorial**: the round-8 chapter was folded into the sections it corrected so that every
 rule is stated once, the remaining documents were translated, and **no rule changed**. What folding
@@ -204,11 +205,13 @@ being a sidebar shoved into a corner.
     `ALGORITHM` (12 px, tracking .22em, `--ink-secondary`), and on the right the provenance —
     `POLLED · SysEx 49 op 1A · 10 Hz` for the parameters and **`ROUTES · DOCUMENTED`** for the
     topology, which comes from Yamaha's table and not from the keyboard. Node canvas on an SVG of
-    routes. Legend foot: three samples (carrier / modulator / level 0), `5 of 43 facts shown · the
-    corner opens the other 38`, and the **ceiling datum** sample.
+    routes. Legend foot: **four** samples — carrier, modulator, level 0 and the **ceiling datum** with
+    `THE LOUDEST OPERATOR IN THIS PATCH` — plus `5 of 43 facts shown · the corner opens the other 38`,
+    which is **held back in the build** until the operator editor exists.
   - **Column 2 — signal views**: two equal panels stacked (`flex:1` each, `padding: 12px 14px`),
     separated by `border-bottom: 2px solid rgba(255,255,255,.09)`. **SCOPE** on top with its contract
-    caption (`LOCKED 349.23 Hz · 4 CYCLES · 11.5 ms`), **SPECTRUM** below (`LOG 1×–32× · FLOOR −66 dB`).
+    caption (`LOCKED 349.23 Hz · 4 CYCLES · 11.5 ms`), **SPECTRUM** below (`LOG 1×–32× · FLOOR −66 dB`
+    — **absolute dBFS**, not relative to the peak; see `DESIGN.md` · *The scope contract*).
     View frame: `border: 1px solid rgba(255,255,255,.07)`, `border-radius: 14px`, background
     `linear-gradient(#0a0f10,#070a0b)`.
   - **Column 3 — measured figures**: `padding: 12px 13px`, `gap: 10px`. The **HARMONICS** panel on top
@@ -218,8 +221,10 @@ being a sidebar shoved into a corner.
     `WORST PARTIAL`, and `LAST CAPTURE` (`65536 · 14 s ago`, `C4 held · peak −18 dBFS`).
     **Before the first capture this column is a contract, not a hole** — see `8d` and `DESIGN.md` §10.1.
 - **Waterfall / scope**, `flex: 0 0 156px`, shared in a tabbed panel of `--hit-tab` (44 px),
-  `border-top: 2px solid rgba(255,255,255,.09)`. Header: `WATERFALL · 22 FRAMES · 0 → 712 ms` — both
-  figures computed from the actual capture — and on the right `TIME ↓ · FREQUENCY →`. Ridgelines in an
+  `border-top: 2px solid rgba(255,255,255,.09)`. Header: `WATERFALL · 22 FRAMES · 0 → 712 ms` — **an
+  illustration; both figures are computed at runtime**, the count from the rows actually drawn (the
+  panel keeps 14) and the span from per-row time stamps, last minus first — and on the right
+  `TIME ↓ · FREQUENCY →`. Ridgelines in an
   SVG with `preserveAspectRatio="none"`, colour from `#eafff4` (newest) to `#1e7351` (oldest), stroke
   1.4 → 1 px with `vector-effect: non-scaling-stroke`.
 
@@ -252,7 +257,10 @@ for.
 - **Transport — `LIVE` and `CAPTURE` are two different acts, and that has to be visible.**
   - *LIVE (a state)*: pill `padding: 12px 16px`, `border: 1px solid rgba(125,240,176,.28)`, background
     `rgba(125,240,176,.06)`, a 7 px dot with `animation: livePulse 1.4s ease-in-out infinite` (opacity
-    .35 → 1), text `LIVE · 30 fps`. Continuous, free, and **produces nothing you can quote**.
+    .35 → 1), text `LIVE · 30 fps`. Continuous, free, and **produces nothing you can quote**. Its
+    **second line is the audio the app actually opened** — `Line (MODX) · 44100 Hz · 2 ch`, three
+    measured facts off the stream, nothing hardcoded. `MAIN L/R` is the keyboard's routing, which the
+    stream cannot report: it is `DOCUMENTED` and lives on the check screen (`4e`).
   - *CAPTURE (an act)*: button `padding: 13px 22px 13px 16px`, `border: 1.5px solid var(--carrier)`,
     `border-radius: 999px 8px 8px 999px`, background `linear-gradient(180deg, rgba(243,177,63,.22),
     rgba(243,177,63,.06))`, shadow `0 0 28px -8px rgba(243,177,63,.7)`; inside, a "shutter" (26 px
@@ -263,7 +271,12 @@ for.
   `stroke-dasharray: 3 3` and carry a `NOT A HARMONIC · 2756 Hz` chip in the panel's top right corner.
   **They are not hidden and are not counted as harmonics.** The `9TH HARMONIC · PEAK` label goes in the
   left corner so they do not collide. And **never a chip without its frequency**: the Hz is what tells a
-  generator comb from mains hum or aliasing, so a warning without a number cannot be acted on.
+  generator comb from mains hum or aliasing, so a warning without a number cannot be acted on. The
+  build makes that unrepresentable — the chip's `hz` is a required input.
+  **The floor does not gate these chips.** The generator's comb sits *below* the live floor and they
+  still fire, because the partial picker has its own **absolute** threshold and never consults the
+  floor figure. That is why `FLOOR` being absolute dBFS changes what the readout says and changes
+  nothing about what is marked.
 
 ### 2. Directions B · Nébula and C · Plotter — ARCHIVED
 
@@ -775,6 +788,15 @@ it is permanent. Alert behaviour belongs to the console alone: a bridge log with
 say and stays quiet. When the last ticket closes, the handle goes with it and no layout is rethought — it
 was always 52 px on the outside.
 
+**The numbers on `8g`'s chips are illustrative.** What a chip wears is the number of the ticket that
+actually retires it, and each has a **retirement condition** rather than a phase-1 default: SWEEP
+(#43) when the operator/part addressing rule is confirmed off Part 1 and written into `CONTEXT.md`;
+BRIDGE (#44) when the capture path is trusted end to end; STARTUP (#45) when the copies screen lands;
+AUDIO (#46) when the check screen lands; PORT (#47) when the check screen lands **and** no pending
+measurement needs the polling switch or the note generator. Full table in `DESIGN.md` §16.1. The
+chips are **tabs** — one instrument on screen at a time — and nothing inside is rendered while the
+drawer is shut.
+
 ### 18. Round 6 — the patch changes underneath
 
 File: `design/Round6-screens.dc.html`. Five pieces, and **the big work of that round**.
@@ -942,9 +964,10 @@ What the real app will have to hold, by zone:
 
 ## Design Tokens
 
-Source of truth: **`design-tokens.css`** (semantic names, not literals). Its comments are English; **no
-name and no value changed in rounds 8 or 9**, and five values are marked `STALE` — see the precedence rule
-above and `CONCERNS.md` §29. Summary:
+Source of truth: **`design-tokens.css`** (semantic names, not literals). Its comments are English and
+**no token name has ever changed**. The five values round 9 had to leave marked stale were applied in
+session 2, together with the two ceiling-datum tokens — see `CONCERNS.md` §29, resolved. **Nothing in
+the file is stale and the two copies are identical in values.** Summary:
 
 **Surfaces** — `--surface-base #06080a`, `--surface-panel #0a0f10`, `--surface-raised #0f1417`,
 `--surface-sunken`. Rules: `--rule-min: 2px`, `--rule-color: oklch(1 0 0 / .09)`,
@@ -963,8 +986,9 @@ above and `CONCERNS.md` §29. Summary:
 
 **Typography** — `--font-ui: 'Helvetica Neue', Helvetica, Arial, sans-serif`;
 `--font-num: ui-monospace, 'Cascadia Mono', Consolas, monospace` for **every measured figure** (tabular).
-Scale: display 44 / title 26 / section 20 / body 15 / label 12 / **micro 10 (absolute floor)**; readout-xl
-30, readout 22, node 25. Tracking: label .14em, eyebrow .24em; leading 1.55.
+Scale: display 44 / title 26 / section 20 / body 15 / label 12 / **micro 10 (the floor for anything a
+figure is read from; three labels sit at 8 px on purpose — the node's role word, the mode's roadmap
+line and `HUSH`'s label)**; readout-xl 30, readout 22, node 25. Tracking: label .14em, eyebrow .24em; leading 1.55.
 
 **Spacing** — base 4: 4 / 8 / 12 / 16 / 20 / 26 / 34 / 44.
 
@@ -988,15 +1012,17 @@ fatten when the viewBox stretches.
 `--frame-live 33.3ms`.
 
 **Diagram** — `--op-node-w 118px`, `--op-node-h 108px` (`--op-node-h-tall 116px` for nodes with a measured
-ratio), `--op-col-gap 82px`, `--op-row-gap 28px`, `--op-bus-offset 30px`. **Not yet a token**: the ceiling
-datum's stroke and colour — proposed in `CONCERNS.md` §29 rather than added unilaterally.
+ratio), `--op-col-gap 82px`, `--op-row-gap 28px`, `--op-bus-offset 30px`, and the ceiling datum's
+`--datum-ceiling-stroke 2px` / `--datum-ceiling-color oklch(1 0 0 / .3)`. **The node's size is the
+narrow composition's**: in the 1232 × 400 drawing it is the layout that sizes the node, from the room
+the algorithm's own depth leaves — `DESIGN.md` §10.
 
 **HUSH** — `--hit-panic 56px`, `--gap-isolate 16px`, `--shape-panic` (the only octagon),
 `--panic-idle-bg` / `--panic-live-bg`, `--panic-ack 1500ms`.
 
 **The player** — `--play-hold 1400ms`, `--play-gap 400ms`, `--probe-idle` / `--probe-playing` (poll rate in
-Hz when silent and when holding — **both marked `STALE`**), `--who-app` (cyan: the app is playing) /
-`--who-hands` (phosphor: you are playing).
+Hz when silent and when holding; `--probe-idle` is **10**, the rate the build achieves),
+`--who-app` (cyan: the app is playing) / `--who-hands` (phosphor: you are playing).
 
 **A/B comparison** — `--ab-a-ink` + `--ab-a-alpha` (hollow and dimmed), `--ab-b-ink` (solid and luminous),
 `--ab-bar-w 13px`. **A and B are told apart by fill, not by colour**: dashed stays reserved for prediction.
@@ -1133,6 +1159,11 @@ than steps of their own: **the algorithm surface** (§10, part of step 1) and **
 whichever step first needs a temporary instrument — in practice step 1, since the bridge log exists
 already).
 
+**One thing that has to be built before a capture is drawn at all**, and it is not on the list because
+it is a rule rather than a screen: **the capture Aval**. A capture is `MEASURED` only when the anchor
+vouches for both ends of its 1.5 s window; without it, a Performance change in the second before the
+press produces a measurement of the old sound attributed to the new patch. `CONCERNS.md` §23.1.
+
 ## What was decided NOT to do
 
 Summarised from `DESIGN.md` §21, so it does not creep back in:
@@ -1148,7 +1179,9 @@ Summarised from `DESIGN.md` §21, so it does not creep back in:
 - **No 3D waterfall**: the flat ridgeline teaches more and perspective lies about amplitudes.
 - **No tooltips as carriers of information** — with a finger they do not exist.
 - **No DX7 corpus and no patch library**: last phase.
-- **No prose caption anywhere.** The one that existed was removed rather than recomputed.
+- **No prose caption anywhere.** The one that existed was removed rather than recomputed. Where a
+  caption states figures, they are computed from what is actually drawn — the sheets' own numbers
+  (`22 FRAMES · 0 → 712 ms`, and `8f`'s four annotations about the bus) are illustrations, not copy.
 - **No settings surface for the temporary instruments.** The bench drawer holds them and does not grow
   options.
 
@@ -1176,9 +1209,12 @@ knowing which is which:
   of 40 msg/s at 90 BPM (**it scales with tempo**), the map's semantics verified on Op5 and Op7 (12 of 12,
   with the prediction written before looking), Feedback at `48 0p 50` **per Part**, that reserved addresses
   **answer a read**, and that `30 4B 00` is **read-only**.
-- **Measured by the running build** (round 8, the two `RUNNING-app-*.jpg` captures): noise floor −66 dB,
-  wide ring 10.0–10.4 Hz, reread set 383 of 384, bulk dump 19 003 B in 123 messages. **These supersede the
-  spike figures** wherever they conflict; the superseded values are listed once, in `DESIGN.md` §22.
+- **Measured by the running build** (round 8, the two `RUNNING-app-*.jpg` captures): noise floor −58 to
+  −66 dB relative to the peak, wide ring 10.0–10.4 Hz, reread set **384** requests of which 383 answer,
+  bulk dump 19 003 B in 123 messages. **These supersede the spike figures** wherever they conflict; the
+  superseded values are listed once, in `DESIGN.md` §22. Session 2 added the 88-algorithm maxima —
+  8 rows, 8 columns, reached by the **66** and the **1** — computed from the transcribed table and so
+  `DOCUMENTED` rather than measured (`CONCERNS.md` §31).
 
 Three data corrections the sources uncovered and that are already applied: **Spectral Skirt is 0-7** (not
 0-99, and that changes the control: eight positions, not a continuous knob), **the filter Cutoff is 0-255

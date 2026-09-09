@@ -64,7 +64,10 @@
   --text-section:  20px;
   --text-body:     15px;
   --text-label:    12px;
-  --text-micro:    10px;   /* absolute floor; nothing is set below it       */
+  --text-micro:    10px;   /* floor for anything a FIGURE is read from.     */
+                           /* Three labels sit at 8px on purpose and are    */
+                           /* the whole list: the node's role word, the     */
+                           /* mode's roadmap line, and HUSH's label.        */
   --text-readout-xl: 30px; /* the headline measured figure                  */
   --text-readout:    22px;
   --text-node:       25px; /* Level inside the operator node                */
@@ -134,7 +137,8 @@
 
   /* --- The SysEx console (5c) ---------------------------------------------- */
   /* A drawer, not a screen: it opens over the bottom strip.                */
-  /* Round 8 generalises these two into the bench drawer. DESIGN.md §14.6.  */
+  /* Round 8 generalises these two into the bench drawer. See DESIGN.md,   */
+  /* "The bench drawer - one home for every temporary instrument".          */
   --drawer-grab:    52px;   /* the drawer handle                            */
   --drawer-lift:    0 -22px 44px -20px oklch(0 0 0 / .9);
   --byte-box:       6px;    /* corner radius of a labelled byte box        */
@@ -176,7 +180,9 @@
 
   /* --- Operator diagram geometry -------------------------------------------- */
   /* Size after the round-3 rebalance: the diagram takes 700 px. Round 8
-     expands it to 1232 × 400 when nothing is measured. DESIGN.md §13.5.   */
+     expands it to 1232 x 400 when nothing is measured. See DESIGN.md,
+     "The main screen when there is no capture on it": in that drawing the
+     LAYOUT sizes the node from the room the depth leaves, not these two.  */
   --op-node-w: 118px;  --op-node-h: 108px;  /* also a touch target          */
   --op-node-h-tall: 116px;                  /* node carrying a measured ratio */
   --op-col-gap: 82px;  --op-row-gap: 28px;
