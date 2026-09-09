@@ -709,8 +709,9 @@ pub fn wide_ring(part: u8) -> Vec<Polled> {
 /// operators, one read per **parameter** and not per byte.
 ///
 /// This is what the relectura goes through, and its length is the total the strip
-/// counts against. It is deliberately not the design's 416: that figure is the
-/// fase 0c sweep, which asked every `al` of `ah` 48 and 49 one byte at a time,
+/// counts against. The design sheet said 416 until session 2 moved
+/// `--reread-total` to 384 to match this: the 416 was the fase 0c sweep, which
+/// asked every `al` of `ah` 48 and 49 one byte at a time,
 /// and a two-byte parameter answers its whole data field from its first address —
 /// so asking its second byte separately asks for something that is not a
 /// parameter. The rest of the difference is the table's one unresolved
@@ -1012,8 +1013,9 @@ mod tests {
             patch.len(),
             PART_FMX.entries.len() + 8 * OPERATOR.entries.len()
         );
-        // 72 + 39 × 8 = 384, and the number is written out because the design's
-        // sheet says 416. The 32 of the difference are `49 op 2B`-`2E`, which the
+        // 72 + 39 × 8 = 384, and the number is written out because the design
+        // sheet said 416 before session 2 moved the token here. The 32 of the
+        // difference are `49 op 2B`-`2E`, which the
         // Data List swallows into the five reserved bytes of `2A` and the fase 0c
         // sweep counted as answering: the one unresolved contradiction of this
         // table (`docs/results`), closed by four reads with the keyboard in front

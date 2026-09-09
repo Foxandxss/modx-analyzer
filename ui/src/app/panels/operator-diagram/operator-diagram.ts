@@ -84,7 +84,7 @@ export class OperatorDiagram {
 
   protected readonly labels = PROVENANCE_LABEL;
 
-  /** `LOS OCHO · 12.2 Hz`, measured, never the documented figure. */
+  /** `LOS OCHO · 10.2 Hz`, measured, never the documented figure. */
   protected readonly cadence = computed<PolledValue<number>>(() => {
     const hz = this.freshness.cadenceHz();
     return hz === null ? invalidated<number>() : { value: hz, provenance: 'polled', readAt: null };

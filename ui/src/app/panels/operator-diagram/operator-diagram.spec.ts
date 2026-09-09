@@ -284,8 +284,8 @@ describe('OperatorDiagram', () => {
     const { backend, clock, fixture, host } = await renderDiagram();
     const readAt = NOW;
 
-    // Four idle passes, which is 336 ms and so the multiplier rather than the
-    // 330 ms floor. Neither is ever a number this component chose.
+    // Four idle passes is 336 ms, under the 400 ms floor, so here the floor is
+    // the threshold. Neither is ever a number this component chose.
     const threshold = staleAfterMs(IDLE_PASS_MS);
     backend.operators.set(eight(readAt, IDLE_PASS_MS));
     clock.now.set(readAt + threshold - 1);
@@ -307,7 +307,7 @@ describe('OperatorDiagram', () => {
     const readAt = NOW;
 
     // A whole pass under notes is 430 ms — longer than the idle threshold of
-    // 330 ms. A fixed threshold would stamp the diagram stale every time the
+    // 400 ms. A fixed threshold would stamp the diagram stale every time the
     // owner touched a key, which is exactly when it has to be believable.
     backend.operators.set(eight(readAt, PLAYING_PASS_MS));
     clock.now.set(readAt + PLAYING_PASS_MS + 1);

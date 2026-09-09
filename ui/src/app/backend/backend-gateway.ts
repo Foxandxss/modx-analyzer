@@ -320,8 +320,9 @@ export function sameTopology(a: Topology | null, b: Topology | null): boolean {
 /**
  * The relectura, running or finished.
  *
- * `total` comes from the native side rather than being a constant here, and it
- * is **not** the design sheet's 416: that figure is the fase 0c sweep, which
+ * `total` comes from the native side rather than being a constant here. The
+ * design sheet said 416 until session 2 moved `--reread-total` to 384 to match:
+ * the 416 was the fase 0c sweep, which
  * asked every `al` of `ah` 48 and 49 one byte at a time. The app reads one
  * address per parameter, which is 384 of them, and the strip says what was
  * actually asked for. See `crates/modx-midi/src/table.rs`.

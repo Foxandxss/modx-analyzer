@@ -44,7 +44,7 @@
   --modulator-dim:       oklch(0.62 0.100 235);
   --inert:               oklch(0.36 0.012 180);   /* #3d4a48  Level 0                   */
   --alert:               oklch(0.72 0.160  35);   /* #ff7a5c  artefacto, fallo, aviso   */
-  --theory:              var(--carrier);          /* la teoría es ámbar y discontinua   */
+  --theory:              var(--carrier);          /* PREDICTED: amber + always dashed   */
 
   --carrier-fill:        linear-gradient(to top, oklch(0.80 0.150 75 / .50), oklch(0.80 0.150 75 / .04));
   --modulator-fill:      linear-gradient(to top, oklch(0.79 0.140 235 / .46), oklch(0.79 0.140 235 / .05));
@@ -100,8 +100,8 @@
   /* --- El reproductor --------------------------------------------------- */
   --play-hold:      1400ms;  /* sostén por defecto: C4, vel 100            */
   --play-gap:        400ms;  /* pausa entre vueltas del bucle              */
-  --probe-idle:        12;   /* Hz de sondeo en silencio                   */
-  --probe-playing:      2;   /* Hz mientras el reproductor sostiene        */
+  --probe-idle:        10;   /* poll rate in Hz when silent: measured 10.0-10.4 */
+  --probe-playing:      2;   /* poll rate in Hz while the player holds a note  */
   --who-app:        var(--modulator);        /* toca la app                */
   --who-hands:      var(--signal-primary);   /* tocas tú                   */
 
@@ -174,6 +174,12 @@
   --op-col-gap: 82px;  --op-row-gap: 28px;
   --op-bus-offset: 30px;
 
+  /* El techo del patch: una discontinua compartida por los ocho nodos, al
+     Level más alto que hay. Ocho rellenos entre 71 y 99 pasan a ser siete
+     huecos legibles. */
+  --datum-ceiling-stroke: 2px;
+  --datum-ceiling-color: oklch(1 0 0 / .3);
+
   /* --- Comparación de los ocho (modo crear) ------------------------------ */
   --op-strip-w: 128px;      /* tarjeta de operador en la vista de los ocho  */
   --op-strip-gap: 8px;
@@ -218,6 +224,7 @@
   --anchor-eyebrow: var(--ink-inert);
   --anchor-changed-border: var(--modulator);
   --anchor-changed-bg: oklch(.79 .14 235 / .1);
+  --anchor-old-ink: var(--ink-inert);           /* el nombre viejo, tachado al lado */
   --anchor-flash: 2200ms;                       /* mismo destello que la escritura del tutor */
 
   /* Muerto ≠ caduco. Un valor muerto conserva su forma y pierde su cifra:
@@ -226,7 +233,9 @@
   --dead-ink: #3f4d4a;
   --dead-border: oklch(1 0 0 / .1);
   --dead-note-ink: #4f5f5b;
-  --reread-total: 416;                          /* direcciones que se releen al cambiar el ancla */
+  --reread-total: 384;                          /* direcciones que se releen al cambiar el ancla:
+                                                   las que el build pide. Una no contesta y está
+                                                   documentada, no escondida en un off-by-one. */
   --reread-silent-s: 0.9;
   --reread-playing-s: 5.5;
 
@@ -254,7 +263,7 @@
 
   /* Quién toca — MIDI primero, audio como respaldo (medido, fase 0e) */
   --who-count-by: pitch;                        /* alturas distintas, no mensajes: Multi da 4 por tecla */
-  --who-fallback: "ENTRA AUDIO QUE NO HE PEDIDO";
+  --who-fallback: "AUDIO IS COMING IN THAT I DID NOT ASK FOR";
 }
 
 /* ============================================================
@@ -272,12 +281,12 @@
 
   /* Los dos anillos de sondeo. Comparten canal: abrir un operador ralentiza el seguimiento. */
   --ring-wide-addrs: 40;                        /* 5 parámetros × 8 operadores */
-  --ring-wide-hz: 12.2;                         /* en silencio; 2.43 con ocho notas */
+  --ring-wide-hz: 10;                           /* medido en silencio sobre el MODX8: 10.0-10.4 */
   --ring-narrow-addrs: 43;                      /* el operador abierto */
   --ring-narrow-hz: 6.1;                        /* con el ancho corriendo a la vez */
   --stale-factor: 4;                            /* CADUCO = 4 × periodo de SU anillo */
-  --stale-wide-s: 0.33;
-  --stale-narrow-s: 0.66;
+  --stale-wide-s: 0.40;                         /* cuatro periodos del anillo ancho a 10 Hz */
+  --stale-narrow-s: 0.80;                       /* misma derivación sobre el anillo estrecho */
   --ring-label-scope: zone;                     /* la cadencia se rotula por zona, no por cifra */
 
   /* La lista de sólo lectura se reprueba una vez por sesión (4 ms) */

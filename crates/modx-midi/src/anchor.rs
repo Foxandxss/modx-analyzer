@@ -354,7 +354,8 @@ mod tests {
         let read = reread(1, &mut asking(&mut owner), &mut |step| seen.push(step)).unwrap();
 
         // The count the strip draws: one per parameter of `48 0p` and the eight
-        // `49 op`. Not the design's 416 — see `table::patch_addresses`.
+        // `49 op`. The design sheet said 416 before session 2 — see
+        // `table::patch_addresses`.
         assert_eq!(read.total, reread_total(1));
         assert_eq!(read.answered, read.total, "the fake answered everything");
         assert_eq!(seen.len(), read.total, "a step went unreported");

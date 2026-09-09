@@ -10,15 +10,15 @@ import { Clock } from './clock';
 export const STALE_FACTOR = 4;
 
 /**
- * And the floor it never goes below: `--stale-wide-s` (0.33 s), which is four
- * periods of the anillo ancho at the 12.2 Hz it was documented at.
+ * And the floor it never goes below: `--stale-wide-s` (0.40 s), which is four
+ * periods of the anillo ancho at the 10 Hz the running build measures.
  *
  * The floor exists so that the threshold cannot collapse on a freakishly fast
  * pass and light the whole diagram in alert; the multiplier exists so that
  * playing — which takes a pass from ~84 ms to ~430 ms — does not light it either.
  * Between them, `CADUCO` means what it says: nobody has read this in a while.
  */
-export const STALE_WIDE_FLOOR_MS = 330;
+export const STALE_WIDE_FLOOR_MS = 400;
 
 /** The threshold that follows the ring, given how long its last pass took. */
 export function staleAfterMs(passMs: number | null): number {
