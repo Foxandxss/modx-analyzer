@@ -12,25 +12,25 @@
           <path class="card__art--gone" d="M70 35H64" />
           <path d="M56 24L64 46" />
         </svg>
-        <h2 class="card__title">Teclado no conectado</h2>
+        <h2 class="card__title">Keyboard not connected</h2>
         <p class="card__body">
           @if (loss() === 'timeouts') {
-            El puerto <span class="card__mono">MODX-1</span> está, pero el teclado no ha contestado
-            al ancla tres veces seguidas.
+            The <span class="card__mono">MODX-1</span> port is there, but the keyboard has not
+            answered the anchor three times in a row.
           } @else {
-            El puerto <span class="card__mono">MODX-1</span> no está o lo tiene otra app abierta en
-            exclusiva.
+            The <span class="card__mono">MODX-1</span> port is gone, or another app holds it
+            exclusively.
           }
           @if (audioGone()) {
-            El audio se ha ido con él: <span class="card__mono">Line (MODX)</span> baja por el mismo
-            cable, así que no hay nada que mirar y no hay patch que leer.
+            The audio went with it: <span class="card__mono">Line (MODX)</span> comes down the same
+            cable, so there is nothing to watch and no patch to read.
           } @else {
-            El audio sigue entrando: puedes mirar, no puedes leer el patch.
+            The audio is still coming in: you can watch, you cannot read the patch.
           }
         </p>
-        <p class="card__diagnosis">DIAGRAMA CONGELADO · ÚLTIMO SONDEO {{ lastPoll() }}</p>
+        <p class="card__diagnosis">POLLING STOPPED · LAST POLL {{ lastPoll() }}</p>
         <button type="button" class="card__action" [disabled]="retrying()" (click)="onRetry()">
-          {{ retrying() ? 'REINTENTANDO' : 'REINTENTAR' }}
+          {{ retrying() ? 'RETRYING' : 'RETRY' }}
         </button>
       </section>
     }
@@ -43,17 +43,17 @@
           <path d="M0 40H44" />
           <path class="card__art--gone" d="M76 40H120" />
           <text x="60" y="28" text-anchor="middle">— — —</text>
-          <text class="card__art--small" x="60" y="60" text-anchor="middle">ni un bloque</text>
+          <text class="card__art--small" x="60" y="60" text-anchor="middle">not one block</text>
         </svg>
-        <h2 class="card__title">El audio se ha ido</h2>
+        <h2 class="card__title">The audio is gone</h2>
         <p class="card__body">
-          No es que entren ceros: es que no entra nada. El dispositivo
-          <span class="card__mono">Line (MODX)</span> ha dejado de entregar, que es lo que pasa
-          cuando se va el cable USB. Las vistas de arriba están paradas, no vivas.
+          It is not that zeros are coming in: nothing is.
+          <span class="card__mono">Line (MODX)</span> has stopped delivering, which is what happens
+          when the USB cable goes. The views above are stopped, not live.
         </p>
-        <p class="card__diagnosis">SIN BLOQUES · REINTENTAR REABRE LAS DOS MITADES</p>
+        <p class="card__diagnosis">NO BLOCKS · RETRY REOPENS BOTH HALVES</p>
         <button type="button" class="card__action" [disabled]="retrying()" (click)="onRetry()">
-          {{ retrying() ? 'REINTENTANDO' : 'REINTENTAR' }}
+          {{ retrying() ? 'RETRYING' : 'RETRY' }}
         </button>
       </section>
     } @else if (noRoute()) {
@@ -65,20 +65,20 @@
           <path class="card__art--halo" d="M0 40H120" />
           <text x="60" y="28" text-anchor="middle">0.000000</text>
           <text class="card__art--small" x="60" y="60" text-anchor="middle">
-            ceros digitales exactos
+            exact digital zeros
           </text>
         </svg>
-        <h2 class="card__title">Sin audio entrando</h2>
+        <h2 class="card__title">No audio coming in</h2>
         <p class="card__body">
-          Estás tocando y no entra nada: ceros exactos con una nota pulsada, así que no hay ruta.
-          Casi siempre es <span class="card__mono">Part Output = USB1&amp;2</span>, que no existe
-          fuera de ASIO.
+          You are playing and nothing comes in: exact zeros with a note held, so there is no route.
+          It is almost always <span class="card__mono">Part Output = USB1&amp;2</span>, which does
+          not exist outside ASIO.
         </p>
-        <p class="card__diagnosis">SILENCIO REAL ≠ CABLE MAL PUESTO</p>
+        <p class="card__diagnosis">REAL SILENCE ≠ A LOOSE CABLE</p>
         <!-- La pantalla `4e` no existe en esta sesión, así que el botón se dibuja
              y no se puede pulsar — lo mismo que A/B y APRENDER en la cabecera:
              la maqueta es definitiva y el destino todavía no. -->
-        <button type="button" class="card__action" disabled>VER LA DISCIPLINA DE INIT</button>
+        <button type="button" class="card__action" disabled>SEE THE INIT DISCIPLINE</button>
       </section>
     }
   </div>

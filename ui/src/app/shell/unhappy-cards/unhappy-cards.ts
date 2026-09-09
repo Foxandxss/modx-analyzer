@@ -17,7 +17,7 @@ import { lastPollAt, pollAgeSeconds } from '../../provenance/last-poll';
  * 1. **Teclado no conectado.** The port is gone from the enumeration or the ancla
  *    has timed out three passes in a row. The audio keeps arriving, so the point
  *    of the card is what is *not* affected: you can look, you cannot read the
- *    patch. `REINTENTAR` enumerates again and reopens.
+ *    patch. `RETRY` enumerates again and reopens.
  * 2. **Sin audio entrando.** Exact digital zeros for one second, decided in Rust
  *    (`crates/modx-audio/src/silence.rs`). Not a level under a threshold: a MODX
  *    with the volume down and a note dying away both make very small numbers, and
@@ -75,7 +75,7 @@ export class UnhappyCards {
   protected readonly noRoute = computed(() => this.audioState() === 'noRoute');
 
   /**
-   * `DIAGRAMA CONGELADO · ÚLTIMO SONDEO N s`, counted from the newest polled
+   * `POLLING STOPPED · LAST POLL N s`, counted from the newest polled
    * figure on screen and ticked by the clock. With nothing ever read it is the
    * dash: a keyboard that never answered has no last poll, and `0 s` would say
    * it answered just now.
@@ -88,7 +88,7 @@ export class UnhappyCards {
     return `${Math.round(pollAgeSeconds(at, this.clock.now()))} s`;
   });
 
-  /** True between the press of `REINTENTAR` and the port answering one way or the other. */
+  /** True between the press of `RETRY` and the port answering one way or the other. */
   protected readonly retrying = signal(false);
 
   protected async onRetry(): Promise<void> {
@@ -102,7 +102,7 @@ export class UnhappyCards {
       // Nothing on screen changes: the card is already saying the keyboard is
       // not there, and it is still true. What the failure adds is a line in the
       // log for whoever is looking at why.
-      console.warn('modx: REINTENTAR no encontró el puerto', reason);
+      console.warn('modx: RETRY did not find the port', reason);
     } finally {
       this.retrying.set(false);
     }

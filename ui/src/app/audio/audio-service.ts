@@ -303,9 +303,9 @@ export class AudioService {
   readonly measureMs = signal<number | null>(null);
 
   /**
-   * Why there is no medida, in Spanish, or `null` when there is one. It is the
-   * difference between «nunca se ha medido» and «se midió sobre un silencio»,
-   * and the column says which.
+   * Why there is no medida, in the column's own words, or `null` when there is
+   * one. It is the difference between «nunca se ha medido» and «se midió sobre
+   * un silencio», and the column says which.
    */
   readonly measureNote = signal<string | null>(null);
 
@@ -394,7 +394,7 @@ export class AudioService {
   private onPatchChanged(): void {
     this.medida.set(null);
     this.measureMs.set(null);
-    this.measureNote.set('la medida era de otro sonido');
+    this.measureNote.set('NOT MEASURED IN THIS SOUND');
     this.live.cuts.push(this.live.rows);
   }
 
@@ -457,7 +457,7 @@ export class AudioService {
       this.measuring.set(false);
       // The ring could not serve the window: at launch it holds less than 1.5 s
       // of sound, and with the device shut it holds none.
-      this.measureNote.set('no hay 1,5 s de audio todavía');
+      this.measureNote.set('not 1.5 s of audio yet');
       return null;
     }
 
@@ -480,7 +480,7 @@ export class AudioService {
     } else {
       // Measured, and there was nothing there. Said out loud, because it is not
       // the same as never having pressed the button.
-      this.measureNote.set('el obturador se abrió sobre un silencio');
+      this.measureNote.set('the shutter opened on silence');
     }
 
     const waiting = this.pending;

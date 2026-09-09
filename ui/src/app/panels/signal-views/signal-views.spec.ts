@@ -62,8 +62,8 @@ describe('SignalViews', () => {
   it('claims no floor and no rate before a single bloque', async () => {
     const { text } = await renderViews();
 
-    expect(text('.view__readout')).toContain(`SUELO ${DEAD_MARK} dB`);
-    expect(text('.view__live')).toBe(`VIVO · ${DEAD_MARK} fps`);
+    expect(text('.view__readout')).toContain(`FLOOR ${DEAD_MARK} dB`);
+    expect(text('.view__live')).toBe(`LIVE · ${DEAD_MARK} fps`);
   });
 
   it('reports the noise floor it measured while a note is held', async () => {
@@ -73,8 +73,8 @@ describe('SignalViews', () => {
 
     // A synthetic tone has no floor to speak of; what is asserted is that the
     // readout stopped being a dash and became a number of decibels under the
-    // peak, which is what `SUELO` means.
-    expect(text('.view__readout')).toMatch(/SUELO -\d+ dB/);
+    // peak, which is what `FLOOR` means.
+    expect(text('.view__readout')).toMatch(/FLOOR -\d+ dB/);
   });
 
   it('names the comb with its frequency instead of hiding it', async () => {
@@ -84,7 +84,7 @@ describe('SignalViews', () => {
 
     // **Never a badge without its number**: the hertz is what tells the
     // generator's comb apart from a harmonic of the mains or from aliasing.
-    expect(text('.view__artefact')).toBe('ARTEFACTO 2756 Hz');
+    expect(text('.view__artefact')).toBe('NOT A HARMONIC · 2756 Hz');
   });
 
   it('does not put an artefact chip on a sound that has no comb in it', async () => {

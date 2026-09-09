@@ -55,7 +55,7 @@ describe('FiguresColumn', () => {
     // A safety file the owner cannot find does not count as safety, so the path is
     // on screen from the first frame — before the keyboard has answered anything.
     expect(text()).toContain(FOLDER);
-    expect(text()).toContain('volcando el buffer de edición');
+    expect(text()).toContain('dumping the edit buffer');
   });
 
   it('names the file and its size once the volcado is on disk', async () => {
@@ -63,7 +63,7 @@ describe('FiguresColumn', () => {
 
     const text = await show(dump());
 
-    expect(text).toContain('7669 B · 123 MSJ');
+    expect(text).toContain('7669 B · 123 MSG');
     expect(text).toContain(FILE);
     expect(text).toContain(FOLDER);
   });
@@ -85,19 +85,19 @@ describe('FiguresColumn', () => {
     expect(text).toContain('—');
     expect(text).toContain('el teclado no contestó');
     expect(text).toContain(FOLDER);
-    expect(text).not.toContain('0 B · 0 MSJ');
+    expect(text).not.toContain('0 B · 0 MSG');
   });
 
   it('never draws a zero where a medida is missing', async () => {
     const { text } = await renderColumn();
 
-    expect(text()).toContain('hay que volver a medir');
+    expect(text()).toContain('NOT MEASURED IN THIS SOUND');
     expect(text()).not.toContain('0.00');
   });
 });
 
 /**
- * The column with the audio bridge behind it, so that pressing MEDIR runs the
+ * The column with the audio bridge behind it, so that pressing CAPTURE runs the
  * real analysis over the real path: bloques in, ring filled, window out, worker,
  * table. Nothing about the medida is stubbed — only the thread and the device.
  */
@@ -147,12 +147,12 @@ async function renderWithAudio() {
 const BLOCKS_FOR_A_MEDIDA = 50;
 
 describe('FiguresColumn · la medida', () => {
-  it('empieza muerta: guiones y «hay que volver a medir», nunca ceros', async () => {
+  it('empieza muerta: guiones y «NOT MEASURED IN THIS SOUND», nunca ceros', async () => {
     const { text, rows } = await renderWithAudio();
 
     expect(rows()).toHaveLength(0);
-    expect(text()).toContain('hay que volver a medir');
-    expect(text()).not.toContain('MEDIDO · ');
+    expect(text()).toContain('NOT MEASURED IN THIS SOUND');
+    expect(text()).not.toContain('MEASURED · ');
   });
 
   it('dice que no hay audio bastante en vez de medir un silencio inventado', async () => {
@@ -161,8 +161,8 @@ describe('FiguresColumn · la medida', () => {
     // El anillo no se ha llenado: la orden contesta que no hay ventana.
     await press();
 
-    expect(text()).toContain('no hay 1,5 s de audio todavía');
-    expect(text()).not.toContain('MEDIDO · ');
+    expect(text()).toContain('not 1.5 s of audio yet');
+    expect(text()).not.toContain('MEASURED · ');
   });
 
   it('publica la tabla de parciales sellada con su ventana y su edad', async () => {
@@ -171,7 +171,7 @@ describe('FiguresColumn · la medida', () => {
     await hold(261.626);
     await press();
 
-    expect(text()).toContain('MEDIDO · 65536 · hace 0 s');
+    expect(text()).toContain('MEASURED · 65536 · 0 s ago');
     const lines = rows();
     expect(lines.length).toBeGreaterThan(0);
     // La nota tocada es la primera línea y sale numerada como el armónico 1.
@@ -185,8 +185,8 @@ describe('FiguresColumn · la medida', () => {
     await hold(261.626);
     await press();
 
-    expect(text()).toMatch(/NOTA 261\.6 Hz · PICO -\d+\.\d dBFS/);
-    expect(text()).toContain('65536 · hace 0 s');
+    expect(text()).toMatch(/NOTE 261\.6 Hz · PEAK -\d+\.\d dBFS/);
+    expect(text()).toContain('65536 · 0 s ago');
   });
 
   it('no cambia sola: la tabla sigue igual mientras entra más audio', async () => {
@@ -244,7 +244,7 @@ describe('FiguresColumn · la edad de la medida', () => {
     clock.now.set(performance.now() + 14_000);
     await fixture.whenStable();
 
-    expect(host.textContent).toContain('MEDIDO · 65536 · hace 14 s');
+    expect(host.textContent).toContain('MEASURED · 65536 · 14 s ago');
     // Catorce segundos después, la tabla es la misma tabla.
     expect(Array.from(host.querySelectorAll('.lines__row')).map((row) => row.textContent)).toEqual(
       table,

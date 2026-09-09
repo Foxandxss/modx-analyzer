@@ -102,7 +102,7 @@ describe('AudioService', () => {
     TestBed.tick();
 
     expect(audio.medida()).toBeNull();
-    expect(audio.measureNote()).toBe('la medida era de otro sonido');
+    expect(audio.measureNote()).toBe('NOT MEASURED IN THIS SOUND');
 
     // And it stays gone. Nothing is going to press MEDIR on the owner's behalf,
     // and a table that came back on its own would be a measurement that happened

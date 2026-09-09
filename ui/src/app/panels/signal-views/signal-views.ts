@@ -11,7 +11,7 @@ import { Spectrum } from '../spectrum/spectrum';
  *
  * These are the one place that never dies — a vista viva is audio entering now,
  * so it is never invalidated and it carries nothing from the patch. Both wear the
- * `VIVO` stamp of their zone rather than one of the five figure stamps: what is
+ * `LIVE` stamp of their zone rather than one of the five figure stamps: what is
  * drawn here was neither measured, nor polled, nor computed from a parameter.
  *
  * The readouts move at 4 Hz and the canvases at 33, which is on purpose: a number
@@ -25,14 +25,14 @@ import { Spectrum } from '../spectrum/spectrum';
   template: `
     <section class="view">
       <div class="view__head">
-        <h2 class="view__title">ESPECTRO</h2>
+        <h2 class="view__title">SPECTRUM</h2>
         <span class="view__live" [class.view__live--dead]="stopped()">{{ liveStamp() }}</span>
         @if (patchChanged()) {
-          <span class="view__alive">ESTO NO HA MUERTO · ES AUDIO</span>
+          <span class="view__alive">STILL TRUE · THIS IS AUDIO</span>
         }
-        <span class="view__readout"> LOG {{ axis }} · SUELO {{ floor() }} </span>
+        <span class="view__readout"> LOG {{ axis }} · FLOOR {{ floor() }} </span>
         @if (artefact(); as hz) {
-          <span class="view__artefact">ARTEFACTO {{ hz }} Hz</span>
+          <span class="view__artefact">NOT A HARMONIC · {{ hz }} Hz</span>
         }
       </div>
       <div class="view__frame">
@@ -42,10 +42,10 @@ import { Spectrum } from '../spectrum/spectrum';
 
     <section class="view">
       <div class="view__head">
-        <h2 class="view__title">ARMÓNICOS</h2>
+        <h2 class="view__title">HARMONICS</h2>
         <span class="view__live" [class.view__live--dead]="stopped()">{{ liveStamp() }}</span>
         @if (patchChanged()) {
-          <span class="view__alive">ESTO NO HA MUERTO · ES AUDIO</span>
+          <span class="view__alive">STILL TRUE · THIS IS AUDIO</span>
         }
         <span class="view__readout">n1 … n16</span>
       </div>
@@ -82,16 +82,16 @@ export class SignalViews {
   protected readonly stopped = computed(() => this.audio.audioState() === 'gone');
 
   /**
-   * `VIVO · N fps`, or the truth.
+   * `LIVE · N fps`, or the truth.
    *
    * «La vista viva nunca muere» was written on the premise that audio keeps
    * arriving whatever happens to MIDI. On this hardware that premise is false —
-   * the two come down one USB cable — and a `VIVO` stamp over a stream that
+   * the two come down one USB cable — and a `LIVE` stamp over a stream that
    * ended is the worst thing this screen can say (#22). What is on the canvas
    * then is the last frame, held, and the stamp says so.
    */
   protected readonly liveStamp = computed(() =>
-    this.stopped() ? 'PARADO · SIN DISPOSITIVO' : `VIVO · ${this.fps()}`,
+    this.stopped() ? 'STOPPED · NO DEVICE' : `LIVE · ${this.fps()}`,
   );
 
   protected readonly floor = computed(() => {

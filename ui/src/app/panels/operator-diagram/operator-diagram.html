@@ -1,15 +1,15 @@
 <div class="zone">
   <div class="zone__head">
-    <h2 class="zone__title">DIAGRAMA DE OPERADORES</h2>
+    <h2 class="zone__title">ALGORITHM</h2>
     <!-- La cadencia se rotula por zona, no por cifra, y es la medida del anillo:
          12 Hz en silencio, 2,4 sonando. Tocar cuesta velocidad de sondeo. -->
     <span class="zone__cadence">
       <!-- Las rutas no son una cifra y no llevan sello de procedencia: son la
            tabla del papel, y dicen de qué grado es su entrada (ADR-0003). -->
       @if (tableProvenance(); as grade) {
-        <span class="zone__table">RUTAS · {{ grade }}</span>
+        <span class="zone__table">ROUTES · {{ grade }}</span>
       }
-      LOS OCHO · <app-figure [value]="cadence()" [unit]="' Hz'" />
+      ALL EIGHT · <app-figure [value]="cadence()" [unit]="' Hz'" />
     </span>
   </div>
 
@@ -78,7 +78,7 @@
     <!-- El algoritmo contestó un número que no está en las 88. No se dibuja una
          topología plausible: se dice que no la hay. -->
     @if (missingTable(); as number) {
-      <p class="no-table">ALGORITMO SIN TABLA · {{ number }}</p>
+      <p class="no-table">ALGORITHM {{ number }} · NO TABLE</p>
     }
 
     @for (node of nodes(); track node.operator) {
@@ -136,13 +136,15 @@
 
   <div class="legend">
     <span class="legend__item">
-      <span class="legend__swatch legend__swatch--carrier" aria-hidden="true"></span>PORTADORA
+      <span class="legend__swatch legend__swatch--carrier" aria-hidden="true"></span>CARRIERS · YOU
+      HEAR THESE
     </span>
     <span class="legend__item">
-      <span class="legend__swatch legend__swatch--modulator" aria-hidden="true"></span>MODULADOR
+      <span class="legend__swatch legend__swatch--modulator" aria-hidden="true"></span>MODULATORS ·
+      THEY COLOUR IT
     </span>
     <span class="legend__item">
-      <span class="legend__swatch legend__swatch--inert" aria-hidden="true"></span>LEVEL 0
+      <span class="legend__swatch legend__swatch--inert" aria-hidden="true"></span>AT ZERO · SILENT
     </span>
   </div>
 </div>

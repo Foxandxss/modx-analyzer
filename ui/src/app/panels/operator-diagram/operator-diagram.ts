@@ -13,15 +13,15 @@ import { DEAD_MARK, PROVENANCE_LABEL } from '../../provenance/provenance';
 import { equalTemperamentHz } from '../../provenance/theory';
 import { DrawnBus, DrawnRoute, NODE_H, NODE_W, Slot, layout } from './layout';
 
-/** What the role is called on the node. UI copy is Spanish; identifiers are not. */
+/** What the role is called on the node, per `GLOSSARY.md` §6: three of a kind. */
 const ROLE_LABEL: Readonly<Record<OperatorRole, string>> = {
-  carrier: 'PORT',
+  carrier: 'CARR',
   modulator: 'MOD',
-  inert: 'INACTIVO',
+  inert: 'ZERO',
 };
 
 /** ADR-0003's two grades of a table entry, in the words the table uses. */
-const TABLE_LABEL = { measured: 'MEDIDO', documented: 'DOCUMENTADO' } as const;
+const TABLE_LABEL = { measured: 'MEASURED', documented: 'DOCUMENTED' } as const;
 
 /** One node, with every figure already stamped and already formatted. */
 interface NodeView {
@@ -33,7 +33,7 @@ interface NodeView {
   readonly fill: number;
   readonly ratio: PolledValue<string>;
   readonly spectralForm: PolledValue<string>;
-  /** The real frequency of this operator for the live note. `TEORÍA`, always. */
+  /** The real frequency of this operator for the live note. `PREDICTED`, always. */
   readonly hz: PolledValue<string>;
   /** The node's one stamp, taken from the weakest figure in it. */
   readonly stamp: Provenance;
@@ -68,7 +68,7 @@ interface LineView {
  * and are laid out by chain depth, so any of the 88 draws without a hand-made
  * sheet (`layout.ts`). And nothing is guessed: until the algorithm has been read
  * there is no topology, so there is no role and there are no lines, and an
- * algorithm with no entry in the table draws `ALGORITMO SIN TABLA` rather than a
+ * algorithm with no entry in the table draws `ALGORITHM n · NO TABLE` rather than a
  * plausible diagram of a patch that does not exist.
  */
 @Component({
@@ -84,7 +84,7 @@ export class OperatorDiagram {
 
   protected readonly labels = PROVENANCE_LABEL;
 
-  /** `LOS OCHO · 10.2 Hz`, measured, never the documented figure. */
+  /** `ALL EIGHT · 10.2 Hz`, measured, never the documented figure. */
   protected readonly cadence = computed<PolledValue<number>>(() => {
     const hz = this.freshness.cadenceHz();
     return hz === null ? invalidated<number>() : { value: hz, provenance: 'polled', readAt: null };
@@ -207,7 +207,7 @@ export class OperatorDiagram {
    * temperament. No note or no ratio, no number — the dash, never a zero, because
    * an operator nobody is playing does not have a frequency.
    *
-   * It is `TEORÍA` however fresh the ratio behind it is: the reading was polled,
+   * It is `PREDICTED` however fresh the ratio behind it is: the reading was polled,
    * the multiplication was not, and one stamp per figure means the number that is
    * on screen has to say which of the two it is.
    */

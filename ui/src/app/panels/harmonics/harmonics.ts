@@ -18,7 +18,7 @@ import { LiveCanvas } from '../live-canvas';
 @Component({
   selector: 'app-harmonics',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<canvas #canvas class="harmonics" aria-label="Armónicos en vivo"></canvas>`,
+  template: `<canvas #canvas class="harmonics" aria-label="Live harmonics"></canvas>`,
   styles: `
     :host {
       display: block;

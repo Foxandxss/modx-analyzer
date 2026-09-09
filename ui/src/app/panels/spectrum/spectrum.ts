@@ -23,7 +23,7 @@ const SPAN_DB = 96;
 @Component({
   selector: 'app-spectrum',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<canvas #canvas class="spectrum" aria-label="Espectro en vivo"></canvas>`,
+  template: `<canvas #canvas class="spectrum" aria-label="Live spectrum"></canvas>`,
   styles: `
     :host {
       display: block;

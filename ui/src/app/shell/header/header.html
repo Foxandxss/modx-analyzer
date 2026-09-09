@@ -20,7 +20,7 @@
       <app-figure [value]="patch().performanceName" />
     </span>
     @if (unmeasured()) {
-      <span class="anchor__unmeasured">SIN MEDIR EN ESTE SONIDO</span>
+      <span class="anchor__unmeasured">NOT MEASURED IN THIS SOUND</span>
     }
   </div>
 
@@ -44,7 +44,7 @@
 
   <div class="spacer"></div>
 
-  <div class="modes" role="group" aria-label="Modo">
+  <div class="modes" role="group" aria-label="Mode">
     @for (mode of modes; track mode) {
       <button
         type="button"
@@ -62,7 +62,7 @@
        los dos son ranuras — laten y disparan cuando llegue el audio. -->
   <div class="look" [class.look--on]="looking()">
     <span class="look__dot" aria-hidden="true"></span>
-    <span class="look__text">MIRAR · {{ fps() === null ? '—' : fps()!.toFixed(1) }} fps</span>
+    <span class="look__text">LIVE · {{ fps() === null ? '—' : fps()!.toFixed(1) }} fps</span>
   </div>
 
   <button
@@ -71,12 +71,12 @@
     [class.measure--on]="canMeasure()"
     [class.measure--busy]="measuring()"
     [disabled]="!canMeasure()"
-    aria-label="Medir: una ventana de 65536 muestras"
+    aria-label="Capture: one window of 65536 samples"
     (click)="onMeasure()"
   >
     <span class="measure__shutter" aria-hidden="true"></span>
-    <span class="measure__label">MEDIR</span>
-    <span class="measure__hint">{{ measureWindow }}<br />NOTA SOST.</span>
+    <span class="measure__label">CAPTURE</span>
+    <span class="measure__hint">{{ measureWindow }}<br />NEEDS A HELD NOTE</span>
   </button>
 
   <!-- Aislamiento en vez de confirmación: filete de 2 px y 16 px de aire, y nada
@@ -89,17 +89,17 @@
     class="panic"
     [class.panic--live]="panicLive()"
     [class.panic--done]="panicDone()"
-    aria-label="Pánico: silenciar el teclado"
+    aria-label="Hush: silence the keyboard"
     (pointerdown)="onPanicDown($event)"
     (pointerup)="onPanicUp($event)"
     (pointercancel)="onPanicCancel()"
     (click)="onPanicClick($event)"
   >
     @if (panicDone()) {
-      <span class="panic__label panic__label--done">HECHO</span>
+      <span class="panic__label panic__label--done">HUSHED</span>
     } @else {
       <span class="panic__mark" aria-hidden="true"></span>
-      <span class="panic__label">CALLA</span>
+      <span class="panic__label">HUSH</span>
     }
   </button>
 </header>

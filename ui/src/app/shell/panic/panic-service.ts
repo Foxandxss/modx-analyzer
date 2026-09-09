@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
 
 /**
- * `--panic-ack`. The design token carries both jobs: the button says `HECHO` for
+ * `--panic-ack`. The design token carries both jobs: the button says `HUSHED` for
  * this long, and the notice leaves on its own after it. Nothing asks for a second
  * touch to close.
  */
@@ -30,7 +30,7 @@ export class PanicService {
   private readonly said = signal<PanicNotice | null>(null);
   private clearing: ReturnType<typeof setTimeout> | null = null;
 
-  /** `HECHO` on the button, for `--panic-ack` after the messages went out. */
+  /** `HUSHED` on the button, for `--panic-ack` after the messages went out. */
   readonly done = this.acknowledged.asReadonly();
 
   /** The notice under the header, or `null` when there is nothing to say. */
@@ -45,10 +45,10 @@ export class PanicService {
   async press(): Promise<void> {
     try {
       const { silenced } = await this.backend.panic();
-      const notes = silenced === 1 ? 'Silenciada 1 nota' : `Silenciadas ${silenced} notas`;
-      this.say({ text: `${notes} · tu patch está intacto`, failed: false });
+      const notes = silenced === 1 ? 'Hushed 1 note' : `Hushed ${silenced} notes`;
+      this.say({ text: `${notes} · your patch is untouched`, failed: false });
     } catch {
-      this.say({ text: 'EL TECLADO NO CONTESTA · TU PATCH ESTÁ INTACTO', failed: true });
+      this.say({ text: 'THE KEYBOARD IS NOT ANSWERING · YOUR PATCH IS UNTOUCHED', failed: true });
     }
   }
 

@@ -10,7 +10,7 @@ import { Figure } from '../../provenance/figure';
 export interface PartialLine {
   readonly hz: string;
   readonly db: string;
-  /** `n9`, or `ART` for the generator's comb, or the dash for neither. */
+  /** `n9`, or `NOT A HARMONIC` for the generator's comb, or the dash for neither. */
   readonly tag: string;
   readonly artefact: boolean;
 }
@@ -18,7 +18,7 @@ export interface PartialLine {
 /**
  * The measured figures, and the copies of the patch.
  *
- * With no valid medida the column shows dashes and `hay que volver a medir` —
+ * With no valid medida the column shows dashes and `NOT MEASURED IN THIS SOUND` —
  * never zeros, because an absent number that looks like a number is worse than
  * no number. **Nothing here updates on its own**: a medida is something you did,
  * so the table stands still and only the age underneath it moves.
@@ -75,7 +75,7 @@ export class FiguresColumn {
     if (taken === null || taken.state === 'failed') {
       return DEAD_MARK;
     }
-    return `${taken.bytes} B · ${taken.messages} MSJ`;
+    return `${taken.bytes} B · ${taken.messages} MSG`;
   });
 
   /** The file name on its own: the path underneath already carries the folder. */
@@ -88,9 +88,9 @@ export class FiguresColumn {
   protected readonly note = computed(() => {
     const taken = this.dump();
     if (taken === null) {
-      return 'volcando el buffer de edición';
+      return 'dumping the edit buffer';
     }
-    return taken.reason ?? 'sin fichero';
+    return taken.reason ?? 'no file';
   });
 
   /** The last medida, or `null`. It changes when MEDIR is pressed and never else. */
@@ -108,12 +108,12 @@ export class FiguresColumn {
     return taken === null ? null : Math.floor((this.clock.now() - taken.takenAt) / 1000);
   });
 
-  /** `MEDIDO · 65536 · hace 14 s`, or nothing at all when there is no medida. */
+  /** `MEASURED · 65536 · 14 s ago`, or nothing at all when there is no medida. */
   protected readonly stamp = computed(() => {
     const age = this.ageSeconds();
     return age === null
       ? null
-      : `${PROVENANCE_LABEL.measured} · ${this.window} · hace ${Math.max(0, age)} s`;
+      : `${PROVENANCE_LABEL.measured} · ${this.window} · ${Math.max(0, age)} s ago`;
   });
 
   /** The lines of the table, strongest first, or `null` in the dead state. */
@@ -122,7 +122,7 @@ export class FiguresColumn {
     return taken === null ? null : taken.medida.partials.map((partial) => toLine(partial));
   });
 
-  /** `NOTA 261.8 Hz · PICO −18 dBFS`: what the shutter caught, in one line. */
+  /** `NOTE 261.8 Hz · PEAK −18 dBFS`: what the shutter caught, in one line. */
   protected readonly caught = computed(() => {
     const taken = this.medida();
     if (taken === null) {
@@ -130,14 +130,14 @@ export class FiguresColumn {
     }
     const { fundamentalHz, peakDb } = taken.medida;
     const note = fundamentalHz === null ? DEAD_MARK : `${fundamentalHz.toFixed(1)} Hz`;
-    return `NOTA ${note} · PICO ${peakDb.toFixed(1)} dBFS`;
+    return `NOTE ${note} · PEAK ${peakDb.toFixed(1)} dBFS`;
   });
 
   /**
    * Why the column is empty, when it is. «Nunca se ha medido» and «se midió y no
    * había nada» are different facts and the second one is a result.
    */
-  protected readonly why = computed(() => this.audio.measureNote() ?? 'hay que volver a medir');
+  protected readonly why = computed(() => this.audio.measureNote() ?? 'NOT MEASURED IN THIS SOUND');
 }
 
 /** One partial as the column draws it. The comb keeps its badge here too. */
@@ -147,7 +147,7 @@ function toLine(partial: Partial): PartialLine {
     db: partial.db.toFixed(1),
     tag:
       partial.kind === 'artefact'
-        ? 'ART'
+        ? 'NOT A HARMONIC'
         : partial.harmonic === null
           ? DEAD_MARK
           : `n${partial.harmonic}`,

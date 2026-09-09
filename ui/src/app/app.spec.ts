@@ -57,7 +57,7 @@ describe('App (4a)', () => {
     const { host } = await renderApp();
 
     const column = host.querySelector('app-figures-column');
-    expect(column?.textContent).toContain('hay que volver a medir');
+    expect(column?.textContent).toContain('NOT MEASURED IN THIS SOUND');
     expect(column?.textContent).toContain(DEAD_MARK);
   });
 
@@ -70,7 +70,7 @@ describe('App (4a)', () => {
 
     backend.reread.set({ done: 118, total: 384, answered: 118, tookMs: null });
     await fixture.whenStable();
-    expect(host.querySelector('.strip__text')?.textContent).toBe('RELECTURA · 118 DE 384');
+    expect(host.querySelector('.strip__text')?.textContent).toBe('REREAD · 118 OF 384');
 
     // A pass that carries how long it took is a pass that finished: the strip
     // comes down, and the count moves to the dev readout where it is written from.
@@ -108,7 +108,7 @@ describe('App (4a)', () => {
     expect(anchor?.textContent).toContain('Bright FM Keys');
     expect(anchor?.textContent).not.toContain('Init Normal (FM-X)');
     expect(anchor?.classList.contains('anchor--changed')).toBe(true);
-    expect(anchor?.textContent).toContain('SIN MEDIR EN ESTE SONIDO');
+    expect(anchor?.textContent).toContain('NOT MEASURED IN THIS SOUND');
 
     // Every polled figure keeps its shape and loses its number. Not one of them
     // was replaced by a figure of the new patch without passing through the dash.
@@ -120,7 +120,7 @@ describe('App (4a)', () => {
     // And the one thing that never dies says so, because it is the only figure
     // left standing on a screen that just went to dashes.
     expect(host.querySelector('app-signal-views')?.textContent).toContain(
-      'ESTO NO HA MUERTO · ES AUDIO',
+      'STILL TRUE · THIS IS AUDIO',
     );
   });
 
@@ -138,7 +138,7 @@ describe('App (4a)', () => {
 
     const card = host.querySelector('.card')!;
     const panic = host.querySelector<HTMLButtonElement>('.panic')!;
-    expect(card.textContent).toContain('DIAGRAMA CONGELADO');
+    expect(card.textContent).toContain('POLLING STOPPED');
     expect(panic.disabled).toBe(false);
     // Under, in the document order the shell lays out top to bottom: the header
     // comes first and nothing overlaps it.

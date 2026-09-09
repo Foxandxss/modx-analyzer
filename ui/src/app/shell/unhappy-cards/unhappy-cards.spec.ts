@@ -101,7 +101,7 @@ describe('UnhappyCards · el teclado no conectado', () => {
     clock.now.set(readAt + 4000);
     await settle();
 
-    expect(text()).toContain('DIAGRAMA CONGELADO · ÚLTIMO SONDEO 4 s');
+    expect(text()).toContain('POLLING STOPPED · LAST POLL 4 s');
   });
 
   it('cuenta sola: nadie va a mandar un evento con el puerto caído', async () => {
@@ -113,7 +113,7 @@ describe('UnhappyCards · el teclado no conectado', () => {
     clock.now.set(readAt + 11_000);
     await settle();
 
-    expect(text()).toContain('ÚLTIMO SONDEO 11 s');
+    expect(text()).toContain('LAST POLL 11 s');
   });
 
   it('con un teclado que nunca contestó pone la raya y no un cero', async () => {
@@ -122,20 +122,21 @@ describe('UnhappyCards · el teclado no conectado', () => {
     await lose('enumeration');
 
     // `0 s` would say it answered just now, which is the opposite of the truth.
-    expect(text()).toContain(`ÚLTIMO SONDEO ${DEAD_MARK}`);
+    expect(text()).toContain(`LAST POLL ${DEAD_MARK}`);
   });
 
   it('dice cuál de los dos caminos fue', async () => {
     const { lose, text } = await renderCards();
 
     await lose('enumeration');
-    expect(text()).toContain('no está o lo tiene otra app');
+    expect(text()).toContain('port is gone, or another app holds it');
 
     await lose('timeouts');
-    expect(text()).toContain('no ha contestado al ancla tres veces seguidas');
+    expect(text()).toContain('has not');
+    expect(text()).toContain('answered the anchor three times in a row');
   });
 
-  it('REINTENTAR vuelve a abrir y el estado se va cuando el falso contesta', async () => {
+  it('RETRY vuelve a abrir y el estado se va cuando el falso contesta', async () => {
     const { backend, lose, retry, cards } = await renderCards();
     await lose('enumeration');
     expect(cards()).toBe(1);
@@ -155,7 +156,7 @@ describe('UnhappyCards · el teclado no conectado', () => {
 
     expect(backend.retryPresses).toBe(1);
     expect(cards()).toBe(1);
-    expect(text()).toContain('REINTENTAR');
+    expect(text()).toContain('RETRY');
   });
 });
 
@@ -183,8 +184,8 @@ describe('UnhappyCards · sin audio entrando', () => {
     await silence(1);
 
     expect(cards()).toBe(1);
-    expect(text()).toContain('SILENCIO REAL ≠ CABLE MAL PUESTO');
-    expect(text()).toContain('Sin audio entrando');
+    expect(text()).toContain('REAL SILENCE ≠ A LOOSE CABLE');
+    expect(text()).toContain('No audio coming in');
   });
 
   /** The bug #21 was filed for, pinned so it cannot come back. */
@@ -225,7 +226,7 @@ describe('UnhappyCards · sin audio entrando', () => {
     await silence(1);
 
     const action = host.querySelector<HTMLButtonElement>('.card--carrier .card__action')!;
-    expect(action.textContent?.trim()).toBe('VER LA DISCIPLINA DE INIT');
+    expect(action.textContent?.trim()).toBe('SEE THE INIT DISCIPLINE');
     expect(action.disabled).toBe(true);
   });
 });

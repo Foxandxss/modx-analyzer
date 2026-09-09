@@ -52,7 +52,7 @@ export const BOTTOM_VIEWS: readonly BottomView[] = ['WATERFALL', 'SCOPE'];
         <span class="tabs__note">TRIGGER ↑0 · 2 CICLOS · {{ trigger() }}</span>
       } @else {
         <span class="tabs__note">el ataque brillante apagándose · 14 tramas · 0 → 460 ms</span>
-        <span class="tabs__axes">TIEMPO ↓ · FRECUENCIA →</span>
+        <span class="tabs__axes">TIME ↓ · FREQUENCY →</span>
       }
     </div>
     <div class="frame">

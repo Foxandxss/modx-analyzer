@@ -26,7 +26,7 @@ const RIDGE_HEIGHT = 2.2;
 @Component({
   selector: 'app-waterfall',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<canvas #canvas class="waterfall" aria-label="Waterfall en vivo"></canvas>`,
+  template: `<canvas #canvas class="waterfall" aria-label="Live waterfall"></canvas>`,
   styles: `
     :host {
       display: block;

@@ -67,10 +67,10 @@ describe('AlertStrip', () => {
       }),
     );
 
-    expect(text).toContain('SIN VOLCADO DE SEGURIDAD');
+    expect(text).toContain('NO SAFETY DUMP');
     // The session writes nothing, so this is a warning and not a block — and the
     // path is the whole point of the warning.
-    expect(text).toContain('ESTA SESIÓN NO ESCRIBE');
+    expect(text).toContain('THIS SESSION WRITES NOTHING');
     expect(text).toContain(FOLDER);
     expect(text).toContain('0E 25 00');
   });
@@ -82,8 +82,8 @@ describe('AlertStrip', () => {
       dump({ state: 'short', bytes: 2480, messages: 40, reason: 'volcado corto' }),
     );
 
-    expect(text).toContain('VOLCADO CORTO');
-    expect(text).toContain('2480 DE 7669 BYTES');
+    expect(text).toContain('SHORT DUMP');
+    expect(text).toContain('2480 OF 7669 BYTES');
     expect(text).toContain(FOLDER);
   });
 });

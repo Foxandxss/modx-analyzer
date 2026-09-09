@@ -169,7 +169,7 @@ describe('OperatorDiagram', () => {
     expect(host.textContent).toContain('OUT L/R');
     // The routes are paper until somebody compares them with the MODX's screen,
     // and the zone says so.
-    expect(host.querySelector('.zone__table')?.textContent).toContain('DOCUMENTADO');
+    expect(host.querySelector('.zone__table')?.textContent).toContain('DOCUMENTED');
   });
 
   it('redraws the routes when the algorithm changes underneath', async () => {
@@ -198,7 +198,7 @@ describe('OperatorDiagram', () => {
     backend.patch.set({ ...backend.patch(), algorithm: polled(89, NOW) });
     await fixture.whenStable();
 
-    expect(host.querySelector('.no-table')?.textContent).toContain('ALGORITMO SIN TABLA');
+    expect(host.querySelector('.no-table')?.textContent).toContain('NO TABLE');
     expect(host.querySelector('.no-table')?.textContent).toContain('89');
     expect(routes(host)).toHaveLength(0);
   });
@@ -249,8 +249,8 @@ describe('OperatorDiagram', () => {
     expect(drawn[3].classList.contains('node--carrier')).toBe(true);
     expect(drawn[0].classList.contains('node--inert')).toBe(true);
     expect(drawn[2].querySelector('.node__role')?.textContent?.trim()).toBe('MOD');
-    expect(drawn[3].querySelector('.node__role')?.textContent?.trim()).toBe('PORT');
-    expect(drawn[0].querySelector('.node__role')?.textContent?.trim()).toBe('INACTIVO');
+    expect(drawn[3].querySelector('.node__role')?.textContent?.trim()).toBe('CARR');
+    expect(drawn[0].querySelector('.node__role')?.textContent?.trim()).toBe('ZERO');
   });
 
   it('makes the Level the height of the fill and the number only confirm it', async () => {
@@ -280,7 +280,7 @@ describe('OperatorDiagram', () => {
     expect(host.querySelector('.zone__cadence')?.textContent).toContain('2.3 Hz');
   });
 
-  it('goes CADUCO past four passes and not before', async () => {
+  it('goes stale past four passes and not before', async () => {
     const { backend, clock, fixture, host } = await renderDiagram();
     const readAt = NOW;
 
@@ -299,10 +299,12 @@ describe('OperatorDiagram', () => {
     expect(stale.classList.contains('node--stale')).toBe(true);
     // The shape survives: it is old, not gone.
     expect(stale.querySelector('.node__level')?.textContent?.trim()).toBe('99');
-    expect(stale.querySelector('.node__stamp')?.textContent?.trim()).toBe('CADUCO');
+    // Stale keeps no word of its own (GLOSSARY §2): it is `POLLED` plus age,
+    // and the age is the broken outline the two assertions above already made.
+    expect(stale.querySelector('.node__stamp')?.textContent?.trim()).toBe('POLLED');
   });
 
-  it('does not light CADUCO just because somebody is playing', async () => {
+  it('does not go stale just because somebody is playing', async () => {
     const { backend, clock, fixture, host } = await renderDiagram();
     const readAt = NOW;
 
@@ -321,7 +323,7 @@ describe('OperatorDiagram', () => {
     expect(nodes(host)[3].dataset['stamp']).toBe('stale');
   });
 
-  it('shows the real frequency as TEORÍA only while a note is held', async () => {
+  it('shows the real frequency as PREDICTED only while a note is held', async () => {
     const { backend, fixture, host } = await renderDiagram();
     const readAt = NOW;
 
@@ -341,7 +343,7 @@ describe('OperatorDiagram', () => {
     await fixture.whenStable();
     const line = nodes(host)[0].querySelector('.node__hz')?.textContent ?? '';
     expect(line).toContain('261.63 Hz');
-    expect(line).toContain('TEORÍA');
+    expect(line).toContain('PREDICTED');
   });
 
   it('gives a fixed operator no ratio and no frequency', async () => {

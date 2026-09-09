@@ -34,9 +34,7 @@ describe('PanicNotice', () => {
     await panic.press();
     await fixture.whenStable();
 
-    expect(fixture.nativeElement.textContent).toContain(
-      'Silenciadas 3 notas · tu patch está intacto',
-    );
+    expect(fixture.nativeElement.textContent).toContain('Hushed 3 notes · your patch is untouched');
   });
 
   it('gets the number right when there was only one note', async () => {
@@ -46,7 +44,7 @@ describe('PanicNotice', () => {
     await panic.press();
     await fixture.whenStable();
 
-    expect(fixture.nativeElement.textContent).toContain('Silenciada 1 nota');
+    expect(fixture.nativeElement.textContent).toContain('Hushed 1 note');
   });
 
   it('leaves on its own, with nothing to dismiss', async () => {
@@ -78,6 +76,6 @@ describe('PanicNotice', () => {
     await fixture.whenStable();
 
     expect(host.querySelector('.notice')?.classList.contains('notice--failed')).toBe(true);
-    expect(fixture.nativeElement.textContent).toContain('TU PATCH ESTÁ INTACTO');
+    expect(fixture.nativeElement.textContent).toContain('YOUR PATCH IS UNTOUCHED');
   });
 });

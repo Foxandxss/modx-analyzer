@@ -12,7 +12,7 @@ import { LiveCanvas } from '../live-canvas';
 @Component({
   selector: 'app-scope',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<canvas #canvas class="scope" aria-label="Forma de onda"></canvas>`,
+  template: `<canvas #canvas class="scope" aria-label="Waveform"></canvas>`,
   styles: `
     :host {
       display: block;

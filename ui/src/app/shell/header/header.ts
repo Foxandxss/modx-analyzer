@@ -7,10 +7,10 @@ import { RingFreshness } from '../../provenance/freshness';
 import { AudioService } from '../../audio/audio-service';
 import { PanicService } from '../panic/panic-service';
 
-/** The three modes of the app. Only `CREAR` is reachable this session. */
-export type Mode = 'CREAR' | 'A/B' | 'APRENDER';
+/** The three modes of the app. Only `BUILD` is reachable this session. */
+export type Mode = 'BUILD' | 'A/B' | 'LEARN';
 
-export const MODES: readonly Mode[] = ['CREAR', 'A/B', 'APRENDER'];
+export const MODES: readonly Mode[] = ['BUILD', 'A/B', 'LEARN'];
 
 /**
  * The bar that never lies and never leaves.
@@ -62,8 +62,8 @@ export class Header {
   protected readonly measuring = this.audio.measuring;
   protected readonly canMeasure = computed(() => this.audio.fps() !== null && !this.measuring());
 
-  /** Only CREAR is selectable; the other two are drawn so the layout is final. */
-  protected readonly selectedMode: Mode = 'CREAR';
+  /** Only BUILD is selectable; the other two are drawn so the layout is final. */
+  protected readonly selectedMode: Mode = 'BUILD';
 
   constructor() {
     // The keyboard shortcut of the design's own table — «MEDIR: tocar / atajo de
@@ -123,7 +123,7 @@ export class Header {
   /** The pánico fills and glows while any note is live. */
   protected readonly panicLive = computed(() => this.liveNotes() > 0);
 
-  /** The third state: `HECHO` for `--panic-ack` after the messages went out. */
+  /** The third state: `HUSHED` for `--panic-ack` after the messages went out. */
   protected readonly panicDone = this.panic.done;
 
   /**

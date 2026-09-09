@@ -89,13 +89,13 @@ describe('Header', () => {
     );
   });
 
-  it('offers only CREAR of the three modes', async () => {
+  it('offers only BUILD of the three modes', async () => {
     const { host } = await renderHeader();
 
     const modes = [...host.querySelectorAll<HTMLButtonElement>('.modes__item')];
-    expect(modes.map((mode) => mode.textContent?.trim())).toEqual(['CREAR', 'A/B', 'APRENDER']);
+    expect(modes.map((mode) => mode.textContent?.trim())).toEqual(['BUILD', 'A/B', 'LEARN']);
     expect(modes.filter((mode) => !mode.disabled).map((mode) => mode.textContent?.trim())).toEqual([
-      'CREAR',
+      'BUILD',
     ]);
   });
 
@@ -171,7 +171,7 @@ describe('Header', () => {
     expect(backend.panicPresses).toBe(2);
   });
 
-  it('says HECHO for the length of the ack and then goes back to CALLA', async () => {
+  it('says HUSHED for the length of the ack and then goes back to HUSH', async () => {
     const { fixture, host, panic } = await renderHeader();
 
     // Real timers up to here: Angular's own stabilisation runs on them.
@@ -179,12 +179,12 @@ describe('Header', () => {
     try {
       await panic.press();
       fixture.detectChanges();
-      expect(host.querySelector('.panic')?.textContent?.trim()).toBe('HECHO');
+      expect(host.querySelector('.panic')?.textContent?.trim()).toBe('HUSHED');
 
       vi.advanceTimersByTime(PANIC_ACK_MS);
       fixture.detectChanges();
 
-      expect(host.querySelector('.panic')?.textContent?.trim()).toBe('CALLA');
+      expect(host.querySelector('.panic')?.textContent?.trim()).toBe('HUSH');
     } finally {
       vi.useRealTimers();
     }
@@ -192,13 +192,13 @@ describe('Header', () => {
 });
 
 describe('Header · el transporte', () => {
-  it('deja MIRAR muerto mientras no llega un bloque', async () => {
+  it('deja LIVE muerto mientras no llega un bloque', async () => {
     const { host } = await renderHeader();
 
     // A heartbeat over a bridge that is not delivering would be the one lie this
     // bar cannot tell.
     expect(host.querySelector('.look')?.className).not.toContain('look--on');
-    expect(host.querySelector('.look__text')?.textContent?.trim()).toBe(`MIRAR · ${DEAD_MARK} fps`);
+    expect(host.querySelector('.look__text')?.textContent?.trim()).toBe(`LIVE · ${DEAD_MARK} fps`);
   });
 
   it('late y dice su cadencia medida en cuanto entra audio', async () => {
@@ -227,11 +227,11 @@ describe('Header · el transporte', () => {
     await fixture.whenStable();
 
     expect(host.querySelector('.look')?.className).toContain('look--on');
-    expect(host.querySelector('.look__text')?.textContent?.trim()).toMatch(/^MIRAR · [\d.]+ fps$/);
+    expect(host.querySelector('.look__text')?.textContent?.trim()).toMatch(/^LIVE · [\d.]+ fps$/);
   });
 });
 
-/** The header with the bridge behind it, so MEDIR has something to measure. */
+/** The header with the bridge behind it, so CAPTURE has something to measure. */
 async function renderWithAudio() {
   const backend = new FakeBackendGateway();
   TestBed.configureTestingModule({
@@ -271,13 +271,13 @@ async function renderWithAudio() {
 }
 
 describe('Header · el obturador', () => {
-  it('dibuja MEDIR desde el primer fotograma, con su ventana y su nota sostenida', async () => {
+  it('dibuja CAPTURE desde el primer fotograma, con su ventana y su nota sostenida', async () => {
     const { host } = await renderHeader();
 
     const measure = host.querySelector('.measure');
-    expect(measure?.textContent).toContain('MEDIR');
+    expect(measure?.textContent).toContain('CAPTURE');
     expect(measure?.textContent).toContain('65536');
-    expect(measure?.textContent).toContain('NOTA SOST.');
+    expect(measure?.textContent).toContain('NEEDS A HELD NOTE');
   });
 
   it('está apagado mientras el anillo no tiene nada que medir', async () => {
@@ -382,17 +382,17 @@ describe('Header · el ancla', () => {
     // teclado delante. Esta prueba cubre el contenido; el píxel, no.
   });
 
-  it('se queda en SIN MEDIR EN ESTE SONIDO hasta que haya otra medida', async () => {
+  it('se queda en NOT MEASURED IN THIS SOUND hasta que haya otra medida', async () => {
     const { host, hold, settle, backend } = await renderWithAudio();
     await hold(261.626, 50);
     const anchor = () => host.querySelector('.anchor')!;
 
     // Al arrancar no lo dice: nunca se ha medido nada y eso no es una noticia.
-    expect(anchor().textContent).not.toContain('SIN MEDIR EN ESTE SONIDO');
+    expect(anchor().textContent).not.toContain('NOT MEASURED IN THIS SOUND');
 
     backend.loadPerformance('Bright FM Keys');
     await settle();
-    expect(anchor().textContent).toContain('SIN MEDIR EN ESTE SONIDO');
+    expect(anchor().textContent).toContain('NOT MEASURED IN THIS SOUND');
 
     // El destello se va solo a los 2 200 ms; la petición de medida no.
     TestBed.inject(Clock).now.set(performance.now() + ANCHOR_FLASH_MS);
@@ -402,11 +402,11 @@ describe('Header · el ancla', () => {
     await hold(261.626, 2);
     await settle();
     expect(anchor().classList.contains('anchor--changed')).toBe(false);
-    expect(anchor().textContent).toContain('SIN MEDIR EN ESTE SONIDO');
+    expect(anchor().textContent).toContain('NOT MEASURED IN THIS SOUND');
 
     // Y se va cuando alguien vuelve a pulsar el obturador, y sólo entonces.
     host.querySelector<HTMLButtonElement>('.measure')!.click();
     await settle();
-    expect(anchor().textContent).not.toContain('SIN MEDIR EN ESTE SONIDO');
+    expect(anchor().textContent).not.toContain('NOT MEASURED IN THIS SOUND');
   });
 });

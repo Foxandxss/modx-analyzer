@@ -82,8 +82,8 @@ export function dumpWarning(
   return {
     text:
       dump.state === 'short'
-        ? `VOLCADO CORTO · ${dump.bytes} DE ${dump.expectedBytes} BYTES`
-        : 'SIN VOLCADO DE SEGURIDAD · ESTA SESIÓN NO ESCRIBE, ASÍ QUE SIGUE',
+        ? `SHORT DUMP · ${dump.bytes} OF ${dump.expectedBytes} BYTES`
+        : 'NO SAFETY DUMP · THIS SESSION WRITES NOTHING, SO CARRY ON',
     reason: dump.reason,
     path: dump.folder,
   };

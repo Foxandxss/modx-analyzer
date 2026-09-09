@@ -4,7 +4,7 @@ import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
 /**
  * The relectura, seen happening.
  *
- * The count is the point: `118 DE 384` says the keyboard is answering and at
+ * The count is the point: `118 OF 384` says the keyboard is answering and at
  * what rate, which a spinner does not. It runs at startup and after every change
  * of ancla, and there is **no «releer» button**: the app recovers on its own and
  * shows what that costs instead of hiding it.
@@ -21,7 +21,7 @@ import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
     @if (running(); as pass) {
       <div class="strip" role="status">
         <span class="strip__mark" aria-hidden="true"></span>
-        <span class="strip__text">RELECTURA · {{ pass.done }} DE {{ pass.total }}</span>
+        <span class="strip__text">REREAD · {{ pass.done }} OF {{ pass.total }}</span>
       </div>
     }
   `,
