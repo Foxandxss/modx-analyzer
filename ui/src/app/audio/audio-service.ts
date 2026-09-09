@@ -8,8 +8,17 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { LiveTrama, MEASURE_WINDOW, Medida, NO_TRAMA, ScopeLock, WATERFALL_FRAMES } from 'modx-dsp';
-import { BACKEND_GATEWAY } from '../backend/backend-gateway';
+import {
+  LiveTrama,
+  MEASURE_WINDOW,
+  MEASURE_WINDOW_MS,
+  Medida,
+  NO_TRAMA,
+  ScopeLock,
+  WATERFALL_FRAMES,
+} from 'modx-dsp';
+import { AnchorBeat, BACKEND_GATEWAY } from '../backend/backend-gateway';
+import { CaptureWindow, aval } from '../provenance/aval';
 import { Clock } from '../provenance/clock';
 import { equalTemperamentHz } from '../provenance/theory';
 import { BridgeStats, stamp } from './bridge';
@@ -380,10 +389,21 @@ export class AudioService {
    * press of MEDIR**, which is the whole difference between measuring and
    * looking: the vista viva's signals move four times a second and this one moves
    * when somebody decides it does.
+   *
+   * A press is necessary and not sufficient: a table only lands here once the
+   * ancla has vouched for the window it was taken from, so what is drawn as
+   * `MEASURED` is never a figure of a sound that was not playing.
    */
   readonly medida = signal<MedidaView | null>(null);
 
-  /** True between the press and the table. The shutter is not instantaneous. */
+  /**
+   * True between the press and the **aval**, not between the press and the table.
+   *
+   * The shutter is not instantaneous and it does not close when the worker
+   * answers: a table nobody can name is not a capture yet, so the busy state
+   * covers the ancla's beat too. Typically 40 to 250 ms of it, never more than
+   * one beat.
+   */
   readonly measuring = signal(false);
 
   /**
@@ -393,8 +413,15 @@ export class AudioService {
    * ring holds nothing at all, so the button stays dead rather than promising a
    * medida the app cannot take. Both places the shutter is drawn read this, so
    * neither can be a lie about the other.
+   *
+   * With the polling switch thrown it is dead too, and that is the aval and not
+   * the audio: #14's instrument exists so that the app stops noticing a
+   * Performance change, so with it on **no capture could ever be vouched for**.
+   * A shutter that opened there would produce a table nothing could ever draw.
    */
-  readonly canMeasure = computed(() => this.fps() !== null && !this.measuring());
+  readonly canMeasure = computed(
+    () => this.fps() !== null && !this.measuring() && !this.backend.polling().paused,
+  );
 
   /**
    * What the last medida cost in the worker, in ms. It has no budget — nobody is
@@ -437,6 +464,16 @@ export class AudioService {
 
   /** The press waiting for its table, so a second press cannot queue behind it. */
   private pending: ((view: MedidaView | null) => void) | null = null;
+
+  /**
+   * The span the shutter took, stamped at the press and carried to the aval.
+   *
+   * Two of them, because a capture crosses two waits: the ring's answer, and then
+   * the ancla's. {@link takingWindow} is the press that has not got its table yet;
+   * {@link waiting} is the table that has not been vouched for.
+   */
+  private takingWindow: CaptureWindow | null = null;
+  private waiting: { readonly view: MedidaView; readonly window: CaptureWindow } | null = null;
 
   /** Tramas since the last time the readouts were allowed to move. */
   private sinceReadout = 0;
@@ -484,6 +521,16 @@ export class AudioService {
         this.onPatchChanged();
       }
     });
+
+    // The ancla speaking: every beat is a chance for the capture that is waiting
+    // to be drawn or thrown away. The polling switch is read here too, because
+    // throwing it means no beat is ever coming and a capture that waited for one
+    // would leave the shutter busy for the rest of the session.
+    effect(() => {
+      const beats = this.backend.anchorBeats();
+      const looking = !this.backend.polling().paused;
+      untracked(() => this.settleCapture(beats, looking));
+    });
   }
 
   /**
@@ -504,6 +551,11 @@ export class AudioService {
     // in the header. Writing it a third time under a cell that is drawn empty
     // is labelling the blank.
     this.measureNote.set(null);
+    // A capture still waiting for its aval is of the sound that has just gone,
+    // so it never reaches the screen. The beat that carried this change would
+    // discard it a moment later anyway; doing it here means the two facts —
+    // «the name moved» and «this table is of the old name» — are one decision.
+    this.discardCapture();
     this.live.cuts.push(this.live.rows);
   }
 
@@ -553,6 +605,10 @@ export class AudioService {
    * The previous medida is left alone until the new one lands: a table that
    * blanked on every press and came back a moment later would be the flicker the
    * design forbids. It is replaced whole, or it stays.
+   *
+   * And it lands **only once the ancla has vouched for it**. The promise resolves
+   * with what was drawn, which is `null` for a capture the aval threw away — the
+   * shutter stays busy until then and nothing on screen moves.
    */
   async measure(): Promise<MedidaView | null> {
     if (this.worker === null || this.measuring()) {
@@ -560,9 +616,26 @@ export class AudioService {
     }
     this.measuring.set(true);
 
+    // Stamped **before** anything is awaited. The ring hands back what is already
+    // recorded, so the span the window covers ends at the press; a stamp taken
+    // after the round trip would claim samples that entered during it.
+    const to = performance.now();
+    this.takingWindow = { from: to - MEASURE_WINDOW_MS, to };
+    // Ask the ancla to look sooner than its second. It is the same out-of-turn
+    // request the anillo ancho makes and it is what keeps the hold at 40 to 250 ms
+    // instead of a whole beat; the ancla owns its cadence and may say no.
+    void this.backend.requestAnchorBeat();
+
     const buffer = await this.backend.measureWindow(MEASURE_WINDOW);
+    if (this.takingWindow === null) {
+      // The sound was changed underneath while the ring was answering. The
+      // window is of a patch that is gone, so it is not even handed over: there
+      // is no outcome it could have that anything would draw.
+      return null;
+    }
     if (buffer === null) {
       this.measuring.set(false);
+      this.takingWindow = null;
       // The ring could not serve the window: at launch it holds less than 1.5 s
       // of sound, and with the device shut it holds none.
       this.measureNote.set('not 1.5 s of audio yet');
@@ -577,23 +650,91 @@ export class AudioService {
   }
 
   private onMedida(message: MedidaMessage): void {
-    this.measuring.set(false);
+    // Recorded even for a table nobody will draw: what the worker cost is a fact
+    // about this machine and #14 weighs the anillo's polling against it.
     this.measureMs.set(message.costMs);
+    const window = this.takingWindow;
+    this.takingWindow = null;
+    if (window === null) {
+      // The sound was changed underneath while the worker was still counting.
+      // The press has already been answered and this table is of a patch that is
+      // gone, so it never becomes anything.
+      return;
+    }
 
-    const view =
-      message.medida === null ? null : { medida: message.medida, takenAt: performance.now() };
-    if (view !== null) {
-      this.medida.set(view);
-      this.measureNote.set(null);
-    } else {
+    if (message.medida === null) {
+      this.measuring.set(false);
       // Measured, and there was nothing there. Said out loud, because it is not
       // the same as never having pressed the button.
       this.measureNote.set('the shutter opened on silence');
+      this.resolveCapture(null);
+      return;
     }
 
-    const waiting = this.pending;
+    // The table exists and **nothing on screen says so yet**. Its window reaches
+    // 1.486 s into the past and the ancla takes up to a second to see a change,
+    // so until a beat has spoken for both ends of it this is a measurement of a
+    // sound the app cannot name. The shutter stays in its measuring state and the
+    // previous capture, if there is one, stays exactly as it was.
+    this.waiting = { view: { medida: message.medida, takenAt: performance.now() }, window };
+    this.settleCapture(this.backend.anchorBeats(), !this.backend.polling().paused);
+  }
+
+  /**
+   * Draw the waiting capture, throw it away, or leave it waiting.
+   *
+   * Called from both sides of the race, because either can arrive first: the beat
+   * that vouches may already be in the history when the worker answers, and the
+   * worker may answer long before the beat.
+   */
+  private settleCapture(beats: readonly AnchorBeat[], looking: boolean): void {
+    const waiting = this.waiting;
+    if (waiting === null) {
+      return;
+    }
+    // With the ancla stopped there is no beat to wait for, ever. Holding the
+    // capture would be the shutter waiting on something that is switched off.
+    const verdict = looking ? aval(beats, waiting.window) : 'discarded';
+    if (verdict === 'pending') {
+      return;
+    }
+    this.waiting = null;
+    this.measuring.set(false);
+    if (verdict === 'vouched') {
+      this.medida.set(waiting.view);
+      this.measureNote.set(null);
+      this.resolveCapture(waiting.view);
+      return;
+    }
+    // Discarded **unseen**: the window was of a sound the ancla cannot name, so
+    // it was never a table on screen and there is nothing to take away. Nothing
+    // is written under the cells either — the column at rest is the statement and
+    // the header says it in words (#33).
+    this.resolveCapture(null);
+  }
+
+  /**
+   * The sound moved under a capture that had not been drawn yet: it goes.
+   *
+   * Both stages of the press, because a Performance change lands in either of
+   * them — while the worker is still counting, and while the ancla has not
+   * spoken. Neither has anything on screen to take away.
+   */
+  private discardCapture(): void {
+    if (this.takingWindow === null && this.waiting === null) {
+      return;
+    }
+    this.takingWindow = null;
+    this.waiting = null;
+    this.measuring.set(false);
+    this.resolveCapture(null);
+  }
+
+  /** Answer the press, whatever it turned out to be. */
+  private resolveCapture(view: MedidaView | null): void {
+    const pending = this.pending;
     this.pending = null;
-    waiting?.(view);
+    pending?.(view);
   }
 
   private onFrame(frame: FrameMessage): void {

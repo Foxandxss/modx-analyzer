@@ -3,7 +3,8 @@ import { ARTEFACT_HZ, BLOCK_FRAMES, WATERFALL_FRAMES } from 'modx-dsp';
 import { AUDIO_WORKER, AudioService, waterfallView } from './audio-service';
 import { fakeBlock, heldNote, withComb } from './fake-block';
 import { FakeAudioWorker } from './fake-audio-worker';
-import { BACKEND_GATEWAY } from '../backend/backend-gateway';
+import { anchorAnswers, anchorWatching } from '../backend/anchor-driver';
+import { BACKEND_GATEWAY, BeatAnswer } from '../backend/backend-gateway';
 import { FakeBackendGateway } from '../backend/fake-backend-gateway';
 
 function setUp() {
@@ -33,6 +34,10 @@ function setUp() {
         );
       }
     },
+    /** The ancla having watched, so a capture pressed now has both its ends. */
+    watching: () => anchorWatching(backend),
+    /** The out-of-turn pass the capture asked for, started after its press. */
+    vouches: (answer: BeatAnswer = 'same', name?: string) => anchorAnswers(backend, answer, name),
   };
 }
 
@@ -148,12 +153,15 @@ describe('AudioService', () => {
   });
 
   it('throws the medida away when the sound changes and does not bring it back', async () => {
-    const { audio, backend, hold } = setUp();
+    const { audio, backend, hold, watching, vouches } = setUp();
     // 50 bloques of 1 323 frames: 66 150 samples, the first window with room.
     hold(50);
     backend.lowestLivePitch.set(60);
+    watching();
     TestBed.tick();
-    await audio.measure();
+    const drawn = audio.measure();
+    vouches();
+    await drawn;
     expect(audio.medida()).not.toBeNull();
 
     backend.loadPerformance('Bright FM Keys');
@@ -205,12 +213,15 @@ describe('AudioService', () => {
   });
 
   it('does not call the first name the ancla reads a change', async () => {
-    const { audio, backend, hold } = setUp();
+    const { audio, backend, hold, watching, vouches } = setUp();
     // 50 bloques of 1 323 frames: 66 150 samples, the first window with room.
     hold(50);
     backend.lowestLivePitch.set(60);
+    watching();
     TestBed.tick();
-    await audio.measure();
+    const drawn = audio.measure();
+    vouches();
+    await drawn;
 
     // The launch: the ancla answers for the first time. Nothing preceded it, so
     // there is nothing of a previous patch to throw away.
@@ -277,5 +288,164 @@ describe('AudioService', () => {
       push(sequence, 523.251, [2]);
     }
     expect(audio.artefactHz()).toBeCloseTo(ARTEFACT_HZ * 2, 2);
+  });
+});
+
+/**
+ * ADR-0005's rule, extended from a polled figure to the capture (#38).
+ *
+ * The window reaches 1,486 s into the past and the ancla takes up to a second to
+ * see a change, so a Performance changed in the second **before** the press
+ * yields a table of the old sound that nothing downstream would ever kill. These
+ * are the four outcomes at the seam the shutter is actually pressed at.
+ */
+describe('AudioService · el aval de la medida', () => {
+  /** 50 bloques of 1 323 frames: 66 150 samples, the first window with room. */
+  const BLOCKS_FOR_A_MEDIDA = 50;
+
+  function ready() {
+    const bench = setUp();
+    bench.hold(BLOCKS_FOR_A_MEDIDA);
+    bench.backend.lowestLivePitch.set(60);
+    bench.watching();
+    TestBed.tick();
+    return bench;
+  }
+
+  it('draws a capture bracketed by two passes that read the same name', async () => {
+    const { audio, vouches } = ready();
+
+    const drawn = audio.measure();
+    vouches('same');
+    const view = await drawn;
+
+    expect(view).not.toBeNull();
+    expect(audio.medida()).toBe(view);
+    expect(audio.medida()?.medida.window).toBe(65_536);
+    expect(audio.measuring()).toBe(false);
+    expect(audio.measureNote()).toBeNull();
+  });
+
+  it('never draws a capture whose pass answers that the sound changed', async () => {
+    const { audio, vouches } = ready();
+
+    const drawn = audio.measure();
+    // The one failure this whole application exists to prevent: somebody turned
+    // the dial a moment before pressing, so the 1,5 s in the ring is the sound
+    // that was and the name on screen is the sound that is.
+    vouches('changed', 'Bright FM Keys');
+
+    expect(await drawn).toBeNull();
+    expect(audio.medida()).toBeNull();
+    expect(audio.measuring()).toBe(false);
+    // Discarded unseen, and nothing written under the cells: the column at rest
+    // is the statement and the header says it in words (#33).
+    expect(audio.measureNote()).toBeNull();
+  });
+
+  it('holds the shutter busy and the previous capture still while no pass has spoken', async () => {
+    const { audio, hold, vouches } = ready();
+    const first = audio.measure();
+    vouches('same');
+    const before = await first;
+    expect(before).not.toBeNull();
+
+    // A second press, and this time the ancla says nothing yet.
+    hold(BLOCKS_FOR_A_MEDIDA);
+    void audio.measure();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(audio.measuring()).toBe(true);
+    // The table on screen does not blink: it is the one that was vouched for,
+    // exactly as it was, until another one has been.
+    expect(audio.medida()).toBe(before);
+  });
+
+  it('asks the ancla for a pass out of turn, so the hold is a fraction of a beat', () => {
+    const { audio, backend } = ready();
+
+    void audio.measure();
+
+    // The same hint the anillo ancho makes: the ancla owns its cadence and may
+    // answer «at the usual second», which is why this is one request and not a
+    // wait on one.
+    expect(backend.beatRequests).toBe(1);
+  });
+
+  it('throws a waiting capture away the moment the sound changes underneath', async () => {
+    const { audio, backend } = ready();
+
+    const drawn = audio.measure();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(audio.measuring()).toBe(true);
+
+    backend.loadPerformance('Bright FM Keys');
+    TestBed.tick();
+
+    expect(await drawn).toBeNull();
+    expect(audio.medida()).toBeNull();
+    expect(audio.measuring()).toBe(false);
+  });
+
+  it('does not open a shutter nothing could vouch for: the ancla is switched off', async () => {
+    const { audio, backend } = ready();
+
+    await backend.setPolling(true);
+    TestBed.tick();
+
+    // #14's instrument exists so the app stops noticing a Performance change.
+    // With it on no capture could ever be vouched for, so the shutter is dead
+    // rather than producing a table nothing can ever draw.
+    expect(audio.canMeasure()).toBe(false);
+  });
+
+  it('throws away a capture left waiting when the ancla is switched off under it', async () => {
+    const { audio, backend } = ready();
+
+    const drawn = audio.measure();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(audio.measuring()).toBe(true);
+
+    await backend.setPolling(true);
+    TestBed.tick();
+
+    // No beat is ever coming. Holding the capture would leave the shutter busy
+    // for the rest of the session, waiting on something that is switched off.
+    expect(await drawn).toBeNull();
+    expect(audio.medida()).toBeNull();
+    expect(audio.measuring()).toBe(false);
+  });
+
+  it('answers the press when the sound changes while the worker is still counting', async () => {
+    const { audio, backend, worker } = ready();
+
+    const drawn = audio.measure();
+    // Before the worker has been handed anything: `measureWindow` is a promise
+    // and the change lands in the microtask between the press and the table.
+    backend.loadPerformance('Bright FM Keys');
+    TestBed.tick();
+
+    expect(await drawn).toBeNull();
+    expect(audio.medida()).toBeNull();
+    expect(audio.measuring()).toBe(false);
+    // And the window is never even handed over: it is of a patch that is gone,
+    // so there is no outcome it could have that anything would draw.
+    expect(worker.measured).toBe(0);
+    expect(audio.measureNote()).toBeNull();
+  });
+
+  it('still refuses before the ring has 1,5 s, and says so instead of waiting', async () => {
+    const { audio, watching } = setUp();
+    watching();
+    TestBed.tick();
+
+    // Nothing entered: the ring cannot serve the window, so there is no window
+    // to vouch for and the aval never comes into it.
+    expect(await audio.measure()).toBeNull();
+    expect(audio.measuring()).toBe(false);
+    expect(audio.measureNote()).toBe('not 1.5 s of audio yet');
   });
 });

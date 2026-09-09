@@ -5,6 +5,7 @@ import { AUDIO_WORKER, AudioService } from '../../audio/audio-service';
 import { fakeBlock, heldNote } from '../../audio/fake-block';
 import { FakeAudioWorker } from '../../audio/fake-audio-worker';
 import { Clock } from '../../provenance/clock';
+import { anchorAnswers, anchorWatching } from '../../backend/anchor-driver';
 import { BACKEND_GATEWAY, DumpView } from '../../backend/backend-gateway';
 import { FakeBackendGateway } from '../../backend/fake-backend-gateway';
 import { FiguresColumn } from './figures-column';
@@ -170,6 +171,7 @@ describe('FiguresColumn · the resting state', () => {
     const fixture = TestBed.createComponent(FiguresColumn);
     const audio = TestBed.inject(AudioService);
     audio.start();
+    anchorWatching(backend);
     await fixture.whenStable();
     const host = fixture.nativeElement as HTMLElement;
     const foot = () => host.querySelector<HTMLButtonElement>('.measure')!;
@@ -193,8 +195,10 @@ describe('FiguresColumn · the resting state', () => {
     expect(foot().disabled).toBe(false);
     expect(foot().className).toContain('measure--on');
 
-    // And it is the control, not a picture of one: pressing it captures.
+    // And it is the control, not a picture of one: pressing it captures — once
+    // the ancla's next pass has vouched for the window it took (#38).
     foot().click();
+    anchorAnswers(backend);
     await fixture.whenStable();
 
     expect(audio.medida()).not.toBeNull();
@@ -222,6 +226,9 @@ async function renderWithAudio() {
   const fixture = TestBed.createComponent(FiguresColumn);
   const audio = TestBed.inject(AudioService);
   audio.start();
+  // The ancla has been looking for a few seconds, which is what lets a capture
+  // taken below be vouched for at both ends of its window (#38).
+  anchorWatching(backend);
   await fixture.whenStable();
 
   return {
@@ -242,8 +249,11 @@ async function renderWithAudio() {
       }
       await fixture.whenStable();
     },
-    async press() {
-      await audio.measure();
+    /** The shutter, and the out-of-turn pass that vouches for what it took. */
+    async press(answer: 'same' | 'changed' = 'same') {
+      const drawn = audio.measure();
+      anchorAnswers(backend, answer, answer === 'changed' ? 'Bright FM Keys' : undefined);
+      await drawn;
       await fixture.whenStable();
     },
     backend,
@@ -281,6 +291,22 @@ describe('FiguresColumn · la medida', () => {
     expect(text()).toContain('WORST PARTIAL');
     // Y ni una nota más: lo dice la columna en reposo y la cabecera con letras.
     expect(text()).not.toContain('NOT MEASURED IN THIS SOUND');
+  });
+
+  it('se queda en reposo cuando el aval tira la captura sin haberse visto', async () => {
+    const { hold, press, text, rows } = await renderWithAudio();
+
+    await hold(261.626);
+    // Alguien giró el dial un momento antes de pulsar: el segundo y medio del
+    // anillo es del sonido que era, y el nombre en pantalla es el que es (#38).
+    await press('changed');
+
+    expect(rows()).toHaveLength(0);
+    expect(text()).toContain(SENTENCE);
+    // Y ni una frase debajo: la columna en reposo lo dice y la cabecera con
+    // letras. Una nota bajo una celda ya dibujada vacía es etiquetar el hueco.
+    expect(text()).not.toContain('the shutter opened on silence');
+    expect(text()).not.toContain('capturing');
   });
 
   it('dice que no hay audio bastante en vez de medir un silencio inventado', async () => {
@@ -364,7 +390,10 @@ describe('FiguresColumn · la edad de la medida', () => {
     await fixture.whenStable();
 
     clock.now.set(performance.now());
-    await audio.measure();
+    anchorWatching(backend);
+    const drawn = audio.measure();
+    anchorAnswers(backend);
+    await drawn;
     await fixture.whenStable();
     const host = fixture.nativeElement as HTMLElement;
     const table = Array.from(host.querySelectorAll('.lines__row')).map((row) => row.textContent);

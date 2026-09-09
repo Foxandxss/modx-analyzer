@@ -35,6 +35,16 @@ export const LIVE_BIN_HZ = SAMPLE_RATE / LIVE_WINDOW;
 export const MEASURE_WINDOW = 65536;
 
 /**
+ * How much wall clock one medida's window covers: 1 486.1 ms.
+ *
+ * The shutter looks **backwards** — the samples are already in the ring when the
+ * button is pressed — so the window is a span of the past and not an instant, and
+ * this is its length. It is what the aval brackets: its last sample is the press
+ * and its first entered this long before it (ADR-0005, extended to the capture).
+ */
+export const MEASURE_WINDOW_MS = (MEASURE_WINDOW / SAMPLE_RATE) * 1000;
+
+/**
  * The waterfall keeps the last 14 tramas.
  *
  * How long that is is **not** a constant and is not written down here: rows are

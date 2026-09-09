@@ -3,6 +3,7 @@ import { BLOCK_FRAMES } from 'modx-dsp';
 import { AUDIO_WORKER, AudioService } from '../../audio/audio-service';
 import { fakeBlock, heldNote } from '../../audio/fake-block';
 import { FakeAudioWorker } from '../../audio/fake-audio-worker';
+import { anchorAnswers, anchorWatching } from '../../backend/anchor-driver';
 import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
 import { FakeBackendGateway } from '../../backend/fake-backend-gateway';
 import { DEAD_MARK } from '../../provenance/provenance';
@@ -244,6 +245,9 @@ async function renderWithAudio() {
   const fixture = TestBed.createComponent(Header);
   const audio = TestBed.inject(AudioService);
   audio.start();
+  // El ancla lleva unos segundos mirando, que es lo que permite avalar por sus
+  // dos extremos la ventana de una captura tomada aquí (#38).
+  anchorWatching(backend);
   await fixture.whenStable();
   const host = fixture.nativeElement as HTMLElement;
 
@@ -299,10 +303,13 @@ describe('Header · el obturador', () => {
   });
 
   it('tocarlo toma una medida de 65 536 muestras', async () => {
-    const { button, hold, audio, settle } = await renderWithAudio();
+    const { button, hold, audio, settle, backend } = await renderWithAudio();
 
     await hold(261.626, 50);
     button().click();
+    // El latido fuera de turno que la captura pidió: sin él no hay tabla que
+    // dibujar, porque nadie ha dicho todavía de qué sonido es (#38).
+    anchorAnswers(backend);
     await settle();
 
     expect(audio.medida()?.medida.window).toBe(65_536);
@@ -310,10 +317,11 @@ describe('Header · el obturador', () => {
   });
 
   it('la tecla M es un extra del ratón, no la única vía', async () => {
-    const { hold, audio, settle } = await renderWithAudio();
+    const { hold, audio, settle, backend } = await renderWithAudio();
 
     await hold(261.626, 50);
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'm' }));
+    anchorAnswers(backend);
     await settle();
 
     expect(audio.medida()).not.toBeNull();
@@ -404,8 +412,16 @@ describe('Header · el ancla', () => {
     expect(anchor().classList.contains('anchor--changed')).toBe(false);
     expect(anchor().textContent).toContain('NOT MEASURED IN THIS SOUND');
 
-    // Y se va cuando alguien vuelve a pulsar el obturador, y sólo entonces.
+    // Y el ancla lleva ya un rato leyendo el nombre nuevo, que es lo que hace
+    // avalable una ventana de este sonido: el latido anterior a su primera
+    // muestra tiene que haber leído el mismo nombre que el posterior (#38).
+    anchorWatching(backend, 'Bright FM Keys');
+    await settle();
+
+    // Y se va cuando alguien vuelve a pulsar el obturador y el ancla avala lo
+    // que cogió, y sólo entonces.
     host.querySelector<HTMLButtonElement>('.measure')!.click();
+    anchorAnswers(backend);
     await settle();
     expect(anchor().textContent).not.toContain('NOT MEASURED IN THIS SOUND');
   });
