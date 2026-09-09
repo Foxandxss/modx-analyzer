@@ -15,6 +15,7 @@ function topology(
     carriers,
     feedback: { from: feedback[0], into: feedback[1] },
     depth: chainDepth(routes),
+    branch: branches(routes),
     provenance: 'documented',
   };
 }
@@ -28,6 +29,19 @@ function chainDepth(routes: readonly [number, number][]): number[] {
     }
   }
   return depth;
+}
+
+/** Rust's `Topology::branches`: everything a route joins, whichever way it points. */
+function branches(routes: readonly [number, number][]): number[] {
+  const branch = [1, 2, 3, 4, 5, 6, 7, 8];
+  for (let pass = 0; pass < 8; pass += 1) {
+    for (const [from, into] of routes) {
+      const lowest = Math.min(branch[from - 1], branch[into - 1]);
+      branch[from - 1] = lowest;
+      branch[into - 1] = lowest;
+    }
+  }
+  return branch;
 }
 
 /** `Init Normal (FM-X)`: the 1-2-3-4 chain, five portadoras, the loop on Op1. */

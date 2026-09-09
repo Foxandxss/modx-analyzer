@@ -177,7 +177,149 @@ impl Topology {
         }
         depth
     }
+
+    /// Which connected structure each operator belongs to, indexed `operator -
+    /// 1`, named by the lowest operator number in it.
+    ///
+    /// A route joins two operators into one branch whichever way it points, so
+    /// this is the undirected reading of [`Topology::routes`]: the tree that hangs
+    /// off one portadora, plus every operator that reaches it. An operator with no
+    /// route at all is a branch of one — which is what the 1 is, eight times over.
+    ///
+    /// The feedback loop is not an edge here either. It is drawn as a rectangle
+    /// around boxes that are already joined, so it never opens a branch and never
+    /// merges two.
+    pub fn branches(&self) -> [u8; OPERATORS as usize] {
+        let mut branch = [0u8; OPERATORS as usize];
+        for (operator, slot) in branch.iter_mut().enumerate() {
+            *slot = operator as u8 + 1;
+        }
+        // Each pass can only lower a label and there are eight of them, so eight
+        // passes settle any of the 88; the loop leaves early when one changes
+        // nothing.
+        for _ in 0..OPERATORS {
+            let mut settled = true;
+            for (from, into) in self.routes {
+                let (from, into) = (usize::from(from - 1), usize::from(into - 1));
+                let lowest = branch[from].min(branch[into]);
+                if branch[from] != lowest || branch[into] != lowest {
+                    branch[from] = lowest;
+                    branch[into] = lowest;
+                    settled = false;
+                }
+            }
+            if settled {
+                break;
+            }
+        }
+        branch
+    }
+
+    /// How many connected structures the drawing has, branches of one included.
+    pub fn branch_count(&self) -> u8 {
+        self.branches()
+            .iter()
+            .enumerate()
+            .filter(|(operator, label)| usize::from(**label) == operator + 1)
+            .count() as u8
+    }
+
+    /// The most operators the drawing puts on one row: the widest depth level,
+    /// counting every branch standing on it.
+    ///
+    /// This is what the wide composition's **width** is sized to, because a row is
+    /// drawn across the whole surface and does not care which branch a node came
+    /// from.
+    pub fn widest_row(&self) -> u8 {
+        let mut per_level = [0u8; OPERATORS as usize];
+        for level in self.chain_depth() {
+            per_level[usize::from(level)] += 1;
+        }
+        per_level.into_iter().max().unwrap_or(0)
+    }
+
+    /// The most operators **one** branch puts on one row: several moduladores
+    /// dropping into the same box, and their siblings further out.
+    ///
+    /// Read beside [`Topology::widest_row`] it says whether a wide row is one
+    /// fan-in or several branches side by side, which is the difference between
+    /// one bracket in the drawing and several.
+    pub fn widest_branch_row(&self) -> u8 {
+        let depth = self.chain_depth();
+        let branch = self.branches();
+        let mut widest = 0;
+        for label in 1..=OPERATORS {
+            let mut per_level = [0u8; OPERATORS as usize];
+            for (operator, level) in depth.iter().enumerate() {
+                if branch[operator] == label {
+                    per_level[usize::from(*level)] += 1;
+                }
+            }
+            widest = widest.max(per_level.into_iter().max().unwrap_or(0));
+        }
+        widest
+    }
+
+    /// The most branches standing side by side on one row.
+    ///
+    /// Every branch has a portadora and every portadora is at depth 0, so the
+    /// answer is always read off the bus row; it is computed over every level
+    /// anyway, because that is the question and not the shortcut.
+    pub fn parallel_branches(&self) -> u8 {
+        let depth = self.chain_depth();
+        let branch = self.branches();
+        let mut most = 0;
+        for level in 0..OPERATORS {
+            let mut seen = [false; OPERATORS as usize];
+            for (operator, at) in depth.iter().enumerate() {
+                if *at == level {
+                    seen[usize::from(branch[operator] - 1)] = true;
+                }
+            }
+            most = most.max(seen.into_iter().filter(|on| *on).count() as u8);
+        }
+        most
+    }
 }
+
+// ---------------------------------------------------------------------------
+// The measured worst case: what the wide composition has to hold.
+//
+// The design handoff sized the algorithm surface by arithmetic on eight boxes —
+// «up to 6 depth levels with up to 4 parallel branches at one level», called safe
+// because no real algorithm could exceed it (`CONCERNS.md` §31) — and declined to
+// name the real worst case without the histogram. These four figures are that
+// histogram's maxima, computed over the transcribed table and asserted below, so
+// the surface is sized to the drawing and not to a bound.
+//
+// Both halves of the arithmetic guess came out low, which is the one thing a
+// bound must not be: the 66 is eight rows deep and not six, and the 1 stands
+// eight branches on one row and not four.
+// ---------------------------------------------------------------------------
+
+/// The deepest any of the 88 goes, counted the way [`Topology::chain_depth`]
+/// counts: a portadora is 0, so the number of rows is one more than this.
+///
+/// Reached by the 66 alone, the single chain of eight. Nothing else passes 5.
+pub const MAX_DEPTH: u8 = 7;
+
+/// The most operators any of the 88 puts on one row: the wide composition's
+/// horizontal worst case.
+///
+/// Reached by the 1 alone: eight portadoras on the bus with no route between
+/// them.
+pub const MAX_ROW: u8 = 8;
+
+/// The most operators one connected structure puts on one row.
+///
+/// Reached by the 68 alone: seven moduladores dropping into Op8 together.
+pub const MAX_BRANCH_ROW: u8 = 7;
+
+/// The most branches any of the 88 stands side by side on one row.
+///
+/// Reached by the 1 alone, and over the same eight boxes [`MAX_ROW`] counts:
+/// there, every branch is one operator wide.
+pub const MAX_PARALLEL_BRANCHES: u8 = 8;
 
 /// The algorithm the keyboard is on, from the byte `48 0p 4F` answered with.
 /// Base zero — `00` is algorithm 1 — and out of range is `None` rather than a
@@ -801,6 +943,158 @@ mod tests {
                     topology.number
                 );
             }
+        }
+    }
+
+    /// The histogram `CONCERNS.md` §31 asked for, and the bound the wide
+    /// composition is sized to.
+    ///
+    /// It trips two ways on purpose. If a transcription ever grows a topology
+    /// past one of the four maxima the layout would silently overlap, so the
+    /// bound is asserted per algorithm. And if every one of the 88 ever came in
+    /// *under* a maximum the constant would be a guess again, so each is asserted
+    /// to be reached, by the algorithm named in its doc.
+    #[test]
+    fn measures_the_worst_case_the_wide_composition_has_to_hold() {
+        let reaching = |what: fn(&Topology) -> u8, bound: u8| -> Vec<u8> {
+            for topology in &ALGORITHMS {
+                assert!(
+                    what(topology) <= bound,
+                    "algoritmo {}: {} pasa de {bound}",
+                    topology.number,
+                    what(topology)
+                );
+            }
+            ALGORITHMS
+                .iter()
+                .filter(|t| what(t) == bound)
+                .map(|t| t.number)
+                .collect()
+        };
+
+        // Eight rows, not the six the arithmetic bound assumed: the 66 is the
+        // single chain of eight and is the only one past five.
+        let deepest = |t: &Topology| *t.chain_depth().iter().max().expect("ocho");
+        assert_eq!(reaching(deepest, MAX_DEPTH), vec![66]);
+
+        // Eight boxes on one row, not four: the 1 is eight portadoras in
+        // parallel, and at 150 px a node that is 1 200 px of the 1 232 the
+        // surface has.
+        assert_eq!(reaching(Topology::widest_row, MAX_ROW), vec![1]);
+
+        // The widest single structure is the 68: seven moduladores dropping into
+        // Op8 at once. The 1's eight are eight branches and not one.
+        assert_eq!(
+            reaching(Topology::widest_branch_row, MAX_BRANCH_ROW),
+            vec![68]
+        );
+        assert_eq!(topology(1).expect("el 1").widest_branch_row(), 1);
+
+        // And the branches: the 1 again, because every portadora it has is a
+        // structure of one.
+        assert_eq!(
+            reaching(Topology::parallel_branches, MAX_PARALLEL_BRANCHES),
+            vec![1]
+        );
+    }
+
+    #[test]
+    fn a_branch_is_everything_a_route_joins_whichever_way_it_points() {
+        // Eight portadoras and no route: eight branches of one.
+        let one = topology(1).expect("el 1");
+        assert_eq!(one.branches(), [1, 2, 3, 4, 5, 6, 7, 8]);
+        assert_eq!(one.branch_count(), 8);
+
+        // The single chain: one branch, named by its deepest operator because it
+        // happens to be the lowest number.
+        let sixty_six = topology(66).expect("el 66");
+        assert_eq!(sixty_six.branches(), [1; 8]);
+        assert_eq!(sixty_six.branch_count(), 1);
+        assert_eq!(sixty_six.widest_row(), 1);
+        assert_eq!(sixty_six.parallel_branches(), 1);
+
+        // Four pairs side by side: four branches, two rows, four on each.
+        let sixty_seven = topology(67).expect("el 67");
+        assert_eq!(sixty_seven.branches(), [1, 1, 3, 3, 5, 5, 7, 7]);
+        assert_eq!(sixty_seven.branch_count(), 4);
+        assert_eq!(sixty_seven.widest_row(), 4);
+        assert_eq!(sixty_seven.widest_branch_row(), 1);
+        assert_eq!(sixty_seven.parallel_branches(), 4);
+
+        // The fan-in: one branch, one operator on the bus row and seven above it.
+        let sixty_eight = topology(68).expect("el 68");
+        assert_eq!(sixty_eight.branch_count(), 1);
+        assert_eq!(sixty_eight.widest_row(), 7);
+        assert_eq!(sixty_eight.widest_branch_row(), 7);
+        assert_eq!(sixty_eight.parallel_branches(), 1);
+
+        // A branch that joins two operators through a third they both modulate:
+        // the routes point the same way and the structure is still one.
+        let three = topology(3).expect("el 3");
+        assert_eq!(three.branches(), [1, 1, 1, 1, 5, 6, 7, 8]);
+        assert_eq!(three.branch_count(), 5);
+
+        // And in general, over the 88: a branch label is a real operator number,
+        // a route never crosses two branches, the branch count is the number of
+        // distinct labels, and every branch reaches the bus, so the bus row alone
+        // answers `parallel_branches`.
+        for topology in &ALGORITHMS {
+            let branch = topology.branches();
+            let mut labels = BTreeSet::new();
+            for (operator, label) in branch.iter().enumerate() {
+                assert!(
+                    (1..=OPERATORS).contains(label) && usize::from(*label) <= operator + 1,
+                    "algoritmo {}: Op{} en la rama {label}",
+                    topology.number,
+                    operator + 1
+                );
+                labels.insert(*label);
+            }
+            assert_eq!(
+                labels.len(),
+                usize::from(topology.branch_count()),
+                "algoritmo {}",
+                topology.number
+            );
+
+            for (from, into) in topology.routes {
+                assert_eq!(
+                    branch[usize::from(from - 1)],
+                    branch[usize::from(into - 1)],
+                    "algoritmo {}: Op{from} y Op{into} en ramas distintas",
+                    topology.number
+                );
+            }
+
+            let on_the_bus: BTreeSet<u8> = topology
+                .carriers
+                .iter()
+                .map(|carrier| branch[usize::from(carrier - 1)])
+                .collect();
+            assert_eq!(
+                on_the_bus, labels,
+                "algoritmo {}: una rama no llega al bus",
+                topology.number
+            );
+            assert_eq!(
+                topology.parallel_branches(),
+                topology.branch_count(),
+                "algoritmo {}",
+                topology.number
+            );
+
+            // A row is never wider than the eight operators there are, and one
+            // branch's row is never wider than the whole row it sits on.
+            assert!(
+                topology.widest_row() <= OPERATORS,
+                "algoritmo {}",
+                topology.number
+            );
+            assert!(
+                topology.widest_branch_row() <= topology.widest_row(),
+                "algoritmo {}",
+                topology.number
+            );
         }
     }
 

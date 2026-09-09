@@ -116,6 +116,16 @@ pub struct TopologyView {
     /// out any of the 88 without a hand-made sheet is part of the table, and two
     /// copies of a rule are one copy too many.
     pub depth: Vec<u8>,
+    /// Which connected structure each operator belongs to, indexed `operator -
+    /// 1`, named by the lowest operator number in it. A route joins two
+    /// operators into one branch whichever way it points; an operator with no
+    /// route is a branch of one.
+    ///
+    /// It crosses beside the depth because the wide composition places whole
+    /// branches side by side and the depth alone cannot say where one ends: the
+    /// 1 and the 68 both put seven or eight boxes on one row, and one of them is
+    /// eight drawings and the other is one.
+    pub branch: Vec<u8>,
     /// `documentado` or `medido`, per entry (ADR-0003). All 88 are paper today:
     /// promotion happens by changing the algorithm on the panel and comparing the
     /// drawing with the MODX's own screen.
@@ -140,6 +150,7 @@ impl TopologyView {
                 into: topology.feedback.into,
             },
             depth: topology.chain_depth().to_vec(),
+            branch: topology.branches().to_vec(),
             provenance: match topology.provenance {
                 Provenance::Medido => "medido",
                 Provenance::Documentado => "documentado",
@@ -611,6 +622,9 @@ mod tests {
         // Depth is what lays the nodes out: Op1 is three modulations from the
         // output, and the five portadoras are on it.
         assert_eq!(drawn.depth, vec![3, 2, 1, 0, 0, 0, 0, 0]);
+        // And branch membership is what keeps them together: the chain and the
+        // four portadoras beside it are five drawings, not one row of eight.
+        assert_eq!(drawn.branch, vec![1, 1, 1, 1, 5, 6, 7, 8]);
         assert_eq!(drawn.provenance, "documentado");
     }
 

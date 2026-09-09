@@ -384,6 +384,17 @@ export interface Topology {
   readonly feedback: Route;
   /** Chain depth by operator, indexed `operator - 1`. A portadora is 0. */
   readonly depth: readonly number[];
+  /**
+   * Which connected structure each operator belongs to, indexed `operator - 1`,
+   * named by the lowest operator number in it. A branch of one is an operator
+   * with no route at all.
+   *
+   * The depth says which row a node stands on; this says which drawing it
+   * belongs to, which is what stands whole branches side by side. Computed in
+   * Rust beside the depth, because the rule that lays out any of the 88 belongs
+   * to the table and two copies of a rule are one copy too many.
+   */
+  readonly branch: readonly number[];
   /** `documentado` until the drawing has been checked against the keyboard. */
   readonly provenance: TableProvenance;
 }

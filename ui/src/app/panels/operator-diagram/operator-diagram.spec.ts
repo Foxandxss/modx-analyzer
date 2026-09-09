@@ -109,6 +109,7 @@ const ALGORITHM_2: Topology = {
   carriers: [4, 5, 6, 7, 8],
   feedback: { from: 1, into: 1 },
   depth: [3, 2, 1, 0, 0, 0, 0, 0],
+  branch: [1, 1, 1, 1, 5, 6, 7, 8],
   provenance: 'documented',
 };
 
@@ -122,6 +123,7 @@ const ALGORITHM_6: Topology = {
   carriers: [2, 4, 5, 6, 7, 8],
   feedback: { from: 1, into: 1 },
   depth: [1, 0, 1, 0, 0, 0, 0, 0],
+  branch: [1, 1, 3, 3, 5, 6, 7, 8],
   provenance: 'documented',
 };
 
