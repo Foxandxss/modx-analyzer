@@ -437,6 +437,19 @@ export interface RereadProgress {
 }
 
 /**
+ * The relectura in progress, or `null`. **One copy of «the strip is up».**
+ *
+ * A pass that carries how long it took is a pass that arrived, and the count
+ * stops climbing because it finished rather than because it stalled. Two places
+ * read this and they must not drift: the strip that draws the count, and the
+ * regrowth of the algorithm surface, which waits for the strip to go rather than
+ * racing it (#41).
+ */
+export function rereadRunning(pass: RereadProgress | null): RereadProgress | null {
+  return pass === null || pass.tookMs !== null ? null : pass;
+}
+
+/**
  * What an operator is doing in this patch. Carrier and modulator come from the
  * algorithm's topology; `inert` is Level 0 and overrides both, wherever the
  * algorithm put the operator.

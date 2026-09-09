@@ -9,6 +9,7 @@ import {
 } from '../../backend/backend-gateway';
 import { Figure } from '../../provenance/figure';
 import { RingFreshness } from '../../provenance/freshness';
+import { Composition } from '../../shell/composition';
 import { DEAD_MARK, PROVENANCE_LABEL } from '../../provenance/provenance';
 import { equalTemperamentHz } from '../../provenance/theory';
 import { DrawnBus, DrawnRoute, NODE_H, NODE_W, Slot, layout } from './layout';
@@ -81,8 +82,22 @@ interface LineView {
 export class OperatorDiagram {
   private readonly backend = inject(BACKEND_GATEWAY);
   private readonly freshness = inject(RingFreshness);
+  private readonly composition = inject(Composition);
 
   protected readonly labels = PROVENANCE_LABEL;
+
+  /**
+   * `KEEP IT BIG`, drawn here because this is the panel it is about.
+   *
+   * It is a **pin and not a mode**: with it up the composition is decided by
+   * whether a capture exists, which is the state the app already holds and the
+   * bookkeeping nobody should be asked to do.
+   */
+  protected readonly pinned = this.composition.pinned;
+
+  protected togglePin(): void {
+    this.composition.togglePin();
+  }
 
   /** `ALL EIGHT · 10.2 Hz`, measured, never the documented figure. */
   protected readonly cadence = computed<PolledValue<number>>(() => {

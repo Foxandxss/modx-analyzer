@@ -5,6 +5,7 @@ import { OperatorDiagram } from './panels/operator-diagram/operator-diagram';
 import { SignalViews } from './panels/signal-views/signal-views';
 import { TabPanel } from './panels/tab-panel/tab-panel';
 import { AlertStrip } from './shell/alert-strip/alert-strip';
+import { Composition } from './shell/composition';
 import { DevReadout } from './shell/dev-readout/dev-readout';
 import { Header } from './shell/header/header';
 import { PanicNotice } from './shell/panic/panic-notice';
@@ -42,9 +43,15 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
     <app-alert-strip />
     <app-unhappy-cards />
     <app-reread-strip />
-    <div class="body">
+    <!-- Dos composiciones de los mismos elementos, y lo que elige entre ellas es
+         si hay una Medida avalada. Las dos vistas vivas no se encogen: se van,
+         porque un panel de 0 px sigue pintando 33 veces por segundo algo que
+         nadie mira. -->
+    <div class="body" [class.body--wide]="wide()">
       <app-operator-diagram />
-      <app-signal-views />
+      @if (panels()) {
+        <app-signal-views />
+      }
       <app-figures-column />
     </div>
     <app-tab-panel />
@@ -84,13 +91,29 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
       flex-shrink: 0;
     }
 
+    /* Las dos anchuras de la composición estrecha, una sola vez cada una. El
+       diagrama no tiene la suya: es el que se lleva la holgura, así que su
+       ancho es lo que sobra y a 1280 sale exactamente en los 700 px del
+       diseño. Así el intercambio no puede desmentir al reposo. */
+    :host {
+      --composition-diagram: 700px;
+      --composition-column: 208px;
+    }
+
     /* El "filete" del cuerpo es un hueco de 2 px sobre el color de la rejilla,
        no un borde de 1 px: a DPR 1.5 un filete de 1 px se ve sucio. */
     .body {
       flex: 1 1 auto;
       min-height: 0;
       display: grid;
-      grid-template-columns: 700px 1fr 208px;
+      /* Tres carriles siempre, y el de en medio es el que se cierra: dos listas
+         de pistas con la misma forma son las que el navegador sabe interpolar,
+         que es lo que hace que el cambio dure --dur-settle y no un fotograma. */
+      grid-template-columns:
+        minmax(0, 1fr)
+        calc(100% - var(--composition-diagram) - var(--composition-column) - 2 * var(--rule-min))
+        var(--composition-column);
+      transition: grid-template-columns var(--dur-settle) var(--ease-instrument);
       /* El suelo va en la FILA, no en el cuerpo: el cuerpo se encoge con la
          ventana —así que en reposo no sobra nada y no hay barra— pero su fila
          nunca baja de 360 px, que es donde los ocho nodos dejan de tener
@@ -101,9 +124,40 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
       gap: var(--rule-min);
       background: var(--rule-color);
     }
+
+    /* Cada panel en su carril por nombre y no por orden de llegada: sin esto, el
+       día que las vistas vivas no están la columna de cifras se metería en el
+       carril que acaba de cerrarse. */
+    app-operator-diagram {
+      grid-column: 1;
+    }
+    app-signal-views {
+      grid-column: 2;
+    }
+    app-figures-column {
+      grid-column: 3;
+    }
+
+    /* Nada medido: el carril de en medio se cierra y el diagrama se lleva su
+       holgura entera —los 368 px de las dos vistas vivas, 1 070 px a 1280 de
+       ventana—. La columna de cifras se queda: es la que dice qué llenaría la
+       medida que no hay (#33), y este es exactamente el estado en que lo dice.
+       El filete se parte por la mitad porque aquí hay dos huecos pegados con un
+       carril de 0 px entre ellos, y dos filetes juntos se leen como una regla
+       del doble de gruesa. */
+    .body--wide {
+      grid-template-columns: minmax(0, 1fr) 0px var(--composition-column);
+      column-gap: calc(var(--rule-min) / 2);
+    }
   `,
 })
 export class App {
+  private readonly composition = inject(Composition);
+
+  /** The algorithm has the room, and the two live panels are not on screen. */
+  protected readonly wide = this.composition.wide;
+  protected readonly panels = this.composition.panels;
+
   constructor() {
     // The audio bridge is opened from the screen that draws it, once. Nothing
     // spins up a worker in a test that did not ask for one.

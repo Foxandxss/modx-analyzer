@@ -40,6 +40,37 @@
   color: var(--ink-inert);
 }
 
+// El pin de la composición ancha. Contorno y nada más en reposo: no es un estado
+// del sonido ni una cifra, es una preferencia de cómo se reparte el ancho, y no
+// compite con nada de lo que hay debajo. Pulsado se enciende en el color del
+// propio panel, que es lo que sostiene.
+.pin {
+  all: unset;
+  cursor: pointer;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  align-self: center;
+  min-height: var(--hit-min);
+  // Los 44 px son de lo que se pulsa y no de la fila: lo que se lee debajo no
+  // cede alto para que un botón tenga su mínimo, que es la lección de la
+  // lectura de banco (#19) aplicada a un solo control.
+  margin-block: calc((var(--text-label) - var(--hit-min)) / 2);
+  padding: 0 13px;
+  border: var(--rule-min) solid var(--rule-color);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-label);
+  white-space: nowrap;
+  color: var(--ink-inert);
+
+  &--on {
+    border-color: var(--modulator);
+    color: var(--modulator);
+  }
+}
+
 // El grado de la entrada de la tabla, no un sello de procedencia: una ruta no es
 // una cifra y no puede caducar.
 .zone__table {

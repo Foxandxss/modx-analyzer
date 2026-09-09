@@ -1,10 +1,16 @@
 import { TestBed } from '@angular/core/testing';
+import { BLOCK_FRAMES } from 'modx-dsp';
 import { App } from './app';
-import { AUDIO_WORKER } from './audio/audio-service';
+import { AUDIO_WORKER, AudioService } from './audio/audio-service';
+import { fakeBlock, heldNote } from './audio/fake-block';
 import { FakeAudioWorker } from './audio/fake-audio-worker';
+import { anchorAnswers, anchorWatching } from './backend/anchor-driver';
 import { BACKEND_GATEWAY, noOperators } from './backend/backend-gateway';
 import { FakeBackendGateway } from './backend/fake-backend-gateway';
 import { DEAD_MARK } from './provenance/provenance';
+
+/** 50 bloques of 1 323 frames: 66 150 samples, the first window with room. */
+const BLOCKS_FOR_A_MEDIDA = 50;
 
 async function renderApp() {
   const backend = new FakeBackendGateway();
@@ -19,7 +25,36 @@ async function renderApp() {
   });
   const fixture = TestBed.createComponent(App);
   await fixture.whenStable();
-  return { backend, worker, fixture, host: fixture.nativeElement as HTMLElement };
+  return {
+    backend,
+    worker,
+    fixture,
+    host: fixture.nativeElement as HTMLElement,
+    /**
+     * A capture the ancla vouched for at both ends of its window, which is the
+     * only kind that reaches the screen — and, since #41, the only thing that
+     * gives the two live panels their room back.
+     */
+    async capture(): Promise<void> {
+      for (let sequence = 0; sequence < BLOCKS_FOR_A_MEDIDA; sequence += 1) {
+        backend.emitBlock(
+          fakeBlock({
+            sequence,
+            sentAtMicros: sequence * 30_000,
+            mono: heldNote(261.626, sequence * BLOCK_FRAMES),
+          }),
+        );
+      }
+      backend.lowestLivePitch.set(60);
+      anchorWatching(backend);
+      await fixture.whenStable();
+
+      const drawn = TestBed.inject(AudioService).measure();
+      anchorAnswers(backend, 'same');
+      await drawn;
+      await fixture.whenStable();
+    },
+  };
 }
 
 describe('App (4a)', () => {
@@ -28,9 +63,45 @@ describe('App (4a)', () => {
 
     expect(host.querySelector('app-header')).not.toBeNull();
     expect(host.querySelector('app-operator-diagram')).not.toBeNull();
-    expect(host.querySelector('app-signal-views')).not.toBeNull();
     expect(host.querySelector('app-figures-column')).not.toBeNull();
     expect(host.querySelector('app-tab-panel')).not.toBeNull();
+  });
+
+  /**
+   * The main screen is two compositions of the same elements, and what chooses
+   * between them is the state that matters most: whether there is a capture.
+   */
+  it('opens with the algorithm holding the room and the two live panels away', async () => {
+    const { host } = await renderApp();
+
+    expect(host.querySelector('.body')?.classList.contains('body--wide')).toBe(true);
+    // Not shrunk to nothing: absent. A panel of 0 px is still painting a curve
+    // 33 times a second for nobody.
+    expect(host.querySelector('app-signal-views')).toBeNull();
+  });
+
+  it('gives the panels their room back when a vouched capture lands', async () => {
+    const { host, capture } = await renderApp();
+
+    await capture();
+
+    expect(host.querySelector('.body')?.classList.contains('body--wide')).toBe(false);
+    expect(host.querySelector('app-signal-views')).not.toBeNull();
+  });
+
+  it('pins the big composition with KEEP IT BIG, and the panels stay away', async () => {
+    const { host, fixture, capture } = await renderApp();
+    const pin = host.querySelector<HTMLButtonElement>('.pin')!;
+    expect(pin.textContent?.trim()).toBe('KEEP IT BIG');
+
+    pin.click();
+    await fixture.whenStable();
+    await capture();
+
+    expect(pin.getAttribute('aria-pressed')).toBe('true');
+    expect(host.querySelector('.body')?.classList.contains('body--wide')).toBe(true);
+    expect(host.querySelector('app-signal-views')).toBeNull();
+    localStorage.clear();
   });
 
   it('draws the eight operator nodes with their shape kept and their number lost', async () => {
@@ -87,7 +158,10 @@ describe('App (4a)', () => {
   });
 
   it('takes every polled figure to the dash when the Performance changes underneath', async () => {
-    const { backend, fixture, host } = await renderApp();
+    const { backend, fixture, host, capture } = await renderApp();
+    // With a capture on screen the two live panels are drawn, which is what lets
+    // this test check the one figure that survives the change.
+    await capture();
     backend.anchorReads('Init Normal (FM-X)');
     backend.patch.update((patch) => ({
       ...patch,

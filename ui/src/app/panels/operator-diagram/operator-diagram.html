@@ -11,6 +11,20 @@
       }
       ALL EIGHT · <app-figure [value]="cadence()" [unit]="' Hz'" />
     </span>
+
+    <!-- El pin de la composición ancha, en la cabecera del propio algoritmo:
+         donde está su efecto. No es un modo y no cambia nada más de la app —
+         sostiene el dibujo grande para quien está trabajando la topología, y
+         sigue puesto en el siguiente arranque. -->
+    <button
+      type="button"
+      class="pin"
+      [class.pin--on]="pinned()"
+      [attr.aria-pressed]="pinned()"
+      (click)="togglePin()"
+    >
+      KEEP IT BIG
+    </button>
   </div>
 
   <!-- El SVG y los nodos comparten caja: las rutas van en unidades del viewBox y

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
+import { BACKEND_GATEWAY, rereadRunning } from '../../backend/backend-gateway';
 
 /**
  * The relectura, seen happening.
@@ -55,8 +55,5 @@ export class RereadStrip {
    * long it took, which is what takes the strip down: the count stops climbing
    * because it arrived, not because it stalled.
    */
-  protected readonly running = computed(() => {
-    const pass = this.backend.reread();
-    return pass === null || pass.tookMs !== null ? null : pass;
-  });
+  protected readonly running = computed(() => rereadRunning(this.backend.reread()));
 }
