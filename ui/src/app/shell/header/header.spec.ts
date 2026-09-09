@@ -90,14 +90,17 @@ describe('Header', () => {
     );
   });
 
-  it('offers only BUILD of the three modes', async () => {
+  it('states the one mode that is built and offers nothing to press', async () => {
     const { host } = await renderHeader();
 
-    const modes = [...host.querySelectorAll<HTMLButtonElement>('.modes__item')];
-    expect(modes.map((mode) => mode.textContent?.trim())).toEqual(['BUILD', 'A/B', 'LEARN']);
-    expect(modes.filter((mode) => !mode.disabled).map((mode) => mode.textContent?.trim())).toEqual([
-      'BUILD',
-    ]);
+    expect(host.querySelector('.mode__name')?.textContent?.trim()).toBe('BUILD');
+    expect(host.querySelector('.mode__line')?.textContent?.trim()).toBe('the only mode built');
+
+    // No control at all, so no inhabilitado to explain: A/B and LEARN are not
+    // drawn anywhere in the bar until they have code behind them.
+    expect(host.querySelector('.mode button, .mode [role="button"]')).toBeNull();
+    expect(host.textContent).not.toContain('A/B');
+    expect(host.textContent).not.toContain('LEARN');
   });
 
   it('leaves the pánico last, isolated, and nothing actionable in the isolation gap', async () => {

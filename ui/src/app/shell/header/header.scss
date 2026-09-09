@@ -150,7 +150,7 @@
    * was unreachable, and nothing said so.
    *
    * So the two informational slots are the ones that lose room. Everything from
-   * `.modes` rightwards is `flex: 0 0 auto` and keeps its size.
+   * `.mode` rightwards is `flex: 0 0 auto` and keeps its size.
    *
    * Clipped and not ellipsised on purpose: these are flex containers, and
    * `text-overflow` does nothing to a flex container's own text. An ellipsis
@@ -163,32 +163,33 @@
   flex: 1;
 }
 
-.modes {
+/* El modo es un dato de la barra, no un control.
+ *
+ * Se va con los dos botones inhabilitados el marco del segmentado y el relleno
+ * del seleccionado: un marco de conmutador alrededor de una sola etiqueta se
+ * sigue leyendo como algo que se pulsa, y no hay nada que pulsar. Lo que queda
+ * es tipografía, como `FB · OP` o la línea de audio. */
+.mode {
   display: flex;
-  gap: var(--space-1);
-  padding: 3px;
-  border-radius: var(--radius-pill);
-  border: var(--rule-min) solid var(--rule-color);
+  flex-direction: column;
+  gap: 1px;
+  white-space: nowrap;
 }
 
-.modes__item {
-  all: unset;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  min-height: 36px;
-  padding: 9px 13px;
-  border-radius: var(--radius-pill);
+.mode__name {
   font-family: var(--font-num);
   font-size: 11px;
-  letter-spacing: 0.1em;
-  color: var(--ink-tertiary);
+  letter-spacing: var(--tracking-label);
+  color: var(--ink-secondary);
+}
 
-  &--on {
-    background: var(--modulator-fill);
-    border: var(--rule-min) solid var(--signal-primary-dim);
-    color: var(--signal-primary);
-  }
+/* Los 8 px que pide §3.1, los mismos de la etiqueta del pánico: por debajo del
+   piso de 10 px que fija `--text-micro`, y a propósito — esta línea es una nota
+   al pie sobre el estado del proyecto, no un dato que haya que leer. */
+.mode__line {
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  color: var(--ink-inert);
 }
 
 .look {

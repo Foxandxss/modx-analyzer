@@ -7,10 +7,15 @@ import { AudioService } from '../../audio/audio-service';
 import { PanicService } from '../panic/panic-service';
 import { CaptureButton } from '../capture/capture-button';
 
-/** The three modes of the app. Only `BUILD` is reachable this session. */
+/**
+ * The three modes of the app.
+ *
+ * The type keeps all three for the day A/B and LEARN land — they are designed,
+ * they are simply not built — but the header renders only the one that has code
+ * behind it. There is no list of modes any more, because a list of one is a
+ * segmented control waiting to be drawn with two dead thirds.
+ */
 export type Mode = 'BUILD' | 'A/B' | 'LEARN';
-
-export const MODES: readonly Mode[] = ['BUILD', 'A/B', 'LEARN'];
 
 /**
  * The bar that never lies and never leaves.
@@ -37,8 +42,6 @@ export class Header {
   /** The pointer that went down on the pánico, until it comes up again. */
   private pressing: number | null = null;
 
-  protected readonly modes = MODES;
-
   /** Nothing has been read yet, so the audio line shows the dash. */
   protected readonly dead = invalidated<string>();
 
@@ -59,8 +62,11 @@ export class Header {
    */
   private readonly canMeasure = this.audio.canMeasure;
 
-  /** Only BUILD is selectable; the other two are drawn so the layout is final. */
-  protected readonly selectedMode: Mode = 'BUILD';
+  /**
+   * The mode the app is in, which this session is the only one it has. It is
+   * stated, not offered: nothing here is pressed, so nothing here is a button.
+   */
+  protected readonly mode: Mode = 'BUILD';
 
   constructor() {
     // The keyboard shortcut of the design's own table — «MEDIR: tocar / atajo de
