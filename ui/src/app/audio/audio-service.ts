@@ -98,8 +98,18 @@ export interface LiveView {
    */
   scope: ScopeLock;
   trama: LiveTrama;
-  /** The last 14 curves, oldest first: 462 ms of the attack fading. */
+  /** The last 14 curves, oldest first, newest last. */
   waterfall: Float32Array[];
+  /**
+   * When each of those curves was sounding, in ms on the capture's clock, in
+   * step with {@link waterfall}.
+   *
+   * There is one per row and not one hop times a count, because rows are pushed
+   * only when there is a curve: a phrase with a breath in it keeps fourteen rows
+   * that span far more than fourteen hops, and a caption computed from the count
+   * would say 420 ms over a picture that covers two seconds.
+   */
+  stamps: number[];
   /**
    * Ridgelines pushed since launch. `waterfall[i]` is row `rows - length + i`,
    * which is what lets a cut keep its place while the window scrolls past it.
@@ -126,6 +136,37 @@ export interface LiveView {
 export interface MedidaView {
   readonly medida: Medida;
   readonly takenAt: number;
+}
+
+/**
+ * What the waterfall's caption states: the rows drawn and the time they cover.
+ *
+ * Both are read off the picture and neither is a constant. `frames` is how many
+ * ridgelines are on screen, which is fewer than fourteen early in a session and
+ * after every silence; `spanMs` is the last row's stamp minus the first's, which
+ * is what makes a breath in the phrase visible in the caption instead of being
+ * quietly counted as 30 ms of sound.
+ */
+export interface WaterfallView {
+  readonly frames: number;
+  readonly spanMs: number;
+}
+
+/** Nothing has been drawn, so there is no span to state. */
+export const NO_WATERFALL: WaterfallView = { frames: 0, spanMs: 0 };
+
+/**
+ * The caption's two figures, from the stamps of the rows that are on screen.
+ *
+ * One row spans nothing: it is a single instant, and `0 → 0 ms` is the true
+ * reading of it. The span is never `frames × hop` — that is the arithmetic this
+ * whole field exists to replace.
+ */
+export function waterfallView(stamps: readonly number[]): WaterfallView {
+  if (stamps.length === 0) {
+    return NO_WATERFALL;
+  }
+  return { frames: stamps.length, spanMs: stamps[stamps.length - 1] - stamps[0] };
 }
 
 /**
@@ -221,6 +262,7 @@ export class AudioService {
     scope: NO_LOCK,
     trama: NO_TRAMA,
     waterfall: [],
+    stamps: [],
     rows: 0,
     cuts: [],
     version: 0,
@@ -234,6 +276,18 @@ export class AudioService {
    * is, and `NO LOCK · pitch unstable` says there is no claim to read off it.
    */
   readonly scope = signal<ScopeLock>(NO_LOCK);
+
+  /**
+   * What the waterfall is showing: how many ridgelines are drawn and how much
+   * time they cover.
+   *
+   * It is the caption's only source. Both figures come from the rows themselves
+   * — the length of {@link LiveView.waterfall} and the difference between its
+   * first and last stamp — so the caption can never describe a picture that is
+   * not on screen. That is the whole of this signal's job, and it is why the
+   * template holds no frame count and no millisecond figure of its own.
+   */
+  readonly waterfall = signal<WaterfallView>(NO_WATERFALL);
 
   /** The noise floor of the vista viva in absolute dBFS, whole decibels. */
   readonly floorDb = signal<number | null>(null);
@@ -542,9 +596,11 @@ export class AudioService {
     // waterfall from filling with the floor.
     if (frame.trama.curve !== null) {
       this.live.waterfall.push(frame.trama.curve);
+      this.live.stamps.push(frame.atMs);
       this.live.rows += 1;
       if (this.live.waterfall.length > WATERFALL_FRAMES) {
         this.live.waterfall.shift();
+        this.live.stamps.shift();
       }
       // A cut that has scrolled off the top of the window is gone with the
       // ridgelines it separated: keeping it would draw a line between two
@@ -588,6 +644,7 @@ export class AudioService {
     this.mainThreadLagAtSeconds.set(started === 0 ? 0 : (this.lag.worstAt - started) / 1000);
 
     this.scope.set(frame.scope);
+    this.waterfall.set(waterfallView(this.live.stamps));
     this.floorDb.set(frame.trama.curve === null ? null : Math.round(frame.trama.floorDb));
     this.holdArtefact(frame.trama.artefactHz, frame.drawnHz, now);
     this.drawing.set(frame.trama.curve !== null);

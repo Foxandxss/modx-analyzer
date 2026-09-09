@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ARTEFACT_HZ, BLOCK_FRAMES, WATERFALL_FRAMES } from 'modx-dsp';
-import { AUDIO_WORKER, AudioService } from './audio-service';
+import { AUDIO_WORKER, AudioService, waterfallView } from './audio-service';
 import { fakeBlock, heldNote, withComb } from './fake-block';
 import { FakeAudioWorker } from './fake-audio-worker';
 import { BACKEND_GATEWAY } from '../backend/backend-gateway';
@@ -59,13 +59,71 @@ describe('AudioService', () => {
     expect(worker.notes.at(-1)).toBeNull();
   });
 
-  it('keeps the last fourteen tramas and no more: 462 ms of waterfall', () => {
+  it('keeps the last fourteen tramas and no more, each with its own stamp', () => {
     const { audio, hold } = setUp();
 
     hold(WATERFALL_FRAMES + 12);
 
     expect(audio.live.waterfall.length).toBe(WATERFALL_FRAMES);
+    expect(audio.live.stamps.length).toBe(WATERFALL_FRAMES);
     expect(audio.live.version).toBe(WATERFALL_FRAMES + 12);
+
+    // Consecutive bloques: one hop of 1 323 frames apart, 30 ms each, so the
+    // fourteen rows span thirteen hops. That is the only case in which the
+    // arithmetic and the stamps agree, and it is not the case the caption is
+    // written for.
+    expect(waterfallView(audio.live.stamps)).toEqual({
+      frames: WATERFALL_FRAMES,
+      spanMs: (WATERFALL_FRAMES - 1) * 30,
+    });
+  });
+
+  it('counts up from one frame, and the first row spans nothing', () => {
+    const { audio, backend } = setUp();
+    backend.lowestLivePitch.set(60);
+    backend.liveNotes.set(1);
+    TestBed.tick();
+
+    backend.emitBlock(fakeBlock({ sequence: 0, sentAtMicros: 0, mono: heldNote(261.626, 0) }));
+
+    // One ridgeline is one instant: `0 → 0 ms` is the true reading of it, and the
+    // caption starts here rather than at fourteen.
+    expect(audio.waterfall()).toEqual({ frames: 1, spanMs: 0 });
+  });
+
+  it('spans the silence in a phrase, because the rows carry their own time', () => {
+    const { audio, backend } = setUp();
+    backend.lowestLivePitch.set(60);
+    backend.liveNotes.set(1);
+    TestBed.tick();
+    const play = (from: number, to: number) => {
+      for (let sequence = from; sequence < to; sequence += 1) {
+        backend.emitBlock(
+          fakeBlock({
+            sequence,
+            sentAtMicros: sequence * 30_000,
+            mono: heldNote(261.626, sequence * BLOCK_FRAMES),
+          }),
+        );
+      }
+    };
+    const rest = (from: number, to: number) => {
+      for (let sequence = from; sequence < to; sequence += 1) {
+        backend.emitBlock(fakeBlock({ sequence, sentAtMicros: sequence * 30_000 }));
+      }
+    };
+
+    play(0, WATERFALL_FRAMES);
+    rest(WATERFALL_FRAMES, 41);
+    play(41, 42);
+
+    // Rows are pushed only when there is a curve, so the breath is skipped and
+    // the window still holds fourteen of them. Count × hop would call that
+    // 420 ms and be describing a picture that is not on screen.
+    const drawn = audio.waterfall();
+    expect(drawn).toEqual(waterfallView(audio.live.stamps));
+    expect(drawn.frames).toBe(WATERFALL_FRAMES);
+    expect(drawn.spanMs).toBeGreaterThan(drawn.frames * 30);
   });
 
   it('adds no ridgeline for a trama with nothing in it', () => {

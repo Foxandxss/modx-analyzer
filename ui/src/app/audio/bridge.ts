@@ -574,6 +574,17 @@ export interface BridgeFrame {
   readonly trama: LiveTrama;
   /** What this trama cost, in ms, measured with `performance` marks. */
   readonly tramaMs: number;
+  /**
+   * When the bloque this trama was computed from left the device, in ms on the
+   * capture's own clock (`sentAtMicros`, which starts at zero with the stream).
+   *
+   * It is the audio's time and not this thread's, because it is what the
+   * waterfall's caption is written from: a row is stamped with the instant of
+   * the sound it draws, so a span measured across a silence counts the silence.
+   * A stamp taken when the message happened to be handled would be counting the
+   * scheduler instead of the phrase.
+   */
+  readonly atMs: number;
 }
 
 /** What one press of MEDIR left behind. */
@@ -719,7 +730,14 @@ export class AudioBridge {
     performance.clearMarks(MARK_END);
     performance.clearMeasures(MEASURE);
 
-    return { trace, scope, drawnHz: this.drawnHz, trama, tramaMs: measured.duration };
+    return {
+      trace,
+      scope,
+      drawnHz: this.drawnHz,
+      trama,
+      tramaMs: measured.duration,
+      atMs: block.sentAtMicros / 1000,
+    };
   }
 
   /**

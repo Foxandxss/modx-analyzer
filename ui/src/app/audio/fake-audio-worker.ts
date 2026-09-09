@@ -51,6 +51,7 @@ export class FakeAudioWorker implements AudioWorkerLike {
       drawnHz: frame.drawnHz,
       trama: frame.trama,
       tramaMs: frame.tramaMs,
+      atMs: frame.atMs,
       stats: this.bridge.stats(),
     };
     this.send(reply);

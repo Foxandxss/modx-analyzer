@@ -4,8 +4,12 @@ import { AudioService } from '../../audio/audio-service';
 import { LiveCanvas } from '../live-canvas';
 
 /**
- * The waterfall: the last fourteen tramas as flat ridgelines, 462 ms of the
- * bright attack fading.
+ * The waterfall: the last fourteen tramas as flat ridgelines.
+ *
+ * How much time that is is the caption's business and is read off the rows'
+ * stamps, not off this count: rows are pushed only when there is a curve, so a
+ * phrase with a breath in it keeps fourteen rows covering far more than the
+ * 420 ms fourteen consecutive hops of 1 323 frames cover.
  *
  * Flat and not in perspective, because a 3D waterfall lies about the heights it
  * hides and this one is being read, not admired. The newest trama is at the top
@@ -131,8 +135,12 @@ export class Waterfall extends LiveCanvas {
 const CUT_DASH = [7, 5];
 
 /**
- * From `#eafff4` when the trama has just arrived to `#1e7351` when it is 462 ms
- * old — the two ends the design gives for the ridgelines.
+ * From `#eafff4` when the trama has just arrived to `#1e7351` when it is the
+ * oldest row on screen — the two ends the design gives for the ridgelines.
+ *
+ * The fade is over the row's **position**, not its age in ms: the drawing is a
+ * stack of fourteen places and the top of it is the newest, whatever the caption
+ * says the span is.
  */
 function fade(age: number): string {
   const mix = (fresh: number, stale: number) => Math.round(fresh + (stale - fresh) * age);

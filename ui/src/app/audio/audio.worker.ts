@@ -71,6 +71,8 @@ export interface FrameMessage {
   readonly trama: LiveTrama;
   /** What this trama cost end to end here, in ms. Budget: 33. */
   readonly tramaMs: number;
+  /** When the bloque left the device, in ms. The waterfall stamps its row with it. */
+  readonly atMs: number;
   /** Present once a second, absent on the other 32 tramas. */
   readonly stats?: BridgeStats;
 }
@@ -116,6 +118,7 @@ addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
     drawnHz: frame.drawnHz,
     trama: frame.trama,
     tramaMs: frame.tramaMs,
+    atMs: frame.atMs,
     ...(received % STATS_EVERY === 0 ? { stats: bridge.stats() } : {}),
   };
 

@@ -34,7 +34,14 @@ export const LIVE_BIN_HZ = SAMPLE_RATE / LIVE_WINDOW;
 /** Medida: one Hann window of 65 536, no overlap, taken when MEDIR is pressed. */
 export const MEASURE_WINDOW = 65536;
 
-/** The waterfall keeps the last 14 tramas: 462 ms. */
+/**
+ * The waterfall keeps the last 14 tramas.
+ *
+ * How long that is is **not** a constant and is not written down here: rows are
+ * pushed only when there is a curve, so a phrase with a silence in it keeps 14
+ * rows spanning far more than the 420 ms fourteen consecutive hops of 1 323
+ * frames cover. The caption reads the rows' own stamps.
+ */
 export const WATERFALL_FRAMES = 14;
 
 /**

@@ -35,6 +35,9 @@ const LOCK_REFUSAL: Record<LockRefusal, string> = {
 /** What is arriving does not clear the floor by 6 dB: it is the floor. */
 const BELOW_FLOOR = 'SIGNAL BELOW FLOOR';
 
+/** Nothing has been drawn yet, so there is no span to state. */
+const NO_ROWS = 'WATERFALL · 0 FRAMES';
+
 /**
  * Waterfall and scope, sharing 156 px.
  *
@@ -51,6 +54,12 @@ const BELOW_FLOOR = 'SIGNAL BELOW FLOOR';
  * `NO LOCK` and why, and when what is arriving is the floor it says that instead.
  * Every word of it comes from {@link AudioService.scope} and none of it from a
  * literal in this template.
+ *
+ * **The waterfall's caption is computed too, and it describes no shape.**
+ * `WATERFALL · 12 FRAMES · 0 → 641 ms` is two figures read off the picture, both
+ * from {@link AudioService.waterfall}. Whether an attack is bright is a property
+ * of the sound and not of the panel, so the sentence that used to sit here could
+ * only ever be right about one patch.
  */
 @Component({
   selector: 'app-tab-panel',
@@ -73,7 +82,7 @@ const BELOW_FLOOR = 'SIGNAL BELOW FLOOR';
       @if (selected() === 'SCOPE') {
         <span class="tabs__note">{{ enganche() }}</span>
       } @else {
-        <span class="tabs__note">el ataque brillante apagándose · 14 tramas · 0 → 460 ms</span>
+        <span class="tabs__note">{{ waterfall() }}</span>
         <span class="tabs__axes">TIME ↓ · FREQUENCY →</span>
       }
     </div>
@@ -128,5 +137,21 @@ export class TabPanel {
       return `NO LOCK · ${LOCK_REFUSAL[lock.reason]}`;
     }
     return `LOCKED ${lock.frequencyHz.toFixed(2)} Hz · ${SCOPE_CYCLES} CYCLES · ${lock.windowMs.toFixed(1)} ms`;
+  });
+
+  /**
+   * The waterfall's caption: the rows drawn and the span they cover, whole ms.
+   *
+   * With nothing drawn the span clause is absent rather than printed as a zero.
+   * A picture of nothing has no first row and no last, so `0 → 0 ms` would be a
+   * figure standing where there is no measurement — and this panel's caption is
+   * the one thing on it that is allowed to make a claim.
+   */
+  protected readonly waterfall = computed(() => {
+    const drawn = this.audio.waterfall();
+    if (drawn.frames === 0) {
+      return NO_ROWS;
+    }
+    return `WATERFALL · ${drawn.frames} FRAMES · 0 → ${Math.round(drawn.spanMs)} ms`;
   });
 }
