@@ -26,7 +26,12 @@ const OPERATORS = [1, 2, 3, 4, 5, 6, 7, 8];
  * this session will have looked at Part 7, and a control that offered it would
  * be inviting a reading nobody is going to write down.
  *
- * It goes when #16 is closed and its numbers are in `docs/results`.
+ * It lives behind the bench drawer's `SWEEP` chip and goes with ticket **#43**:
+ * when the `op<<4 | part` rule is confirmed past the Part 1 and written into
+ * `CONTEXT.md`, the chip and this component are deleted together.
+ *
+ * **Nothing here is in the alert register.** The drawer keeps that for the SysEx
+ * console; an offset that moved is drawn in the brightest ink instead.
  */
 @Component({
   selector: 'app-sweep-readout',
@@ -44,7 +49,7 @@ const OPERATORS = [1, 2, 3, 4, 5, 6, 7, 8];
         </button>
         <span>{{ line() }}</span>
         @if (changes(); as moved) {
-          <span class="sweep__alert">CHANGED {{ moved }}</span>
+          <span class="sweep__loud">CHANGED {{ moved }}</span>
         }
       </div>
       @if (offsets().length > 0) {
@@ -53,7 +58,7 @@ const OPERATORS = [1, 2, 3, 4, 5, 6, 7, 8];
             <span
               class="sweep__cell"
               [class.sweep__cell--silent]="offset.value === null"
-              [class.sweep__cell--changed]="offset.changed"
+              [class.sweep__cell--moved]="offset.changed"
             >
               <span class="sweep__al">{{ hex(offset.al) }}</span>
               <span>{{ offset.value === null ? dash : offset.value }}</span>
@@ -65,9 +70,7 @@ const OPERATORS = [1, 2, 3, 4, 5, 6, 7, 8];
   `,
   styles: `
     .sweep {
-      padding: 5px 18px;
-      border-top: var(--rule-min) solid var(--rule-color);
-      background: var(--surface-base);
+      padding: 14px 18px;
       font-family: var(--font-num);
       font-size: var(--text-micro);
       letter-spacing: 0.08em;
@@ -81,8 +84,13 @@ const OPERATORS = [1, 2, 3, 4, 5, 6, 7, 8];
     .sweep__label {
       color: var(--ink-tertiary);
     }
-    .sweep__alert {
-      color: var(--alert);
+    /* An offset that moved since the last sweep, which is the ticket's whole
+       criterion. It is not in the alert register any more: the drawer keeps that
+       for the SysEx console, where a colour means a consequence. Here it means
+       «look at this one», so it is the brightest ink against the inert the rest
+       of the strip is written in. */
+    .sweep__loud {
+      color: var(--ink-primary);
     }
     /* Forty-seven cells of fixed width: the offsets keep their columns from one
        sweep to the next, so a value that moved is a cell that moved and not a
@@ -112,8 +120,8 @@ const OPERATORS = [1, 2, 3, 4, 5, 6, 7, 8];
     .sweep__cell--silent {
       color: var(--ink-inert);
     }
-    .sweep__cell--changed {
-      color: var(--alert);
+    .sweep__cell--moved {
+      color: var(--ink-primary);
     }
     .sweep__al {
       color: var(--ink-tertiary);

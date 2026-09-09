@@ -1,0 +1,143 @@
+// The 52 px the drawer costs the screen, open or shut.
+//
+// The host reserves the handle and nothing else, and the panel inside it is
+// absolute with its bottom pinned there, so opening grows the box *upward* over
+// the bottom strip. That is the whole rule of `5c` in two declarations: you have
+// to watch an instrument while the thing it measures happens, so the screen
+// behind must not reflow to make room for it.
+:host {
+  flex: 0 0 var(--drawer-grab);
+  position: relative;
+  // Over the strip below it, which is a plain block and would otherwise paint
+  // last. Nothing else in the shell is stacked, so 1 is enough.
+  z-index: 1;
+}
+
+.drawer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-base);
+  // The phosphor edge of the console's drawer, at the same 28 % the LIVE pill
+  // uses: enough to say the strip is a lid, not enough to be a signal.
+  border-top: var(--rule-min) solid oklch(0.87 0.155 155 / 0.28);
+  box-shadow: var(--drawer-lift);
+}
+
+.drawer__handle {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  height: var(--drawer-grab);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  letter-spacing: 0.18em;
+  color: var(--ink-inert);
+}
+
+.drawer--open .drawer__handle {
+  border-bottom: var(--rule-min) solid var(--rule-color);
+}
+
+.drawer__grip {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--rule-color-strong);
+}
+
+.drawer__title {
+  flex: 0 0 auto;
+  color: var(--ink-tertiary);
+}
+
+.drawer__chips {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 7px;
+}
+
+/* What is read yields; what is pressed does not.
+ *
+ * The retirement line is the only variable-width string on the handle and it
+ * sits between the chips and `CLOSE`, which is exactly where the audio line was
+ * when it pushed the pánico out of the window (#18). So it is the slot that
+ * shrinks, and it clips rather than ellipsising: an ellipsis promises there is
+ * more to read and the ticket number is already on the chip. */
+.drawer__spacer {
+  flex: 1 1 auto;
+}
+
+.drawer__retirement {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  letter-spacing: 0.1em;
+  color: var(--ink-tertiary);
+}
+
+.drawer__hint {
+  flex: 0 0 auto;
+  letter-spacing: 0.12em;
+}
+
+.chip,
+.drawer__close {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: var(--hit-chip);
+  padding: 0 12px;
+  cursor: pointer;
+  border: var(--rule-min) solid var(--rule-color);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  letter-spacing: 0.1em;
+  color: var(--ink-secondary);
+}
+
+.drawer__close {
+  flex: 0 0 auto;
+  letter-spacing: 0.12em;
+  color: var(--ink-tertiary);
+}
+
+.chip--on {
+  border-color: oklch(0.87 0.155 155 / 0.28);
+  background: oklch(0.87 0.155 155 / 0.06);
+  color: var(--signal-primary);
+}
+
+/* The ticket is drawn quieter than the name and at the same size.
+ *
+ * The drawn piece sets it a pixel smaller; the app's floor for anything that is
+ * read is `--text-micro`, and a number that says which ticket to close is read.
+ * The step down is in ink instead, which is the vocabulary the readouts below
+ * already use for a label against its figure. */
+.chip__ticket {
+  color: var(--ink-inert);
+}
+
+.chip--on .chip__ticket {
+  color: var(--signal-primary-dim);
+}
+
+/* Room for the largest instrument — the sweep's forty-seven cells — and a hand
+   on the drawer's own scrollbar past that. Nothing in here grows on its own. */
+.drawer__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 300px;
+  overflow-y: auto;
+}

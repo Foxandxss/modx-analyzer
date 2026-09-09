@@ -5,12 +5,11 @@ import { OperatorDiagram } from './panels/operator-diagram/operator-diagram';
 import { SignalViews } from './panels/signal-views/signal-views';
 import { TabPanel } from './panels/tab-panel/tab-panel';
 import { AlertStrip } from './shell/alert-strip/alert-strip';
+import { BenchDrawer } from './shell/bench-drawer/bench-drawer';
 import { Composition } from './shell/composition';
-import { DevReadout } from './shell/dev-readout/dev-readout';
 import { Header } from './shell/header/header';
 import { PanicNotice } from './shell/panic/panic-notice';
 import { RereadStrip } from './shell/reread-strip/reread-strip';
-import { SweepReadout } from './shell/sweep-readout/sweep-readout';
 import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
 
 /**
@@ -33,8 +32,7 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
     SignalViews,
     FiguresColumn,
     TabPanel,
-    DevReadout,
-    SweepReadout,
+    BenchDrawer,
   ],
   template: `
     <app-header />
@@ -55,12 +53,11 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
       <app-figures-column />
     </div>
     <app-tab-panel />
-    <!-- El instrumento con el que se mide la sesión, no parte del diseño: se va
-         cuando las cifras estén en docs/results. -->
-    <app-dev-readout />
-    <!-- El barrido de #16: mismo sitio y mismo trato que la lectura de arriba,
-         debajo del todo porque es lo que menos se mira. -->
-    <app-sweep-readout />
+    <!-- Los cinco instrumentos con los que se mide la sesión, no parte del
+         diseño: 52 px de asa, cerrada, y cada chip con el número del ticket que
+         la retira. Se abre POR ENCIMA de la tira de abajo, así que lo que hay
+         detrás no se recoloca. -->
+    <app-bench-drawer />
   `,
   styles: `
     :host {

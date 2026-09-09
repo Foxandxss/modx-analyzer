@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { MEASURE_WINDOW } from 'modx-dsp';
 import { AudioService } from '../../audio/audio-service';
 import { LatencyLegs } from '../../audio/bridge';
@@ -8,56 +8,86 @@ import { lastPollAt, pollAgeSeconds } from '../../provenance/last-poll';
 import { DEAD_MARK } from '../../provenance/provenance';
 
 /**
+ * The four instruments this readout holds, one per retirement ticket.
+ *
+ * They are groups of readouts and not modes of a control: the drawer shows one
+ * at a time because its chips are what choose, and closing a ticket deletes one
+ * name from this type, one case from the template and one chip from the drawer.
+ */
+export type BenchGroup = 'BRIDGE' | 'STARTUP' | 'AUDIO' | 'PORT';
+
+/**
  * The instrument the session is measured with, not part of the design.
  *
  * The ten-minute runs of #3 and #8 ask for three numbers — bloques lost, sequence
  * gaps and p99 delivery latency — and a number nobody can read off the screen is a
  * number nobody will write down. So they are on screen, in the smallest type the
- * tokens allow, at the very bottom and under everything else.
+ * tokens allow, behind the bench drawer's handle (#48).
  *
- * It goes when the measurements are in the results document and the tickets that
- * need it (#5's dump timing, #8's counts) are closed.
+ * **Nothing here is ever in the alert register.** That belongs to the SysEx
+ * console alone: a bridge log with 0 drops has nothing to say, and a temporary
+ * instrument that nags is a temporary instrument nobody closes the ticket on. A
+ * fact that changes what a run *means* — a negative leg, a starved generator, a
+ * paused ancla — is still drawn apart from the rest, but in ink and not in amber.
+ *
+ * Each group goes when its own ticket closes: BRIDGE #44, STARTUP #45,
+ * AUDIO #46, PORT #47.
  */
 @Component({
   selector: 'app-dev-readout',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="dev">
-      <span class="dev__label">BRIDGE</span>
-      <span>{{ line() }}</span>
-      <span class="dev__label">LATENCY</span>
-      <span [class.dev__alert]="overBudget()">{{ latencyLine() }}</span>
-      @if (brokenClock()) {
-        <span class="dev__alert">BROKEN CLOCK</span>
+      @switch (group()) {
+        @case ('BRIDGE') {
+          <span class="dev__label">BRIDGE</span>
+          <span>{{ line() }}</span>
+          <span class="dev__label">LATENCY</span>
+          <span [class.dev__loud]="overBudget()">{{ latencyLine() }}</span>
+          @if (brokenClock()) {
+            <span class="dev__loud">BROKEN CLOCK</span>
+          }
+          <span class="dev__label">FRAME</span>
+          <span>{{ tramaLine() }}</span>
+        }
+        @case ('STARTUP') {
+          <span class="dev__label">DUMP</span>
+          <span>{{ dumpLine() }}</span>
+          <span class="dev__label">REREAD</span>
+          <span>{{ rereadLine() }}</span>
+        }
+        @case ('AUDIO') {
+          <span class="dev__label">AUDIO</span>
+          <span [class.dev__loud]="audioState() !== 'alive'">{{ audioState().toUpperCase() }}</span>
+          @if (exactZeros()) {
+            <span class="dev__loud">EXACT ZEROS</span>
+          }
+          <span class="dev__label">CAPTURE</span>
+          <span>{{ medidaLine() }}</span>
+        }
+        @case ('PORT') {
+          <span class="dev__label">LINK</span>
+          <span [class.dev__loud]="linkLost()">{{ linkLine() }}</span>
+          <span class="dev__label">GENERATOR</span>
+          <span [class.dev__loud]="starved()">{{ generatorLine() }}</span>
+          <button type="button" class="dev__button" (click)="toggleGenerator()">
+            {{ generator().running ? 'STOP' : 'DENSE NOTES' }}
+          </button>
+          <span class="dev__label">POLLING</span>
+          <span [class.dev__loud]="paused()">{{ pollingLine() }}</span>
+          <button type="button" class="dev__button" (click)="togglePolling()">
+            {{ paused() ? 'POLL' : 'STOP POLLING' }}
+          </button>
+          <button
+            type="button"
+            class="dev__button"
+            [disabled]="exporting()"
+            (click)="exportWindow()"
+          >
+            EXPORT
+          </button>
+        }
       }
-      @if (exactZeros()) {
-        <span class="dev__alert">EXACT ZEROS</span>
-      }
-      <span class="dev__label">AUDIO</span>
-      <span [class.dev__alert]="audioState() !== 'alive'">{{ audioState().toUpperCase() }}</span>
-      <span class="dev__label">FRAME</span>
-      <span>{{ tramaLine() }}</span>
-      <span class="dev__label">CAPTURE</span>
-      <span>{{ medidaLine() }}</span>
-      <span class="dev__label">DUMP</span>
-      <span>{{ dumpLine() }}</span>
-      <span class="dev__label">REREAD</span>
-      <span>{{ rereadLine() }}</span>
-      <span class="dev__label">LINK</span>
-      <span [class.dev__alert]="linkLost()">{{ linkLine() }}</span>
-      <span class="dev__label">GENERATOR</span>
-      <span [class.dev__alert]="starved()">{{ generatorLine() }}</span>
-      <button type="button" class="dev__button" (click)="toggleGenerator()">
-        {{ generator().running ? 'STOP' : 'DENSE NOTES' }}
-      </button>
-      <span class="dev__label">POLLING</span>
-      <span [class.dev__alert]="paused()">{{ pollingLine() }}</span>
-      <button type="button" class="dev__button" (click)="togglePolling()">
-        {{ paused() ? 'POLL' : 'STOP POLLING' }}
-      </button>
-      <button type="button" class="dev__button" [disabled]="exporting()" (click)="exportWindow()">
-        EXPORT
-      </button>
     </div>
   `,
   styles: `
@@ -68,15 +98,14 @@ import { DEAD_MARK } from '../../provenance/provenance';
      * wider than the window and carried EXPORT off the right edge with it.
      * Exactly what happened to the pánico in the header, twice in one session, so
      * the rule is written down here too: what is read yields, what is pressed
-     * does not. */
+     * does not. It is the drawer's rule too (#48), inside a drawer that is 18 px
+     * narrower than the window it used to have. */
     .dev {
       display: flex;
       flex-wrap: wrap;
       align-items: baseline;
       gap: var(--space-3);
-      padding: 5px 18px;
-      border-top: var(--rule-min) solid var(--rule-color);
-      background: var(--surface-base);
+      padding: 14px 18px;
       font-family: var(--font-num);
       font-size: var(--text-micro);
       letter-spacing: 0.08em;
@@ -92,8 +121,16 @@ import { DEAD_MARK } from '../../provenance/provenance';
     .dev__label {
       color: var(--ink-tertiary);
     }
-    .dev__alert {
-      color: var(--alert);
+    /* The fact that changes what the run means, drawn apart from the rest.
+     *
+     * It used to be the alert register, and the drawer took that away: alert is
+     * the SysEx console's alone, because an unconfirmed write is a consequence
+     * and a broken clock is a reading. The step is up the ink scale instead —
+     * the brightest the app has, against the inert this strip is written in —
+     * so a negative leg is still the first thing the eye lands on and nothing in
+     * the drawer nags. */
+    .dev__loud {
+      color: var(--ink-primary);
     }
     /* The one thing in this strip that can be pressed. It is deliberately plain:
        the design has no control for it, because the generator is not part of the
@@ -113,6 +150,9 @@ import { DEAD_MARK } from '../../provenance/provenance';
   `,
 })
 export class DevReadout {
+  /** Which instrument the drawer asked for. There is no default: the chip says. */
+  readonly group = input.required<BenchGroup>();
+
   private readonly audio = inject(AudioService);
   private readonly backend = inject(BACKEND_GATEWAY);
   private readonly clock = inject(Clock);

@@ -1,0 +1,41 @@
+<!-- The panel is out of flow: it grows upward over the bottom strip and the
+     screen behind it does not move. What the drawer costs the layout is the
+     52 px of the handle, open or shut. -->
+<div class="drawer" [class.drawer--open]="open()">
+  <div class="drawer__handle">
+    <span class="drawer__grip"></span>
+    @if (!open()) {
+      <span class="drawer__title">TEMPORARY INSTRUMENTS</span>
+    }
+    <div class="drawer__chips">
+      @for (chip of chips; track chip.id) {
+        <button
+          type="button"
+          class="chip"
+          [class.chip--on]="shown() === chip.id"
+          [attr.aria-pressed]="shown() === chip.id"
+          (click)="pick(chip.id)"
+        >
+          <span class="chip__name">{{ chip.id }}</span>
+          <span class="chip__ticket">#{{ chip.ticket }}</span>
+        </button>
+      }
+    </div>
+    <span class="drawer__spacer"></span>
+    @if (open()) {
+      <span class="drawer__retirement">{{ retirement() }}</span>
+      <button type="button" class="drawer__close" (click)="close()">CLOSE</button>
+    } @else {
+      <span class="drawer__hint">TICKET SHOWING = ON ITS WAY OUT</span>
+    }
+  </div>
+  @if (open()) {
+    <div class="drawer__body">
+      @if (group(); as group) {
+        <app-dev-readout [group]="group" />
+      } @else {
+        <app-sweep-readout />
+      }
+    </div>
+  }
+</div>

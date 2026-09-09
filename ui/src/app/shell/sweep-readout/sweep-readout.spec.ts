@@ -20,8 +20,8 @@ async function renderSweep() {
     fixture,
     text: () => element().textContent ?? '',
     cells: () => Array.from(element().querySelectorAll('.sweep__cell')),
-    alerts: () =>
-      Array.from(element().querySelectorAll('.sweep__alert'))
+    loud: () =>
+      Array.from(element().querySelectorAll('.sweep__loud'))
         .map((node) => node.textContent ?? '')
         .join(' '),
     async press(label: string) {
@@ -92,10 +92,10 @@ describe('SweepReadout', () => {
 
     await sweep.press('SWEEP');
 
-    expect(sweep.alerts()).toContain('CHANGED 1A');
-    expect(sweep.alerts()).toContain('Parameter 1A');
+    expect(sweep.loud()).toContain('CHANGED 1A');
+    expect(sweep.loud()).toContain('Parameter 1A');
     expect(
-      sweep.cells().filter((cell) => cell.classList.contains('sweep__cell--changed')),
+      sweep.cells().filter((cell) => cell.classList.contains('sweep__cell--moved')),
     ).toHaveLength(1);
   });
 

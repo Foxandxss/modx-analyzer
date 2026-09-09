@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BLOCK_FRAMES } from 'modx-dsp';
 import { App } from './app';
 import { AUDIO_WORKER, AudioService } from './audio/audio-service';
@@ -55,6 +55,27 @@ async function renderApp() {
       await fixture.whenStable();
     },
   };
+}
+
+/**
+ * Open the bench drawer on one of its five chips.
+ *
+ * Closed is the default and nothing inside is rendered until a chip is pressed,
+ * so this is how a test that reads an instrument gets at one.
+ */
+async function openChip(
+  fixture: ComponentFixture<App>,
+  host: HTMLElement,
+  name: string,
+): Promise<void> {
+  const chip = Array.from(host.querySelectorAll<HTMLButtonElement>('.chip')).find((candidate) =>
+    (candidate.textContent ?? '').includes(name),
+  );
+  if (chip === undefined) {
+    throw new Error(`no hay chip «${name}»`);
+  }
+  chip.click();
+  await fixture.whenStable();
 }
 
 describe('App (4a)', () => {
@@ -150,10 +171,13 @@ describe('App (4a)', () => {
     expect(host.querySelector('.strip__text')?.textContent).toBe('REREAD · 118 OF 384');
 
     // A pass that carries how long it took is a pass that finished: the strip
-    // comes down, and the count moves to the dev readout where it is written from.
+    // comes down, and the count is behind the drawer's `STARTUP` chip, which is
+    // where it is written down from.
     backend.reread.set({ done: 384, total: 384, answered: 383, tookMs: 912 });
     await fixture.whenStable();
     expect(host.querySelector('.strip__text')).toBeNull();
+
+    await openChip(fixture, host, 'STARTUP');
     expect(host.querySelector('app-dev-readout')?.textContent).toContain('383 OF 384 · 0.91 s');
   });
 
@@ -233,6 +257,26 @@ describe('App (4a)', () => {
     panic.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, bubbles: true }));
     await fixture.whenStable();
     expect(backend.panicPresses).toBe(1);
+  });
+
+  /**
+   * The five instruments used to be about 130 px of permanent text under the
+   * bottom strip. The body gets that height back, and what the drawer costs the
+   * screen is the handle — the readouts are not in the shell at all until a chip
+   * is pressed.
+   */
+  it('keeps the five temporary instruments behind one handle, shut', async () => {
+    const { fixture, host } = await renderApp();
+
+    expect(host.querySelector('app-bench-drawer')).not.toBeNull();
+    expect(host.querySelector('app-dev-readout')).toBeNull();
+    expect(host.querySelector('app-sweep-readout')).toBeNull();
+
+    await openChip(fixture, host, 'SWEEP');
+    expect(host.querySelector('app-sweep-readout')).not.toBeNull();
+    // The strip it opened over is still there behind it: a drawer that replaced
+    // the screen would take away the thing the instrument is measuring.
+    expect(host.querySelector('app-tab-panel')).not.toBeNull();
   });
 
   it('opens on the waterfall, the default the moment a note is live', async () => {
