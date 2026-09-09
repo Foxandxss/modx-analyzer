@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { BLOCK_FRAMES, MEASURE_WINDOW } from 'modx-dsp';
 import { AUDIO_WORKER, AudioService } from '../../audio/audio-service';
 import { fakeBlock, heldNote } from '../../audio/fake-block';
+import { LatencyLegs, WARMUP_BLOCKS } from '../../audio/bridge';
+import { NO_STATS } from '../../audio/audio-service';
 import { FakeAudioWorker } from '../../audio/fake-audio-worker';
 import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
 import { FakeBackendGateway } from '../../backend/fake-backend-gateway';
@@ -74,15 +76,79 @@ describe('DevReadout', () => {
     expect(text).toContain('HUECOS 2');
   });
 
-  it('shows the spread of the delivery once bloques have arrived', async () => {
+  /**
+   * #23: the launch burst must not be readable as a run.
+   *
+   * Four bloques in, the app is still launching, so there is no window to take a
+   * percentile over and the strip says so with a dash. What it does show is the
+   * count the figures will be about, which is the sentence #23 says was missing:
+   * «p99 under 33 ms» is a claim about a window and nothing named the window.
+   */
+  it('takes no percentile while the app is still launching, and says so', async () => {
     const { push } = await renderReadout();
 
     const text = await push(
       ...[0, 1, 2, 3].map((sequence) => fakeBlock({ sequence, sentAtMicros: sequence * 30_000 })),
     );
 
-    expect(text).toMatch(/p50 \d+\.\d ms/);
-    expect(text).toMatch(/p99 \d+\.\d ms/);
+    expect(text).toContain('SOBRE 0');
+    expect(text).toContain('ARRANQUE 4 BLOQUES');
+    expect(text).toMatch(/SOBRE 0 · p50 — · p99 — · max —/);
+  });
+
+  it('shows the spread of the delivery once the launch is over', async () => {
+    const { push } = await renderReadout();
+
+    await push(
+      ...Array.from({ length: WARMUP_BLOCKS + 5 }, (_, sequence) =>
+        fakeBlock({ sequence, sentAtMicros: sequence * 30_000 }),
+      ),
+    );
+
+    const text = (await push()).replace(/\s+/g, ' ');
+    expect(text).toContain(`ARRANQUE ${WARMUP_BLOCKS} BLOQUES`);
+    expect(text).toMatch(/SOBRE 5 · p50 \d+\.\d ms · p99 \d+\.\d ms/);
+  });
+
+  /**
+   * Where the lateness was, which is what makes #23's burst attributable rather
+   * than merely observed. The three legs are on screen because the one figure
+   * they add up to could not say whether the wait was in the queue to the IPC,
+   * in the crossing, or in the worker's own backlog.
+   */
+  it('splits the worst bloque into the three legs of the path', async () => {
+    const { push } = await renderReadout();
+
+    const text = await push(fakeBlock({ sequence: 0, sentAtMicros: 30_000 }));
+
+    expect(text).toContain('COLA');
+    expect(text).toContain('IPC');
+    expect(text).toContain('WORKER');
+    // And when it was, because a max the launch explains and one it does not are
+    // two different answers wearing the same number.
+    expect(text).toContain('A LOS 0.0 s');
+  });
+
+  /**
+   * The instrument saying it is broken, which on the first run of #23 it could
+   * not: a worker leg of −447,5 ms was drawn as calmly as any other figure,
+   * because `performance.now()` counts from a different origin on each thread.
+   * A duration cannot be negative, so a negative one is never a result.
+   */
+  it('says so when a leg comes back negative instead of drawing it as a figure', async () => {
+    const { fixture, fixtureAlerts } = await renderReadout();
+    const broken: LatencyLegs = {
+      queueMs: 0,
+      ipcMs: 202.2,
+      workerMs: -447.5,
+      totalMs: -245.3,
+      atSeconds: 1.2,
+    };
+
+    TestBed.inject(AudioService).stats.set({ ...NO_STATS, blocks: 1, worstWarmup: broken });
+    await fixture.whenStable();
+
+    expect(fixtureAlerts()).toContain('RELOJ ROTO');
   });
 
   /**

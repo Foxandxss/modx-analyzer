@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 import { LiveTrama, Medida } from 'modx-dsp';
-import { AudioBridge, BridgeStats } from './bridge';
+import { AudioBridge, BridgeStats, stamp } from './bridge';
 
 /**
  * The worker the bloques are handed to. A message wrapper and nothing else: every
@@ -19,6 +19,18 @@ const STATS_EVERY = 33;
 export interface BlockMessage {
   readonly kind: 'block';
   readonly buffer: ArrayBuffer;
+  /**
+   * `performance.now()` on the main thread, the instant the bloque came off the
+   * Tauri channel.
+   *
+   * It rides along because of #23: without it, the wait in **this** queue — the
+   * worker chewing through the tramas ahead of this bloque — is indistinguishable
+   * from the IPC being slow, and those two have nothing to do with each other.
+   * It is taken with {@link stamp} and not `performance.now()`, because those
+   * are two different clocks on two threads — which is what the first attempt at
+   * this got wrong, and it showed up as a worker leg of −447 ms.
+   */
+  readonly postedAt: number;
 }
 
 /**
@@ -85,7 +97,7 @@ addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
     return;
   }
 
-  const frame = bridge.receive(event.data.buffer, performance.now());
+  const frame = bridge.receive(event.data.buffer, stamp(), event.data.postedAt);
   received += 1;
 
   const message: FrameMessage = {

@@ -1,16 +1,29 @@
 import { BLOCK_FRAMES, CURVE_POINTS, HARMONIC_BARS, MEASURE_WINDOW, SAMPLE_RATE } from 'modx-dsp';
-import { AudioBridge, BlockMeter, channelZero, decodeBlock, decodeMeasureWindow } from './bridge';
+import {
+  AudioBridge,
+  BlockMeter,
+  WARMUP_BLOCKS,
+  channelZero,
+  decodeBlock,
+  decodeMeasureWindow,
+} from './bridge';
 import { fakeBlock, heldNote, withComb } from './fake-block';
 
 describe('decodeBlock', () => {
   it('reads the header Rust wrote', () => {
-    const buffer = fakeBlock({ sequence: 41, sentAtMicros: 1_234_567, silent: true });
+    const buffer = fakeBlock({
+      sequence: 41,
+      sentAtMicros: 1_234_567,
+      queuedAtMicros: 1_235_567,
+      silent: true,
+    });
 
     const block = decodeBlock(buffer);
 
     expect(block.sequence).toBe(41);
     expect(block.frames).toBe(BLOCK_FRAMES);
     expect(block.sentAtMicros).toBe(1_234_567);
+    expect(block.queuedAtMicros).toBe(1_235_567);
     expect(block.callbackFrames).toBe(441);
     expect(block.silent).toBe(true);
   });
@@ -62,24 +75,104 @@ describe('BlockMeter', () => {
     expect(stats.outOfOrder).toBe(1);
   });
 
-  it('measures the spread of the delivery and not an epoch it cannot see', () => {
-    // The two clocks start 100 s apart. Every bloque is 30 ms of audio; the third
-    // one arrives 12 ms late and the rest are on time.
-    const meter = new BlockMeter();
-    const offsetMs = 100_000;
-    const late = [0, 0, 12, 0, 0, 0, 0, 0, 0, 0];
-    late.forEach((delay, sequence) => {
+  /**
+   * The two clocks start 100 s apart, and every bloque is 30 ms of audio. A run
+   * of {@link WARMUP_BLOCKS} on time, then ten more of which one is 12 ms late.
+   *
+   * `delays` are how late the **worker** got to each bloque; nothing waits in
+   * the queue or the IPC, so the lateness is all in one leg and the totals are
+   * the delays themselves.
+   */
+  function run(meter: BlockMeter, delays: readonly number[], offsetMs = 100_000): void {
+    delays.forEach((delay, sequence) => {
       const sentAtMicros = sequence * 30_000;
-      meter.observe(
-        decodeBlock(fakeBlock({ sequence, sentAtMicros })),
-        offsetMs + sentAtMicros / 1000 + delay,
-      );
+      const postedAt = offsetMs + sentAtMicros / 1000;
+      meter.observe(decodeBlock(fakeBlock({ sequence, sentAtMicros })), postedAt + delay, postedAt);
     });
+  }
+
+  it('measures the spread of the delivery and not an epoch it cannot see', () => {
+    const meter = new BlockMeter();
+    const late = Array.from({ length: WARMUP_BLOCKS + 10 }, (_, index) =>
+      index === WARMUP_BLOCKS + 2 ? 12 : 0,
+    );
+
+    run(meter, late);
 
     const stats = meter.stats();
     // The unknown 100 s offset is gone: the fastest bloque of the run is zero.
     expect(stats.p50Ms).toBeCloseTo(0, 6);
     expect(stats.maxMs).toBeCloseTo(12, 6);
+    expect(stats.measuredBlocks).toBe(10);
+  });
+
+  /**
+   * #23: every launch delivers its first bloques hundreds of milliseconds late
+   * and loses none of them. A percentile taken over a window that still holds
+   * that burst is a figure about the launch wearing the name of the bridge, and
+   * at 132 bloques `p99` really did read 167,9 ms.
+   */
+  it('keeps the launch out of the percentiles and reports it on its own', () => {
+    const meter = new BlockMeter();
+    const delays = Array.from({ length: WARMUP_BLOCKS + 10 }, (_, index) =>
+      index === 3 ? 379 : 0,
+    );
+
+    run(meter, delays);
+
+    const stats = meter.stats();
+    expect(stats.blocks).toBe(WARMUP_BLOCKS + 10);
+    expect(stats.warmupBlocks).toBe(WARMUP_BLOCKS);
+    expect(stats.measuredBlocks).toBe(10);
+    // The burst is nowhere near the figures the go/no-go is read off …
+    expect(stats.p99Ms).toBeCloseTo(0, 6);
+    expect(stats.maxMs).toBeCloseTo(0, 6);
+    // … and it is not hidden either.
+    expect(stats.worstWarmup!.totalMs).toBeCloseTo(379, 6);
+  });
+
+  it('claims no run at all while the launch is still going on', () => {
+    const meter = new BlockMeter();
+
+    run(meter, new Array<number>(WARMUP_BLOCKS).fill(0));
+
+    const stats = meter.stats();
+    expect(stats.blocks).toBe(WARMUP_BLOCKS);
+    expect(stats.measuredBlocks).toBe(0);
+    expect(stats.p99Ms).toBeNull();
+    expect(stats.worstMeasured).toBeNull();
+  });
+
+  /**
+   * The whole point of the second stamp: a bloque that was 200 ms late says
+   * **where** it was late. Two of the three legs are exact durations on one
+   * clock; only the crossing carries the epoch, and it is the one the floor comes
+   * out of, so the three still add up to the total.
+   */
+  it('says which leg of the path the lateness was spent in', () => {
+    const meter = new BlockMeter();
+    const offsetMs = 100_000;
+
+    for (let sequence = 0; sequence < WARMUP_BLOCKS + 4; sequence += 1) {
+      const sentAtMicros = sequence * 30_000;
+      // The fourth bloque waits 200 ms in the queue between the audio thread and
+      // the IPC; every bloque waits 5 ms in the worker, and none in the crossing.
+      const queued = sentAtMicros + (sequence === 3 ? 200_000 : 0);
+      const postedAt = offsetMs + queued / 1000;
+      meter.observe(
+        decodeBlock(fakeBlock({ sequence, sentAtMicros, queuedAtMicros: queued })),
+        postedAt + 5,
+        postedAt,
+      );
+    }
+
+    const burst = meter.stats().worstWarmup!;
+    expect(burst.queueMs).toBeCloseTo(200, 6);
+    expect(burst.ipcMs).toBeCloseTo(0, 6);
+    expect(burst.workerMs).toBeCloseTo(5, 6);
+    expect(burst.totalMs).toBeCloseTo(burst.queueMs + burst.ipcMs + burst.workerMs, 9);
+    // And where in the capture it was: the fourth bloque, 90 ms in.
+    expect(burst.atSeconds).toBeCloseTo(0.09, 6);
   });
 
   it('reports the device callback size it was told about', () => {
@@ -92,11 +185,37 @@ describe('BlockMeter', () => {
     expect(stats.maxCallbackFrames).toBe(441);
   });
 
+  /**
+   * The number that tells a stall from a slow bloque. The front stops receiving
+   * for 230 ms and then takes the backlog at once; the worst of those looks like
+   * a delivery 200 ms late, and it is not — it is the front having been away.
+   */
+  it('reports the longest the front went without a bloque, and when', () => {
+    const meter = new BlockMeter();
+    const offsetMs = 100_000;
+
+    for (let sequence = 0; sequence < 10; sequence += 1) {
+      const sentAtMicros = sequence * 30_000;
+      // Nothing arrives between the third bloque and the fourth for 230 ms.
+      const stalled = sequence >= 3 ? 200 : 0;
+      const postedAt = offsetMs + sentAtMicros / 1000 + stalled;
+      meter.observe(decodeBlock(fakeBlock({ sequence, sentAtMicros })), postedAt, postedAt);
+    }
+
+    const stats = meter.stats();
+    expect(stats.worstGapMs).toBeCloseTo(230, 6);
+    // Placed by the bloque that ended the silence: the fourth, 90 ms in.
+    expect(stats.worstGapAtSeconds).toBeCloseTo(0.09, 6);
+  });
+
   it('claims nothing before the first bloque', () => {
     const stats = new BlockMeter().stats();
 
     expect(stats.blocks).toBe(0);
     expect(stats.p99Ms).toBeNull();
+    expect(stats.worstWarmup).toBeNull();
+    expect(stats.worstGapMs).toBeNull();
+    expect(stats.worstMeasured).toBeNull();
   });
 });
 

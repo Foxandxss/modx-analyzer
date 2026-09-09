@@ -10,11 +10,10 @@
 //! so between the audio thread and the analysis the samples are copied by the IPC
 //! and by nobody else.
 
-use std::sync::mpsc::Receiver;
 use std::sync::Mutex;
 use std::thread;
 
-use modx_audio::{encode_mono, AudioBlock, Capture, RING_SAMPLES};
+use modx_audio::{encode_mono, AudioBlock, Bloques, Capture, RING_SAMPLES};
 use tauri::ipc::{Channel, InvokeResponseBody, Response};
 use tauri::{AppHandle, Manager};
 
@@ -111,7 +110,7 @@ pub fn start(app: &AppHandle) {
 ///
 /// It exists so that the audio thread never waits on a webview: it puts the bloque
 /// on a channel and goes back to the device, and the waiting happens here.
-fn forward(app: AppHandle, blocks: Receiver<AudioBlock>) {
+fn forward(app: AppHandle, blocks: Bloques) {
     thread::Builder::new()
         .name("modx-audio-ipc".into())
         .spawn(move || {

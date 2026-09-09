@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MEASURE_WINDOW } from 'modx-dsp';
 import { AudioService } from '../../audio/audio-service';
+import { LatencyLegs } from '../../audio/bridge';
 import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
 import { Clock } from '../../provenance/clock';
 import { lastPollAt, pollAgeSeconds } from '../../provenance/last-poll';
@@ -24,6 +25,11 @@ import { DEAD_MARK } from '../../provenance/provenance';
     <div class="dev">
       <span class="dev__label">PUENTE</span>
       <span>{{ line() }}</span>
+      <span class="dev__label">LATENCIA</span>
+      <span [class.dev__alert]="overBudget()">{{ latencyLine() }}</span>
+      @if (brokenClock()) {
+        <span class="dev__alert">RELOJ ROTO</span>
+      }
       @if (exactZeros()) {
         <span class="dev__alert">CEROS EXACTOS</span>
       }
@@ -113,6 +119,8 @@ export class DevReadout {
 
   /** The raw fact, and the dev strip is the one place it is drawn raw. */
   protected readonly exactZeros = this.audio.exactZeros;
+  protected readonly mainThreadLag = this.audio.mainThreadLagMs;
+  protected readonly mainThreadLagAt = this.audio.mainThreadLagAtSeconds;
   protected readonly audioState = this.audio.audioState;
 
   /**
@@ -313,11 +321,99 @@ export class DevReadout {
       `HUECOS ${stats.gaps}`,
       `DESORDEN ${stats.outOfOrder}`,
       `CALLBACK ${stats.blocks === 0 ? DEAD_MARK : callback} f`,
+      // **Which bloques the three figures below are about.** #23 is what happens
+      // when nothing says: read early enough and `p99` reports the launch burst
+      // and calls it the bridge. The count is next to the percentiles rather than
+      // anywhere else because it is the sentence they are only true inside.
+      `SOBRE ${stats.measuredBlocks}`,
       `p50 ${millis(stats.p50Ms)}`,
       `p99 ${millis(stats.p99Ms)}`,
       `max ${millis(stats.maxMs)}`,
     ].join(' · ');
   });
+
+  /**
+   * Where the lateness was: the worst bloque of the launch and the worst one
+   * after it, each split into the three legs of the path (#23).
+   *
+   * Both are on screen because they are two different facts. Every launch
+   * measured so far bursts — 208 to 379 ms against a 33 ms budget, losing
+   * nothing — and that burst is a property of the first seconds, not of the
+   * bridge, so it is reported and kept out of the percentiles. What would be a
+   * real failure is the second figure, and that is the one drawn in alert.
+   *
+   * The split is what makes the burst attributable rather than merely observed:
+   * `COLA` is the wait between the audio thread and the IPC, `IPC` the crossing
+   * itself, `WORKER` the wait behind the tramas already queued in the worker.
+   * Two of the three are exact; only `IPC` spans the two clocks.
+   */
+  protected readonly latencyLine = computed(() => {
+    const stats = this.audio.stats();
+    return [
+      `ARRANQUE ${stats.warmupBlocks} BLOQUES max ${legs(stats.worstWarmup)}`,
+      `DESPUÉS max ${legs(stats.worstMeasured)}`,
+      // The two that say whether any of the above is about the bridge at all: how
+      // long the front went blind, and how late the main thread was to its own
+      // timer over the same run. If those two agree, the thread was blocked and
+      // the delivery figures are a symptom of it.
+      `PARÓN ${millis(stats.worstGapMs)} A LOS ${stats.worstGapAtSeconds.toFixed(1)} s`,
+      `BUCLE ${millis(this.mainThreadLag())} A LOS ${this.mainThreadLagAt().toFixed(1)} s`,
+    ].join(' · ');
+  });
+
+  /**
+   * The bridge missed the budget somewhere other than the launch.
+   *
+   * It is deliberately **not** lit by the launch burst: that fires on every
+   * single launch, and an alert that is always on is an alert nobody reads. This
+   * one only lights for a bloque that was late once the capture was running,
+   * which is the thing #8's criterion is actually about.
+   */
+  protected readonly overBudget = computed(() => {
+    const worst = this.audio.stats().worstMeasured;
+    return worst !== null && worst.totalMs > BUDGET_MS;
+  });
+
+  /**
+   * A leg came back negative, which is never a fact about the bridge.
+   *
+   * All three are durations by construction: the queue and the worker are two
+   * stamps each on one clock, and the crossing has the run's smallest crossing
+   * taken off it, so none of them can go under zero unless the instrument itself
+   * is wrong about which clock it is holding.
+   *
+   * It is here because that is exactly what happened on the first run of #23's
+   * split: `WORKER −447,5 ms`, because `performance.now()` in a worker counts
+   * from the worker's own creation and not the page's. The figure was nonsense
+   * and nothing on screen said so — it was caught by a human noticing a minus
+   * sign. **A measuring instrument that can be wrong should say when it is**,
+   * so this says it, and the numbers next to it are not to be written down.
+   */
+  protected readonly brokenClock = computed(() => {
+    const stats = this.audio.stats();
+    return [stats.worstWarmup, stats.worstMeasured].some(
+      (split) => split !== null && (split.queueMs < 0 || split.ipcMs < 0 || split.workerMs < 0),
+    );
+  });
+}
+
+/** One bloque of the vista viva: the budget every delivery is measured against. */
+const BUDGET_MS = 33;
+
+/** One bloque's lateness and where it was spent, or a dash for no such bloque. */
+function legs(split: LatencyLegs | null): string {
+  if (split === null) {
+    return DEAD_MARK;
+  }
+  const where = [
+    `COLA ${split.queueMs.toFixed(1)}`,
+    `IPC ${split.ipcMs.toFixed(1)}`,
+    `WORKER ${split.workerMs.toFixed(1)}`,
+  ].join(' · ');
+  // **When**, and not only how much. A worst bloque three seconds in is the
+  // launch and one four minutes in is the bridge, and #23 is precisely the
+  // question of which of those a figure is reporting.
+  return `${split.totalMs.toFixed(1)} ms A LOS ${split.atSeconds.toFixed(1)} s (${where})`;
 }
 
 function millis(value: number | null): string {

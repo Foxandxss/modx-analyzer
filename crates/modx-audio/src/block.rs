@@ -12,11 +12,20 @@
 //!      8      8  u64  sent_at_micros    monotonic, from the start of the capture
 //!     16      4  u32  callback_frames   frames the device handed over last time
 //!     20      4  u32  flags             bit 0: no entra audio (see `silence`)
-//!     24  8·f     f32  samples          interleaved L R L R …, `frames · 2` of them
+//!     24      8  u64  queued_at_micros  same clock, stamped on the way to the IPC
+//!     32  8·f     f32  samples          interleaved L R L R …, `frames · 2` of them
 //! ```
 //!
-//! The header is 24 bytes so the samples start on a multiple of 4 and a
+//! The header is 32 bytes so the samples start on a multiple of 4 and a
 //! `Float32Array` can be laid over the same buffer without copying it.
+//!
+//! **Why there are two stamps.** Until #23 there was one, and the worker's
+//! `arrival − sent` covered the whole path in a single figure: the queue to the
+//! forwarding thread, the encode, Tauri's IPC, the webview's event loop and the
+//! worker's own message queue. A launch burst of 379 ms had nowhere to be
+//! attributed. The second stamp cuts that lump where it can be cut **on one
+//! clock** — `queued_at_micros − sent_at_micros` is an exact duration and not a
+//! difference of two epochs — and what is left over is the crossing itself.
 
 /// The only rate `Line (MODX)` offers (`44100..44100`, fase 0 §4).
 pub const SAMPLE_RATE: u32 = 44_100;
@@ -41,7 +50,7 @@ pub const CALLBACKS_PER_BLOCK: u32 = 3;
 pub const BLOCK_FRAMES: u32 = CALLBACK_FRAMES * CALLBACKS_PER_BLOCK;
 
 /// Size of the header in front of the samples.
-pub const HEADER_BYTES: usize = 24;
+pub const HEADER_BYTES: usize = 32;
 
 /// Bit 0 of `flags`: the last second has been exact digital zeros.
 pub const FLAG_SILENT: u32 = 1;
@@ -54,6 +63,12 @@ pub struct AudioBlock {
     pub sent_at_micros: u64,
     pub callback_frames: u32,
     pub flags: u32,
+    /// When the bloque left the queue between the audio thread and the IPC, on
+    /// the same monotonic clock as [`Self::sent_at_micros`]. Zero until
+    /// [`crate::capture::Bloques`] hands it over: the assembler cannot fill it
+    /// in, because what it measures is everything that happens after the
+    /// assembler is done.
+    pub queued_at_micros: u64,
     /// Interleaved stereo: `frames * CHANNELS` samples.
     pub samples: Vec<f32>,
 }
@@ -67,6 +82,7 @@ impl AudioBlock {
         bytes.extend_from_slice(&self.sent_at_micros.to_le_bytes());
         bytes.extend_from_slice(&self.callback_frames.to_le_bytes());
         bytes.extend_from_slice(&self.flags.to_le_bytes());
+        bytes.extend_from_slice(&self.queued_at_micros.to_le_bytes());
         for sample in &self.samples {
             bytes.extend_from_slice(&sample.to_le_bytes());
         }
@@ -129,6 +145,7 @@ impl BlockAssembler {
                 sent_at_micros: now_micros,
                 callback_frames: frames,
                 flags: 0,
+                queued_at_micros: 0,
                 samples,
             };
             self.sequence += 1;
@@ -185,6 +202,9 @@ mod tests {
         assert_eq!(blocks[0].sequence, 0);
         assert_eq!(blocks[0].frames, BLOCK_FRAMES);
         assert_eq!(blocks[0].sent_at_micros, 7);
+        // The assembler is not what stamps it: everything it would measure
+        // happens after the bloque leaves here (#23).
+        assert_eq!(blocks[0].queued_at_micros, 0);
         assert_eq!(
             blocks[0].samples.len(),
             BLOCK_FRAMES as usize * CHANNELS as usize
@@ -247,6 +267,7 @@ mod tests {
             sent_at_micros: 0x0807_0605_0403_0201,
             callback_frames: CALLBACK_FRAMES,
             flags: FLAG_SILENT,
+            queued_at_micros: 0x1112_1314_1516_1718,
             samples: vec![0.0, 1.0, -1.0, 0.5],
         };
 
@@ -258,8 +279,9 @@ mod tests {
         assert_eq!(&bytes[8..16], &0x0807_0605_0403_0201u64.to_le_bytes());
         assert_eq!(&bytes[16..20], &CALLBACK_FRAMES.to_le_bytes());
         assert_eq!(&bytes[20..24], &FLAG_SILENT.to_le_bytes());
-        assert_eq!(&bytes[24..28], &0.0f32.to_le_bytes());
-        assert_eq!(&bytes[36..40], &0.5f32.to_le_bytes());
+        assert_eq!(&bytes[24..32], &0x1112_1314_1516_1718u64.to_le_bytes());
+        assert_eq!(&bytes[32..36], &0.0f32.to_le_bytes());
+        assert_eq!(&bytes[44..48], &0.5f32.to_le_bytes());
         assert!(block.is_silent());
     }
 

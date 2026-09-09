@@ -12,7 +12,8 @@ import { LiveTrama, MEASURE_WINDOW, Medida, NO_TRAMA, WATERFALL_FRAMES } from 'm
 import { BACKEND_GATEWAY } from '../backend/backend-gateway';
 import { Clock } from '../provenance/clock';
 import { equalTemperamentHz } from '../provenance/theory';
-import { BridgeStats } from './bridge';
+import { BridgeStats, stamp } from './bridge';
+import { LoopLag } from './loop-lag';
 import { FrameMessage, MedidaMessage, WorkerMessage } from './audio.worker';
 
 /**
@@ -64,6 +65,13 @@ export const NO_STATS: BridgeStats = {
   callbackFrames: 0,
   minCallbackFrames: 0,
   maxCallbackFrames: 0,
+  measuredBlocks: 0,
+  warmupBlocks: 0,
+  worstWarmup: null,
+  worstMeasured: null,
+  worstGapMs: null,
+  worstGapAtSeconds: 0,
+  captureStartedAtMs: 0,
   p50Ms: null,
   p99Ms: null,
   maxMs: null,
@@ -303,6 +311,25 @@ export class AudioService {
 
   private worker: AudioWorkerLike | null = null;
 
+  /**
+   * The main thread watching itself, so #23's one remaining ambiguity can be
+   * settled: whether the crossing is slow or the thread it crosses onto is busy.
+   */
+  private readonly lag = new LoopLag();
+
+  /**
+   * The worst the main thread has been late to its own timer, in ms. It is not
+   * about the audio at all, which is exactly why it can answer for it.
+   */
+  readonly mainThreadLagMs = signal(0);
+
+  /**
+   * How far into the capture the main thread's worst stall was, in seconds, on
+   * the same clock as every other `A LOS`. Zero until a bloque has placed the
+   * capture's zero on the page's clock.
+   */
+  readonly mainThreadLagAtSeconds = signal(0);
+
   /** The press waiting for its table, so a second press cannot queue behind it. */
   private pending: ((view: MedidaView | null) => void) | null = null;
 
@@ -382,6 +409,7 @@ export class AudioService {
 
     const worker = this.makeWorker();
     this.worker = worker;
+    this.lag.start();
     worker.addEventListener('message', ({ data }) =>
       data.kind === 'medida' ? this.onMedida(data) : this.onFrame(data),
     );
@@ -390,12 +418,16 @@ export class AudioService {
     this.postNote(pitch === null ? null : equalTemperamentHz(pitch));
 
     const unsubscribe = this.backend.subscribeBlocks((buffer) => {
-      worker.postMessage({ kind: 'block', buffer }, [buffer]);
+      // Stamped here and not in the worker: this is the last moment on the main
+      // thread, so everything after it is the worker's queue and everything
+      // before it is the crossing. #23 could not tell those apart.
+      worker.postMessage({ kind: 'block', buffer, postedAt: stamp() }, [buffer]);
     });
 
     this.destroyRef.onDestroy(() => {
       void unsubscribe.then((stop) => stop());
       worker.terminate();
+      this.lag.stop();
       this.worker = null;
     });
   }
@@ -511,6 +543,9 @@ export class AudioService {
     }
     this.readoutAt = now;
     this.sinceReadout = 0;
+    this.mainThreadLagMs.set(this.lag.worst);
+    const started = this.stats().captureStartedAtMs;
+    this.mainThreadLagAtSeconds.set(started === 0 ? 0 : (this.lag.worstAt - started) / 1000);
 
     const hertz = frame.frequencyHz;
     this.frequencyHz.set(hertz === null ? null : Math.round(hertz * 10) / 10);

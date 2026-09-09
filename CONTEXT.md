@@ -185,7 +185,33 @@ _Avoid_: frame (en prosa), bloque
 
 **Puente**:
 El camino entero de un bloque, desde el callback del dispositivo hasta el worker: tres callbacks,
-un sello monótono, el IPC y la transferencia. Se mide, no se prueba.
+dos sellos monótonos, el IPC y la transferencia. Se mide, no se prueba. Tiene tres **tramos**, y una
+latencia que no diga en cuál de ellos se pasó la espera no dice nada (#23): la **cola** —lo que el
+bloque espera entre el hilo del audio y el que alimenta el IPC—, el **IPC** —el encode, el canal de
+Tauri y el bucle de eventos del webview— y el **worker** —lo que espera detrás de las tramas que ya
+tenía encoladas—. Dos de los tres se miden con un solo reloj y son exactos; sólo el IPC salta de
+época, y es de él de donde se resta el suelo, así que los tres siguen sumando el total.
+_Avoid_: pipeline, canal (el canal es el de Tauri, que es un tramo y no el camino)
+
+**Arranque**:
+Los primeros cinco segundos de una captura, contados aparte del resto. Un percentil tomado sobre una
+ventana que todavía contiene un estallido es una cifra sobre el arranque con el nombre del puente: a
+132 bloques el `p99` marcó 167,9 ms y a 4 917 todavía marcaba 150,2. Ni se promedia ni se esconde:
+sus bloques se cuentan, el peor se dibuja entero y partido en sus tres tramos, y los percentiles
+dicen **sobre cuántos bloques** hablan. **No es una excusa**: cinco lanzamientos del 2026-09-09
+dieron un bloque 204,9 ms tarde a los 48,5 s y tres arranques sin estallido ninguno, así que la
+ventana sirve para contar el arranque con honradez y nunca para hacer pasar una cifra (ADR-0006). Lo
+que sobreviva a la ventana sale en el `max` de después, con su hora puesta.
+_Avoid_: calentamiento, warm-up
+
+**Parón**:
+El rato más largo que el frente pasó sin recibir ningún bloque. Con bloques cada 30 ms, un parón sano
+mide unos 30. Existe porque un `max` solo no distingue un bloque lento de una ausencia: si el frente
+deja de recibir 50 ms y luego se pone al día de golpe, el peor de esos bloques parece una entrega
+tardía y no lo es. Medido en el hilo principal, y su compañero es el **bucle** —lo tarde que ese
+mismo hilo llega a su propio temporizador de 25 ms, que no sabe nada de audio—. Cuando los dos
+coinciden en el mismo segundo, la tardanza del puente es un síntoma del hilo y no del camino.
+_Avoid_: hueco (un hueco es un bloque que no llegó nunca), corte
 
 **Disparo**:
 El punto donde empieza la traza del scope: un cruce de cero ascendente alineado al periodo de la

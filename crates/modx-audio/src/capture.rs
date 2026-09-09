@@ -75,6 +75,37 @@ struct Shared {
     silent: AtomicBool,
 }
 
+/// The bloques coming off the audio thread, stamped as they leave the queue.
+///
+/// It is an iterator and not the bare `Receiver` because of #23. The stamp the
+/// worker measures against is taken inside the device callback, so everything
+/// between the callback and the worker was one unmeasured lump — this queue, the
+/// encode, Tauri's IPC, the webview's event loop and the worker's own message
+/// queue — and a launch burst of 379 ms had nowhere to be attributed.
+///
+/// Handing a bloque over here is the moment the forwarding thread got to it, on
+/// the clock the callback stamped, so `queued_at_micros − sent_at_micros` is an
+/// exact duration and not a difference of two epochs. It is the only cut in the
+/// path that can be made without crossing one.
+///
+/// It stamps on `next` and not on `send` deliberately: what is being measured is
+/// how long the bloque **waited**, and a stamp taken by the audio thread as it
+/// pushed would measure nothing at all.
+pub struct Bloques {
+    blocks: Receiver<AudioBlock>,
+    started: Instant,
+}
+
+impl Iterator for Bloques {
+    type Item = AudioBlock;
+
+    fn next(&mut self) -> Option<AudioBlock> {
+        let mut block = self.blocks.recv().ok()?;
+        block.queued_at_micros = self.started.elapsed().as_micros() as u64;
+        Some(block)
+    }
+}
+
 /// An open capture of `Line (MODX)`. Dropping it closes the stream.
 pub struct Capture {
     device: DeviceInfo,
@@ -89,17 +120,31 @@ impl Capture {
     /// The receiver is unbounded on purpose: a bloque dropped inside the process
     /// would show up in the worker's gap counter as if the IPC had lost it, and
     /// then the go/no-go of ADR-0001 would be measuring the wrong thing.
-    pub fn open() -> Result<(Self, Receiver<AudioBlock>), CaptureError> {
+    pub fn open() -> Result<(Self, Bloques), CaptureError> {
         let (blocks_sender, blocks) = mpsc::channel();
         let (ready_sender, ready) = mpsc::channel();
         let shared = Arc::new(Shared::default());
         let stop = Arc::new(AtomicBool::new(false));
 
+        // The clock the whole bridge is timed against, made **here** rather than
+        // inside the audio thread so that the forwarding side can read the same
+        // one (#23). It costs the offset a device enumeration, which the front
+        // subtracts away with everything else it cannot see across the epoch.
+        let started = Instant::now();
+
         let thread_shared = Arc::clone(&shared);
         let thread_stop = Arc::clone(&stop);
         let thread = thread::Builder::new()
             .name("modx-audio".into())
-            .spawn(move || hold_stream(thread_shared, thread_stop, blocks_sender, ready_sender))
+            .spawn(move || {
+                hold_stream(
+                    thread_shared,
+                    thread_stop,
+                    blocks_sender,
+                    ready_sender,
+                    started,
+                )
+            })
             .map_err(|error| CaptureError::Open {
                 device: DEVICE_NAME.into(),
                 reason: error.to_string(),
@@ -117,7 +162,7 @@ impl Capture {
                 stop,
                 thread: Some(thread),
             },
-            blocks,
+            Bloques { blocks, started },
         ))
     }
 
@@ -160,8 +205,9 @@ fn hold_stream(
     stop: Arc<AtomicBool>,
     blocks: Sender<AudioBlock>,
     ready: Sender<Result<DeviceInfo, CaptureError>>,
+    started: Instant,
 ) {
-    let stream = match build_stream(&shared, blocks) {
+    let stream = match build_stream(&shared, blocks, started) {
         Ok((stream, device)) => match stream.play() {
             Ok(()) => {
                 let _ = ready.send(Ok(device));
@@ -191,6 +237,7 @@ fn hold_stream(
 fn build_stream(
     shared: &Arc<Shared>,
     blocks: Sender<AudioBlock>,
+    started: Instant,
 ) -> Result<(cpal::Stream, DeviceInfo), CaptureError> {
     let device = find_device()?;
     let name = device.name().unwrap_or_else(|_| DEVICE_NAME.to_owned());
@@ -207,9 +254,9 @@ fn build_stream(
         buffer_size: BufferSize::Default,
     };
 
-    // The clock the whole bridge is timed against: monotonic, counted from before
-    // the first callback, so `sent_at_micros` is a duration and never a wall clock.
-    let started = Instant::now();
+    // `started` is monotonic and counted from before the first callback, so
+    // `sent_at_micros` is a duration and never a wall clock. It is made in
+    // `open` because [`Bloques`] stamps against it too.
     let mut assembler = BlockAssembler::new();
     let mut silence = SilenceDetector::new();
     let callback_shared = Arc::clone(shared);

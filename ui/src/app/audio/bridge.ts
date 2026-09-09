@@ -25,7 +25,8 @@ import {
  *      8      8  u64  sent_at_micros    monotonic, from the start of the capture
  *     16      4  u32  callback_frames
  *     20      4  u32  flags             bit 0: no entra audio
- *     24    4·s  f32  samples           interleaved L R L R …
+ *     24      8  u64  queued_at_micros  same clock, on the way to the IPC
+ *     32    4·s  f32  samples           interleaved L R L R …
  * ```
  *
  * That layout is the contract between Rust and this file and it is written down in
@@ -34,10 +35,29 @@ import {
  */
 
 /** Bytes of header in front of the samples. Mirrors `HEADER_BYTES` in Rust. */
-export const HEADER_BYTES = 24;
+export const HEADER_BYTES = 32;
 
 /** Bit 0 of `flags`. */
 const FLAG_SILENT = 1;
+
+/**
+ * The page's clock, read the same way on the main thread and inside the worker.
+ *
+ * **`performance.now()` is not one clock across threads.** A dedicated worker
+ * gets its own `timeOrigin` — the moment it was created — so its `now()` counts
+ * from later than the page's. Measured on the MODX8 on 2026-09-09, the first
+ * attempt at #23's split reported a worker leg of **−447,5 ms**: not a latency at
+ * all, but the 447 ms between the page starting and `new Worker` returning.
+ *
+ * Adding `timeOrigin` back puts both threads on the same absolute scale, so a
+ * difference across them is a duration again. What it costs is that
+ * `timeOrigin` can be coarsened by the browser, which leaves a constant bias
+ * under a millisecond on that one leg — three orders of magnitude below the
+ * burst it is there to find.
+ */
+export function stamp(): number {
+  return performance.timeOrigin + performance.now();
+}
 
 /** How many bloques of channel 0 the scope keeps: 90 ms, two cycles down to 22 Hz. */
 const SCOPE_BLOCKS = 3;
@@ -62,11 +82,42 @@ const TRAMA_HISTORY = 65536;
  */
 const LATENCY_HISTORY = 65536;
 
+/**
+ * How many bloques at the start of a capture are kept out of the percentiles:
+ * five seconds of them.
+ *
+ * **This is #23.** Some launches deliver a bloque hundreds of milliseconds late
+ * and lose none of them (`HUECOS 0`, `DESORDEN 0` every time). A percentile taken
+ * over a window that still contains one of those is reporting the launch and not
+ * the bridge: at 132 bloques `p99` read 167,9 ms, and at 4 917 it still read
+ * 150,2 ms, because a burst only falls under the 1 % once the run is a hundred
+ * times longer than it.
+ *
+ * So the burst is not averaged in and it is not hidden either: these bloques are
+ * counted, their worst is reported on its own as {@link BridgeStats.worstWarmup},
+ * and the percentiles say how many bloques they cover.
+ *
+ * **Five seconds, and why that number is not the point.** Measured over five
+ * launches on 2026-09-09, the worst bloque of a burst landed at 1,3 s twice and
+ * the other three launches never burst at all; five seconds covers that with
+ * margin. But the same measurement found a 204,9 ms bloque at **48,5 s**, which
+ * no window can exclude — so this is a way of reporting the launch honestly and
+ * never a way of making the figures pass. What keeps them honest is that the
+ * worst of the run says {@link LatencyLegs.atSeconds}, and that
+ * {@link BridgeStats.worstGapMs} says whether the front was late or absent.
+ */
+export const WARMUP_BLOCKS = 167;
+
 export interface AudioBlock {
   readonly sequence: number;
   readonly frames: number;
   /** Monotonic microseconds counted from before the first device callback. */
   readonly sentAtMicros: number;
+  /**
+   * The same clock, stamped as the bloque left the queue between the audio
+   * thread and the IPC. The one cut in the path that needs no epoch crossed.
+   */
+  readonly queuedAtMicros: number;
   /** Frames the device handed over in the callback that completed this bloque. */
   readonly callbackFrames: number;
   /** Exact digital zeros for a second. Not a level threshold; see `silence.rs`. */
@@ -90,6 +141,7 @@ export function decodeBlock(buffer: ArrayBuffer): AudioBlock {
     sentAtMicros: Number(header.getBigUint64(8, true)),
     callbackFrames: header.getUint32(16, true),
     silent: (header.getUint32(20, true) & FLAG_SILENT) !== 0,
+    queuedAtMicros: Number(header.getBigUint64(24, true)),
     samples: new Float32Array(buffer, HEADER_BYTES, frames * CHANNELS),
   };
 }
@@ -119,8 +171,42 @@ export function channelZero(block: AudioBlock): Float32Array {
   return mono;
 }
 
+/**
+ * One bloque's journey, cut into the three pieces it is made of.
+ *
+ * The path from the device callback to the worker crosses two threads and one
+ * process boundary, and until #23 it was reported as a single number: a launch
+ * burst of 379 ms was visible and unattributable. These are the three pieces,
+ * and they add up to {@link LatencyLegs.totalMs} exactly.
+ *
+ * **Two of them are measurements and one is a lower bound.** {@link queueMs} is
+ * stamped twice by Rust on one monotonic clock, {@link workerMs} twice by the
+ * page on `performance.now()`; both are exact. Only {@link ipcMs} spans the two
+ * epochs, so only it carries the unknown constant — and it is the leg the floor
+ * is taken out of, which is why the three still sum to the total.
+ */
+export interface LatencyLegs {
+  /** Waiting between the audio thread and the thread that feeds the IPC. */
+  readonly queueMs: number;
+  /** The crossing itself: the encode, Tauri's IPC, the webview's event loop. */
+  readonly ipcMs: number;
+  /** Waiting in the worker's own message queue, behind the tramas ahead of it. */
+  readonly workerMs: number;
+  /** The three of them. This is the figure the 33 ms budget is about. */
+  readonly totalMs: number;
+  /**
+   * How far into the capture this bloque was, in seconds, off the stamp the
+   * device callback took.
+   *
+   * A `max` without it cannot be acted on. #23 is the question «is this figure
+   * the launch or the bridge?», and a worst bloque three seconds in and one four
+   * minutes in are two completely different answers wearing the same number.
+   */
+  readonly atSeconds: number;
+}
+
 export interface BridgeStats {
-  /** Bloques that arrived. */
+  /** Bloques that arrived, the launch included. */
   readonly blocks: number;
   /** Sequence numbers that never arrived. The go/no-go wants this at zero. */
   readonly gaps: number;
@@ -131,6 +217,42 @@ export interface BridgeStats {
   /** Smallest and largest device callback seen since the app started. */
   readonly minCallbackFrames: number;
   readonly maxCallbackFrames: number;
+  /**
+   * How many bloques the three percentiles below cover: everything past the
+   * launch. It is reported next to them and not left to be worked out, because
+   * «p99 under 33 ms» is a claim about a window, and #23 is what happens when
+   * nothing on screen says which window it was.
+   */
+  readonly measuredBlocks: number;
+  /** Bloques of the launch, kept out of them. See {@link WARMUP_BLOCKS}. */
+  readonly warmupBlocks: number;
+  /** The worst bloque of the launch, split. `null` before the first one. */
+  readonly worstWarmup: LatencyLegs | null;
+  /** The worst bloque past the launch, split. `null` until the launch is over. */
+  readonly worstMeasured: LatencyLegs | null;
+  /**
+   * The longest the front went without a bloque arriving at all, in ms, and how
+   * far into the capture that was.
+   *
+   * Bloques are cut every 30 ms, so this reads about 30 on a healthy run. It is
+   * here because a `max` on its own cannot tell one slow bloque from a **stall**:
+   * if the front stops receiving for 230 ms and then takes seven at once, the
+   * worst of those looks like a delivery that was 200 ms late, and it is not —
+   * it is the front having been away. The two have different causes, and this is
+   * the number that separates them.
+   */
+  readonly worstGapMs: number | null;
+  readonly worstGapAtSeconds: number;
+  /**
+   * The page-clock stamp at which the capture's own clock reads zero.
+   *
+   * It is what lets a figure measured on the page — the main thread's lateness
+   * to its own timer — be placed in the same seconds as a figure measured on the
+   * device's. Taken from the most recent bloque, so it carries that bloque's
+   * delivery latency as its error: about a millisecond, against events being
+   * placed to a tenth of a second.
+   */
+  readonly captureStartedAtMs: number;
   readonly p50Ms: number | null;
   readonly p99Ms: number | null;
   readonly maxMs: number | null;
@@ -153,6 +275,13 @@ const NO_STATS: BridgeStats = {
   callbackFrames: 0,
   minCallbackFrames: 0,
   maxCallbackFrames: 0,
+  measuredBlocks: 0,
+  warmupBlocks: 0,
+  worstWarmup: null,
+  worstMeasured: null,
+  worstGapMs: null,
+  worstGapAtSeconds: 0,
+  captureStartedAtMs: 0,
   p50Ms: null,
   p99Ms: null,
   maxMs: null,
@@ -162,19 +291,38 @@ const NO_STATS: BridgeStats = {
   silent: false,
 };
 
+/** The three legs before the epoch is taken out of the middle one. */
+interface RawLegs {
+  readonly queueMs: number;
+  readonly ipcRawMs: number;
+  readonly workerMs: number;
+  /** Microseconds since the capture started, straight off the header. */
+  readonly sentAtMicros: number;
+}
+
 /**
- * Counts what the bridge lost and how late it was.
+ * Counts what the bridge lost, how late it was, and **where** the lateness was.
  *
- * **How the two clocks are aligned.** Rust stamps each bloque with microseconds
- * since the capture started; the worker stamps arrival with `performance.now()`,
- * which counts from the page. The two epochs are unrelated, so the difference
- * between them is a real latency plus an unknown constant, and no amount of
- * arithmetic here can separate the two. What is reported is therefore the
- * difference **minus the smallest difference of the whole run**: the fastest
- * bloque is called zero and every other one is measured against it. The numbers
- * are a lower bound on the true delivery latency and an exact measurement of its
- * spread — which is what «p99 under 33 ms» is asking about, because a constant
- * offset shared by every bloque cannot drop a frame.
+ * **How the two clocks are aligned.** Rust stamps each bloque twice in
+ * microseconds since the capture started; the page stamps it twice more with
+ * `performance.now()`, which counts from the page. The two epochs are unrelated,
+ * so a difference taken across them is a real latency plus an unknown constant,
+ * and no amount of arithmetic here can separate the two.
+ *
+ * Exactly **one** of the three legs crosses the epochs, and that is the whole
+ * trick: {@link LatencyLegs.queueMs} is Rust's two stamps and
+ * {@link LatencyLegs.workerMs} is the page's two, so both are exact durations,
+ * and only the crossing carries the constant. What is reported for the crossing
+ * is the difference **minus the smallest such difference of the run**: the
+ * fastest bloque's crossing is called zero and every other one is measured
+ * against it. So the total is a lower bound on the true delivery latency and an
+ * exact measurement of its spread — which is what «p99 under 33 ms» is asking
+ * about, because a constant offset shared by every bloque cannot drop a frame.
+ *
+ * **The launch is counted apart.** The first {@link WARMUP_BLOCKS} never enter
+ * the percentiles; they are counted, and the worst of them is reported whole and
+ * split, so #23's burst appears on screen as itself instead of inside a figure
+ * that claims to be about the bridge.
  */
 export class BlockMeter {
   private blocks = 0;
@@ -186,16 +334,49 @@ export class BlockMeter {
   private maxCallbackFrames = 0;
   private silent = false;
 
-  /** Raw `arrival − sent` differences, in ms, oldest overwritten. */
-  private readonly deltas = new Float64Array(LATENCY_HISTORY);
+  /** The three legs of each bloque past the launch, in ms, oldest overwritten. */
+  private readonly queueMs = new Float64Array(LATENCY_HISTORY);
+  private readonly ipcRawMs = new Float64Array(LATENCY_HISTORY);
+  private readonly workerMs = new Float64Array(LATENCY_HISTORY);
+  /** When each of them was cut by the device, so a `max` can be placed in time. */
+  private readonly sentAtMicros = new Float64Array(LATENCY_HISTORY);
   private written = 0;
+
+  /**
+   * The fastest crossing of the whole capture, the launch included: the stand-in
+   * for the constant between the two epochs.
+   *
+   * It is a running minimum over **everything** and not over the measured window
+   * alone, on purpose. A floor that is too low makes every reported latency too
+   * large, which is the direction a go/no-go should err in; one taken from the
+   * window it reports on could rise as that window scrolled and would make the
+   * bridge look as though it were getting better.
+   */
+  private floorRaw = Infinity;
+
+  /** The launch: how many bloques, and the worst of them, before the floor. */
+  private warmupBlocks = 0;
+  private worstWarmup: RawLegs | null = null;
+
+  /** Where the capture's zero falls on the page's clock. See the field. */
+  private captureStartedAtMs = 0;
+
+  /** The longest the front went without a bloque, and how far in it happened. */
+  private lastPostedAt: number | null = null;
+  private worstGapMs: number | null = null;
+  private worstGapAtSeconds = 0;
 
   /** What each trama cost the worker, in ms, oldest overwritten. */
   private readonly tramas = new Float64Array(TRAMA_HISTORY);
   private tramasWritten = 0;
 
-  /** `arrivedAt` is `performance.now()` when the buffer reached the worker. */
-  observe(block: AudioBlock, arrivedAt: number): void {
+  /**
+   * `postedAt` is `performance.now()` when the main thread took the bloque off
+   * the Tauri channel; `arrivedAt` is `performance.now()` when the worker got to
+   * it. They are the same clock, so what lies between them is the worker's own
+   * message queue and nothing else.
+   */
+  observe(block: AudioBlock, arrivedAt: number, postedAt: number = arrivedAt): void {
     // Lost is counted as a hole in the span, not as a jump: a bloque that came
     // late is out of order, and counting it as lost the moment its successor
     // arrived would make the go/no-go fail on a reordering that lost nothing.
@@ -217,7 +398,42 @@ export class BlockMeter {
         : Math.min(this.minCallbackFrames, block.callbackFrames);
     this.silent = block.silent;
 
-    this.deltas[this.written % LATENCY_HISTORY] = arrivedAt - block.sentAtMicros / 1000;
+    const legs: RawLegs = {
+      queueMs: (block.queuedAtMicros - block.sentAtMicros) / 1000,
+      ipcRawMs: postedAt - block.queuedAtMicros / 1000,
+      workerMs: arrivedAt - postedAt,
+      sentAtMicros: block.sentAtMicros,
+    };
+    this.floorRaw = Math.min(this.floorRaw, legs.ipcRawMs);
+
+    // The gap is measured on arrivals at the main thread and not on the stamps
+    // the device took: what is being asked is how long **the front** was without
+    // one, and the device never stops cutting them.
+    if (this.lastPostedAt !== null) {
+      const gap = postedAt - this.lastPostedAt;
+      if (this.worstGapMs === null || gap > this.worstGapMs) {
+        this.worstGapMs = gap;
+        this.worstGapAtSeconds = block.sentAtMicros / 1_000_000;
+      }
+    }
+    this.lastPostedAt = postedAt;
+    this.captureStartedAtMs = postedAt - block.sentAtMicros / 1000;
+
+    if (this.blocks <= WARMUP_BLOCKS) {
+      this.warmupBlocks += 1;
+      // Ordering by the raw total is ordering by the corrected one: the floor is
+      // the same constant under every bloque of the run.
+      if (this.worstWarmup === null || rawTotal(legs) > rawTotal(this.worstWarmup)) {
+        this.worstWarmup = legs;
+      }
+      return;
+    }
+
+    const slot = this.written % LATENCY_HISTORY;
+    this.queueMs[slot] = legs.queueMs;
+    this.ipcRawMs[slot] = legs.ipcRawMs;
+    this.workerMs[slot] = legs.workerMs;
+    this.sentAtMicros[slot] = legs.sentAtMicros;
     this.written += 1;
   }
 
@@ -232,9 +448,19 @@ export class BlockMeter {
       return NO_STATS;
     }
 
-    const kept = this.deltas.slice(0, Math.min(this.written, LATENCY_HISTORY));
-    const floor = kept.reduce((lowest, delta) => Math.min(lowest, delta), Infinity);
-    const latencies = Array.from(kept, (delta) => delta - floor).sort((a, b) => a - b);
+    const kept = Math.min(this.written, LATENCY_HISTORY);
+    const totals = new Array<number>(kept);
+    let worstAt = -1;
+    let worstTotal = -Infinity;
+    for (let index = 0; index < kept; index += 1) {
+      const total = this.corrected(index).totalMs;
+      totals[index] = total;
+      if (total > worstTotal) {
+        worstTotal = total;
+        worstAt = index;
+      }
+    }
+    totals.sort((a, b) => a - b);
 
     // The trama costs need no floor subtracted: one clock measured them.
     const tramas = Array.from(
@@ -248,15 +474,48 @@ export class BlockMeter {
       callbackFrames: this.callbackFrames,
       minCallbackFrames: this.minCallbackFrames,
       maxCallbackFrames: this.maxCallbackFrames,
-      p50Ms: percentile(latencies, 0.5),
-      p99Ms: percentile(latencies, 0.99),
-      maxMs: latencies[latencies.length - 1] ?? null,
+      measuredBlocks: kept,
+      warmupBlocks: this.warmupBlocks,
+      worstWarmup: this.worstWarmup === null ? null : this.correct(this.worstWarmup),
+      worstMeasured: worstAt < 0 ? null : this.corrected(worstAt),
+      worstGapMs: this.worstGapMs,
+      worstGapAtSeconds: this.worstGapAtSeconds,
+      captureStartedAtMs: this.captureStartedAtMs,
+      p50Ms: percentile(totals, 0.5),
+      p99Ms: percentile(totals, 0.99),
+      maxMs: totals[totals.length - 1] ?? null,
       tramaP50Ms: percentile(tramas, 0.5),
       tramaP99Ms: percentile(tramas, 0.99),
       tramaMaxMs: tramas[tramas.length - 1] ?? null,
       silent: this.silent,
     };
   }
+
+  /** The legs of one measured bloque, with the epoch taken out of the crossing. */
+  private corrected(index: number): LatencyLegs {
+    return this.correct({
+      queueMs: this.queueMs[index],
+      ipcRawMs: this.ipcRawMs[index],
+      workerMs: this.workerMs[index],
+      sentAtMicros: this.sentAtMicros[index],
+    });
+  }
+
+  private correct(legs: RawLegs): LatencyLegs {
+    const ipcMs = legs.ipcRawMs - this.floorRaw;
+    return {
+      queueMs: legs.queueMs,
+      ipcMs,
+      workerMs: legs.workerMs,
+      totalMs: legs.queueMs + ipcMs + legs.workerMs,
+      atSeconds: legs.sentAtMicros / 1_000_000,
+    };
+  }
+}
+
+/** The three raw legs added up, for comparing two bloques of the same run. */
+function rawTotal(legs: RawLegs): number {
+  return legs.queueMs + legs.ipcRawMs + legs.workerMs;
 }
 
 function percentile(sorted: readonly number[], fraction: number): number | null {
@@ -343,11 +602,18 @@ export class AudioBridge {
     this.noteHz = hz;
   }
 
-  receive(buffer: ArrayBuffer, arrivedAt: number): BridgeFrame {
+  /**
+   * `postedAt` is when the main thread handed the bloque over, on this
+   * page's clock. It defaults to `arrivedAt` — «it was not waiting here» — so a
+   * caller
+   * that has nothing to say about the worker's queue says nothing rather than
+   * inventing a zero somewhere else.
+   */
+  receive(buffer: ArrayBuffer, arrivedAt: number, postedAt: number = arrivedAt): BridgeFrame {
     performance.mark(MARK_START);
 
     const block = decodeBlock(buffer);
-    this.meter.observe(block, arrivedAt);
+    this.meter.observe(block, arrivedAt, postedAt);
 
     const mono = channelZero(block);
     this.history.copyWithin(0, mono.length);

@@ -1,4 +1,4 @@
-import { AudioBridge } from './bridge';
+import { AudioBridge, stamp } from './bridge';
 import { FrameMessage, MedidaMessage, NoteMessage, WorkerMessage } from './audio.worker';
 import { AudioWorkerLike, WorkerReply } from './audio-service';
 
@@ -36,7 +36,10 @@ export class FakeAudioWorker implements AudioWorkerLike {
       return;
     }
 
-    const frame = this.bridge.receive(message.buffer, performance.now());
+    // The bloque is handed over the instant it is posted, because there is no
+    // thread between the two here. That is the honest `postedAt` for this
+    // worker: nothing waited in a queue that does not exist.
+    const frame = this.bridge.receive(message.buffer, stamp(), message.postedAt);
     this.received += 1;
 
     // Every trama carries the stats here, where nobody is counting frames: a test

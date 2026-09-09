@@ -36,6 +36,6 @@ pub use block::{
     AudioBlock, BlockAssembler, CallbackStats, BLOCK_FRAMES, CALLBACKS_PER_BLOCK, CALLBACK_FRAMES,
     CHANNELS, FLAG_SILENT, HEADER_BYTES, SAMPLE_RATE,
 };
-pub use capture::{Capture, CaptureError, CaptureStats, DeviceInfo, DEVICE_NAME};
+pub use capture::{Bloques, Capture, CaptureError, CaptureStats, DeviceInfo, DEVICE_NAME};
 pub use ring::{encode_mono, MonoRing, RING_SAMPLES};
 pub use silence::{SilenceDetector, SILENCE_FRAMES};

@@ -12,6 +12,12 @@ export interface FakeBlock {
   sequence?: number;
   /** Monotonic microseconds, as the audio thread stamps them. */
   sentAtMicros?: number;
+  /**
+   * The same clock, as the forwarding thread stamps it on the way to the IPC.
+   * It defaults to {@link sentAtMicros} — a bloque that did not wait — so a test
+   * about anything else does not have to have an opinion about the queue.
+   */
+  queuedAtMicros?: number;
   callbackFrames?: number;
   silent?: boolean;
   /** Channel 0. Channel 1 is written identical, which is what was measured. */
@@ -21,6 +27,7 @@ export interface FakeBlock {
 export function fakeBlock({
   sequence = 0,
   sentAtMicros = 0,
+  queuedAtMicros = sentAtMicros,
   callbackFrames = 441,
   silent = false,
   mono = new Float32Array(BLOCK_FRAMES),
@@ -33,6 +40,7 @@ export function fakeBlock({
   header.setBigUint64(8, BigInt(Math.round(sentAtMicros)), true);
   header.setUint32(16, callbackFrames, true);
   header.setUint32(20, silent ? 1 : 0, true);
+  header.setBigUint64(24, BigInt(Math.round(queuedAtMicros)), true);
 
   const samples = new Float32Array(buffer, HEADER_BYTES, frames * CHANNELS);
   for (let frame = 0; frame < frames; frame += 1) {
