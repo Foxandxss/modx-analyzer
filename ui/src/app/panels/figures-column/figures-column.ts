@@ -7,12 +7,19 @@ import { DEAD_MARK, PROVENANCE_LABEL } from '../../provenance/provenance';
 import { Figure } from '../../provenance/figure';
 import { CaptureButton } from '../../shell/capture/capture-button';
 import { Shutter } from '../../shell/capture/shutter';
+import { NOT_A_HARMONIC } from '../not-a-harmonic';
 
 /** One line of the partial table, ready to draw. */
 export interface PartialLine {
   readonly hz: string;
   readonly db: string;
-  /** `n9`, or `NOT A HARMONIC` for the generator's comb, or the dash for neither. */
+  /**
+   * `n9`, or {@link NOT_A_HARMONIC} for the comb, or the dash for neither.
+   *
+   * The tag is one column of a row whose **first column is the frequency**, so
+   * the comb is named beside its hertz here exactly as it is on the chip. What
+   * it is not is a second copy of the number twelve pixels to its right.
+   */
   readonly tag: string;
   readonly artefact: boolean;
 }
@@ -169,7 +176,7 @@ function toLine(partial: Partial): PartialLine {
     db: partial.db.toFixed(1),
     tag:
       partial.kind === 'artefact'
-        ? 'NOT A HARMONIC'
+        ? NOT_A_HARMONIC
         : partial.harmonic === null
           ? DEAD_MARK
           : `n${partial.harmonic}`,

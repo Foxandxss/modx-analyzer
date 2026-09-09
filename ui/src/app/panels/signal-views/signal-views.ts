@@ -4,6 +4,7 @@ import { AudioService } from '../../audio/audio-service';
 import { Anchor } from '../../provenance/anchor';
 import { DEAD_MARK } from '../../provenance/provenance';
 import { Harmonics } from '../harmonics/harmonics';
+import { NotAHarmonic } from '../not-a-harmonic';
 import { Spectrum } from '../spectrum/spectrum';
 
 /**
@@ -21,7 +22,7 @@ import { Spectrum } from '../spectrum/spectrum';
 @Component({
   selector: 'app-signal-views',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Spectrum, Harmonics],
+  imports: [Spectrum, Harmonics, NotAHarmonic],
   template: `
     <section class="view">
       <div class="view__head">
@@ -32,7 +33,7 @@ import { Spectrum } from '../spectrum/spectrum';
         }
         <span class="view__readout"> LOG {{ axis }} · FLOOR {{ floor() }} </span>
         @if (artefact(); as hz) {
-          <span class="view__artefact">NOT A HARMONIC · {{ hz }} Hz</span>
+          <app-not-a-harmonic class="view__artefact" [hz]="hz" />
         }
       </div>
       <div class="view__frame">
@@ -106,12 +107,11 @@ export class SignalViews {
   });
 
   /**
-   * The comb, named. **Never a badge without its frequency**: the hertz is what
-   * tells the generator's comb apart from a harmonic of the mains or from
-   * aliasing, so a warning with no number could not be acted on.
+   * Where the comb is, or `null` when this sound has none.
+   *
+   * **Never a badge without its frequency**: the chip that draws this takes the
+   * hertz as a required input, so the only choice left here is whether there is
+   * a chip at all.
    */
-  protected readonly artefact = computed(() => {
-    const hz = this.audio.artefactHz();
-    return hz === null ? null : Math.round(hz);
-  });
+  protected readonly artefact = computed(() => this.audio.artefactHz());
 }

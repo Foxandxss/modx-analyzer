@@ -84,8 +84,9 @@ describe('SignalViews', () => {
     await hold(261.626, { comb: true });
 
     // **Never a badge without its number**: the hertz is what tells the
-    // generator's comb apart from a harmonic of the mains or from aliasing.
-    expect(text('.view__artefact')).toBe('NOT A HARMONIC · 2756 Hz');
+    // generator's comb apart from a harmonic of the mains or from aliasing. The
+    // chip takes it as a required input, so this is the only shape it has.
+    expect(text('app-not-a-harmonic')).toBe('NOT A HARMONIC · 2756 Hz');
   });
 
   it('does not put an artefact chip on a sound that has no comb in it', async () => {
@@ -93,6 +94,17 @@ describe('SignalViews', () => {
 
     await hold(261.626);
 
-    expect(host.querySelector('.view__artefact')).toBeNull();
+    expect(host.querySelector('app-not-a-harmonic')).toBeNull();
+  });
+
+  // The dashed overlay belongs to the fit, and the fit does not exist. A legend
+  // naming a curve nobody drew sends the eye hunting for it.
+  it('offers only the MEASURED legend on the harmonics panel', async () => {
+    const { hold, host } = await renderViews();
+
+    await hold(261.626);
+
+    expect(host.querySelector('app-harmonics .legend')?.textContent?.trim()).toBe('MEASURED');
+    expect(host.textContent).not.toContain('PREDICTED');
   });
 });

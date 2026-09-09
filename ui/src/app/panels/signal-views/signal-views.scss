@@ -53,17 +53,9 @@
   color: var(--signal-primary-dim);
 }
 
-// El artefacto nunca se esconde, y nunca sin su frecuencia.
-.view__artefact {
-  padding: 3px 8px;
-  border: var(--rule-min) solid oklch(0.72 0.16 35 / 0.4);
-  border-radius: var(--radius-pill);
-  background: oklch(0.72 0.16 35 / 0.1);
-  font-family: var(--font-num);
-  font-size: var(--text-micro);
-  letter-spacing: 0.06em;
-  color: var(--alert);
-}
+/* El artefacto nunca se esconde y nunca sin su frecuencia, y ahora se dibuja
+   una sola vez: `app-not-a-harmonic` lleva su propio pill. Aquí sólo queda
+   cómo se comporta dentro de la fila de la cabecera. */
 
 /* El chip del cambio de ancla. En fósforo, no en alerta: no ha pasado nada malo
    — es la frase que dice que esto es lo único que sigue vivo. */
