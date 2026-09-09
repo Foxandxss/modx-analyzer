@@ -26,7 +26,9 @@
     border-radius: 11px 11px 0 0;
   }
 
-  &:last-child {
+  // `of-type` y no `last-child`: debajo de la última celda está el obturador
+  // repetido, que no es una celda y no debe robarle la esquina.
+  &:last-of-type {
     border-radius: 0 0 11px 11px;
   }
 
@@ -131,4 +133,63 @@
   line-height: 1.4;
   color: var(--ink-tertiary);
   overflow-wrap: anywhere;
+}
+
+// La invitación: el obturador punteado, dos palabras y una frase. Vive sobre las
+// celdas, separada por un filete de portadora para que se lea como cabecera de
+// la columna y no como una celda más.
+.invite {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 11px 12px 12px;
+  border-bottom: var(--rule-min) solid rgba(243, 177, 63, 0.22);
+  background: var(--surface-panel);
+  border-radius: 11px 11px 0 0;
+}
+
+.invite__head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.invite__shutter {
+  color: var(--carrier);
+}
+
+.invite__eyebrow {
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  color: var(--carrier);
+}
+
+.invite__sentence {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-tertiary);
+  text-wrap: pretty;
+}
+
+.invite__key {
+  font-family: var(--font-num);
+  color: var(--carrier);
+}
+
+// La unidad: qué llenaría la celda y en qué se mide. Hace trabajo de verdad —
+// `no I, no Bessel curve` es la razón de que el panel de armónicos no tenga
+// curva punteada, dicha donde alguien se lo preguntaría.
+.cell__unit {
+  font-family: var(--font-num);
+  font-size: 9px;
+  color: var(--dead-note-ink);
+}
+
+// El obturador repetido al pie. No se pega a la última celda: es el control, no
+// una fila más de la tabla.
+app-capture-button {
+  margin-top: var(--space-2);
 }

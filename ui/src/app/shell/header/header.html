@@ -65,19 +65,9 @@
     <span class="look__text">LIVE · {{ fps() === null ? '—' : fps()!.toFixed(1) }} fps</span>
   </div>
 
-  <button
-    type="button"
-    class="measure"
-    [class.measure--on]="canMeasure()"
-    [class.measure--busy]="measuring()"
-    [disabled]="!canMeasure()"
-    aria-label="Capture: one window of 65536 samples"
-    (click)="onMeasure()"
-  >
-    <span class="measure__shutter" aria-hidden="true"></span>
-    <span class="measure__label">CAPTURE</span>
-    <span class="measure__hint">{{ measureWindow }}<br />NEEDS A HELD NOTE</span>
-  </button>
+  <!-- El mismo componente que se repite al pie de la columna medida: un control,
+       dos sitios, y ningún estado en el que uno mienta sobre el otro. -->
+  <app-capture-button place="header" />
 
   <!-- Aislamiento en vez de confirmación: filete de 2 px y 16 px de aire, y nada
        accionable dentro de esa franja. -->

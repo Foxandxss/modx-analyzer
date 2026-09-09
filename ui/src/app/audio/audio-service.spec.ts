@@ -160,7 +160,10 @@ describe('AudioService', () => {
     TestBed.tick();
 
     expect(audio.medida()).toBeNull();
-    expect(audio.measureNote()).toBe('NOT MEASURED IN THIS SOUND');
+    // And **no note**. The column going back to labels, units and dashes is the
+    // statement, and the ancla is already saying it in words in the header; a
+    // third copy under a cell that is drawn empty is labelling the blank (#33).
+    expect(audio.measureNote()).toBeNull();
 
     // And it stays gone. Nothing is going to press MEDIR on the owner's behalf,
     // and a table that came back on its own would be a measurement that happened

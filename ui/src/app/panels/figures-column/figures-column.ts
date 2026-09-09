@@ -5,6 +5,8 @@ import { BACKEND_GATEWAY, invalidated } from '../../backend/backend-gateway';
 import { Clock } from '../../provenance/clock';
 import { DEAD_MARK, PROVENANCE_LABEL } from '../../provenance/provenance';
 import { Figure } from '../../provenance/figure';
+import { CaptureButton } from '../../shell/capture/capture-button';
+import { Shutter } from '../../shell/capture/shutter';
 
 /** One line of the partial table, ready to draw. */
 export interface PartialLine {
@@ -18,15 +20,27 @@ export interface PartialLine {
 /**
  * The measured figures, and the copies of the patch.
  *
- * With no valid medida the column shows dashes and `NOT MEASURED IN THIS SOUND` —
- * never zeros, because an absent number that looks like a number is worse than
- * no number. **Nothing here updates on its own**: a medida is something you did,
- * so the table stands still and only the age underneath it moves.
+ * **The empty column is a contract, not a hole.** Every cell keeps its label and
+ * its unit and loses only its figure — the void vocabulary, reused — so a dash
+ * says which measurement is missing and what it would be measured in. Never a
+ * zero and never a plausible placeholder: a ratio reading `0.00` before anything
+ * was captured is the one failure this project exists to prevent.
  *
- * The three cells at the top — ratio, fc/fm and the modulation index — exist and
- * stay dead all session. They are not measurements but *fits* over one: a
- * sideband fit for fc/fm, a Bessel fit for I. Drawing them empty says the app
- * knows they are missing; leaving them out would say nobody had thought of them.
+ * That state is **not onboarding**. The column goes back to dashes every time the
+ * Performance changes, which is many times an hour, so it is permanent and
+ * recurring and is drawn as one thing: one sentence at the head over the same
+ * shutter glyph the button carries, and the `CAPTURE` button repeated at the foot
+ * where the eye already is. What it does not do is repeat a variant of "not in
+ * this session" under five separate cells.
+ *
+ * **Nothing here updates on its own**: a medida is something you did, so the
+ * table stands still and only the age underneath it moves.
+ *
+ * The four cells at the top — ratio, fc/fm, the modulation index and the worst
+ * partial — exist and stay dead all session. They are not measurements but *fits*
+ * over one: a sideband fit for fc/fm, a Bessel fit for I and for the gap. Drawing
+ * them empty says the app knows they are missing; leaving them out would say
+ * nobody had thought of them.
  *
  * The last cell is the volcado de seguridad: how much of it came back, what it is
  * called and the full folder path. A safety file you cannot locate does not count
@@ -35,7 +49,7 @@ export interface PartialLine {
 @Component({
   selector: 'app-figures-column',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Figure],
+  imports: [Figure, Shutter, CaptureButton],
   templateUrl: './figures-column.html',
   styleUrl: './figures-column.scss',
 })
@@ -85,7 +99,7 @@ export class FiguresColumn {
   });
 
   /** What to say when there is no file: what is happening, or what went wrong. */
-  protected readonly note = computed(() => {
+  protected readonly dumpNote = computed(() => {
     const taken = this.dump();
     if (taken === null) {
       return 'dumping the edit buffer';
@@ -134,10 +148,18 @@ export class FiguresColumn {
   });
 
   /**
-   * Why the column is empty, when it is. «Nunca se ha medido» and «se midió y no
-   * había nada» are different facts and the second one is a result.
+   * Why the shutter came back empty, when it did, and `null` when there is
+   * nothing to say. Two causes and no more — the ring not filled and the shutter
+   * over a silence — plus `capturing` while it is open. That the sound was
+   * changed underneath is **not** here: the column at rest says it, and the
+   * header says it in words.
    */
-  protected readonly why = computed(() => this.audio.measureNote() ?? 'NOT MEASURED IN THIS SOUND');
+  protected readonly note = computed(() =>
+    this.measuring() ? 'capturing' : this.audio.measureNote(),
+  );
+
+  /** No capture on screen: the invitation stands and every cell is a dash. */
+  protected readonly resting = computed(() => this.medida() === null);
 }
 
 /** One partial as the column draws it. The comb keeps its badge here too. */

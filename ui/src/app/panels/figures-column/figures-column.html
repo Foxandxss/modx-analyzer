@@ -1,23 +1,46 @@
+<!-- La invitación. No es onboarding: la columna vuelve a los guiones cada vez que
+     cambia la Performance, así que este estado es permanente y recurrente, y se
+     dibuja como tal. Una frase, no cinco, y el mismo obturador que el botón. -->
+@if (resting()) {
+  <div class="invite">
+    <div class="invite__head">
+      <app-shutter class="invite__shutter" [dashed]="true" />
+      <span class="invite__eyebrow">NOTHING<br />MEASURED YET</span>
+    </div>
+    <p class="invite__sentence">
+      Hold a note and press <span class="invite__key">CAPTURE</span>. One 1.5 s window fills every
+      cell below.
+    </p>
+  </div>
+}
+
 <div class="cell">
   <span class="cell__eyebrow">MEASURED RATIO</span>
   <span class="cell__value cell__value--xl"><app-figure [value]="dead" /></span>
-  <span class="cell__note">los ajustes no entran en esta sesión</span>
+  <span class="cell__unit">fm / fc</span>
 </div>
 
 <div class="cell">
   <span class="cell__eyebrow">fc / fm</span>
-  <span class="cell__value"><app-figure [value]="dead" [unit]="' Hz'" /></span>
-  <span class="cell__value"><app-figure [value]="dead" [unit]="' Hz'" /></span>
-  <span class="cell__note">los ajustes no entran en esta sesión</span>
+  <span class="cell__value"><app-figure [value]="dead" /> / <app-figure [value]="dead" /></span>
+  <span class="cell__unit">Hz</span>
 </div>
 
 <div class="cell">
   <span class="cell__eyebrow">INDEX I · FITTED</span>
   <span class="cell__value"><app-figure [value]="dead" /></span>
-  <span class="cell__note">los ajustes no entran en esta sesión</span>
+  <!-- La razón por la que el panel de armónicos no tiene curva punteada, dicha
+       donde alguien se lo preguntaría. -->
+  <span class="cell__unit">no I, no Bessel curve</span>
 </div>
 
-<!-- La tabla de parciales: lo único que MEDIR produce hoy. Se queda quieta hasta
+<div class="cell">
+  <span class="cell__eyebrow">WORST PARTIAL</span>
+  <span class="cell__value"><app-figure [value]="dead" /></span>
+  <span class="cell__unit">dB off prediction</span>
+</div>
+
+<!-- La tabla de parciales: lo único que CAPTURE produce hoy. Se queda quieta hasta
      la siguiente pulsación; sólo envejece. -->
 <div class="cell cell--grow">
   <span class="cell__eyebrow">PARTIALS</span>
@@ -34,7 +57,7 @@
     </ol>
   } @else {
     <span class="cell__value"><app-figure [value]="dead" /></span>
-    <span class="cell__note">{{ why() }}</span>
+    <span class="cell__unit">Hz · dB</span>
   }
 </div>
 
@@ -45,7 +68,14 @@
     <span class="cell__note">{{ caught() }}</span>
   } @else {
     <span class="cell__value"><app-figure [value]="dead" /></span>
-    <span class="cell__note">{{ measuring() ? 'capturing' : why() }}</span>
+    <!-- Dos causas y ninguna más: el anillo sin llenar y el obturador sobre un
+         silencio. Que el sonido haya cambiado no es una nota: lo dice esta
+         columna estando en reposo y la cabecera con todas las letras. -->
+    @if (note(); as why) {
+      <span class="cell__note">{{ why }}</span>
+    } @else {
+      <span class="cell__unit">{{ window }}</span>
+    }
   }
 </div>
 
@@ -58,9 +88,13 @@
   @if (fileName(); as file) {
     <span class="cell__note">{{ file }}</span>
   } @else {
-    <span class="cell__note">{{ note() }}</span>
+    <span class="cell__note">{{ dumpNote() }}</span>
   }
   @if (folder(); as path) {
     <span class="cell__path">{{ path }}</span>
   }
 </div>
+
+<!-- El obturador repetido donde el ojo ya está: el mismo componente que el de la
+     cabecera, con su mismo estado. -->
+<app-capture-button place="foot" />

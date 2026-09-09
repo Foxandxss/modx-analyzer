@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject } from '@angular/core';
-import { MEASURE_WINDOW } from 'modx-dsp';
 import { BACKEND_GATEWAY, invalidated } from '../../backend/backend-gateway';
 import { Anchor } from '../../provenance/anchor';
 import { Figure } from '../../provenance/figure';
 import { RingFreshness } from '../../provenance/freshness';
 import { AudioService } from '../../audio/audio-service';
 import { PanicService } from '../panic/panic-service';
+import { CaptureButton } from '../capture/capture-button';
 
 /** The three modes of the app. Only `BUILD` is reachable this session. */
 export type Mode = 'BUILD' | 'A/B' | 'LEARN';
@@ -23,7 +23,7 @@ export const MODES: readonly Mode[] = ['BUILD', 'A/B', 'LEARN'];
 @Component({
   selector: 'app-header',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Figure],
+  imports: [Figure, CaptureButton],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
@@ -51,16 +51,13 @@ export class Header {
   protected readonly looking = computed(() => this.audio.fps() !== null);
 
   /**
-   * Medir is a shutter, and it is live the moment there is sound to measure.
-   *
-   * Before the first bloque the ring holds nothing at all, so the button stays in
-   * its dead look rather than promising a medida the app cannot take. What it
-   * never does is disappear: the shutter is half of the transport and the layout
-   * is final from the first frame.
+   * Medir is a shutter, and the shutter is its own component: the header draws
+   * one, the foot of the measured column draws the other, and both arm off
+   * {@link AudioService.canMeasure}. What it never does is disappear — the
+   * shutter is half of the transport and the layout is final from the first
+   * frame. The header keeps only the keyboard shortcut, which is the header's.
    */
-  protected readonly measureWindow = MEASURE_WINDOW;
-  protected readonly measuring = this.audio.measuring;
-  protected readonly canMeasure = computed(() => this.audio.fps() !== null && !this.measuring());
+  private readonly canMeasure = this.audio.canMeasure;
 
   /** Only BUILD is selectable; the other two are drawn so the layout is final. */
   protected readonly selectedMode: Mode = 'BUILD';
@@ -81,11 +78,6 @@ export class Header {
     };
     document.addEventListener('keydown', shortcut);
     inject(DestroyRef).onDestroy(() => document.removeEventListener('keydown', shortcut));
-  }
-
-  /** One press, one medida. A second press while one is running does nothing. */
-  protected onMeasure(): void {
-    void this.audio.measure();
   }
 
   protected readonly connection = this.backend.connection;

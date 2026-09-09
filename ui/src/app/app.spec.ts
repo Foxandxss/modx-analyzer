@@ -53,12 +53,18 @@ describe('App (4a)', () => {
     }
   });
 
-  it('says there is nothing measured instead of showing zeros', async () => {
+  it('says what a capture would fill instead of showing zeros', async () => {
     const { host } = await renderApp();
 
+    // The empty column is a contract, not a hole: it says what fills it, and it
+    // says it once. `NOT MEASURED IN THIS SOUND` is the ancla's line, up in the
+    // header, not a fifth sentence down here.
     const column = host.querySelector('app-figures-column');
-    expect(column?.textContent).toContain('NOT MEASURED IN THIS SOUND');
+    expect(column?.textContent).toContain(
+      'Hold a note and press CAPTURE. One 1.5 s window fills every cell below.',
+    );
     expect(column?.textContent).toContain(DEAD_MARK);
+    expect(column?.textContent).not.toContain('NOT MEASURED IN THIS SOUND');
   });
 
   it('counts the relectura against the addresses the app actually asks for', async () => {

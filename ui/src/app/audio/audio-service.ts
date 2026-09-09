@@ -387,6 +387,16 @@ export class AudioService {
   readonly measuring = signal(false);
 
   /**
+   * Whether the shutter is armed, and **the only copy of that decision**.
+   *
+   * It is live the moment there is sound to measure. Before the first bloque the
+   * ring holds nothing at all, so the button stays dead rather than promising a
+   * medida the app cannot take. Both places the shutter is drawn read this, so
+   * neither can be a lie about the other.
+   */
+  readonly canMeasure = computed(() => this.fps() !== null && !this.measuring());
+
+  /**
    * What the last medida cost in the worker, in ms. It has no budget — nobody is
    * drawing while it runs — but it is what #14 will weigh the anillo's polling
    * against, so it is measured rather than guessed.
@@ -394,9 +404,13 @@ export class AudioService {
   readonly measureMs = signal<number | null>(null);
 
   /**
-   * Why there is no medida, in the column's own words, or `null` when there is
-   * one. It is the difference between «nunca se ha medido» and «se midió sobre
-   * un silencio», and the column says which.
+   * Why the shutter came back empty, in the column's own words, or `null`.
+   *
+   * Two causes and no more: `not 1.5 s of audio yet` and `the shutter opened on
+   * silence`. The third — the sound was changed underneath — is **not** a note,
+   * because the column's resting state already says it by being at rest and the
+   * header says it in words (`NOT MEASURED IN THIS SOUND`). A sentence under a
+   * cell that is already drawn empty is the wordiness #33 removed.
    */
   readonly measureNote = signal<string | null>(null);
 
@@ -485,7 +499,11 @@ export class AudioService {
   private onPatchChanged(): void {
     this.medida.set(null);
     this.measureMs.set(null);
-    this.measureNote.set('NOT MEASURED IN THIS SOUND');
+    // No note: the column going back to labels, units and dashes *is* the
+    // statement, and the ancla is already saying `NOT MEASURED IN THIS SOUND`
+    // in the header. Writing it a third time under a cell that is drawn empty
+    // is labelling the blank.
+    this.measureNote.set(null);
     this.live.cuts.push(this.live.rows);
   }
 

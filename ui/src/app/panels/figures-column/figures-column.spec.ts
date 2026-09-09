@@ -91,8 +91,116 @@ describe('FiguresColumn', () => {
   it('never draws a zero where a medida is missing', async () => {
     const { text } = await renderColumn();
 
-    expect(text()).toContain('NOT MEASURED IN THIS SOUND');
+    expect(text()).toContain(SENTENCE);
     expect(text()).not.toContain('0.00');
+  });
+});
+
+/** The one sentence of the resting column, verbatim from `DESIGN.md` §10.1. */
+const SENTENCE = 'Hold a note and press CAPTURE. One 1.5 s window fills every cell below.';
+
+/** Every cell of the resting column, in the order the design stacks them. */
+const CELLS = [
+  'MEASURED RATIO',
+  'fc / fm',
+  'INDEX I · FITTED',
+  'WORST PARTIAL',
+  'PARTIALS',
+  'LAST CAPTURE',
+] as const;
+
+describe('FiguresColumn · the resting state', () => {
+  it('keeps every label and unit and loses only the figure', async () => {
+    const { text } = await renderColumn();
+    const host = text();
+
+    // The void vocabulary: the outline stays, the number goes. A cell that lost
+    // its label with its figure would be a hole; this one is a contract.
+    for (const label of CELLS) {
+      expect(host).toContain(label);
+    }
+    for (const unit of ['fm / fc', 'Hz', 'no I, no Bessel curve', 'dB off prediction']) {
+      expect(host).toContain(unit);
+    }
+    expect(host).toContain('—');
+    // Never a zero and never a plausible placeholder: the one rule this state
+    // must not break.
+    expect(host).not.toMatch(/\b0(\.0+)?\s*(Hz|dB)/);
+    expect(host).not.toContain('0.00');
+  });
+
+  it('says its sentence once and does not repeat a variant of it under the cells', async () => {
+    const { text } = await renderColumn();
+    const host = text();
+
+    expect(host.split(SENTENCE)).toHaveLength(2);
+    // The five repeated notes are gone. `NOT MEASURED IN THIS SOUND` is the
+    // ancla's, in the header, and it is not written a second time down here.
+    expect(host).not.toContain('los ajustes no entran en esta sesión');
+    expect(host).not.toContain('NOT MEASURED IN THIS SOUND');
+  });
+
+  it('stacks the cells in the designed order, worst partial before the table', async () => {
+    const backend = new FakeBackendGateway();
+    backend.appInfoResult = { version: '0.1.0', dumpsFolder: FOLDER };
+    TestBed.configureTestingModule({
+      imports: [FiguresColumn],
+      providers: [{ provide: BACKEND_GATEWAY, useValue: backend }],
+    });
+    const fixture = TestBed.createComponent(FiguresColumn);
+    await fixture.whenStable();
+
+    const drawn = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.cell__eyebrow'),
+    ).map((eyebrow) => eyebrow.textContent);
+
+    expect(drawn).toEqual([...CELLS, 'SAFETY DUMP']);
+  });
+
+  it('repeats the shutter at the foot as the very same control', async () => {
+    const backend = new FakeBackendGateway();
+    backend.appInfoResult = { version: '0.1.0', dumpsFolder: FOLDER };
+    TestBed.configureTestingModule({
+      imports: [FiguresColumn],
+      providers: [
+        { provide: BACKEND_GATEWAY, useValue: backend },
+        { provide: AUDIO_WORKER, useValue: () => new FakeAudioWorker() },
+      ],
+    });
+    const fixture = TestBed.createComponent(FiguresColumn);
+    const audio = TestBed.inject(AudioService);
+    audio.start();
+    await fixture.whenStable();
+    const host = fixture.nativeElement as HTMLElement;
+    const foot = () => host.querySelector<HTMLButtonElement>('.measure')!;
+
+    // Nothing has arrived, so the shutter is dead in both places at once.
+    expect(foot().disabled).toBe(true);
+    expect(audio.canMeasure()).toBe(false);
+
+    backend.lowestLivePitch.set(60);
+    for (let sequence = 0; sequence < BLOCKS_FOR_A_MEDIDA; sequence += 1) {
+      backend.emitBlock(
+        fakeBlock({
+          sequence,
+          sentAtMicros: sequence * 30_000,
+          mono: heldNote(261.626, sequence * BLOCK_FRAMES),
+        }),
+      );
+    }
+    await fixture.whenStable();
+
+    expect(foot().disabled).toBe(false);
+    expect(foot().className).toContain('measure--on');
+
+    // And it is the control, not a picture of one: pressing it captures.
+    foot().click();
+    await fixture.whenStable();
+
+    expect(audio.medida()).not.toBeNull();
+    // With a capture on screen the invitation goes: `NOTHING MEASURED YET` over
+    // a table of partials would be the caption lying about what is under it.
+    expect(host.textContent).not.toContain(SENTENCE);
   });
 });
 
@@ -138,6 +246,8 @@ async function renderWithAudio() {
       await audio.measure();
       await fixture.whenStable();
     },
+    backend,
+    settle: () => fixture.whenStable(),
     text: () => (fixture.nativeElement as HTMLElement).textContent ?? '',
     rows: () => Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.lines__row')),
   };
@@ -147,12 +257,30 @@ async function renderWithAudio() {
 const BLOCKS_FOR_A_MEDIDA = 50;
 
 describe('FiguresColumn · la medida', () => {
-  it('empieza muerta: guiones y «NOT MEASURED IN THIS SOUND», nunca ceros', async () => {
+  it('empieza muerta: guiones y la invitación, nunca ceros', async () => {
     const { text, rows } = await renderWithAudio();
 
     expect(rows()).toHaveLength(0);
-    expect(text()).toContain('NOT MEASURED IN THIS SOUND');
+    expect(text()).toContain(SENTENCE);
     expect(text()).not.toContain('MEASURED · ');
+  });
+
+  it('vuelve al reposo cuando cambia la Performance, sin una quinta frase', async () => {
+    const { hold, press, backend, settle, text, rows } = await renderWithAudio();
+
+    await hold(261.626);
+    await press();
+    expect(rows().length).toBeGreaterThan(0);
+
+    // El sonido cambió debajo: la medida era de otro patch y se va entera.
+    backend.loadPerformance('Bright FM Keys');
+    await settle();
+
+    expect(rows()).toHaveLength(0);
+    expect(text()).toContain(SENTENCE);
+    expect(text()).toContain('WORST PARTIAL');
+    // Y ni una nota más: lo dice la columna en reposo y la cabecera con letras.
+    expect(text()).not.toContain('NOT MEASURED IN THIS SOUND');
   });
 
   it('dice que no hay audio bastante en vez de medir un silencio inventado', async () => {
