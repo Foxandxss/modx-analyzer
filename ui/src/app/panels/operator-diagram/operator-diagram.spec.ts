@@ -15,7 +15,9 @@ import { FakeBackendGateway } from '../../backend/fake-backend-gateway';
 import { Clock } from '../../provenance/clock';
 import { staleAfterMs } from '../../provenance/freshness';
 import { DEAD_MARK } from '../../provenance/provenance';
+import { NODE_H } from './layout';
 import { OperatorDiagram } from './operator-diagram';
+import { SPECTRAL_GLYPH } from './spectral-glyph';
 
 /** The two cadences that were measured: 42 addresses in silence, and under notes. */
 const IDLE_PASS_MS = 84;
@@ -92,6 +94,35 @@ function eight(readAt: number, passMs: number): OperatorsView {
 
 function nodes(host: HTMLElement): HTMLElement[] {
   return Array.from(host.querySelectorAll<HTMLElement>('.node'));
+}
+
+/**
+ * The patch the running build reads off the keyboard: six of the eight identical
+ * to the eye, which is the whole reason the ceiling datum exists.
+ */
+function theBuildsOwnPatch(readAt: number): OperatorsView {
+  const levels = [90, 90, 71, 90, 90, 85, 90, 99];
+  return {
+    operators: levels.map((level, index) =>
+      reading(index + 1, { role: index === 7 ? 'carrier' : 'modulator', level, ratio: 1 }, readAt),
+    ),
+    passMs: IDLE_PASS_MS,
+    passes: 12,
+  };
+}
+
+/**
+ * The component's own compiled stylesheet, as Angular put it in the document.
+ *
+ * jsdom lays nothing out, so «no ellipsis at 118 px» cannot be measured here.
+ * What can be asserted is the rule that would do the trimming: with no
+ * `text-overflow` anywhere in the panel, no figure in the node can be replaced
+ * by three dots, whatever width it ends up at.
+ */
+function componentCss(): string {
+  return Array.from(document.querySelectorAll('style'))
+    .map((style) => style.textContent ?? '')
+    .join('\n');
 }
 
 function routes(host: HTMLElement): SVGPathElement[] {
@@ -348,6 +379,142 @@ describe('OperatorDiagram', () => {
     expect(line).toContain('PREDICTED');
   });
 
+  it('hangs one ceiling datum at the loudest operator, across all eight nodes', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.operators.set(theBuildsOwnPatch(NOW));
+    await fixture.whenStable();
+
+    const datums = Array.from(host.querySelectorAll<HTMLElement>('.node__datum'));
+    expect(datums).toHaveLength(8);
+    // One line, so one height: the eight are read by the gap above each fill.
+    for (const datum of datums) {
+      expect(datum.style.bottom).toBe('99%');
+    }
+
+    // 71 against a ceiling of 99 is 28 % of the node's 108 px — 30 px of
+    // daylight, which is what makes the difference visible at all.
+    const fill = nodes(host)[2].querySelector<HTMLElement>('.node__fill');
+    expect(fill?.style.height).toBe('71%');
+    expect(((99 - 71) / 100) * NODE_H).toBeCloseTo(30, 0);
+  });
+
+  it('hangs no datum until something has answered its Level', async () => {
+    const { host } = await renderDiagram();
+
+    // A ceiling over eight dashes would be a baseline the patch does not have.
+    expect(host.querySelectorAll('.node__datum')).toHaveLength(0);
+  });
+
+  it('draws the spectral form and never writes its name', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.operators.set({
+      ...eight(NOW, IDLE_PASS_MS),
+      operators: [
+        reading(1, { role: 'carrier', level: 99, ratio: 1, form: 'Sine' }, NOW),
+        reading(2, { role: 'modulator', level: 90, ratio: 1, form: 'All 1' }, NOW),
+        reading(3, { role: 'modulator', level: 90, ratio: 1, form: 'Odd 2' }, NOW),
+        reading(4, { role: 'modulator', level: 90, ratio: 1, form: 'Res 1' }, NOW),
+        ...eight(NOW, IDLE_PASS_MS).operators.slice(4),
+      ],
+    });
+    await fixture.whenStable();
+
+    const drawn = nodes(host);
+    for (const form of ['Sine', 'All 1', 'Odd 2', 'Res 1']) {
+      expect(host.textContent).not.toContain(form);
+    }
+    expect(drawn[0].querySelector('.node__glyph path')?.getAttribute('d')).toBe(
+      SPECTRAL_GLYPH.Sine,
+    );
+    expect(drawn[1].querySelector('.node__glyph path')?.getAttribute('d')).toBe(SPECTRAL_GLYPH.All);
+    expect(drawn[2].querySelector('.node__glyph path')?.getAttribute('d')).toBe(SPECTRAL_GLYPH.Odd);
+    expect(drawn[3].querySelector('.node__glyph path')?.getAttribute('d')).toBe(SPECTRAL_GLYPH.Res);
+  });
+
+  it('draws the dash where the glyph goes until the form has been read', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.operators.set({
+      ...noOperators(),
+      passMs: IDLE_PASS_MS,
+      operators: [
+        {
+          ...reading(1, { role: 'carrier', level: 99, ratio: 1 }, NOW),
+          spectralForm: invalidated(),
+        },
+        ...noOperators().operators.slice(1),
+      ],
+    });
+    await fixture.whenStable();
+
+    const node = nodes(host)[0];
+    expect(node.querySelector('.node__glyph path')).toBeNull();
+    expect(node.querySelector('.node__glyph')?.textContent?.trim()).toBe(DEAD_MARK);
+  });
+
+  it('writes nothing in the node that can ellipsise, at the widest figures there are', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    // The widest the node ever gets: a three-figure ratio and the frequency it
+    // makes of the top of the keyboard. jsdom lays nothing out, so what is
+    // asserted is that the figures reach the DOM whole and that no slot in the
+    // node is allowed to trim one.
+    backend.lowestLivePitch.set(108);
+    backend.operators.set({
+      ...noOperators(),
+      passMs: IDLE_PASS_MS,
+      operators: [
+        reading(1, { role: 'carrier', level: 99, ratio: 31.99, form: 'Res 2' }, NOW),
+        ...noOperators().operators.slice(1),
+      ],
+    });
+    await fixture.whenStable();
+
+    const node = nodes(host)[0];
+    expect(node.querySelector('.node__ratio')?.textContent?.trim()).toBe('×31.99');
+    expect(node.querySelector('.node__hz')?.textContent).toContain('133910 Hz');
+    expect(node.textContent).not.toContain('…');
+    expect(node.textContent).not.toContain('...');
+    // The stylesheet has to be the panel's own, or the line below would pass on
+    // an empty string and assert nothing.
+    expect(componentCss()).toContain('node__ratio');
+    expect(componentCss()).not.toContain('text-overflow');
+  });
+
+  it('draws the open corner on all eight and gives it nothing to press', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.operators.set(theBuildsOwnPatch(NOW));
+    await fixture.whenStable();
+
+    const corners = Array.from(host.querySelectorAll('.node__corner'));
+    expect(corners).toHaveLength(8);
+    for (const corner of corners) {
+      // Inert this session: the operator editor does not exist, so neither the
+      // corner nor the node body opens anything.
+      expect(corner.tagName.toLowerCase()).not.toBe('button');
+      expect(corner.querySelector('path')?.getAttribute('d')).toBe('M21 9v12H9');
+    }
+    expect(host.querySelectorAll('.node button')).toHaveLength(0);
+
+    // And the words that name it stay with the editor they promise: a legend
+    // line pointing at a path that does not exist is a caption lying.
+    expect(host.textContent).not.toContain('43 facts');
+    expect(host.textContent).not.toContain('the corner');
+  });
+
+  it('names the shared datum in the legend, once', async () => {
+    const { host } = await renderDiagram();
+
+    // Without this the dashed line crossing the eight nodes is a line that does
+    // not say what it is of.
+    const legend = host.querySelector('.legend');
+    expect(legend?.textContent).toContain('THE LOUDEST OPERATOR IN THIS PATCH');
+    expect(legend?.querySelectorAll('.legend__swatch--datum')).toHaveLength(1);
+  });
+
   it('gives a fixed operator no ratio and no frequency', async () => {
     const { backend, fixture, host } = await renderDiagram();
     const readAt = NOW;
@@ -364,7 +531,7 @@ describe('OperatorDiagram', () => {
     await fixture.whenStable();
 
     const node = nodes(host)[0];
-    expect(node.querySelector('.node__line')?.textContent).toContain(DEAD_MARK);
+    expect(node.querySelector('.node__ratio')?.textContent).toContain(DEAD_MARK);
     expect(node.querySelector('.node__hz')?.textContent).toContain(DEAD_MARK);
     // The Level is still a number: one figure missing does not take the node down.
     expect(node.querySelector('.node__level')?.textContent?.trim()).toBe('99');

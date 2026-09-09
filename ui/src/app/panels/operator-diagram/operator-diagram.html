@@ -113,37 +113,65 @@
         <!-- El Level ES la altura del relleno; la cifra sólo lo confirma. -->
         <div class="node__fill" [style.height.%]="node.fill" aria-hidden="true"></div>
 
+        <!-- El techo del patch: la MISMA altura en los ocho, así que los ocho
+             rellenos se leen por el hueco que les queda encima y no por su
+             altura absoluta. Es el Level más alto que hay, nunca una constante. -->
+        @if (ceiling(); as level) {
+          <div class="node__datum" [style.bottom.%]="level" aria-hidden="true"></div>
+        }
+
         <div class="node__body">
+          <!-- El nodo lleva UN sello, y va en la cabecera porque califica todo lo
+               sondeado que hay debajo —el Level, la ratio y la forma—. PREDICTED
+               va abajo, en la línea de lo único que se calcula. Nunca dos sellos
+               en una misma línea: es lo que los ponía en la misma línea de base y
+               los hacía ilegibles (#19). -->
           <div class="node__head">
             <span class="node__id">OP{{ node.operator }}</span>
             <span class="node__role"><app-figure [value]="node.roleLabel" /></span>
+            <span class="node__stamp">{{ labels[node.stamp] }}</span>
           </div>
 
           <div class="node__level"><app-figure [value]="node.level" /></div>
 
-          <!-- Cada sello en la línea de lo que califica, y nunca dos en la
-               misma. El sello del nodo va aquí porque lo que se sondea es esto
-               —el Level, la ratio y la forma—, y TEORÍA va abajo porque lo
-               calculado es la frecuencia. Antes los dos caían en la misma
-               línea de base y se pisaban, y una tarjeta que decía TEORÍA y
-               SONDEADO a la vez no decía cuál calificaba a qué (#19). -->
+          <!-- La ratio y la forma espectral, y la forma es un DIBUJO: el nombre
+               es lo que ellipsizaba el par a `×0.50 ...`, y una palabra cortada
+               es peor que ninguna palabra. -->
           <div class="node__line">
-            <span class="node__line-figures">
-              <app-figure [value]="node.ratio" /> ·
-              <app-figure [value]="node.spectralForm" />
-            </span>
-            <span class="node__stamp">{{ labels[node.stamp] }}</span>
+            <span class="node__ratio"><app-figure [value]="node.ratio" /></span>
+            @if (node.glyph; as glyph) {
+              <svg
+                class="node__glyph"
+                viewBox="0 0 18 14"
+                width="18"
+                height="14"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path [attr.d]="glyph" />
+              </svg>
+            } @else {
+              <span class="node__glyph node__glyph--dead" aria-hidden="true">{{ deadMark }}</span>
+            }
           </div>
 
           <!-- La frecuencia real de la nota viva. Es TEORÍA y lo dice: el
                fundamental que mide el MODX no cae donde dice la fórmula. -->
           <div class="node__hz">
-            <span class="node__hz-figure">
-              <app-figure [value]="node.hz" [unit]="' Hz'" />
-            </span>
+            <app-figure [value]="node.hz" [unit]="' Hz'" />
             <span class="node__hz-stamp">{{ labels.theory }}</span>
           </div>
         </div>
+
+        <!-- La esquina abierta: la marca de «hay más detrás de esto», dibujada en
+             los ocho. Está INERTE esta sesión, y el cuerpo del nodo tampoco abre
+             nada, porque el editor de operador no existe. No lleva rótulo: la
+             línea de la leyenda que la nombra entra con el editor, no antes. -->
+        <span class="node__corner" aria-hidden="true">
+          <svg viewBox="0 0 22 22" width="22" height="22" focusable="false">
+            <path d="M21 9v12H9" />
+          </svg>
+        </span>
       </div>
     }
   </div>
@@ -159,6 +187,13 @@
     </span>
     <span class="legend__item">
       <span class="legend__swatch legend__swatch--inert" aria-hidden="true"></span>AT ZERO · SILENT
+    </span>
+    <!-- La discontinua compartida se nombra una vez, aquí: sin esto es una línea
+         que cruza los ocho nodos y no dice de qué es. La esquina NO se nombra —
+         su línea entra con el editor que abre (#39). -->
+    <span class="legend__item">
+      <span class="legend__swatch legend__swatch--datum" aria-hidden="true"></span>THE LOUDEST
+      OPERATOR IN THIS PATCH
     </span>
   </div>
 </div>

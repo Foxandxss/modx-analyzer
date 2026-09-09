@@ -13,6 +13,7 @@ import { Composition } from '../../shell/composition';
 import { DEAD_MARK, PROVENANCE_LABEL } from '../../provenance/provenance';
 import { equalTemperamentHz } from '../../provenance/theory';
 import { DrawnBus, DrawnRoute, NODE_H, NODE_W, Slot, layout } from './layout';
+import { spectralGlyph } from './spectral-glyph';
 
 /** What the role is called on the node, per `GLOSSARY.md` §6: three of a kind. */
 const ROLE_LABEL: Readonly<Record<OperatorRole, string>> = {
@@ -33,7 +34,12 @@ interface NodeView {
   /** Height of the luminous fill, 0-100. The Level **is** this height. */
   readonly fill: number;
   readonly ratio: PolledValue<string>;
-  readonly spectralForm: PolledValue<string>;
+  /**
+   * The spectral form's drawing, or `null` for a form nobody read. Never a word:
+   * writing `Sine` / `Odd 1` beside the ratio is what ellipsised the pair to
+   * `×0.50 ...`, and `spectral-glyph.ts` is what replaces it.
+   */
+  readonly glyph: string | null;
   /** The real frequency of this operator for the live note. `PREDICTED`, always. */
   readonly hz: PolledValue<string>;
   /** The node's one stamp, taken from the weakest figure in it. */
@@ -61,16 +67,36 @@ interface LineView {
  * The hero column: who is a portadora, who is a modulador, how loud each one is,
  * and who modulates whom.
  *
+ * ## The node holds exactly five facts
+ *
+ * Label and role, Level, ratio, spectral form, and the operator's Hz. There was
+ * a sixth once and it is what broke the box: six things in 118 × 108 ellipsised
+ * the ratio and the form together into `×0.50 ...`. So the form stops being a
+ * word and becomes a **glyph** (`spectral-glyph.ts`), and nothing in the node is
+ * allowed to trim a figure — a word that ellipsises is worse than no word.
+ *
  * Four things are deliberate here. The role is a **shape** before it is a colour
  * — total curve for a portadora, live corner for a modulador, dashed outline for
  * an operator at zero — so it reads without a legend and without colour vision.
- * The Level is the **height of the fill**, and the number under it only confirms
- * what the height already said. The routes come from the algorithm the ring read
+ * The Level is the **height of the fill**, the number under it only confirms what
+ * the height already said, and one **ceiling datum** at the patch's highest Level
+ * crosses all eight so the eye reads the gaps rather than eight private
+ * baselines. The routes come from the algorithm the ring read
  * and are laid out by chain depth, so any of the 88 draws without a hand-made
  * sheet (`layout.ts`). And nothing is guessed: until the algorithm has been read
  * there is no topology, so there is no role and there are no lines, and an
  * algorithm with no entry in the table draws `ALGORITHM n · NO TABLE` rather than a
  * plausible diagram of a patch that does not exist.
+ *
+ * ## The corner is drawn and does nothing
+ *
+ * Every node carries the open corner, the mark for *there is more behind this*,
+ * because the path from a node to its editor was invisible. The operator editor
+ * is not built, so the mark is **inert** and the node body opens nothing either;
+ * the legend line that names it (`5 of 43 facts shown · the corner opens the
+ * other 38`) joins in the same commit as the editor. A caption pointing at a
+ * path that does not exist is the same lie as a disabled button for a mode with
+ * no code behind it.
  */
 @Component({
   selector: 'app-operator-diagram',
@@ -85,6 +111,8 @@ export class OperatorDiagram {
   private readonly composition = inject(Composition);
 
   protected readonly labels = PROVENANCE_LABEL;
+  /** Where the glyph goes when nobody has read the form: the dash, never a Sine. */
+  protected readonly deadMark = DEAD_MARK;
 
   /**
    * `KEEP IT BIG`, drawn here because this is the panel it is about.
@@ -137,6 +165,25 @@ export class OperatorDiagram {
     return this.backend
       .operators()
       .operators.map((node) => this.draw(node, slots[node.operator - 1]));
+  });
+
+  /**
+   * The ceiling datum: the highest Level in the patch, drawn as one dashed line
+   * across all eight nodes.
+   *
+   * Real patches cluster their operators near the top — the running build's own
+   * reads `90 · 90 · 71 · 90 · 90 · 85 · 90 · 99`, six of the eight identical to
+   * the eye — so eight fills each with their own private baseline are eight
+   * absolute heights nobody can compare. One shared line turns them into seven
+   * **gaps**, which is what the eye is good at. It is the patch's own highest
+   * Level and never a constant: a fixed 99 would be a baseline the patch does not
+   * have. With nothing read there is no ceiling and no line.
+   */
+  protected readonly ceiling = computed<number | null>(() => {
+    const levels = this.nodes()
+      .map((node) => node.level.value)
+      .filter((level): level is number => level !== null);
+    return levels.length === 0 ? null : Math.max(...levels);
   });
 
   /** The modulation lines, dashed when they leave an operator that is cut. */
@@ -200,7 +247,7 @@ export class OperatorDiagram {
       // same drawing as one that answered 0: that one is dashed and cut.
       fill: level.value ?? 0,
       ratio: text(ratio, (held) => `×${held.toFixed(2)}`),
-      spectralForm,
+      glyph: spectralGlyph(spectralForm.value),
       hz: this.theoryHz(ratio.value),
       stamp: weakest([role, level, ratio, spectralForm]),
       box: {
@@ -232,8 +279,24 @@ export class OperatorDiagram {
       return invalidated<string>();
     }
     const hz = equalTemperamentHz(pitch) * ratio;
-    return { value: hz.toFixed(hz < 1000 ? 2 : 1), provenance: 'theory', readAt: null };
+    // Fewer decimals the higher it goes, and none at all past ten thousand: a
+    // tenth of a hertz on a 133 kHz prediction is not a figure, it is the two
+    // characters that would push `PREDICTED` off the 118 px node.
+    return { value: hz.toFixed(decimals(hz)), provenance: 'theory', readAt: null };
   }
+}
+
+/**
+ * How many decimals the operator's Hz keeps: two under a kilohertz, one up to
+ * ten, none above. The node is 118 px wide and the figure shares its line with
+ * `PREDICTED`; a word that ellipsises is worse than no word (`DESIGN.md` §9), so
+ * the precision is what gives way, and it gives way where it means least.
+ */
+function decimals(hz: number): number {
+  if (hz < 1000) {
+    return 2;
+  }
+  return hz < 10_000 ? 1 : 0;
 }
 
 /** The same stamp and age, with the number turned into what the node prints. */

@@ -178,7 +178,6 @@
 .node {
   position: absolute;
   box-sizing: border-box;
-  box-sizing: border-box;
   overflow: hidden;
   border: var(--rule-min) solid var(--dead-border);
   border-radius: 8px;
@@ -187,18 +186,21 @@
   // El rol se lee por FORMA antes que por color: curva total = portadora,
   // esquina viva = modulador, contorno discontinuo = cortado a cero.
   &--carrier {
+    --node-ink: var(--carrier);
     border-color: var(--carrier);
     border-radius: var(--radius-carrier);
     box-shadow: var(--glow-carrier);
   }
 
   &--modulator {
+    --node-ink: var(--modulator);
     border-color: var(--modulator);
     border-radius: var(--radius-modulator);
     box-shadow: var(--glow-modulator);
   }
 
   &--inert {
+    --node-ink: var(--dead-ink);
     border-style: dashed;
     border-color: var(--inert);
     border-radius: var(--radius-modulator);
@@ -221,6 +223,18 @@
   pointer-events: none;
 }
 
+// El techo del patch. Cruza el nodo de lado a lado y está a la MISMA altura en
+// los ocho, que es lo que convierte ocho alturas absolutas en siete huecos.
+// Neutro a propósito: no es del rol de este nodo, es del patch.
+.node__datum {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: var(--datum-ceiling-stroke) dashed var(--datum-ceiling-color);
+  pointer-events: none;
+}
+
 .node--carrier .node__fill {
   background: var(--carrier-fill);
 }
@@ -230,11 +244,13 @@
   background: none;
 }
 
+// El pie del nodo se lo queda la marca de la esquina: ninguna cifra comparte
+// línea con ella, así que ninguna tiene que cederle ancho ni pasarle por debajo.
 .node__body {
   position: relative;
   height: 100%;
   box-sizing: border-box;
-  padding: 8px 11px;
+  padding: 8px 10px 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -242,8 +258,8 @@
 
 .node__head {
   display: flex;
-  justify-content: space-between;
   align-items: baseline;
+  gap: var(--space-1);
 }
 
 .node__id {
@@ -255,45 +271,55 @@
 .node__role {
   font-size: 8px;
   letter-spacing: var(--tracking-label);
-  color: var(--ink-secondary);
+  color: var(--node-ink, var(--ink-secondary));
 }
 
+// El Level se lleva el aire que queda: la cabecera arriba, y la cifra grande con
+// la ratio y la frecuencia apiladas debajo de ella.
 .node__level {
+  margin-top: auto;
   font-size: var(--text-node);
   line-height: 1;
-  color: var(--ink-primary);
+  color: var(--node-ink, var(--ink-primary));
 }
 
-.node__line,
-.node__hz {
+.node__line {
   display: flex;
-  align-items: baseline;
-  gap: 4px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-1);
+  margin-top: 3px;
   font-size: var(--text-micro);
   color: var(--ink-secondary);
 }
 
-// La cifra cede y el sello no: con ocho tarjetas con frecuencia de verdad
-// —`587.33 Hz`— lo que sobraba se comía el sello. Ahora se corta la cifra, que
-// es lo que se puede volver a leer en la columna de la derecha.
-.node__line-figures,
-.node__hz-figure {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.node__hz {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-size: 8px;
+  color: var(--ink-secondary);
+}
+
+// Ninguna de las dos cifras se ellipsiza: una palabra cortada es peor que
+// ninguna palabra (`DESIGN.md` §9), y lo que hacía falta cortar —el nombre de la
+// forma espectral— ya no se escribe, es el glifo.
+.node__ratio,
+.node__hz {
   white-space: nowrap;
 }
 
-// Un sello por línea, al final de la línea que califica: SONDEADO al lado de lo
-// que se sondeó, TEORÍA al lado de lo que se calculó. Ninguno de los dos está
-// ya fuera del flujo, que es lo que los ponía a los dos en la misma línea de
-// base y los hacía ilegibles (#19).
+// Un sello por línea, al final de la línea que califica. El del nodo va en la
+// cabecera, sobre las tres cifras sondeadas; TEORÍA va con la única que se
+// calcula. Nunca dos en la misma línea de base (#19).
 .node__stamp,
 .node__hz-stamp {
   margin-left: auto;
   flex-shrink: 0;
   font-size: 7px;
-  letter-spacing: var(--tracking-label);
+  // Menos aire que --tracking-label, que a 7 px se lleva un carácter entero de
+  // ancho y es lo que dejaría a `133910 Hz · PREDICTED` sin sitio en 118 px.
+  letter-spacing: 0.06em;
 }
 
 .node__hz-stamp {
@@ -304,24 +330,64 @@
   color: var(--ink-inert);
 }
 
+// El glifo de la forma espectral: 18 × 14, cinco trazos como mucho, y ni una
+// letra. El color es el del rol, así que hereda del nodo.
+.node__glyph {
+  flex: 0 0 auto;
+  display: block;
+  color: var(--node-ink, var(--ink-secondary));
+
+  path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--rule-min);
+  }
+}
+
+.node__glyph--dead {
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  line-height: 14px;
+  color: var(--dead-ink);
+}
+
+// La esquina abierta. Los 44 px son la zona de toque que hereda el editor cuando
+// exista; lo que se dibuja son los 22 px de la marca. Inerte: no escucha nada y
+// no se queda con la pulsación de nadie.
+.node__corner {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--hit-min);
+  height: var(--hit-min);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: var(--space-2);
+  box-sizing: border-box;
+  pointer-events: none;
+  color: var(--node-ink, var(--ink-inert));
+
+  svg {
+    display: block;
+  }
+
+  path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--rule-min);
+  }
+}
+
 .node--stale .node__stamp {
   color: var(--carrier-dim);
 }
 
-.node--carrier .node__role,
-.node--carrier .node__level {
-  color: var(--carrier);
-}
-
-.node--modulator .node__role,
-.node--modulator .node__level {
-  color: var(--modulator);
-}
-
-.node--inert .node__role,
-.node--inert .node__level,
+// El rol tiñe el contenido del nodo con UNA variable, y cada slot conserva su
+// color de reposo como valor por defecto. Sin rol leído no hay --node-ink y el
+// nodo se dibuja neutro, que es lo que un algoritmo sin leer tiene que parecer.
 .node--inert .node__line {
-  color: var(--dead-ink);
+  color: var(--node-ink);
 }
 
 .legend {
@@ -361,5 +427,11 @@
   &--inert {
     border: var(--rule-min) dashed var(--inert);
     border-radius: var(--radius-modulator);
+  }
+
+  // La discontinua compartida, en la misma tinta con la que cruza los ocho nodos.
+  &--datum {
+    height: 0;
+    border-top: var(--datum-ceiling-stroke) dashed var(--datum-ceiling-color);
   }
 }
