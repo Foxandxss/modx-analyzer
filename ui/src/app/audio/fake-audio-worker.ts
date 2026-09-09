@@ -32,7 +32,7 @@ export class FakeAudioWorker implements AudioWorkerLike {
     }
     if (message.kind === 'note') {
       this.notes.push((message as NoteMessage).hz);
-      this.bridge.setNote(message.hz);
+      this.bridge.setNote(message.hz, message.held);
       return;
     }
 
@@ -47,7 +47,8 @@ export class FakeAudioWorker implements AudioWorkerLike {
     const reply: FrameMessage = {
       kind: 'frame',
       trace: frame.trace,
-      frequencyHz: frame.frequencyHz,
+      scope: frame.scope,
+      drawnHz: frame.drawnHz,
       trama: frame.trama,
       tramaMs: frame.tramaMs,
       stats: this.bridge.stats(),

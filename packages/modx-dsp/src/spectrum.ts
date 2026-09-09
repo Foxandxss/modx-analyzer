@@ -62,7 +62,7 @@ export interface Spectrum {
  *
  * The last `window` samples are the ones analysed: what the vista viva wants is
  * the newest audio, not the oldest, and the caller keeps a longer history than
- * one window on purpose (the scope needs two cycles of a low note).
+ * one window on purpose (the scope needs four cycles of a low note).
  */
 export function spectrum(
   samples: Float32Array,

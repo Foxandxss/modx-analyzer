@@ -7,6 +7,17 @@ import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
 import { FakeBackendGateway } from '../../backend/fake-backend-gateway';
 import { TabPanel } from './tab-panel';
 
+/** One bloque with no period in it at all, loud enough to clear the floor. */
+function noise(seed: number): Float32Array {
+  const mono = new Float32Array(BLOCK_FRAMES);
+  let state = seed * 7919 + 1;
+  for (let index = 0; index < mono.length; index += 1) {
+    state = (state * 1103515245 + 12345) & 0x7fffffff;
+    mono[index] = (state / 0x3fffffff - 1) * 0.5;
+  }
+  return mono;
+}
+
 async function renderPanel() {
   const backend = new FakeBackendGateway();
   TestBed.configureTestingModule({
@@ -30,8 +41,17 @@ async function renderPanel() {
       tabs.find((tab) => tab.textContent?.trim() === 'SCOPE')?.click();
       await fixture.whenStable();
     },
-    async holdNote(frequency: number, blocks = 5) {
-      for (let sequence = 0; sequence < blocks; sequence += 1) {
+    /**
+     * The keyboard holding a note and the sound of it arriving, which are two
+     * separate facts: the scope locks to the first and verifies against the
+     * second. `pitches` is how many keys are down; `pitch` is the MIDI note the
+     * lock is granted at, `null` for audio with no keyboard behind it.
+     */
+    async holdNote(frequency: number, pitch: number | null = 60, pitches = pitch === null ? 0 : 1) {
+      backend.lowestLivePitch.set(pitch);
+      backend.liveNotes.set(pitches);
+      await fixture.whenStable();
+      for (let sequence = 0; sequence < 9; sequence += 1) {
         backend.emitBlock(
           fakeBlock({
             sequence,
@@ -87,33 +107,60 @@ describe('TabPanel', () => {
     expect(host.querySelector('app-waterfall')).not.toBeNull();
   });
 
-  it('says the scope has nothing to trigger on before any audio', async () => {
+  it('has no enganche before any audio, and says which of the three it is', async () => {
     const { selectScope, note } = await renderPanel();
 
     await selectScope();
 
-    expect(note()).toBe('TRIGGER ↑0 · 2 CICLOS · — Hz');
+    expect(note()).toBe('NO LOCK · no held note');
   });
 
-  it('says at what frequency it triggered while a note is held', async () => {
+  it('says the note, the count of cycles and the window while one note is held', async () => {
     const { selectScope, holdNote, note } = await renderPanel();
     await selectScope();
 
-    await holdNote(261.626);
+    // C4 at equal temperament, which is what the keyboard's pitch 60 is worth.
+    await holdNote(261.626, 60);
 
-    expect(note()).toMatch(/^TRIGGER ↑0 · 2 CICLOS · 26[12]\.\d Hz$/);
+    expect(note()).toBe('LOCKED 261.63 Hz · 4 CYCLES · 15.3 ms');
   });
 
-  it('goes back to the dash when the audio is digital silence', async () => {
+  it('refuses under a chord: two pitches have no fundamental between them', async () => {
+    const { selectScope, holdNote, note } = await renderPanel();
+    await selectScope();
+
+    await holdNote(261.626, 60, 3);
+
+    expect(note()).toBe('NO LOCK · MORE THAN ONE NOTE');
+  });
+
+  it('refuses when the held note is not in what is arriving', async () => {
     const { selectScope, holdNote, backend, fixture, note } = await renderPanel();
     await selectScope();
-    await holdNote(261.626);
+    // A key down over something with no period in it: an enganche here would be
+    // standing a shape still that the audio does not have.
+    await holdNote(261.626, 60);
 
-    for (let sequence = 5; sequence < 10; sequence += 1) {
+    for (let sequence = 9; sequence < 18; sequence += 1) {
+      backend.emitBlock(
+        fakeBlock({ sequence, sentAtMicros: sequence * 30_000, mono: noise(sequence) }),
+      );
+    }
+    await fixture.whenStable();
+
+    expect(note()).toBe('NO LOCK · pitch unstable');
+  });
+
+  it('says the audio is under the floor rather than drawing the floor', async () => {
+    const { selectScope, holdNote, backend, fixture, note } = await renderPanel();
+    await selectScope();
+    await holdNote(261.626, 60);
+
+    for (let sequence = 9; sequence < 18; sequence += 1) {
       backend.emitBlock(fakeBlock({ sequence, sentAtMicros: sequence * 30_000 }));
     }
     await fixture.whenStable();
 
-    expect(note()).toBe('TRIGGER ↑0 · 2 CICLOS · — Hz');
+    expect(note()).toBe('SIGNAL BELOW FLOOR');
   });
 });

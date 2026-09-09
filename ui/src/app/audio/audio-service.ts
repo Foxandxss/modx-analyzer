@@ -8,7 +8,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { LiveTrama, MEASURE_WINDOW, Medida, NO_TRAMA, WATERFALL_FRAMES } from 'modx-dsp';
+import { LiveTrama, MEASURE_WINDOW, Medida, NO_TRAMA, ScopeLock, WATERFALL_FRAMES } from 'modx-dsp';
 import { BACKEND_GATEWAY } from '../backend/backend-gateway';
 import { Clock } from '../provenance/clock';
 import { equalTemperamentHz } from '../provenance/theory';
@@ -28,9 +28,9 @@ import { FrameMessage, MedidaMessage, WorkerMessage } from './audio.worker';
  *   the trama budget is 33 ms whole. Nothing in Angular is told a bloque
  *   arrived.
  * - **signals for the readouts**, which are set only when the number a human
- *   reads has actually changed — the frequency to a tenth, the floor to a whole
- *   decibel. A figure that flickers between two values is a figure nobody can
- *   read.
+ *   reads has actually changed — the floor to a whole decibel, the enganche when
+ *   it becomes another enganche. A figure that flickers between two values is a
+ *   figure nobody can read.
  *
  * It never looks inside a buffer: the samples are given away the moment they
  * arrive, which is the point — the thread that draws must not be the thread that
@@ -88,8 +88,15 @@ export const NO_STATS: BridgeStats = {
  * same shape twice» without comparing arrays.
  */
 export interface LiveView {
-  /** Channel 0, triggered and two cycles long, or `null` with nothing to draw. */
+  /** Channel 0, cut to what {@link scope} allows, or `null` with nothing to cut. */
   trace: Float32Array | null;
+  /**
+   * What the scope may claim about that trace. The canvas reads it to choose its
+   * register: a locked trace is drawn in the signal's colour with its period
+   * boundaries, an unlocked one in the predicted register, and a signal under the
+   * floor is a band and no trace at all.
+   */
+  scope: ScopeLock;
   trama: LiveTrama;
   /** The last 14 curves, oldest first: 462 ms of the attack fading. */
   waterfall: Float32Array[];
@@ -120,6 +127,21 @@ export interface MedidaView {
   readonly medida: Medida;
   readonly takenAt: number;
 }
+
+/**
+ * The scope before the first bloque: nothing is held, so there is no lock.
+ *
+ * It is a refusal and not a `belowFloor`, because no window has been looked at
+ * yet — saying the signal is under the floor would be a claim about audio that
+ * has not arrived.
+ */
+export const NO_LOCK: ScopeLock = {
+  kind: 'noLock',
+  reason: 'noHeldNote',
+  trigger: 0,
+  length: 0,
+  windowMs: 0,
+};
 
 /** How often the readout signals are allowed to move: four times a second. */
 const READOUT_EVERY = 8;
@@ -160,6 +182,14 @@ function noteMoved(before: number | null, now: number | null): boolean {
 }
 
 /**
+ * The enganche as one word, so two readings can be told apart without comparing
+ * a frequency that moves a hundredth of a hertz between tramas.
+ */
+function lockState(lock: ScopeLock): string {
+  return lock.kind === 'noLock' ? lock.reason : lock.kind;
+}
+
+/**
  * What the audio is doing. Four states, because «no entra audio» turned out to be
  * three different facts wearing one name (#21, #22).
  *
@@ -188,6 +218,7 @@ export class AudioService {
   /** The newest trama. Mutated 33 times a second and never watched by Angular. */
   readonly live: LiveView = {
     trace: null,
+    scope: NO_LOCK,
     trama: NO_TRAMA,
     waterfall: [],
     rows: 0,
@@ -195,8 +226,14 @@ export class AudioService {
     version: 0,
   };
 
-  /** The frequency the trace was triggered at, or `null` with no note. Tenths. */
-  readonly frequencyHz = signal<number | null>(null);
+  /**
+   * The scope's enganche: the note it is locked to, or why it is not locked.
+   *
+   * It is the caption's only source, and the caption is the scope's
+   * specification — `LOCKED 349.23 Hz · 4 CYCLES · 11.5 ms` says what the trace
+   * is, and `NO LOCK · pitch unstable` says there is no claim to read off it.
+   */
+  readonly scope = signal<ScopeLock>(NO_LOCK);
 
   /** The noise floor of the vista viva in absolute dBFS, whole decibels. */
   readonly floorDb = signal<number | null>(null);
@@ -341,12 +378,12 @@ export class AudioService {
   private anchorChanges = 0;
 
   constructor() {
-    // The note the espectro's axis is drawn against. It crosses to the worker
-    // when it changes and not with every bloque: somebody playing is hundreds of
-    // times slower than the audio.
+    // The note the espectro's axis is drawn against and the scope locks to, with
+    // how many pitches are down beside it. It crosses to the worker when it
+    // changes and not with every bloque: somebody playing is hundreds of times
+    // slower than the audio.
     effect(() => {
-      const pitch = this.backend.lowestLivePitch();
-      this.postNote(pitch === null ? null : equalTemperamentHz(pitch));
+      this.postNote(this.backend.lowestLivePitch(), this.backend.liveNotes());
     });
 
     // Since when the keyboard has been holding something. It is a **since** and
@@ -414,8 +451,7 @@ export class AudioService {
       data.kind === 'medida' ? this.onMedida(data) : this.onFrame(data),
     );
 
-    const pitch = this.backend.lowestLivePitch();
-    this.postNote(pitch === null ? null : equalTemperamentHz(pitch));
+    this.postNote(this.backend.lowestLivePitch(), this.backend.liveNotes());
 
     const unsubscribe = this.backend.subscribeBlocks((buffer) => {
       // Stamped here and not in the worker: this is the last moment on the main
@@ -497,6 +533,7 @@ export class AudioService {
     this.lastBlockAt.set(this.clock.now());
 
     this.live.trace = frame.trace;
+    this.live.scope = frame.scope;
     this.live.trama = frame.trama;
     this.live.version += 1;
 
@@ -523,11 +560,14 @@ export class AudioService {
     }
 
     // The readouts move at 4 Hz, except when the vista viva starts or stops
-    // drawing: that is not a number moving, it is a panel changing state, and
-    // making somebody wait a quarter of a second for it would be a stutter.
+    // drawing, or when the scope's enganche changes: those are not numbers
+    // moving, they are panels changing state, and making somebody wait a quarter
+    // of a second for one would be a stutter. A caption that still says `LOCKED`
+    // over a trace that has already gone amber is worse than a stutter.
     this.sinceReadout += 1;
     const drawing = frame.trama.curve !== null;
-    if (this.sinceReadout >= READOUT_EVERY || drawing !== this.drawing()) {
+    const locked = lockState(frame.scope) !== lockState(this.scope());
+    if (this.sinceReadout >= READOUT_EVERY || drawing !== this.drawing() || locked) {
       this.refreshReadouts(frame);
     }
   }
@@ -547,10 +587,9 @@ export class AudioService {
     const started = this.stats().captureStartedAtMs;
     this.mainThreadLagAtSeconds.set(started === 0 ? 0 : (this.lag.worstAt - started) / 1000);
 
-    const hertz = frame.frequencyHz;
-    this.frequencyHz.set(hertz === null ? null : Math.round(hertz * 10) / 10);
+    this.scope.set(frame.scope);
     this.floorDb.set(frame.trama.curve === null ? null : Math.round(frame.trama.floorDb));
-    this.holdArtefact(frame.trama.artefactHz, frame.frequencyHz, now);
+    this.holdArtefact(frame.trama.artefactHz, frame.drawnHz, now);
     this.drawing.set(frame.trama.curve !== null);
   }
 
@@ -600,7 +639,16 @@ export class AudioService {
     this.artefactHz.set(this.artefactHeldHz);
   }
 
-  private postNote(hz: number | null): void {
-    this.worker?.postMessage({ kind: 'note', hz }, []);
+  /**
+   * The pitch the worker draws and locks against, and how many keys are down.
+   *
+   * The two travel together because the scope needs both: the lowest live pitch
+   * has an answer under a chord and there is no fundamental under a chord, so
+   * the count is what stops the trace being stood still on a note nobody is
+   * hearing on its own.
+   */
+  private postNote(pitch: number | null, held: number): void {
+    const hz = pitch === null ? null : equalTemperamentHz(pitch);
+    this.worker?.postMessage({ kind: 'note', hz, held }, []);
   }
 }

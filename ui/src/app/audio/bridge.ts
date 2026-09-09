@@ -5,9 +5,11 @@ import {
   MEASURE_WINDOW,
   Medida,
   SAMPLE_RATE,
+  ScopeLock,
+  estimatePeriod,
   liveTrama,
   medida,
-  scopeTrace,
+  scopeLock,
 } from 'modx-dsp';
 
 /**
@@ -59,16 +61,36 @@ export function stamp(): number {
   return performance.timeOrigin + performance.now();
 }
 
-/** How many bloques of channel 0 the scope keeps: 90 ms, two cycles down to 22 Hz. */
-const SCOPE_BLOCKS = 3;
+/**
+ * How many bloques of channel 0 the scope keeps: seven, 210 ms.
+ *
+ * The scope draws four whole periods of the note and the first crossing it can
+ * start on may be almost a period into the buffer, so what it needs is **five**
+ * periods of the lowest key of an 88-key MODX8 — A0, 27.5 Hz, 181.8 ms. Seven
+ * bloques cover that with margin, and the trace is cut from the **newest** end
+ * of them (`cutCycles` in `scope.ts`), so a long history costs latency nowhere.
+ */
+const SCOPE_BLOCKS = 7;
 
 /**
- * How many bloques of channel 0 are kept in all: four, 5 292 samples, because the
- * vista viva's window is 4 096 and three bloques are 3 969. The scope still reads
- * the last three of them — a longer buffer would change where it triggers — so
- * this number is the espectro's, not the scope's.
+ * How many bloques the espectro's axis falls back on when the MIDI port is gone:
+ * three, 90 ms, which is what it has always read.
+ *
+ * It is deliberately **not** the scope's window. `estimatePeriod` measures from
+ * the start of what it is given, so handing it the scope's longer buffer would
+ * have it correlating the silence in front of the first seven bloques of a
+ * session — and the axis would have no note for the first fifth of a second of
+ * every launch.
  */
-const HISTORY_BLOCKS = 4;
+const AXIS_BLOCKS = 3;
+
+/**
+ * How many bloques of channel 0 are kept in all. The scope's buffer is the
+ * longest thing anybody reads — the vista viva's window is 4 096 and lives
+ * inside it — so this is the scope's number and the espectro takes its window
+ * off the end of it.
+ */
+const HISTORY_BLOCKS = SCOPE_BLOCKS;
 
 /**
  * How many trama costs are kept for the percentiles. The same 65 536 as the
@@ -529,13 +551,25 @@ function percentile(sorted: readonly number[], fraction: number): number | null 
 /** What one bloque leaves behind for the screen. */
 export interface BridgeFrame {
   /**
-   * Channel 0, already triggered and two cycles long, ready to draw — or `null`
-   * when there is nothing to draw. Never a flat line at zero: that would be a
-   * measurement, and this is the absence of one.
+   * Channel 0, cut to what {@link scope} says is drawable: four locked cycles,
+   * or the raw window when there is no lock. `null` only when the buffer was too
+   * short to cut anything at all.
    */
   readonly trace: Float32Array | null;
-  /** The frequency the trace was triggered at, for the readout. */
-  readonly frequencyHz: number | null;
+  /**
+   * What the scope is entitled to claim about that trace: the lock and its
+   * frequency, or why there is none. The caption is written from this and from
+   * nothing else, which is what makes the caption a specification.
+   */
+  readonly scope: ScopeLock;
+  /**
+   * The note the espectro's axis was drawn against — the played one, or the
+   * period the autocorrelation found when the MIDI port is gone.
+   *
+   * **It is not the scope's frequency** and nothing reads it as one: it is what
+   * numbers the harmonics and finds the comb's sidebands.
+   */
+  readonly drawnHz: number | null;
   /** The espectro, the armónicos and the ridgeline of this trama. */
   readonly trama: LiveTrama;
   /** What this trama cost, in ms, measured with `performance` marks. */
@@ -564,8 +598,8 @@ const MEDIDA_MEASURE = 'medida';
  * The worker's whole job: take a bloque, keep the score, and hand back the piece
  * of waveform the scope draws.
  *
- * It holds the last three bloques of channel 0 so that two cycles fit down to
- * 22 Hz — one bloque is 30 ms, which is not two cycles of anything below 66 Hz.
+ * It holds the last {@link SCOPE_BLOCKS} bloques of channel 0 so that the four
+ * cycles the scope draws fit down to the lowest key of the keyboard.
  *
  * {@link stats} is deliberately not part of {@link receive}: the percentiles sort
  * the whole history and the readout is only read once a second, so paying for them
@@ -577,6 +611,23 @@ export class AudioBridge {
 
   /** The note the keyboard is holding, when it says so. See {@link setNote}. */
   private noteHz: number | null = null;
+
+  /**
+   * How many distinct pitches the keyboard is holding. Two notes have no
+   * fundamental between them, so the scope refuses rather than locking to one.
+   */
+  private heldPitches = 0;
+
+  /**
+   * The fc of the last Medida, which the scope locks to ahead of the played
+   * note.
+   *
+   * **Nothing calls the setter in the running build**: the medida produces a
+   * partial table and fits nothing, so there is no fc to hand over. The branch
+   * exists because the priority is part of the scope's contract, and it is
+   * exercised in the spec so that the fit ticket lands on a path that works.
+   */
+  private capturedFcHz: number | null = null;
 
   /**
    * The note the last trama was actually drawn against, fallback included.
@@ -598,8 +649,18 @@ export class AudioBridge {
    * that audio entering with the MIDI port gone is still drawn — it is the same
    * note, read off the sound instead of off the keyboard.
    */
-  setNote(hz: number | null): void {
+  setNote(hz: number | null, heldPitches = hz === null ? 0 : 1): void {
     this.noteHz = hz;
+    this.heldPitches = heldPitches;
+  }
+
+  /**
+   * The fc the last capture fitted, for the scope to lock to.
+   *
+   * Unused in this build and deliberately kept: see {@link capturedFcHz}.
+   */
+  setCapturedFc(hz: number | null): void {
+    this.capturedFcHz = hz;
   }
 
   /**
@@ -619,15 +680,37 @@ export class AudioBridge {
     this.history.copyWithin(0, mono.length);
     this.history.set(mono, this.history.length - mono.length);
 
-    // The scope keeps reading the last three bloques it always read: the trigger
-    // it finds is a property of the window it was given.
     const scopeWindow = this.history.subarray(this.history.length - BLOCK_FRAMES * SCOPE_BLOCKS);
-    const found = scopeTrace(scopeWindow, SAMPLE_RATE);
-    const trace =
-      found === null ? null : scopeWindow.slice(found.trigger, found.trigger + found.length);
 
-    this.drawnHz = this.noteHz ?? found?.frequencyHz ?? null;
+    // The axis's fallback, and the only thing the autocorrelation is allowed to
+    // name: the espectro is drawn in multiples of a note and needs one even with
+    // the MIDI port gone. The scope does not read it — on a bright timbre it
+    // picks a sub-multiple, which is what 43,8 Hz was.
+    const axisWindow = this.history.subarray(this.history.length - BLOCK_FRAMES * AXIS_BLOCKS);
+    const period = this.noteHz === null ? estimatePeriod(axisWindow, SAMPLE_RATE) : null;
+    this.drawnHz = this.noteHz ?? (period === null ? null : SAMPLE_RATE / period);
     const trama = liveTrama(this.history, this.drawnHz);
+
+    // The floor the lock is weighed against is the same figure the readout says
+    // beside it (#30): one word, one meaning, one window.
+    const scope = scopeLock(
+      scopeWindow,
+      {
+        capturedFcHz: this.capturedFcHz,
+        heldHz: this.noteHz,
+        heldPitches: this.heldPitches,
+        floorDb: trama.floorDb,
+      },
+      SAMPLE_RATE,
+    );
+    // Under the floor nothing is handed over at all: what would be drawn is the
+    // floor, the panel draws it as a band from the lock's own figure, and a
+    // trace of noise sent across for nobody to draw is a flat line waiting to be
+    // painted by the next reader of this field.
+    const trace =
+      scope.kind === 'belowFloor' || scope.length < 2
+        ? null
+        : scopeWindow.slice(scope.trigger, scope.trigger + scope.length);
 
     performance.mark(MARK_END);
     const measured = performance.measure(MEASURE, MARK_START, MARK_END);
@@ -636,7 +719,7 @@ export class AudioBridge {
     performance.clearMarks(MARK_END);
     performance.clearMeasures(MEASURE);
 
-    return { trace, frequencyHz: found?.frequencyHz ?? null, trama, tramaMs: measured.duration };
+    return { trace, scope, drawnHz: this.drawnHz, trama, tramaMs: measured.duration };
   }
 
   /**

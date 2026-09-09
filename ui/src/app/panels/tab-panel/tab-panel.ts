@@ -6,9 +6,9 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { LockRefusal, SCOPE_CYCLES } from 'modx-dsp';
 import { AudioService } from '../../audio/audio-service';
 import { BACKEND_GATEWAY } from '../../backend/backend-gateway';
-import { DEAD_MARK } from '../../provenance/provenance';
 import { Scope } from '../scope/scope';
 import { Waterfall } from '../waterfall/waterfall';
 
@@ -16,6 +16,24 @@ import { Waterfall } from '../waterfall/waterfall';
 export type BottomView = 'WATERFALL' | 'SCOPE';
 
 export const BOTTOM_VIEWS: readonly BottomView[] = ['WATERFALL', 'SCOPE'];
+
+/**
+ * The three reasons there is no enganche, in the screen's words.
+ *
+ * Two of them are lower case and one is not, and that is deliberate: `MORE THAN
+ * ONE NOTE` is a fact about what is being played and the other two are the app
+ * saying what it cannot do. `no capture yet` is not here — it cannot fire until
+ * an fc is fitted, and copy that cannot appear is copy the next sweep has to
+ * explain.
+ */
+const LOCK_REFUSAL: Record<LockRefusal, string> = {
+  noHeldNote: 'no held note',
+  pitchUnstable: 'pitch unstable',
+  moreThanOneNote: 'MORE THAN ONE NOTE',
+};
+
+/** What is arriving does not clear the floor by 6 dB: it is the floor. */
+const BELOW_FLOOR = 'SIGNAL BELOW FLOOR';
 
 /**
  * Waterfall and scope, sharing 156 px.
@@ -26,9 +44,13 @@ export const BOTTOM_VIEWS: readonly BottomView[] = ['WATERFALL', 'SCOPE'];
  * expires when the keyboard falls silent, so the next note starts on the
  * waterfall again.
  *
- * The scope's readout says how the trace was triggered — `TRIGGER ↑0 · 2 CICLOS ·
- * 261.8 Hz` — because a waveform that stands still is a claim about the trigger,
- * not about the sound.
+ * **The scope's caption is its specification.** `LOCKED 349.23 Hz · 4 CYCLES ·
+ * 11.5 ms` says what the trace is: the note it is locked to, how much of it is
+ * drawn, and how long that is. A waveform that stands still is a claim about the
+ * enganche and not about the sound, so when there is no enganche the caption says
+ * `NO LOCK` and why, and when what is arriving is the floor it says that instead.
+ * Every word of it comes from {@link AudioService.scope} and none of it from a
+ * literal in this template.
  */
 @Component({
   selector: 'app-tab-panel',
@@ -49,7 +71,7 @@ export const BOTTOM_VIEWS: readonly BottomView[] = ['WATERFALL', 'SCOPE'];
         </button>
       }
       @if (selected() === 'SCOPE') {
-        <span class="tabs__note">TRIGGER ↑0 · 2 CICLOS · {{ trigger() }}</span>
+        <span class="tabs__note">{{ enganche() }}</span>
       } @else {
         <span class="tabs__note">el ataque brillante apagándose · 14 tramas · 0 → 460 ms</span>
         <span class="tabs__axes">TIME ↓ · FREQUENCY →</span>
@@ -90,9 +112,21 @@ export class TabPanel {
     this.asked.set(view);
   }
 
-  /** The frequency the trace was triggered at, in tenths so it stops flickering. */
-  protected readonly trigger = computed(() => {
-    const hertz = this.audio.frequencyHz();
-    return hertz === null ? `${DEAD_MARK} Hz` : `${hertz.toFixed(1)} Hz`;
+  /**
+   * The caption, whole, from the enganche and nothing else.
+   *
+   * The frequency is printed to two decimals because that is what the note is
+   * known to — it comes from equal temperament or from a fitted fc, not from a
+   * peak that wanders — and the window to a tenth of a millisecond.
+   */
+  protected readonly enganche = computed(() => {
+    const lock = this.audio.scope();
+    if (lock.kind === 'belowFloor') {
+      return BELOW_FLOOR;
+    }
+    if (lock.kind === 'noLock') {
+      return `NO LOCK · ${LOCK_REFUSAL[lock.reason]}`;
+    }
+    return `LOCKED ${lock.frequencyHz.toFixed(2)} Hz · ${SCOPE_CYCLES} CYCLES · ${lock.windowMs.toFixed(1)} ms`;
   });
 }

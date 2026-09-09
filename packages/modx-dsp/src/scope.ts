@@ -1,27 +1,48 @@
 import { SAMPLE_RATE } from './constants';
 
 /**
- * The scope: where to start drawing so that the waveform stands still.
+ * The scope: what it locks to, how much of it it draws, and when it refuses.
  *
- * A scope that starts at the beginning of every bloque draws a shape that slides
- * sideways at the beat frequency between the note and 33.3 Hz, which reads as
- * «the sound is moving» when the sound is doing nothing at all. So the trace is
- * triggered on a **rising crossing of zero aligned to the note's period**: the
- * period is found first and the crossing is taken on the fundamental, not on the
- * raw signal. A bright FM timbre crosses zero going up three or five times per
- * period and a trigger that took the first of them would pick a different one
- * every trama; the fundamental crosses once, always in the same place.
+ * **The caption is the specification.** `LOCKED 349.23 Hz · 4 CYCLES · 11.5 ms`
+ * is a claim about three things, and every one of them is decided here: the note
+ * the trace is aligned to, that the alignment was verified against the audio, and
+ * how long the drawn stretch is.
  *
- * The trace is then exactly two periods long, so the shape fills the frame
- * whatever the note is. With no period to align to — noise, a transient, a
- * percussive tail — it falls back to the plain hysteresis trigger of a bench
- * scope and a fixed 20 ms window.
+ * The lock is the **fundamental of the note being held** — the fc of the last
+ * Medida when a fit exists, the played note at equal temperament otherwise —
+ * never a count of zero crossings and never the autocorrelation's own guess. A
+ * bright FM timbre crosses zero going up three or five times per period, and the
+ * autocorrelation of one picks a sub-multiple of the period: that is what turned
+ * 349,23 Hz into 43,8 on the MODX8 and drew a near-flat line under a caption that
+ * read like a measurement.
+ *
+ * Autocorrelation still has a job, and it is the opposite one: it **verifies**.
+ * The lock is only granted when the audio correlates with itself at the locked
+ * period — so a held key over an inharmonic or noisy sound says `pitch unstable`
+ * rather than standing a shape still that is not there.
+ *
+ * The trace is then exactly {@link SCOPE_CYCLES} periods long, so the shape fills
+ * the frame whatever the note is, and the window is reported in ms. When there is
+ * no lock the raw window is drawn in the predicted register and the reason is
+ * named; when what is there is noise, that is said instead.
  *
  * Pure functions over `Float32Array`, as everything in this package (ADR-0001).
  */
 
-/** Below this peak there is nothing to trigger on: −80 dBFS. */
-const PEAK_FLOOR = 1e-4;
+/**
+ * How many periods the trace draws. **Always four**, and this is the only copy of
+ * the number: the trace is cut to it here and the caption reads it from here.
+ */
+export const SCOPE_CYCLES = 4;
+
+/**
+ * How far the trace has to stand over the noise floor before it is a signal at
+ * all: 6 dB, peak to peak against the median bin, both in absolute dBFS (#30).
+ *
+ * Under it there is nothing to lock to and nothing worth drawing, and the honest
+ * caption is that the floor is what is on screen.
+ */
+export const SCOPE_OVER_FLOOR_DB = 6;
 
 /** The lowest note of an 88-key MODX8 is A0, 27.5 Hz. */
 const MIN_HZ = 25;
@@ -32,74 +53,182 @@ const MAX_HZ = 4200;
 /** Samples correlated per lag. Enough to be sure, cheap enough for 33 fps. */
 const CORRELATION_WINDOW = 1024;
 
-/** A correlation below this is not a note; the trace then has no period. */
-const PERIODIC_ENOUGH = 0.6;
+/**
+ * A correlation below this is not a note.
+ *
+ * One threshold, two callers: {@link estimatePeriod} refuses to name a period
+ * under it and {@link scopeLock} refuses to grant a lock under it, so «periodic
+ * enough to draw» means the same thing on both sides of the panel.
+ */
+export const PERIODIC_ENOUGH = 0.6;
 
 /**
  * How close to the best correlation a lag has to be to be preferred for being
  * earlier. Without it a note rich in even harmonics correlates just as well at
- * twice its period and the scope draws four cycles calling them two.
+ * twice its period and the period found is twice the real one.
  */
 const OCTAVE_GUARD = 0.9;
 
-/** Hysteresis, as a fraction of the peak, that has to be crossed to re-arm. */
-const ARM_FRACTION = 0.25;
+/** Drawn with no lock: the newest 20 ms of whatever is arriving, untriggered. */
+const RAW_WINDOW_SECONDS = 0.02;
 
-/** Drawn from the trigger when no period was found: 20 ms of whatever it is. */
-const APERIODIC_SECONDS = 0.02;
+/** Why there is no lock. The screen's words for these live in the tab panel. */
+export type LockRefusal = 'noHeldNote' | 'pitchUnstable' | 'moreThanOneNote';
 
-export interface ScopeTrace {
-  /** Index of the rising zero crossing the trace starts at. */
+/** What every reading says, locked or not: which slice of the window to draw. */
+interface DrawnWindow {
+  /** First sample of the buffer to draw. */
   readonly trigger: number;
-  /** How many samples to draw from {@link trigger}. */
+  /** How many samples from {@link trigger}. */
   readonly length: number;
-  /** The period found, in samples, fractional. `null` when nothing periodic. */
-  readonly periodSamples: number | null;
-  /** The same period as a frequency, for the readout. `null` with no period. */
-  readonly frequencyHz: number | null;
+  /** The same length in ms. The locked caption says this figure. */
+  readonly windowMs: number;
+}
+
+/** Locked to the note: four periods, aligned, with the period drawn on them. */
+export interface LockedScope extends DrawnWindow {
+  readonly kind: 'locked';
+  /** The frequency the lock was granted at — the note's, never a guess. */
+  readonly frequencyHz: number;
+  /** Its period in fractional samples, so the boundaries can be drawn. */
+  readonly periodSamples: number;
+  /** What the audio correlated with itself at that period: the verification. */
+  readonly periodicity: number;
+}
+
+/** No lock, and which of the three reasons. The window is drawn raw. */
+export interface UnlockedScope extends DrawnWindow {
+  readonly kind: 'noLock';
+  readonly reason: LockRefusal;
+}
+
+/** What is arriving does not clear the floor: the band is drawn, not a trace. */
+export interface BelowFloorScope extends DrawnWindow {
+  readonly kind: 'belowFloor';
+  /** Half the peak-to-peak of the window: how tall the band is above zero. */
+  readonly band: number;
+}
+
+export type ScopeLock = LockedScope | UnlockedScope | BelowFloorScope;
+
+/** Where the lock comes from, and what would stop it. */
+export interface LockSource {
+  /**
+   * The fc of the last Medida, ahead of the played note because it is measured
+   * off the sound itself.
+   *
+   * **Nothing produces it yet**: no fit exists, so this is `null` in the running
+   * build and the branch below waits for the fit ticket. It is written because
+   * the priority is part of the contract, not because it fires.
+   */
+  readonly capturedFcHz: number | null;
+  /** The held note at equal temperament, or `null` when nothing is held. */
+  readonly heldHz: number | null;
+  /**
+   * How many distinct pitches the keyboard is holding. More than one and there
+   * is no fundamental to lock to — two notes are two of them.
+   */
+  readonly heldPitches: number;
+  /** The window's noise floor in absolute dBFS, as `FLOOR` reports it (#30). */
+  readonly floorDb: number;
 }
 
 /**
- * Where the trace starts and how long it is, or `null` when there is nothing to
- * draw: digital silence, a buffer too short, or no rising crossing to trigger on.
+ * What the scope draws and what its caption says, for one window of audio.
  *
- * A `null` is drawn as an empty frame, never as a flat line at zero — a flat line
- * is a measurement and this is the absence of one.
+ * The order of the three refusals is the order of the questions: is there a
+ * signal at all, is there one note, and is that note actually in the audio. A
+ * silence with nothing held is `belowFloor` and not `noHeldNote`, because what is
+ * on screen is the floor and saying anything else about it would be a claim.
  */
-export function scopeTrace(
+export function scopeLock(
   samples: Float32Array,
+  source: LockSource,
   sampleRate: number = SAMPLE_RATE,
-  cycles = 2,
-): ScopeTrace | null {
-  const peak = peakOf(samples);
-  if (peak < PEAK_FLOOR) {
-    return null;
+): ScopeLock {
+  const raw = rawWindow(samples, sampleRate);
+
+  const swing = peakToPeak(samples);
+  const swingDb = 20 * Math.log10(swing / 2);
+  // A floor of `-Infinity` is `NO_TRAMA`'s: nothing entered, so there is no
+  // level to stand over and no arithmetic to do on it.
+  if (
+    !Number.isFinite(swingDb) ||
+    !Number.isFinite(source.floorDb) ||
+    swingDb < source.floorDb + SCOPE_OVER_FLOOR_DB
+  ) {
+    return { kind: 'belowFloor', band: swing / 2, ...raw };
   }
 
-  const periodSamples = estimatePeriod(samples, sampleRate);
-  const trigger =
-    periodSamples === null
-      ? findRisingTrigger(samples, peak * ARM_FRACTION)
-      : fundamentalTrigger(samples, periodSamples);
-  if (trigger === null) {
-    return null;
+  if (source.heldPitches > 1) {
+    return { kind: 'noLock', reason: 'moreThanOneNote', ...raw };
   }
 
-  const wanted =
-    periodSamples === null
-      ? Math.round(APERIODIC_SECONDS * sampleRate)
-      : Math.round(periodSamples * cycles);
-  const length = Math.min(wanted, samples.length - trigger);
-  if (length < 2) {
-    return null;
+  const lockHz = source.capturedFcHz ?? source.heldHz;
+  if (lockHz === null || lockHz < MIN_HZ || lockHz > MAX_HZ) {
+    return { kind: 'noLock', reason: 'noHeldNote', ...raw };
+  }
+
+  const periodSamples = sampleRate / lockHz;
+  const cut = cutCycles(samples, periodSamples);
+  const measured = periodicity(samples, periodSamples);
+  // The lock is a claim about **this** audio, so it is checked against it. The
+  // cut is checked too: four cycles that do not fit in the window cannot be
+  // verified any more than they can be drawn, and the buffer the caller keeps is
+  // sized so that this cannot happen above A0.
+  if (cut === null || measured < PERIODIC_ENOUGH) {
+    return { kind: 'noLock', reason: 'pitchUnstable', ...raw };
   }
 
   return {
-    trigger,
-    length,
+    kind: 'locked',
+    frequencyHz: lockHz,
     periodSamples,
-    frequencyHz: periodSamples === null ? null : sampleRate / periodSamples,
+    periodicity: measured,
+    trigger: cut.trigger,
+    length: cut.length,
+    windowMs: (cut.length / sampleRate) * 1000,
   };
+}
+
+/** The newest {@link RAW_WINDOW_SECONDS}, untriggered, which is what «raw» is. */
+function rawWindow(samples: Float32Array, sampleRate: number): DrawnWindow {
+  const length = Math.min(samples.length, Math.round(RAW_WINDOW_SECONDS * sampleRate));
+  return {
+    trigger: samples.length - length,
+    length,
+    windowMs: (length / sampleRate) * 1000,
+  };
+}
+
+/**
+ * The newest {@link SCOPE_CYCLES} whole periods of the buffer, or `null` when
+ * that many do not fit.
+ *
+ * The crossing comes from {@link fundamentalTrigger} and the cut is then pushed
+ * forward by whole periods, which is what keeps two things true at once: the
+ * trace is the newest audio in the buffer — a scope showing the oldest 11 ms of
+ * a 210 ms history is a fifth of a second behind the keyboard — and it starts on
+ * the same crossing every trama, so the shape still stands still.
+ */
+function cutCycles(
+  samples: Float32Array,
+  periodSamples: number,
+): { trigger: number; length: number } | null {
+  const first = fundamentalTrigger(samples, periodSamples);
+  if (first === null) {
+    return null;
+  }
+  const length = Math.round(periodSamples * SCOPE_CYCLES);
+  const spare = samples.length - length - first;
+  if (spare < 0 || length < 2) {
+    return null;
+  }
+  // The multiple is taken on the fractional period and rounded once, at the end:
+  // stepping by a rounded period would drift a sample per cycle and the shape
+  // would crawl at the very rate this function exists to stop.
+  const trigger = Math.round(first + Math.floor(spare / periodSamples) * periodSamples);
+  return { trigger: Math.min(trigger, samples.length - length), length };
 }
 
 /**
@@ -138,31 +267,55 @@ export function fundamentalTrigger(samples: Float32Array, periodSamples: number)
 }
 
 /**
- * The first rising crossing of zero that comes after the signal has been below
- * `-armBelow`. The fallback for a sound with no period to align to.
+ * How well the newest audio correlates with itself one period later, normalised
+ * to ±1. **This is the verification and not the measurement**: the period is
+ * given, and what comes back is whether the audio agrees with it.
+ *
+ * The lag is fractional — the note is a frequency and not a whole number of
+ * samples — so the shifted sample is interpolated. It is read off the end of the
+ * buffer because a lock is a claim about what is arriving now.
  */
-export function findRisingTrigger(samples: Float32Array, armBelow: number): number | null {
-  let armed = false;
-  for (let index = 0; index + 1 < samples.length; index += 1) {
-    const here = samples[index]!;
-    if (here < -armBelow) {
-      armed = true;
-      continue;
-    }
-    if (armed && here <= 0 && samples[index + 1]! > 0) {
-      return index;
-    }
+export function periodicity(samples: Float32Array, periodSamples: number): number {
+  const lag = Math.ceil(periodSamples) + 1;
+  const window = Math.min(CORRELATION_WINDOW, samples.length - lag);
+  if (window < 64) {
+    return 0;
   }
-  return null;
+
+  const first = samples.length - window - lag;
+  let dot = 0;
+  let here = 0;
+  let there = 0;
+  for (let index = 0; index < window; index += 1) {
+    const at = first + index;
+    const a = samples[at]!;
+    const b = interpolate(samples, at + periodSamples);
+    dot += a * b;
+    here += a * a;
+    there += b * b;
+  }
+
+  return here === 0 || there === 0 ? 0 : dot / Math.sqrt(here * there);
+}
+
+/** The sample at a fractional index, linearly. */
+function interpolate(samples: Float32Array, at: number): number {
+  const whole = Math.floor(at);
+  const fraction = at - whole;
+  const before = samples[whole] ?? 0;
+  const after = samples[whole + 1] ?? before;
+  return before + (after - before) * fraction;
 }
 
 /**
  * The period of the note in the buffer, in fractional samples, by normalised
  * autocorrelation — or `null` when the buffer is not periodic enough to say.
  *
- * This is a period, not a pitch measurement: it exists so the trace is two cycles
- * wide and stands still. The number the app publishes as a frequency comes from
- * MEDIR (#10), stamped, and from the note at equal temperament, stamped `TEORÍA`.
+ * **The scope does not use this and must not**: on a bright FM timbre it picks a
+ * sub-multiple of the period, which is the whole reason the trace locks to the
+ * note instead. What it is for is the espectro's axis, which is drawn in
+ * multiples of the note and needs *some* note when the MIDI port is gone — a
+ * fallback for an axis, never a frequency anybody reads.
  */
 export function estimatePeriod(
   samples: Float32Array,
@@ -236,13 +389,18 @@ function refinePeak(values: Float64Array, peak: number): number {
   return peak + (0.5 * (before - after)) / denominator;
 }
 
-function peakOf(samples: Float32Array): number {
-  let peak = 0;
+/** The whole swing of the window: the loudest sample above zero minus below. */
+function peakToPeak(samples: Float32Array): number {
+  let low = 0;
+  let high = 0;
   for (let index = 0; index < samples.length; index += 1) {
-    const magnitude = Math.abs(samples[index]!);
-    if (magnitude > peak) {
-      peak = magnitude;
+    const value = samples[index]!;
+    if (value < low) {
+      low = value;
+    }
+    if (value > high) {
+      high = value;
     }
   }
-  return peak;
+  return high - low;
 }

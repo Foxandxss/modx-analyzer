@@ -219,24 +219,46 @@ describe('BlockMeter', () => {
   });
 });
 
-describe('AudioBridge', () => {
-  it('hands back a trace of two cycles of the note that is playing', () => {
-    const bridge = new AudioBridge();
-    // Three bloques of a continuous 261.626 Hz, so the history is full.
-    for (let sequence = 0; sequence < 3; sequence += 1) {
-      bridge.receive(
-        fakeBlock({ sequence, mono: heldNote(261.626, sequence * BLOCK_FRAMES) }),
+describe('AudioBridge · el enganche', () => {
+  /** Bloques of one continuous note, enough to fill the scope's history. */
+  function play(bridge: AudioBridge, note: number, blocks = 8) {
+    let frame = bridge.receive(fakeBlock({ mono: heldNote(note, 0) }), 0);
+    for (let sequence = 1; sequence < blocks; sequence += 1) {
+      frame = bridge.receive(
+        fakeBlock({ sequence, mono: heldNote(note, sequence * BLOCK_FRAMES) }),
         sequence * 30,
       );
     }
+    return frame;
+  }
 
-    const frame = bridge.receive(
-      fakeBlock({ sequence: 3, mono: heldNote(261.626, 3 * BLOCK_FRAMES) }),
-      90,
-    );
+  it('locks to the note the keyboard says it is holding, and cuts four cycles', () => {
+    const bridge = new AudioBridge();
+    bridge.setNote(261.626);
 
-    expect(frame.frequencyHz).toBeCloseTo(261.626, 0);
-    expect(frame.trace!.length).toBeCloseTo((2 * 44100) / 261.626, 0);
+    const frame = play(bridge, 261.626);
+
+    expect(frame.scope.kind).toBe('locked');
+    expect(frame.scope.kind === 'locked' && frame.scope.frequencyHz).toBe(261.626);
+    expect(frame.trace!.length).toBeCloseTo((4 * SAMPLE_RATE) / 261.626, 0);
+  });
+
+  it('refuses with no held note, whatever is coming down the cable', () => {
+    // Audio with the MIDI port gone: the espectro still has an axis to draw
+    // against, and the scope still has nothing it is entitled to lock to.
+    const frame = play(new AudioBridge(), 261.626);
+
+    expect(frame.scope.kind === 'noLock' && frame.scope.reason).toBe('noHeldNote');
+    expect(frame.drawnHz).toBeCloseTo(261.626, 0);
+  });
+
+  it('refuses under a chord: two pitches have no fundamental', () => {
+    const bridge = new AudioBridge();
+    bridge.setNote(261.626, 3);
+
+    const frame = play(bridge, 261.626);
+
+    expect(frame.scope.kind === 'noLock' && frame.scope.reason).toBe('moreThanOneNote');
   });
 
   it('draws nothing at all when the audio is digital zeros', () => {
@@ -245,21 +267,34 @@ describe('AudioBridge', () => {
     const frame = bridge.receive(fakeBlock({ silent: true }), 0);
 
     expect(frame.trace).toBeNull();
-    expect(frame.frequencyHz).toBeNull();
+    expect(frame.scope.kind).toBe('belowFloor');
+    expect(frame.drawnHz).toBeNull();
     expect(bridge.stats().silent).toBe(true);
+  });
+
+  it('takes fc from the last capture ahead of the note the keyboard says', () => {
+    // The branch waits for the fit: nothing in the build calls this setter.
+    const bridge = new AudioBridge();
+    bridge.setNote(261.626);
+    bridge.setCapturedFc(130.813);
+
+    const frame = play(bridge, 130.813);
+
+    expect(frame.scope.kind === 'locked' && frame.scope.frequencyHz).toBe(130.813);
   });
 
   it('keeps the trace still while the bloques are cut at arbitrary phases', () => {
     const bridge = new AudioBridge();
     const note = 261.626;
+    bridge.setNote(note);
     let last: Float32Array | null = null;
 
-    for (let sequence = 0; sequence < 8; sequence += 1) {
+    for (let sequence = 0; sequence < 12; sequence += 1) {
       const frame = bridge.receive(
         fakeBlock({ sequence, mono: heldNote(note, sequence * BLOCK_FRAMES) }),
         sequence * 30,
       );
-      if (sequence >= 4 && frame.trace !== null) {
+      if (sequence >= 8 && frame.trace !== null) {
         if (last !== null) {
           expect(frame.trace.length).toBe(last.length);
           for (let index = 0; index < frame.trace.length; index += 13) {
@@ -308,7 +343,7 @@ describe('AudioBridge · la vista viva', () => {
     const frame = hold(bridge, 261.626);
 
     expect(frame.trama.fundamentalHz).toBe(130.813);
-    expect(frame.frequencyHz).toBeCloseTo(261.626, 0);
+    expect(frame.drawnHz).toBe(130.813);
   });
 
   it('marca el comb del generador con su frecuencia y no lo cuenta como armónico', () => {

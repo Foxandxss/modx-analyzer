@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-import { LiveTrama, Medida } from 'modx-dsp';
+import { LiveTrama, Medida, ScopeLock } from 'modx-dsp';
 import { AudioBridge, BridgeStats, stamp } from './bridge';
 
 /**
@@ -41,6 +41,12 @@ export interface BlockMessage {
 export interface NoteMessage {
   readonly kind: 'note';
   readonly hz: number | null;
+  /**
+   * How many distinct pitches are down. It rides with the note because the scope
+   * needs both: a chord has a lowest note and no fundamental, and locking to the
+   * first of three would stand a shape still that belongs to none of them.
+   */
+  readonly held: number;
 }
 
 /**
@@ -57,7 +63,10 @@ export type WorkerMessage = BlockMessage | NoteMessage | MeasureMessage;
 export interface FrameMessage {
   readonly kind: 'frame';
   readonly trace: Float32Array | null;
-  readonly frequencyHz: number | null;
+  /** The lock, or why there is none: what the scope's caption is written from. */
+  readonly scope: ScopeLock;
+  /** The note the espectro's axis was drawn against. Not the scope's figure. */
+  readonly drawnHz: number | null;
   /** The espectro, the armónicos and the ridgeline, ready to draw. */
   readonly trama: LiveTrama;
   /** What this trama cost end to end here, in ms. Budget: 33. */
@@ -80,7 +89,7 @@ let received = 0;
 
 addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
   if (event.data.kind === 'note') {
-    bridge.setNote(event.data.hz);
+    bridge.setNote(event.data.hz, event.data.held);
     return;
   }
   if (event.data.kind === 'measure') {
@@ -103,7 +112,8 @@ addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
   const message: FrameMessage = {
     kind: 'frame',
     trace: frame.trace,
-    frequencyHz: frame.frequencyHz,
+    scope: frame.scope,
+    drawnHz: frame.drawnHz,
     trama: frame.trama,
     tramaMs: frame.tramaMs,
     ...(received % STATS_EVERY === 0 ? { stats: bridge.stats() } : {}),
