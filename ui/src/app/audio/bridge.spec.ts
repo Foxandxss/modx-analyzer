@@ -312,25 +312,25 @@ describe('AudioBridge · el enganche', () => {
 describe('AudioBridge · la vista viva', () => {
   /** Enough bloques for the 4 096 window to be full of the note and nothing else. */
   function hold(bridge: AudioBridge, frequency: number, blocks = 5) {
-    let frame = bridge.receive(fakeBlock({ mono: heldNote(frequency, 0) }), 0);
+    let bridged = bridge.receive(fakeBlock({ mono: heldNote(frequency, 0) }), 0);
     for (let sequence = 1; sequence < blocks; sequence += 1) {
-      frame = bridge.receive(
+      bridged = bridge.receive(
         fakeBlock({ sequence, mono: heldNote(frequency, sequence * BLOCK_FRAMES) }),
         sequence * 30,
       );
     }
-    return frame;
+    return bridged;
   }
 
   it('trae la curva, las barras y la nota contra la que están dibujadas', () => {
-    const frame = hold(new AudioBridge(), 261.626);
+    const bridged = hold(new AudioBridge(), 261.626);
 
-    expect(frame.trama.curve).toHaveLength(CURVE_POINTS);
-    expect(frame.trama.harmonics).toHaveLength(HARMONIC_BARS);
-    expect(frame.trama.fundamentalHz).toBeCloseTo(261.626, 0);
+    expect(bridged.frame.curve).toHaveLength(CURVE_POINTS);
+    expect(bridged.frame.harmonics).toHaveLength(HARMONIC_BARS);
+    expect(bridged.frame.fundamentalHz).toBeCloseTo(261.626, 0);
     // A pure tone: the first bar is the peak and the second is far under it.
-    expect(frame.trama.harmonics![0]).toBeCloseTo(0, 0);
-    expect(frame.trama.harmonics![1]).toBeLessThan(-60);
+    expect(bridged.frame.harmonics![0]).toBeCloseTo(0, 0);
+    expect(bridged.frame.harmonics![1]).toBeLessThan(-60);
   });
 
   it('dibuja el eje contra la nota pulsada y no contra el periodo que midió', () => {
@@ -340,17 +340,17 @@ describe('AudioBridge · la vista viva', () => {
     const bridge = new AudioBridge();
     bridge.setNote(130.813);
 
-    const frame = hold(bridge, 261.626);
+    const bridged = hold(bridge, 261.626);
 
-    expect(frame.trama.fundamentalHz).toBe(130.813);
-    expect(frame.drawnHz).toBe(130.813);
+    expect(bridged.frame.fundamentalHz).toBe(130.813);
+    expect(bridged.drawnHz).toBe(130.813);
   });
 
   it('marca el comb del generador con su frecuencia y no lo cuenta como armónico', () => {
     const bridge = new AudioBridge();
-    let frame = bridge.receive(fakeBlock({ mono: withComb(heldNote(261.626, 0), 0) }), 0);
+    let bridged = bridge.receive(fakeBlock({ mono: withComb(heldNote(261.626, 0), 0) }), 0);
     for (let sequence = 1; sequence < 5; sequence += 1) {
-      frame = bridge.receive(
+      bridged = bridge.receive(
         fakeBlock({
           sequence,
           mono: withComb(heldNote(261.626, sequence * BLOCK_FRAMES), sequence * BLOCK_FRAMES),
@@ -359,8 +359,8 @@ describe('AudioBridge · la vista viva', () => {
       );
     }
 
-    expect(frame.trama.artefactHz).toBeCloseTo(2756.25, 2);
-    const comb = frame.trama.partials.filter((partial) => partial.kind === 'artefact');
+    expect(bridged.frame.artefactHz).toBeCloseTo(2756.25, 2);
+    const comb = bridged.frame.partials.filter((partial) => partial.kind === 'artefact');
     expect(comb.length).toBeGreaterThan(0);
     for (const line of comb) {
       expect(line.harmonic).toBeNull();
@@ -368,21 +368,21 @@ describe('AudioBridge · la vista viva', () => {
   });
 
   it('no dibuja nada cuando no entra nada, ni una línea plana', () => {
-    const frame = new AudioBridge().receive(fakeBlock({ silent: true }), 0);
+    const bridged = new AudioBridge().receive(fakeBlock({ silent: true }), 0);
 
-    expect(frame.trama.curve).toBeNull();
-    expect(frame.trama.harmonics).toBeNull();
-    expect(frame.trama.partials).toEqual([]);
+    expect(bridged.frame.curve).toBeNull();
+    expect(bridged.frame.harmonics).toBeNull();
+    expect(bridged.frame.partials).toEqual([]);
   });
 
   it('mide lo que cuesta cada trama en vez de suponerlo', () => {
     const bridge = new AudioBridge();
-    const frame = hold(bridge, 261.626);
+    const bridged = hold(bridge, 261.626);
 
-    expect(frame.tramaMs).toBeGreaterThanOrEqual(0);
+    expect(bridged.frameMs).toBeGreaterThanOrEqual(0);
     const stats = bridge.stats();
-    expect(stats.tramaP50Ms).not.toBeNull();
-    expect(stats.tramaMaxMs).toBeGreaterThanOrEqual(stats.tramaP50Ms!);
+    expect(stats.frameP50Ms).not.toBeNull();
+    expect(stats.frameMaxMs).toBeGreaterThanOrEqual(stats.frameP50Ms!);
   });
 });
 

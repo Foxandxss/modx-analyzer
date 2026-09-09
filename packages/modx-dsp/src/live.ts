@@ -24,7 +24,7 @@ import { Spectrum, spectrum, windowPeak } from './spectrum';
  * note and the comb's sidebands cannot be found without it.
  */
 
-export interface LiveTrama {
+export interface LiveFrame {
   /** The note the trace was triggered at, or `null` when nothing is periodic. */
   readonly fundamentalHz: number | null;
   /** The strongest bin, in dBFS. The working level of fase 0 is −15 to −25. */
@@ -46,7 +46,7 @@ export interface LiveTrama {
 }
 
 /** The dead trama: no audio, no note, nothing claimed. */
-export const NO_TRAMA: LiveTrama = {
+export const NO_FRAME: LiveFrame = {
   fundamentalHz: null,
   peakDb: -Infinity,
   // Not 0: in absolute dBFS that is full scale, and a dead frame claiming a
@@ -67,14 +67,14 @@ export const NO_TRAMA: LiveTrama = {
  * §3), and an axis that called it 1× would redraw the whole spectrum every time
  * somebody turned a knob.
  */
-export function liveTrama(
+export function liveFrame(
   samples: Float32Array,
   fundamentalHz: number | null,
   sampleRate: number = SAMPLE_RATE,
   window: number = LIVE_WINDOW,
-): LiveTrama {
+): LiveFrame {
   if (samples.length < window || windowPeak(samples, window) < NOTHING_ENTERING) {
-    return NO_TRAMA;
+    return NO_FRAME;
   }
 
   const analysed = spectrum(samples, window, sampleRate);

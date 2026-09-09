@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SAMPLE_RATE } from './constants';
 import { GOLDEN_F0, GoldenName, readGolden } from './golden';
-import { liveTrama } from './live';
+import { liveFrame } from './live';
 import {
   LockSource,
   SCOPE_CYCLES,
@@ -90,7 +90,7 @@ describe('fundamentalTrigger', () => {
     expect(samples[trigger + 4]).toBeGreaterThan(0);
   });
 
-  it('picks the same crossing however the trama was cut', () => {
+  it('picks the same crossing however the frame was cut', () => {
     const period = SAMPLE_RATE / 261.626;
     const shift = 97;
     const whole = tone(261.626, [1], 0, LENGTH + shift);
@@ -169,7 +169,7 @@ describe('scopeLock · el enganche', () => {
     expect(lock.length / lock.periodSamples).toBeCloseTo(SCOPE_CYCLES, 2);
   });
 
-  it('stands still: two tramas of the same note start on the same shape', () => {
+  it('stands still: two frames of the same note start on the same shape', () => {
     const note = 261.626;
     const shift = 97;
     const whole = tone(note, [0.4, 0, 1], 0, LENGTH + shift);
@@ -282,7 +282,7 @@ describe('scopeLock · los vectores de oro', () => {
     it(`locks ${name} to the note the MODX8 was playing`, () => {
       const samples = readGolden(name);
       // The floor the panel would be reading beside it: same window, same word.
-      const floorDb = liveTrama(samples, GOLDEN_F0).floorDb;
+      const floorDb = liveFrame(samples, GOLDEN_F0).floorDb;
 
       const lock = scopeLock(samples, holding(GOLDEN_F0, floorDb));
 
@@ -304,7 +304,7 @@ describe('scopeLock · los vectores de oro', () => {
     // standing one still that is not there.
     const samples = readGolden('fmx-ratio1414');
 
-    const lock = scopeLock(samples, holding(GOLDEN_F0, liveTrama(samples, GOLDEN_F0).floorDb));
+    const lock = scopeLock(samples, holding(GOLDEN_F0, liveFrame(samples, GOLDEN_F0).floorDb));
 
     expect(lock.kind === 'noLock' && lock.reason).toBe('pitchUnstable');
   });
@@ -313,7 +313,7 @@ describe('scopeLock · los vectores de oro', () => {
     // `modhigh` is the one that breaks a scope that trusts the strongest line or
     // the autocorrelation: the peak of its spectrum is the 9th harmonic.
     const samples = readGolden('fmx-ratio2-modhigh');
-    const lock = scopeLock(samples, holding(GOLDEN_F0, liveTrama(samples, GOLDEN_F0).floorDb));
+    const lock = scopeLock(samples, holding(GOLDEN_F0, liveFrame(samples, GOLDEN_F0).floorDb));
 
     expect(lock.kind === 'locked' && lock.frequencyHz).toBe(GOLDEN_F0);
   });

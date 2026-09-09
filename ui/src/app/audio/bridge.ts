@@ -1,13 +1,13 @@
 import {
   BLOCK_FRAMES,
   CHANNELS,
-  LiveTrama,
+  LiveFrame,
   MEASURE_WINDOW,
   Medida,
   SAMPLE_RATE,
   ScopeLock,
   estimatePeriod,
-  liveTrama,
+  liveFrame,
   medida,
   scopeLock,
 } from 'modx-dsp';
@@ -96,7 +96,7 @@ const HISTORY_BLOCKS = SCOPE_BLOCKS;
  * How many trama costs are kept for the percentiles. The same 65 536 as the
  * latencies, for the same reason: a ten-minute run is measured whole.
  */
-const TRAMA_HISTORY = 65536;
+const FRAME_HISTORY = 65536;
 
 /**
  * How many delivery latencies are kept for the percentiles: 33 minutes at 33.3 Hz,
@@ -283,9 +283,9 @@ export interface BridgeStats {
    * the espectro, the armónicos and the ridgeline being ready to draw. The budget
    * is 33 ms — one bloque — and these are the numbers that say whether it is met.
    */
-  readonly tramaP50Ms: number | null;
-  readonly tramaP99Ms: number | null;
-  readonly tramaMaxMs: number | null;
+  readonly frameP50Ms: number | null;
+  readonly frameP99Ms: number | null;
+  readonly frameMaxMs: number | null;
   /** No entra audio: exact digital zeros for a second. */
   readonly silent: boolean;
 }
@@ -307,9 +307,9 @@ const NO_STATS: BridgeStats = {
   p50Ms: null,
   p99Ms: null,
   maxMs: null,
-  tramaP50Ms: null,
-  tramaP99Ms: null,
-  tramaMaxMs: null,
+  frameP50Ms: null,
+  frameP99Ms: null,
+  frameMaxMs: null,
   silent: false,
 };
 
@@ -388,9 +388,9 @@ export class BlockMeter {
   private worstGapMs: number | null = null;
   private worstGapAtSeconds = 0;
 
-  /** What each trama cost the worker, in ms, oldest overwritten. */
-  private readonly tramas = new Float64Array(TRAMA_HISTORY);
-  private tramasWritten = 0;
+  /** What each frame cost the worker, in ms, oldest overwritten. */
+  private readonly frameCosts = new Float64Array(FRAME_HISTORY);
+  private frameCostsWritten = 0;
 
   /**
    * `postedAt` is `performance.now()` when the main thread took the bloque off
@@ -460,9 +460,9 @@ export class BlockMeter {
   }
 
   /** What the analysis of one trama cost, in ms. Measured, never estimated. */
-  observeTrama(costMs: number): void {
-    this.tramas[this.tramasWritten % TRAMA_HISTORY] = costMs;
-    this.tramasWritten += 1;
+  observeFrame(costMs: number): void {
+    this.frameCosts[this.frameCostsWritten % FRAME_HISTORY] = costMs;
+    this.frameCostsWritten += 1;
   }
 
   stats(): BridgeStats {
@@ -485,8 +485,8 @@ export class BlockMeter {
     totals.sort((a, b) => a - b);
 
     // The trama costs need no floor subtracted: one clock measured them.
-    const tramas = Array.from(
-      this.tramas.slice(0, Math.min(this.tramasWritten, TRAMA_HISTORY)),
+    const frameCosts = Array.from(
+      this.frameCosts.slice(0, Math.min(this.frameCostsWritten, FRAME_HISTORY)),
     ).sort((a, b) => a - b);
 
     return {
@@ -506,9 +506,9 @@ export class BlockMeter {
       p50Ms: percentile(totals, 0.5),
       p99Ms: percentile(totals, 0.99),
       maxMs: totals[totals.length - 1] ?? null,
-      tramaP50Ms: percentile(tramas, 0.5),
-      tramaP99Ms: percentile(tramas, 0.99),
-      tramaMaxMs: tramas[tramas.length - 1] ?? null,
+      frameP50Ms: percentile(frameCosts, 0.5),
+      frameP99Ms: percentile(frameCosts, 0.99),
+      frameMaxMs: frameCosts[frameCosts.length - 1] ?? null,
       silent: this.silent,
     };
   }
@@ -570,10 +570,10 @@ export interface BridgeFrame {
    * numbers the harmonics and finds the comb's sidebands.
    */
   readonly drawnHz: number | null;
-  /** The espectro, the armónicos and the ridgeline of this trama. */
-  readonly trama: LiveTrama;
+  /** The espectro, the armónicos and the ridgeline of this frame. */
+  readonly frame: LiveFrame;
   /** What this trama cost, in ms, measured with `performance` marks. */
-  readonly tramaMs: number;
+  readonly frameMs: number;
   /**
    * When the bloque this trama was computed from left the device, in ms on the
    * capture's own clock (`sentAtMicros`, which starts at zero with the stream).
@@ -596,9 +596,9 @@ export interface MedidaFrame {
 }
 
 /** The marks the trama budget is measured with. Named so a profile reads. */
-const MARK_START = 'trama:inicio';
-const MARK_END = 'trama:fin';
-const MEASURE = 'trama';
+const MARK_START = 'frame:start';
+const MARK_END = 'frame:end';
+const MEASURE = 'frame';
 
 /** And the medida's own, which nobody is timing against a budget. */
 const MEDIDA_START = 'medida:inicio';
@@ -700,7 +700,7 @@ export class AudioBridge {
     const axisWindow = this.history.subarray(this.history.length - BLOCK_FRAMES * AXIS_BLOCKS);
     const period = this.noteHz === null ? estimatePeriod(axisWindow, SAMPLE_RATE) : null;
     this.drawnHz = this.noteHz ?? (period === null ? null : SAMPLE_RATE / period);
-    const trama = liveTrama(this.history, this.drawnHz);
+    const frame = liveFrame(this.history, this.drawnHz);
 
     // The floor the lock is weighed against is the same figure the readout says
     // beside it (#30): one word, one meaning, one window.
@@ -710,7 +710,7 @@ export class AudioBridge {
         capturedFcHz: this.capturedFcHz,
         heldHz: this.noteHz,
         heldPitches: this.heldPitches,
-        floorDb: trama.floorDb,
+        floorDb: frame.floorDb,
       },
       SAMPLE_RATE,
     );
@@ -725,7 +725,7 @@ export class AudioBridge {
 
     performance.mark(MARK_END);
     const measured = performance.measure(MEASURE, MARK_START, MARK_END);
-    this.meter.observeTrama(measured.duration);
+    this.meter.observeFrame(measured.duration);
     performance.clearMarks(MARK_START);
     performance.clearMarks(MARK_END);
     performance.clearMeasures(MEASURE);
@@ -734,8 +734,8 @@ export class AudioBridge {
       trace,
       scope,
       drawnHz: this.drawnHz,
-      trama,
-      tramaMs: measured.duration,
+      frame,
+      frameMs: measured.duration,
       atMs: block.sentAtMicros / 1000,
     };
   }

@@ -60,7 +60,7 @@ export class Spectrum extends LiveCanvas {
       context.stroke();
     }
 
-    const { curve, partials, fundamentalHz } = this.audio.live.trama;
+    const { curve, partials, fundamentalHz } = this.audio.live.frame;
     if (curve === null || fundamentalHz === null) {
       // No note, no axis, no drawing: an empty frame is the honest one.
       return;

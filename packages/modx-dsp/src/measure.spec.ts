@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ARTEFACT_HZ, MEASURE_WINDOW } from './constants';
 import { GOLDEN_F0, GoldenName, readGolden } from './golden';
-import { liveTrama } from './live';
+import { liveFrame } from './live';
 import { Medida, medida } from './measure';
 import { Partial } from './partials';
 
@@ -43,7 +43,7 @@ const INHARMONIC_LINES = [
 
 /** The same vector's floor at 4 096, so the two windows can be compared. */
 function liveFloorDb(name: GoldenName): number {
-  return liveTrama(readGolden(name), GOLDEN_F0).floorDb;
+  return liveFrame(readGolden(name), GOLDEN_F0).floorDb;
 }
 
 function measured(name: GoldenName): Medida {

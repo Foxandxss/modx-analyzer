@@ -64,7 +64,7 @@ describe('AudioService', () => {
     expect(worker.notes.at(-1)).toBeNull();
   });
 
-  it('keeps the last fourteen tramas and no more, each with its own stamp', () => {
+  it('keeps the last fourteen frames and no more, each with its own stamp', () => {
     const { audio, hold } = setUp();
 
     hold(WATERFALL_FRAMES + 12);
@@ -131,7 +131,7 @@ describe('AudioService', () => {
     expect(drawn.spanMs).toBeGreaterThan(drawn.frames * 30);
   });
 
-  it('adds no ridgeline for a trama with nothing in it', () => {
+  it('adds no ridgeline for a frame with nothing in it', () => {
     const { audio, backend, hold } = setUp();
     hold(6);
 
@@ -149,7 +149,7 @@ describe('AudioService', () => {
     // The note is over. What is already drawn is its tail; the frame does not
     // fill with the noise floor.
     expect(audio.live.waterfall.length).toBe(drawn);
-    expect(audio.live.trama.curve).toBeNull();
+    expect(audio.live.frame.curve).toBeNull();
   });
 
   it('throws the medida away when the sound changes and does not bring it back', async () => {
@@ -195,7 +195,7 @@ describe('AudioService', () => {
     expect(audio.live.cuts).toEqual([audio.live.rows]);
     hold(4);
     expect(audio.live.waterfall.length).toBeGreaterThan(before);
-    expect(audio.live.trama.curve).not.toBeNull();
+    expect(audio.live.frame.curve).not.toBeNull();
   });
 
   it('forgets a cut once the ridgelines it separated have scrolled away', () => {

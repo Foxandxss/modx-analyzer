@@ -88,7 +88,7 @@ export class Harmonics extends LiveCanvas {
     context.lineTo(width, base);
     context.stroke();
 
-    const bars = this.audio.live.trama.harmonics;
+    const bars = this.audio.live.frame.harmonics;
     if (bars === null) {
       return;
     }

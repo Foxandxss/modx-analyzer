@@ -27,7 +27,7 @@ escribe `node golden/trim.mjs <carpeta wav del spike>`, y hace tres cosas, cada 
 
 ## Dos cosas que conviene saber antes de usarlos
 
-- **La ventana que se analiza es la última**, no la primera: `liveTrama` lee las últimas 4 096
+- **La ventana que se analiza es la última**, no la primera: `liveFrame` lee las últimas 4 096
   muestras de lo que se le pasa. En el segundo 1 la senoide todavía tiene una envolvente moviéndose
   por debajo y la falda de su propia fuga se sienta 45 dB por encima del suelo; una ventana temprana
   mide el ataque y lo llama ruido.

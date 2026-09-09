@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-import { LiveTrama, Medida, ScopeLock } from 'modx-dsp';
+import { LiveFrame, Medida, ScopeLock } from 'modx-dsp';
 import { AudioBridge, BridgeStats, stamp } from './bridge';
 
 /**
@@ -68,9 +68,9 @@ export interface FrameMessage {
   /** The note the espectro's axis was drawn against. Not the scope's figure. */
   readonly drawnHz: number | null;
   /** The espectro, the armónicos and the ridgeline, ready to draw. */
-  readonly trama: LiveTrama;
+  readonly frame: LiveFrame;
   /** What this trama cost end to end here, in ms. Budget: 33. */
-  readonly tramaMs: number;
+  readonly frameMs: number;
   /** When the bloque left the device, in ms. The waterfall stamps its row with it. */
   readonly atMs: number;
   /** Present once a second, absent on the other 32 tramas. */
@@ -108,25 +108,25 @@ addEventListener('message', (event: MessageEvent<WorkerMessage>) => {
     return;
   }
 
-  const frame = bridge.receive(event.data.buffer, stamp(), event.data.postedAt);
+  const bridged = bridge.receive(event.data.buffer, stamp(), event.data.postedAt);
   received += 1;
 
   const message: FrameMessage = {
     kind: 'frame',
-    trace: frame.trace,
-    scope: frame.scope,
-    drawnHz: frame.drawnHz,
-    trama: frame.trama,
-    tramaMs: frame.tramaMs,
-    atMs: frame.atMs,
+    trace: bridged.trace,
+    scope: bridged.scope,
+    drawnHz: bridged.drawnHz,
+    frame: bridged.frame,
+    frameMs: bridged.frameMs,
+    atMs: bridged.atMs,
     ...(received % STATS_EVERY === 0 ? { stats: bridge.stats() } : {}),
   };
 
-  postMessage(message, transferable(frame.trace, frame.trama));
+  postMessage(message, transferable(bridged.trace, bridged.frame));
 });
 
-/** Every array in the trama is this worker's own, so all of them go by transfer. */
-function transferable(trace: Float32Array | null, trama: LiveTrama): Transferable[] {
-  const buffers = [trace?.buffer, trama.curve?.buffer, trama.harmonics?.buffer];
+/** Every array in the frame is this worker's own, so all of them go by transfer. */
+function transferable(trace: Float32Array | null, frame: LiveFrame): Transferable[] {
+  const buffers = [trace?.buffer, frame.curve?.buffer, frame.harmonics?.buffer];
   return buffers.filter((buffer): buffer is ArrayBuffer => buffer !== undefined);
 }

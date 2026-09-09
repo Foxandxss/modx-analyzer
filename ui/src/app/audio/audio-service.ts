@@ -9,11 +9,11 @@ import {
   untracked,
 } from '@angular/core';
 import {
-  LiveTrama,
+  LiveFrame,
   MEASURE_WINDOW,
   MEASURE_WINDOW_MS,
   Medida,
-  NO_TRAMA,
+  NO_FRAME,
   ScopeLock,
   WATERFALL_FRAMES,
 } from 'modx-dsp';
@@ -84,9 +84,9 @@ export const NO_STATS: BridgeStats = {
   p50Ms: null,
   p99Ms: null,
   maxMs: null,
-  tramaP50Ms: null,
-  tramaP99Ms: null,
-  tramaMaxMs: null,
+  frameP50Ms: null,
+  frameP99Ms: null,
+  frameMaxMs: null,
   silent: false,
 };
 
@@ -106,7 +106,7 @@ export interface LiveView {
    * floor is a band and no trace at all.
    */
   scope: ScopeLock;
-  trama: LiveTrama;
+  frame: LiveFrame;
   /** The last 14 curves, oldest first, newest last. */
   waterfall: Float32Array[];
   /**
@@ -269,7 +269,7 @@ export class AudioService {
   readonly live: LiveView = {
     trace: null,
     scope: NO_LOCK,
-    trama: NO_TRAMA,
+    frame: NO_FRAME,
     waterfall: [],
     stamps: [],
     rows: 0,
@@ -737,7 +737,7 @@ export class AudioService {
     pending?.(view);
   }
 
-  private onFrame(frame: FrameMessage): void {
+  private onFrame(message: FrameMessage): void {
     // The rate is counted from the first bloque, so the first readout already
     // has an interval to divide by instead of a dash for a second.
     this.readoutAt ??= performance.now();
@@ -745,17 +745,17 @@ export class AudioService {
     // that something arrived, and the readout only moves four times a second.
     this.lastBlockAt.set(this.clock.now());
 
-    this.live.trace = frame.trace;
-    this.live.scope = frame.scope;
-    this.live.trama = frame.trama;
+    this.live.trace = message.trace;
+    this.live.scope = message.scope;
+    this.live.frame = message.frame;
     this.live.version += 1;
 
-    // A trama with no curve adds no ridgeline: the note is over, and what is
+    // A frame with no curve adds no ridgeline: the note is over, and what is
     // already drawn is the tail of it fading. Nothing is pushed to keep the
     // waterfall from filling with the floor.
-    if (frame.trama.curve !== null) {
-      this.live.waterfall.push(frame.trama.curve);
-      this.live.stamps.push(frame.atMs);
+    if (message.frame.curve !== null) {
+      this.live.waterfall.push(message.frame.curve);
+      this.live.stamps.push(message.atMs);
       this.live.rows += 1;
       if (this.live.waterfall.length > WATERFALL_FRAMES) {
         this.live.waterfall.shift();
@@ -770,8 +770,8 @@ export class AudioService {
       }
     }
 
-    if (frame.stats !== undefined) {
-      this.stats.set(frame.stats);
+    if (message.stats !== undefined) {
+      this.stats.set(message.stats);
     }
 
     // The readouts move at 4 Hz, except when the vista viva starts or stops
@@ -780,15 +780,15 @@ export class AudioService {
     // of a second for one would be a stutter. A caption that still says `LOCKED`
     // over a trace that has already gone amber is worse than a stutter.
     this.sinceReadout += 1;
-    const drawing = frame.trama.curve !== null;
-    const locked = lockState(frame.scope) !== lockState(this.scope());
+    const drawing = message.frame.curve !== null;
+    const locked = lockState(message.scope) !== lockState(this.scope());
     if (this.sinceReadout >= READOUT_EVERY || drawing !== this.drawing() || locked) {
-      this.refreshReadouts(frame);
+      this.refreshReadouts(message);
     }
   }
 
   /** The four numbers a human reads, moved at 4 Hz and rounded so they hold still. */
-  private refreshReadouts(frame: FrameMessage): void {
+  private refreshReadouts(message: FrameMessage): void {
     const now = performance.now();
     if (this.readoutAt !== null) {
       const seconds = (now - this.readoutAt) / 1000;
@@ -802,11 +802,11 @@ export class AudioService {
     const started = this.stats().captureStartedAtMs;
     this.mainThreadLagAtSeconds.set(started === 0 ? 0 : (this.lag.worstAt - started) / 1000);
 
-    this.scope.set(frame.scope);
+    this.scope.set(message.scope);
     this.waterfall.set(waterfallView(this.live.stamps));
-    this.floorDb.set(frame.trama.curve === null ? null : Math.round(frame.trama.floorDb));
-    this.holdArtefact(frame.trama.artefactHz, frame.drawnHz, now);
-    this.drawing.set(frame.trama.curve !== null);
+    this.floorDb.set(message.frame.curve === null ? null : Math.round(message.frame.floorDb));
+    this.holdArtefact(message.frame.artefactHz, message.drawnHz, now);
+    this.drawing.set(message.frame.curve !== null);
   }
 
   /**

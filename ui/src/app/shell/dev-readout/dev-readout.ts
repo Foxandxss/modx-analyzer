@@ -48,7 +48,7 @@ export type BenchGroup = 'BRIDGE' | 'STARTUP' | 'AUDIO' | 'PORT';
             <span class="dev__loud">BROKEN CLOCK</span>
           }
           <span class="dev__label">FRAME</span>
-          <span>{{ tramaLine() }}</span>
+          <span>{{ frameLine() }}</span>
         }
         @case ('STARTUP') {
           <span class="dev__label">DUMP</span>
@@ -185,12 +185,12 @@ export class DevReadout {
    * What one trama of the vista viva costs end to end in the worker, which is
    * the number #9 asks to be written down. The budget is one bloque: 33 ms.
    */
-  protected readonly tramaLine = computed(() => {
+  protected readonly frameLine = computed(() => {
     const stats = this.audio.stats();
     return [
-      `p50 ${millis(stats.tramaP50Ms)}`,
-      `p99 ${millis(stats.tramaP99Ms)}`,
-      `max ${millis(stats.tramaMaxMs)}`,
+      `p50 ${millis(stats.frameP50Ms)}`,
+      `p99 ${millis(stats.frameP99Ms)}`,
+      `max ${millis(stats.frameMaxMs)}`,
       `${this.audio.fps() === null ? DEAD_MARK : this.audio.fps()!.toFixed(1)} fps`,
     ].join(' · ');
   });

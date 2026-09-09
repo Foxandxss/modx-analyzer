@@ -150,7 +150,7 @@ export function scopeLock(
 
   const swing = peakToPeak(samples);
   const swingDb = 20 * Math.log10(swing / 2);
-  // A floor of `-Infinity` is `NO_TRAMA`'s: nothing entered, so there is no
+  // A floor of `-Infinity` is `NO_FRAME`'s: nothing entered, so there is no
   // level to stand over and no arithmetic to do on it.
   if (
     !Number.isFinite(swingDb) ||

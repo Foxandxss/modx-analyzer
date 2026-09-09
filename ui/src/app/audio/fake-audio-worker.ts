@@ -39,19 +39,19 @@ export class FakeAudioWorker implements AudioWorkerLike {
     // The bloque is handed over the instant it is posted, because there is no
     // thread between the two here. That is the honest `postedAt` for this
     // worker: nothing waited in a queue that does not exist.
-    const frame = this.bridge.receive(message.buffer, stamp(), message.postedAt);
+    const bridged = this.bridge.receive(message.buffer, stamp(), message.postedAt);
     this.received += 1;
 
     // Every trama carries the stats here, where nobody is counting frames: a test
     // asserts on what the readout shows, not on how often it is refreshed.
     const reply: FrameMessage = {
       kind: 'frame',
-      trace: frame.trace,
-      scope: frame.scope,
-      drawnHz: frame.drawnHz,
-      trama: frame.trama,
-      tramaMs: frame.tramaMs,
-      atMs: frame.atMs,
+      trace: bridged.trace,
+      scope: bridged.scope,
+      drawnHz: bridged.drawnHz,
+      frame: bridged.frame,
+      frameMs: bridged.frameMs,
+      atMs: bridged.atMs,
       stats: this.bridge.stats(),
     };
     this.send(reply);
