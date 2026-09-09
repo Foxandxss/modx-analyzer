@@ -232,6 +232,15 @@ pub struct Patch {
     /// for. The ancla reads it to decide whether to beat out of turn: there is a
     /// figure behind, and the beat is what brings it up.
     aval_wanted: AtomicBool,
+    /// Set by the **front** when it is holding a medida nothing has vouched for.
+    ///
+    /// It is the same want as [`Patch::aval_wanted`] and deliberately not the same
+    /// flag: the ring rewrites its own once per turn from what it is holding, so a
+    /// request from the other side of the IPC would be erased within milliseconds.
+    /// This one is one-shot — the next beat answers it — because a capture asks
+    /// once and a flag left standing would hold the ancla at the 250 ms floor for
+    /// the rest of the session.
+    beat_asked: AtomicBool,
 }
 
 impl Patch {
@@ -331,6 +340,25 @@ impl Patch {
     /// Whether a beat out of turn would put a figure on the screen.
     pub fn aval_wanted(app: &AppHandle) -> bool {
         app.state::<Patch>().aval_wanted.load(Ordering::Acquire)
+    }
+
+    /// The front is holding a medida and would like the vouching beat sooner.
+    pub fn ask_for_beat(app: &AppHandle) {
+        app.state::<Patch>()
+            .beat_asked
+            .store(true, Ordering::Release);
+    }
+
+    /// Whether the front has asked for one since the last beat was taken.
+    pub fn beat_asked(app: &AppHandle) -> bool {
+        app.state::<Patch>().beat_asked.load(Ordering::Acquire)
+    }
+
+    /// A beat is about to be taken, so whatever asked for it has been answered.
+    pub fn answer_beat_request(app: &AppHandle) {
+        app.state::<Patch>()
+            .beat_asked
+            .store(false, Ordering::Release);
     }
 
     fn update(app: &AppHandle, change: impl FnOnce(&mut PatchView)) {

@@ -2,8 +2,10 @@ import { Injectable, signal } from '@angular/core';
 import { CHANNELS } from 'modx-dsp';
 import { HEADER_BYTES } from '../audio/bridge';
 import {
+  AnchorBeat,
   AppInfo,
   BackendGateway,
+  BeatAnswer,
   ConnectionView,
   DumpView,
   GeneratorView,
@@ -16,6 +18,7 @@ import {
   SweepView,
   Topology,
   invalidated,
+  keepBeat,
   noGenerator,
   noPolling,
   PollingView,
@@ -49,6 +52,12 @@ export class FakeBackendGateway implements BackendGateway {
 
   /** No algorithm read, so no drawing: the same silence the real one opens in. */
   readonly topology = signal<Topology | null>(null, { equal: sameTopology });
+
+  /** The ancla has not beaten yet, which is where the app opens. */
+  readonly anchorBeats = signal<readonly AnchorBeat[]>([]);
+
+  /** How many times a beat has been asked for out of turn. */
+  beatRequests = 0;
 
   readonly liveNotes = signal(0);
 
@@ -124,6 +133,19 @@ export class FakeBackendGateway implements BackendGateway {
   retry(): Promise<void> {
     this.retryPresses += 1;
     return this.retryResult();
+  }
+
+  /**
+   * The request is counted and **no beat happens**.
+   *
+   * That is not a shortcut: the ancla owns its cadence and answers the request when
+   * the gap rule lets it, so a fake that beat here would let a test pass on a beat
+   * the keyboard is not obliged to give — and, worse, on times nobody chose. A test
+   * that wants the beat scripts it with {@link anchorBeat}.
+   */
+  requestAnchorBeat(): Promise<void> {
+    this.beatRequests += 1;
+    return Promise.resolve();
   }
 
   startGenerator(): Promise<void> {
@@ -248,6 +270,43 @@ export class FakeBackendGateway implements BackendGateway {
       performanceName: { value: name, provenance: 'polled', readAt: performance.now() },
     }));
   }
+
+  /**
+   * Test driver: a pass started at `startedAt`, ended at `endedAt` and answered
+   * this. The two times are the point and are never invented here — what a beat can
+   * vouch for is decided by where it sits against a window of audio, so a driver
+   * that chose the times would be choosing the answer.
+   *
+   * Neither {@link anchorReads} nor {@link loadPerformance} beats: those say what
+   * the header reads, which crosses on another event and carries no times at all. A
+   * test that needs both says both, in the order the native side would.
+   *
+   * The name defaults to whatever the fake has loaded, because that is what the
+   * pass would have read; `incomplete` overrides it to `null`, because a pass with a
+   * hole in it read no name.
+   */
+  anchorBeat(beat: {
+    startedAt: number;
+    endedAt: number;
+    answer: BeatAnswer;
+    name?: string | null;
+  }): AnchorBeat {
+    const read =
+      beat.answer === 'incomplete' ? null : (beat.name ?? this.patch().performanceName.value);
+    const found: AnchorBeat = {
+      beat: this.beats + 1,
+      startedAt: beat.startedAt,
+      endedAt: beat.endedAt,
+      answer: beat.answer,
+      name: read,
+    };
+    this.beats += 1;
+    this.anchorBeats.update((history) => keepBeat(history, found));
+    return found;
+  }
+
+  /** How many beats have been scripted, so their numbers climb as the ancla's do. */
+  private beats = 0;
 
   /**
    * Test driver: somebody loads another Performance on the panel.

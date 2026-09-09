@@ -12,6 +12,11 @@
 //! - `modx://reread` — the relectura, seen happening. The count is the point: it
 //!   says the keyboard is answering and at what rate, which a spinner does not,
 //!   and it is what the design means by not hiding what the app costs.
+//! - `modx://anchor-beat` — every pass, with the two instants that bracket it and
+//!   what it answered. Nothing draws it. It exists because the aval below is a
+//!   rule about *time*, and the medida is on the other side of the IPC: a window
+//!   of audio can only be vouched for by a beat that began after its last sample,
+//!   and the front cannot ask that question of a name and a counter.
 //!
 //! **Nothing here invalidates anything directly.** A figure is invalidated where
 //! it lives: [`Patch::set_anchor`] bumps a generation, and the anillo ancho empties
@@ -25,9 +30,9 @@
 //! Without it the ring holds the reading rather than stamping it `SONDEADO`, which
 //! is #20 — a pass that straddled a Performance change used to be drawn as a
 //! confident diagram of a patch that exists on no keyboard. The ring can ask for a
-//! beat ahead of the second when it is holding something; how often that is
-//! answered is decided here, because the port is the ancla's before it is the
-//! ring's (ADR-0004).
+//! beat ahead of the second when it is holding something, and so can the front for
+//! a medida; how often that is answered is decided here, because the port is the
+//! ancla's before it is anybody else's (ADR-0004).
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -45,6 +50,16 @@ use crate::polling::Polling;
 
 /// The relectura, as the strip draws it.
 const EVENT_REREAD: &str = "modx://reread";
+
+/// One pass of the ancla, as the front sees it.
+///
+/// The name and the change counter already cross on `modx://patch`, and neither
+/// can say *when* the app last confirmed the sound: a counter that has not moved
+/// says nothing about the last second. The medida needs exactly that — a beat that
+/// began after the last sample of its window and found the same name is what turns
+/// the window into a figure (ADR-0005) — so every pass is announced, with the two
+/// instants that bracket it.
+const EVENT_BEAT: &str = "modx://anchor-beat";
 
 /// The Part the ancla watches. Fase 1 works on the Part 1 only; see `patch.rs`.
 const PART: u8 = 1;
@@ -81,6 +96,35 @@ const NO_PORT_PATIENCE: Duration = Duration::from_millis(500);
 /// fast. Every eight is fifty events and a count that still visibly climbs.
 const PROGRESS_EVERY: usize = 8;
 
+/// One pass of the ancla, and the two instants that bracket it.
+///
+/// **Ages and not timestamps**, like every other figure that crosses: the pass is
+/// timed with a monotonic clock whose epoch has nothing to do with the front's
+/// `performance.now()`, so what travels is how long before the event left each of
+/// the two moments happened. The gateway turns both back into stamps on its own
+/// clock the instant the event arrives.
+///
+/// The two are not one: a pass takes ~40 ms idle and ~200 ms under notes, and what
+/// a beat can vouch for is everything read before it **started** — the end is when
+/// the answer is known, and the difference between them is the whole reason
+/// [`Beat`] cannot be reported as a single moment.
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BeatView {
+    /// 1-based, in the order the ancla took them, so the front can tell a beat it
+    /// has already seen from one it has not.
+    pub beat: u64,
+    pub started_ago_ms: u64,
+    pub ended_ago_ms: u64,
+    /// `same`, `first`, `changed` or `incomplete`: [`Beat`]'s own four answers.
+    pub answer: &'static str,
+    /// The name **this pass** read, or `None` for `incomplete`, which read none.
+    ///
+    /// An incomplete pass is compared with nothing, so putting the last known name
+    /// here would be the app claiming a reading it did not take.
+    pub name: Option<String>,
+}
+
 /// The relectura, running or finished.
 #[derive(Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -111,6 +155,7 @@ fn run(app: &AppHandle) {
     let mut anchor = Anchor::new(PART);
     let mut link = LinkWatch::new();
     let mut reopens = app.state::<Keyboard>().reopens();
+    let mut beats = 0u64;
 
     loop {
         // The watchdog rides on the ancla and is not a thread of its own: the two
@@ -152,6 +197,12 @@ fn run(app: &AppHandle) {
             continue;
         };
 
+        // Whatever asked for a beat out of turn, this is the beat that answers it.
+        // The flag is cleared **before** the pass rather than after: a request that
+        // arrives while these twenty addresses are in flight is about a window this
+        // pass began too early to speak for, so it has to survive into the next one.
+        Patch::answer_beat_request(app);
+
         let started = Instant::now();
         let beat = anchor.beat(&mut |address| owner.read(Priority::Anchor, address));
         let read_at = Instant::now();
@@ -163,6 +214,16 @@ fn run(app: &AppHandle) {
         // verdict would be about three quarters of a second instead of about
         // three seconds. A hole keeps its full second.
         let complete = !matches!(&beat, Ok(Beat::Incomplete));
+
+        // Every pass is announced, including the incomplete ones and including the
+        // ordinary `Same` that is the overwhelming majority of them: what the front
+        // needs is not the interesting beats but *each* beat, because a medida is
+        // vouched for by the pass that happened to follow it. An error is not a
+        // pass and is not counted as one.
+        if let Ok(found) = &beat {
+            beats += 1;
+            announce(app, beats, started, read_at, found, &anchor);
+        }
 
         match beat {
             // The same name, and that is the aval (ADR-0005): every reading the
@@ -200,8 +261,63 @@ fn run(app: &AppHandle) {
     }
 }
 
-/// Hold until the next beat is due — or until the anillo ancho says one would put
-/// a figure on the screen and enough time has passed to give it one.
+/// Say what one pass found, with the two instants that bracket it.
+///
+/// The name comes from the ancla and not from the [`Beat`], because a `Same` beat
+/// carries no name and the front needs the one it read: two Performances that share
+/// their Part 1 name are one sound to the ancla, and a beat that says *which* name
+/// it saw is what lets the medida check both ends of its own window. An incomplete
+/// pass gets `None` — it read no whole name, so it has none to report.
+fn announce(
+    app: &AppHandle,
+    beat: u64,
+    started: Instant,
+    ended: Instant,
+    found: &Beat,
+    anchor: &Anchor,
+) {
+    let answer = match found {
+        Beat::Same => "same",
+        Beat::First(_) => "first",
+        Beat::Changed { .. } => "changed",
+        Beat::Incomplete => "incomplete",
+    };
+    let name = match found {
+        Beat::Incomplete => None,
+        _ => anchor.name().map(str::to_owned),
+    };
+
+    let _ = app.emit(
+        EVENT_BEAT,
+        BeatView {
+            beat,
+            started_ago_ms: started.elapsed().as_millis() as u64,
+            ended_ago_ms: ended.elapsed().as_millis() as u64,
+            answer,
+            name,
+        },
+    );
+}
+
+/// The shortest a beat is allowed to follow the last one, from what the last one
+/// cost (ADR-0005).
+///
+/// The floor is what an idle beat gets and the multiple is what a beat under notes
+/// gets, and the second is the point: at ~40 ms a pass the gap stays at 250 ms, and
+/// at ~200 ms a pass it goes past the ancla's own second, so out-of-turn beats fade
+/// out by themselves exactly when the port is disputed. Nobody who asks for one can
+/// change this — the ancla owns its cadence (ADR-0004).
+fn aval_gap(cost: Duration) -> Duration {
+    AVAL_GAP_FLOOR.max(cost * AVAL_GAP_BEATS)
+}
+
+/// Hold until the next beat is due — or until somebody says one would put a figure
+/// on the screen and enough time has passed to give it one.
+///
+/// Two things ask: the anillo ancho, which is holding a reading no beat has vouched
+/// for, and the front, which is holding a medida (ADR-0005, extended to the
+/// capture). They are one question here — the gap is the same for both, because
+/// what it protects is the port and not whoever wanted the beat.
 ///
 /// The second is still measured from the **start** of the last beat, as it always
 /// was: what the design asks for is a beat a second, not a second of silence
@@ -214,17 +330,29 @@ fn wait_for_next_beat(app: &AppHandle, started: Instant, cost: Duration, complet
         return;
     }
 
-    let gap = AVAL_GAP_FLOOR.max(cost * AVAL_GAP_BEATS);
+    let gap = aval_gap(cost);
 
     loop {
         let Some(rest) = BEAT.checked_sub(started.elapsed()) else {
             return;
         };
-        if started.elapsed() >= gap && Patch::aval_wanted(app) {
+        if started.elapsed() >= gap && (Patch::aval_wanted(app) || Patch::beat_asked(app)) {
             return;
         }
         std::thread::sleep(WAIT_SLICE.min(rest));
     }
+}
+
+/// The front asks for a beat sooner than the ancla's second.
+///
+/// It is the same request the anillo ancho makes and it buys the same thing: a
+/// medida is drawn only once a beat that began after its window closed has found
+/// the same name, so the sooner that beat comes the shorter the shutter's wait.
+/// It is a **hint**, not a demand: the gap rule above decides when, and under notes
+/// the answer is «at the usual second».
+#[tauri::command]
+pub fn request_anchor_beat(app: AppHandle) {
+    Patch::ask_for_beat(&app);
 }
 
 /// Look at the two facts a disconnection is made of and say so if either moved.
@@ -310,5 +438,49 @@ fn reread(app: &AppHandle, owner: &Arc<OwnerHandle>) {
                 },
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The rule the out-of-turn beat lives under, and the one thing a new caller
+    /// could quietly change. It is asserted at the two costs that were actually
+    /// measured, because that is where it has to hold.
+    #[test]
+    fn the_out_of_turn_gap_is_the_floor_idle_and_a_whole_second_under_notes() {
+        // Idle: a pass costs ~40 ms, five of which is under the floor, so the
+        // floor governs and a medida waits at most a quarter of a second.
+        assert_eq!(aval_gap(Duration::from_millis(40)), AVAL_GAP_FLOOR);
+        assert_eq!(aval_gap(Duration::ZERO), AVAL_GAP_FLOOR);
+
+        // Under notes: a pass costs ~200 ms and the multiple governs, which puts
+        // the gap at the ancla's own second. The out-of-turn beat fades out by
+        // itself exactly when the port is disputed — nothing switches it off.
+        assert_eq!(aval_gap(Duration::from_millis(200)), BEAT);
+        assert!(aval_gap(Duration::from_millis(430)) > BEAT);
+    }
+
+    /// The four answers the front is given, and the one that carries no name.
+    #[test]
+    fn every_answer_has_a_word_and_only_the_incomplete_one_has_no_name() {
+        let words = |found: &Beat| match found {
+            Beat::Same => "same",
+            Beat::First(_) => "first",
+            Beat::Changed { .. } => "changed",
+            Beat::Incomplete => "incomplete",
+        };
+
+        assert_eq!(words(&Beat::Same), "same");
+        assert_eq!(words(&Beat::First("Init Normal (FM-X)".into())), "first");
+        assert_eq!(
+            words(&Beat::Changed {
+                name: "Bright FM Keys".into(),
+                previous: "Init Normal (FM-X)".into(),
+            }),
+            "changed",
+        );
+        assert_eq!(words(&Beat::Incomplete), "incomplete");
     }
 }

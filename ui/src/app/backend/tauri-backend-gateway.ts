@@ -2,8 +2,10 @@ import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { Channel, invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import {
+  AnchorBeat,
   AppInfo,
   BackendGateway,
+  BeatAnswer,
   ConnectionView,
   DumpView,
   FrequencyMode,
@@ -18,6 +20,7 @@ import {
   SweepView,
   Topology,
   invalidated,
+  keepBeat,
   noGenerator,
   noPolling,
   PollingView,
@@ -80,6 +83,20 @@ interface OperatorsWire {
   readonly passes: number;
 }
 
+/**
+ * `modx://anchor-beat`, before the ages become stamps.
+ *
+ * Two ages and not one timestamp, for the same reason {@link Aged} carries one: the
+ * pass is timed in Rust against a monotonic clock this side cannot subtract from.
+ */
+interface AnchorBeatWire {
+  readonly beat: number;
+  readonly startedAgoMs: number;
+  readonly endedAgoMs: number;
+  readonly answer: BeatAnswer;
+  readonly name: string | null;
+}
+
 /** `modx://live-notes`: the pánico's glow and the note the TEORÍA lines follow. */
 interface LiveNotesWire {
   readonly count: number;
@@ -137,6 +154,9 @@ export class TauriBackendGateway implements BackendGateway {
   // algorithm every time; the drawing is only rebuilt when the number changes.
   readonly topology = signal<Topology | null>(null, { equal: sameTopology });
 
+  /** No pass yet: the ancla's first is about a second after launch. */
+  readonly anchorBeats = signal<readonly AnchorBeat[]>([]);
+
   readonly liveNotes = signal(0);
 
   readonly lowestLivePitch = signal<number | null>(null);
@@ -186,6 +206,22 @@ export class TauriBackendGateway implements BackendGateway {
     this.listen<OperatorsWire>('modx://operators', (wire) =>
       this.operators.set(this.toOperators(wire)),
     );
+    // Every pass, aligned to this side's clock on arrival like the rest. Nothing
+    // draws it: it is the medida's aval, and the shutter reads the history when it
+    // is asked for rather than being pushed at.
+    this.listen<AnchorBeatWire>('modx://anchor-beat', (wire) => {
+      const arrivedAt = performance.now();
+      this.anchorBeats.update((history) =>
+        keepBeat(history, {
+          beat: wire.beat,
+          startedAt: arrivedAt - wire.startedAgoMs,
+          endedAt: arrivedAt - wire.endedAgoMs,
+          answer: wire.answer,
+          name: wire.name,
+        }),
+      );
+    });
+
     this.listen<LiveNotesWire>('modx://live-notes', (wire) => {
       this.liveNotes.set(wire.count);
       this.lowestLivePitch.set(wire.lowestPitch);
@@ -229,6 +265,13 @@ export class TauriBackendGateway implements BackendGateway {
     // The command joins the thread before it answers, so this resolving is the
     // keys being up and not the request having been filed.
     return invoke<void>('stop_generator');
+  }
+
+  requestAnchorBeat(): Promise<void> {
+    // Nothing is written here and nothing is awaited into a state: the beat, when
+    // the ancla decides to take it, arrives on `modx://anchor-beat` like every
+    // other one. One writer, the way the connection and the relectura do it.
+    return invoke<void>('request_anchor_beat');
   }
 
   setPolling(paused: boolean): Promise<void> {

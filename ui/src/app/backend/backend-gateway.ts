@@ -51,6 +51,33 @@ export interface BackendGateway {
    */
   readonly topology: Signal<Topology | null>;
 
+  /**
+   * The ancla's own passes, oldest first, at most {@link ANCHOR_BEAT_HISTORY} of
+   * them, and empty until the first one has gone by.
+   *
+   * The name and {@link PatchHeaderView.changes} say *what* is loaded; these say
+   * **when the app last checked**, which is a different question and the only one
+   * a medida can be vouched for by (ADR-0005, extended to the capture): a window
+   * of audio reaches 1.5 s into the past, and only a beat that started after its
+   * last sample can speak for it.
+   *
+   * It is a list and not the last beat because the rule needs **both** ends of the
+   * window — the beat that closed before its first sample and the beat that opened
+   * after its last — and a signal that only ever holds the newest would have the
+   * older of the two already overwritten by the time the shutter asks.
+   */
+  readonly anchorBeats: Signal<readonly AnchorBeat[]>;
+
+  /**
+   * Ask the ancla for a beat sooner than its second.
+   *
+   * It is a hint and it is the same one the anillo ancho makes: the ancla owns its
+   * cadence (ADR-0004) and the gap rule decides when, which under notes is «at the
+   * usual second». Resolving means the request was filed, never that a beat has
+   * happened — that arrives on {@link anchorBeats} like every other.
+   */
+  requestAnchorBeat(): Promise<void>;
+
   /** Live notes counted by distinct pitch (Note On with velocity 0 is Note Off). */
   readonly liveNotes: Signal<number>;
 
@@ -269,6 +296,68 @@ export function noPatch(): PatchHeaderView {
     feedback: invalidated<number>(),
     feedbackOperator: invalidated<number>(),
   };
+}
+
+/**
+ * What one ancla pass found. Rust's `Beat`, in its own four words.
+ *
+ * `first` is the first whole name of the session and is **not** a change: nothing
+ * preceded it, so it invalidates nothing — but it cannot vouch for anything either,
+ * because it has no previous name to have found unchanged. `incomplete` is a pass
+ * with a hole in it, which is compared with nothing at all and therefore neither
+ * confirms nor denies that the sound moved.
+ */
+export type BeatAnswer = 'same' | 'first' | 'changed' | 'incomplete';
+
+/**
+ * One pass of the ancla, on this side's clock.
+ *
+ * **Two instants and not one.** A pass costs ~40 ms idle and ~200 ms under notes,
+ * and what it can vouch for is everything that happened before it *started*: the
+ * end is only when the answer became known. Collapsing them would give the aval a
+ * fifth of a second of slack in the one condition — somebody playing — where a
+ * Performance is most likely to be changed underneath.
+ */
+export interface AnchorBeat {
+  /** 1-based, in the order the ancla took them. A gap here is a beat that was lost. */
+  readonly beat: number;
+  /** When the pass asked for its first address, on `performance.now()`'s clock. */
+  readonly startedAt: number;
+  /** When its last address answered. */
+  readonly endedAt: number;
+  readonly answer: BeatAnswer;
+  /**
+   * The name **this pass** read, or `null` for `incomplete`, which read none.
+   *
+   * A hole in the name is not a name, so an incomplete pass reports nothing rather
+   * than the last one it knew: that would be the app claiming a reading it did not
+   * take.
+   */
+  readonly name: string | null;
+}
+
+/**
+ * How many beats the gateway keeps.
+ *
+ * The medida's window reaches 1.486 s into the past and needs the beat that closed
+ * before it began, so about three seconds of history is the requirement. Beats are
+ * a second apart at rest and 250 ms apart at the aval floor, so sixteen of them is
+ * four seconds in the worst case and the requirement in the best. It is bounded at
+ * all because this signal is written a dozen times a minute for the whole life of
+ * the process and nothing draws the old ones.
+ */
+export const ANCHOR_BEAT_HISTORY = 16;
+
+/**
+ * The history with `beat` on the end, oldest first, and the oldest dropped once it
+ * is longer than {@link ANCHOR_BEAT_HISTORY}.
+ *
+ * It is shared by both gateways because forgetting the oldest beat is the same fact
+ * either side of the seam, and two copies of a bound are two bounds.
+ */
+export function keepBeat(history: readonly AnchorBeat[], beat: AnchorBeat): readonly AnchorBeat[] {
+  const kept = [...history, beat];
+  return kept.length > ANCHOR_BEAT_HISTORY ? kept.slice(kept.length - ANCHOR_BEAT_HISTORY) : kept;
 }
 
 /** One line of the drawing: `from` modulates `into`. */
