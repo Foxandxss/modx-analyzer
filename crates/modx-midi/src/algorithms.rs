@@ -998,6 +998,30 @@ mod tests {
         );
     }
 
+    /// The bottom row of the wide composition is chain depth 0, and what it
+    /// means is «you hear this»: the drawing says an operator is a portadora by
+    /// standing it on the output bus and by nothing else. That reading is only
+    /// true if the two sets are the same set in all 88 — an operator that
+    /// modulates nobody and is not on the bus would be drawn on the bus row
+    /// touching nothing, and the definition would have a hole in it.
+    #[test]
+    fn every_operator_that_modulates_nobody_is_a_portadora() {
+        for topology in &ALGORITHMS {
+            let depth = topology.chain_depth();
+            let at_zero: Vec<u8> = (1..=OPERATORS)
+                .filter(|operator| depth[usize::from(*operator - 1)] == 0)
+                .collect();
+            let mut carriers = topology.carriers.to_vec();
+            carriers.sort_unstable();
+
+            assert_eq!(
+                at_zero, carriers,
+                "algoritmo {}: la fila de abajo no es el bus",
+                topology.number
+            );
+        }
+    }
+
     #[test]
     fn a_branch_is_everything_a_route_joins_whichever_way_it_points() {
         // Eight portadoras and no route: eight branches of one.

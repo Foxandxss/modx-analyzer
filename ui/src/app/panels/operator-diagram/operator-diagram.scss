@@ -99,6 +99,7 @@
 // El trazo no engorda al estirar el viewBox: es para lo que existe esa propiedad.
 .route,
 .bus,
+.stub,
 .feedback {
   fill: none;
   vector-effect: non-scaling-stroke;
@@ -110,19 +111,18 @@
   stroke-width: 2;
 }
 
-// Una ruta que sale de un operador a cero está cortada: se ve, y se ve cortada.
-.route--inert {
-  stroke: var(--inert);
-  stroke-width: 1.5;
-  stroke-dasharray: var(--dash-inactive);
-}
-
 .bus {
   stroke: var(--signal-primary);
   stroke-width: 2;
 }
 
-.bus--inert {
+// Una línea que no lleva nada se dibuja igual, sea lo que sea: la ruta que sale
+// de un operador a cero, su bajada al bus, y el cabo del que está aparcado
+// fuera de las ramas. Se ve, y se ve cortada. El cabo además va sin flecha y
+// termina en una barra, porque no es una ruta cortada: es un final.
+.route--inert,
+.bus--inert,
+.stub {
   stroke: var(--inert);
   stroke-width: 1.5;
   stroke-dasharray: var(--dash-inactive);
@@ -336,12 +336,15 @@
   flex: 0 0 auto;
   display: block;
   color: var(--node-ink, var(--ink-secondary));
+}
 
-  path {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: var(--rule-min);
-  }
+// Los dos dibujos que lleva el nodo —el glifo de la forma y la marca de la
+// esquina— se trazan igual: contorno en la tinta que herede y nada de relleno.
+.node__glyph path,
+.node__corner path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--rule-min);
 }
 
 .node__glyph--dead {
@@ -371,16 +374,35 @@
   svg {
     display: block;
   }
-
-  path {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: var(--rule-min);
-  }
 }
 
 .node--stale .node__stamp {
   color: var(--carrier-dim);
+}
+
+// Cuando la profundidad del algoritmo deja el nodo sin alto para APILAR sus
+// cinco datos, se acuestan en una fila y el layout le da el ancho para hacerlo
+// (`wide-layout.ts`). Envuelven, así que el mismo bloque sirve para el nodo de
+// una sola fila del 66 y para el de cuatro filas que todavía es alto: cuántas
+// líneas salen lo decide la caja y no una segunda regla.
+.node--squat {
+  .node__body {
+    flex-flow: row wrap;
+    align-items: baseline;
+    align-content: center;
+    column-gap: var(--space-2);
+    // El pie deja de ser del rincón y pasa a serlo el costado: acostadas las
+    // cifras, ninguna puede compartir línea con la marca de la esquina. El
+    // reparto entre ellas es el mismo de siempre, que a lo ancho las separa.
+    padding: 3px var(--hit-min) 3px 10px;
+  }
+
+  .node__head,
+  .node__level,
+  .node__line {
+    flex: none;
+    margin-top: 0;
+  }
 }
 
 // El rol tiñe el contenido del nodo con UNA variable, y cada slot conserva su

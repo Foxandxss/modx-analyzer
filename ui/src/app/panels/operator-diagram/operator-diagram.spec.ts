@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   BACKEND_GATEWAY,
@@ -13,11 +13,13 @@ import {
 } from '../../backend/backend-gateway';
 import { FakeBackendGateway } from '../../backend/fake-backend-gateway';
 import { Clock } from '../../provenance/clock';
+import { Composition } from '../../shell/composition';
 import { staleAfterMs } from '../../provenance/freshness';
 import { DEAD_MARK } from '../../provenance/provenance';
-import { NODE_H } from './layout';
+import { CANVAS_H, CANVAS_W, NODE_H } from './layout';
 import { OperatorDiagram } from './operator-diagram';
 import { SPECTRAL_GLYPH } from './spectral-glyph';
+import { WIDE_CANVAS_H, WIDE_CANVAS_W } from './wide-layout';
 
 /** The two cadences that were measured: 42 addresses in silence, and under notes. */
 const IDLE_PASS_MS = 84;
@@ -26,8 +28,29 @@ const PLAYING_PASS_MS = 430;
 /** What time it is, in every test here. A real clock would decide the answers. */
 const NOW = 10_000;
 
-async function renderDiagram() {
+/**
+ * Which composition the panel is drawing in, handed over rather than derived.
+ *
+ * The real one reads the audio service and the ancla to decide, and this panel
+ * has nothing to say about either: what it has to do is draw two different
+ * layouts of the same eight nodes, and a test that cannot say which one it is
+ * looking at tests neither.
+ */
+function composition(wide: boolean) {
+  const big = signal(wide);
+  const pin = signal(false);
+  return {
+    big,
+    wide: big.asReadonly(),
+    panels: computed(() => !big()),
+    pinned: pin.asReadonly(),
+    togglePin: () => pin.set(!pin()),
+  };
+}
+
+async function renderDiagram({ wide = false } = {}) {
   const backend = new FakeBackendGateway();
+  const room = composition(wide);
   // The clock is handed over rather than left running: the thing under test is a
   // decision about what time it is, and a test that cannot say what time it is
   // tests nothing. Clock carries only its `now`.
@@ -37,11 +60,12 @@ async function renderDiagram() {
     providers: [
       { provide: BACKEND_GATEWAY, useValue: backend },
       { provide: Clock, useValue: clock },
+      { provide: Composition, useValue: room },
     ],
   });
   const fixture = TestBed.createComponent(OperatorDiagram);
   await fixture.whenStable();
-  return { backend, fixture, clock, host: fixture.nativeElement as HTMLElement };
+  return { backend, fixture, clock, room, host: fixture.nativeElement as HTMLElement };
 }
 
 function polled<T>(value: T, readAt: number): PolledValue<T> {
@@ -141,6 +165,17 @@ const ALGORITHM_2: Topology = {
   feedback: { from: 1, into: 1 },
   depth: [3, 2, 1, 0, 0, 0, 0, 0],
   branch: [1, 1, 1, 1, 5, 6, 7, 8],
+  provenance: 'documented',
+};
+
+/** The 66: the single chain of eight, which is the deepest of the 88 (#40). */
+const ALGORITHM_66: Topology = {
+  number: 66,
+  routes: [1, 2, 3, 4, 5, 6, 7].map((from) => ({ from, into: from + 1 })),
+  carriers: [8],
+  feedback: { from: 1, into: 1 },
+  depth: [7, 6, 5, 4, 3, 2, 1, 0],
+  branch: [1, 1, 1, 1, 1, 1, 1, 1],
   provenance: 'documented',
 };
 
@@ -535,5 +570,89 @@ describe('OperatorDiagram', () => {
     expect(node.querySelector('.node__hz')?.textContent).toContain(DEAD_MARK);
     // The Level is still a number: one figure missing does not take the node down.
     expect(node.querySelector('.node__level')?.textContent?.trim()).toBe('99');
+  });
+
+  describe('with the room of the wide composition', () => {
+    it('draws in the box the algorithm surface was sized to', async () => {
+      const { backend, fixture, host } = await renderDiagram({ wide: true });
+
+      backend.operators.set(theBuildsOwnPatch(NOW));
+      backend.topology.set(ALGORITHM_2);
+      await fixture.whenStable();
+
+      expect(host.querySelector('.routes')?.getAttribute('viewBox')).toBe(
+        `0 0 ${WIDE_CANVAS_W} ${WIDE_CANVAS_H}`,
+      );
+      // Role reads from position: the five portadoras stand together on the bus
+      // row and Op1, three deep, is drawn above every one of them.
+      const feet = [4, 5, 6, 7, 8].map((operator) => nodes(host)[operator - 1].style.top);
+      expect(new Set(feet).size).toBe(1);
+      expect(parseFloat(nodes(host)[0].style.top)).toBeLessThan(parseFloat(feet[0]));
+      expect(host.querySelectorAll('.bus')).toHaveLength(6);
+      expect(host.querySelectorAll('.stub')).toHaveLength(0);
+    });
+
+    it('parks the operators at zero on a stub and draws no line of theirs', async () => {
+      const { backend, fixture, host } = await renderDiagram({ wide: true });
+
+      // The fase 0c patch: two operators sounding and six at zero, which is an
+      // ordinary two-operator sound and not an edge case.
+      backend.topology.set(ALGORITHM_2);
+      backend.operators.set(eight(NOW, IDLE_PASS_MS));
+      await fixture.whenStable();
+
+      expect(host.querySelectorAll('.stub')).toHaveLength(6);
+      // Op3 into Op4 is the one route left standing; the three that leave an
+      // operator at zero are not drawn cut, they are not drawn at all.
+      expect(routes(host)).toHaveLength(1);
+      expect(routes(host)[0].classList.contains('route--inert')).toBe(false);
+      // And the parked ones keep their dashed outline and their place: eight
+      // nodes, drawn and never deleted.
+      expect(nodes(host)).toHaveLength(8);
+      expect(nodes(host)[0].classList.contains('node--inert')).toBe(true);
+      const parked = parseFloat(nodes(host)[0].style.left);
+      expect(parked).toBeGreaterThan(parseFloat(nodes(host)[2].style.left));
+    });
+
+    it('lays the five facts of the node in a row when the depth leaves no height', async () => {
+      const { backend, fixture, host } = await renderDiagram({ wide: true });
+
+      // Algorithm 6 is two rows, and two rows leave the node the height it has
+      // in the 700 px composition, so it stacks its facts exactly as it does
+      // there.
+      backend.operators.set(theBuildsOwnPatch(NOW));
+      backend.topology.set(ALGORITHM_6);
+      await fixture.whenStable();
+      expect(nodes(host)[0].classList.contains('node--squat')).toBe(false);
+
+      // Eight rows in the same box: the node cannot stack its five facts in an
+      // eighth of it, so it lies them down and takes the width to do it.
+      backend.topology.set(ALGORITHM_66);
+      await fixture.whenStable();
+      for (const node of nodes(host)) {
+        expect(node.classList.contains('node--squat')).toBe(true);
+      }
+      expect(parseFloat(nodes(host)[0].style.height)).toBeLessThan(100 / 8);
+    });
+
+    it('gives the 700 px grid back exactly as it was when a capture takes the room', async () => {
+      const { backend, fixture, host, room } = await renderDiagram({ wide: true });
+
+      backend.operators.set(eight(NOW, IDLE_PASS_MS));
+      backend.topology.set(ALGORITHM_2);
+      await fixture.whenStable();
+
+      room.big.set(false);
+      await fixture.whenStable();
+
+      expect(host.querySelector('.routes')?.getAttribute('viewBox')).toBe(
+        `0 0 ${CANVAS_W} ${CANVAS_H}`,
+      );
+      // The narrow composition parks nothing and cuts nothing out: the three
+      // routes are back, and the ones out of an operator at zero are drawn cut.
+      expect(routes(host)).toHaveLength(3);
+      expect(host.querySelectorAll('.stub')).toHaveLength(0);
+      expect(host.querySelectorAll('.bus')).toHaveLength(6);
+    });
   });
 });

@@ -12,8 +12,9 @@ import { RingFreshness } from '../../provenance/freshness';
 import { Composition } from '../../shell/composition';
 import { DEAD_MARK, PROVENANCE_LABEL } from '../../provenance/provenance';
 import { equalTemperamentHz } from '../../provenance/theory';
-import { DrawnBus, DrawnRoute, NODE_H, NODE_W, Slot, layout } from './layout';
+import { DrawnBus, DrawnRoute, DrawnStub, Slot, layout } from './layout';
 import { spectralGlyph } from './spectral-glyph';
+import { wideLayout } from './wide-layout';
 
 /** What the role is called on the node, per `GLOSSARY.md` §6: three of a kind. */
 const ROLE_LABEL: Readonly<Record<OperatorRole, string>> = {
@@ -88,6 +89,17 @@ interface LineView {
  * algorithm with no entry in the table draws `ALGORITHM n · NO TABLE` rather than a
  * plausible diagram of a patch that does not exist.
  *
+ * ## Two compositions, two layouts, one node
+ *
+ * At 700 px the node carries its own role, because there is no room for the
+ * layout to carry it: the eight stand in a depth-sorted 3 × 3 grid (`layout.ts`)
+ * and the shape is what says who is a portadora. With the width the algorithm
+ * takes when nothing is measured, **position says it instead** — the bottom row
+ * is the output bus, every arrow points down, and an operator at zero is parked
+ * to the right on a stub that ends nowhere (`wide-layout.ts`). The shape survives
+ * underneath as confirmation, so there is nothing new to learn, and the swap is
+ * a different drawing of the same eight nodes rather than a different panel.
+ *
  * ## The corner is drawn and does nothing
  *
  * Every node carries the open corner, the mark for *there is more behind this*,
@@ -134,11 +146,38 @@ export class OperatorDiagram {
   });
 
   /**
-   * The drawing, rebuilt only when the algorithm changes: the gateway holds the
-   * topology behind an equality on its number, so the dozen events a second the
-   * ring emits do not relay out the diagram a dozen times a second.
+   * Which operators the ring read a Level of 0 for, as a bitmask.
+   *
+   * A number and not a list on purpose. The wide composition parks these off the
+   * branches, so the drawing depends on them; the ring answers the same eight
+   * roles a dozen times a second, and a mask compares by value, so the layout is
+   * rebuilt when an operator actually crosses zero and not once per pass.
    */
-  private readonly drawing = computed(() => layout(this.backend.topology()));
+  private readonly cut = computed(() =>
+    this.backend
+      .operators()
+      .operators.reduce(
+        (mask, node) =>
+          this.freshness.stamp(node.role).value === 'inert'
+            ? mask | (1 << (node.operator - 1))
+            : mask,
+        0,
+      ),
+  );
+
+  /**
+   * The drawing, rebuilt only when the algorithm, the composition or the set of
+   * operators at zero changes: the gateway holds the topology behind an equality
+   * on its number, so the dozen events a second the ring emits do not relay out
+   * the diagram a dozen times a second.
+   */
+  private readonly drawing = computed(() => {
+    const topology = this.backend.topology();
+    return this.composition.wide() ? wideLayout(topology, parked(this.cut())) : layout(topology);
+  });
+
+  /** The node lays its five facts in a row: the depth left it no height to stack. */
+  protected readonly squat = computed(() => this.drawing().squat);
 
   protected readonly viewBox = computed(() => {
     const drawn = this.drawing();
@@ -206,6 +245,14 @@ export class OperatorDiagram {
 
   protected readonly busLine = computed(() => this.drawing().busLine);
 
+  /** The dead ends of the operators parked at zero. Only the wide drawing has any. */
+  protected readonly stubs = computed(() =>
+    this.drawing().stubs.map((dead: DrawnStub) => ({
+      key: `stub:${dead.operator}`,
+      path: dead.path,
+    })),
+  );
+
   /** The loop, with `FB n` beside it — the value the ring read, or the dash. */
   protected readonly feedback = computed(() => {
     const arc = this.drawing().feedback;
@@ -253,8 +300,10 @@ export class OperatorDiagram {
       box: {
         left: this.share(slot.x, drawn.width),
         top: this.share(slot.y, drawn.height),
-        width: this.share(NODE_W, drawn.width),
-        height: this.share(NODE_H, drawn.height),
+        // The box is the slot's own and not a constant: the wide composition
+        // sizes the node by how many rows the algorithm's depth asked for.
+        width: this.share(slot.w, drawn.width),
+        height: this.share(slot.h, drawn.height),
       },
     };
   }
@@ -284,6 +333,11 @@ export class OperatorDiagram {
     // characters that would push `PREDICTED` off the 118 px node.
     return { value: hz.toFixed(decimals(hz)), provenance: 'theory', readAt: null };
   }
+}
+
+/** The operators of a cut mask, in operator order. */
+function parked(mask: number): number[] {
+  return [1, 2, 3, 4, 5, 6, 7, 8].filter((operator) => (mask & (1 << (operator - 1))) !== 0);
 }
 
 /**

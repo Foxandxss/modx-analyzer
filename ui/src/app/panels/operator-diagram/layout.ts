@@ -74,12 +74,29 @@ export interface Slot {
   readonly column: number;
   readonly x: number;
   readonly y: number;
+  /**
+   * The box the node gets, in `viewBox` units. It is a constant here, and it is
+   * not in the wide composition: there the depth of the algorithm decides how
+   * much height there is to go round (`wide-layout.ts`).
+   */
+  readonly w: number;
+  readonly h: number;
 }
 
 /** A modulation line, ready to be drawn. Whether it is dashed is the role's business. */
 export interface DrawnRoute {
   readonly from: number;
   readonly into: number;
+  readonly path: string;
+}
+
+/**
+ * The dead end of an operator parked at zero: a short dashed drop out of the
+ * node ending in a cross-bar, and nothing after it. Only the wide composition
+ * parks anything, so the narrow one never draws one.
+ */
+export interface DrawnStub {
+  readonly operator: number;
   readonly path: string;
 }
 
@@ -108,6 +125,14 @@ export interface DiagramLayout {
   /** The bus itself, from the leftmost portadora to `OUT L/R`, or null with no topology. */
   readonly busLine: string | null;
   readonly feedback: DrawnFeedback | null;
+  /** The dead ends of the operators at zero. Empty unless something was parked. */
+  readonly stubs: readonly DrawnStub[];
+  /**
+   * The height the rows left the node is under what stacking its five facts
+   * needs, so the node lays them in a row instead. The layout is what says so,
+   * because it is the only thing that knows how many rows shared the height.
+   */
+  readonly squat: boolean;
 }
 
 /**
@@ -128,6 +153,8 @@ export function layout(topology: Topology | null): DiagramLayout {
       bus: [],
       busLine: null,
       feedback: null,
+      stubs: [],
+      squat: false,
     };
   }
 
@@ -147,6 +174,8 @@ export function layout(topology: Topology | null): DiagramLayout {
     bus,
     busLine: busLine(topology.carriers.map(slotOf)),
     feedback: feedbackArc(slotOf(topology.feedback.from), slotOf(topology.feedback.into)),
+    stubs: [],
+    squat: false,
   };
 }
 
@@ -171,6 +200,8 @@ function place(topology: Topology | null): Slot[] {
       column,
       x: MARGIN_X + column * (NODE_W + COL_GAP),
       y: MARGIN_Y + row * (NODE_H + ROW_GAP),
+      w: NODE_W,
+      h: NODE_H,
     });
   }
   return slots;

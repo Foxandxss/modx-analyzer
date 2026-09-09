@@ -69,6 +69,13 @@
         <path class="bus" [attr.d]="line"></path>
       }
 
+      <!-- El cabo del operador aparcado a cero: una caída corta que termina en
+           una barra y no llega a ninguna parte. Es lo que distingue «está a
+           cero» de «está suelto en el dibujo». -->
+      @for (dead of stubs(); track dead.key) {
+        <path class="stub" [attr.d]="dead.path"></path>
+      }
+
       @if (feedback(); as arc) {
         <path class="feedback" [attr.d]="arc.path" marker-end="url(#diagram-arrow)"></path>
       }
@@ -102,6 +109,7 @@
         [class.node--modulator]="node.role === 'modulator'"
         [class.node--inert]="node.role === 'inert'"
         [class.node--stale]="node.stamp === 'stale'"
+        [class.node--squat]="squat()"
         [style.left.%]="node.box.left"
         [style.top.%]="node.box.top"
         [style.width.%]="node.box.width"
