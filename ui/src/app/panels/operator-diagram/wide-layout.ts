@@ -305,12 +305,16 @@ function centreX(slot: Slot, nodeW: number): number {
   return slot.x + nodeW / 2;
 }
 
-/** The lane in the gap under a row, where a route runs sideways. */
-function laneY(slot: Slot, shape: Shape): number {
+/**
+ * The middle of the gap under a row, where a route runs sideways. `layout.ts`
+ * has the same function under the same name, and that is deliberate: it is one
+ * object, and the two modules naming it apart was never a decision.
+ */
+function gapY(slot: Slot, shape: Shape): number {
   return slot.y + shape.nodeH + shape.rowGap / 2;
 }
 
-/** The lane in the gap just above a row, for a route that skipped past one. */
+/** The gap just above a row, for a route that skipped past one. */
 function hopY(slot: Slot, shape: Shape): number {
   return slot.y - shape.rowGap / 2;
 }
@@ -332,7 +336,7 @@ function gutterX(slot: Slot, shape: Shape): number {
  * it takes the gutter, so a long drop never falls through a node.
  */
 function routePath(from: Slot, into: Slot, shape: Shape): string {
-  const start = `M ${centreX(from, shape.nodeW)} ${from.y + shape.nodeH} V ${laneY(from, shape)}`;
+  const start = `M ${centreX(from, shape.nodeW)} ${from.y + shape.nodeH} V ${gapY(from, shape)}`;
   if (into.row === from.row + 1) {
     return `${start} H ${centreX(into, shape.nodeW)} V ${into.y}`;
   }
@@ -348,7 +352,7 @@ function busDrop(slot: Slot, rows: number, shape: Shape): string {
   if (slot.row === rows - 1) {
     return `${out} V ${shape.busY}`;
   }
-  return `${out} V ${laneY(slot, shape)} H ${gutterX(slot, shape)} V ${shape.busY}`;
+  return `${out} V ${gapY(slot, shape)} H ${gutterX(slot, shape)} V ${shape.busY}`;
 }
 
 /**

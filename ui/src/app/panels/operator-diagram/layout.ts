@@ -49,7 +49,7 @@ export const ROW_GAP = 28;
 /** How far under the last row the output bus runs. */
 export const BUS_OFFSET = 30;
 
-/** Room for the feedback arc on the right, and for the hop lane at the top. */
+/** Room for the feedback arc on the right, and for the hop gap at the top. */
 const MARGIN_X = 40;
 const MARGIN_Y = 18;
 
@@ -62,7 +62,7 @@ export const BUS_Y = MARGIN_Y + GRID_H + BUS_OFFSET;
 /** Below the bus there is only the `OUT L/R` rótulo. */
 export const CANVAS_H = BUS_Y + 26;
 
-/** How far above a row the lane runs that a route uses to hop over a neighbour. */
+/** How far above a row the gap runs that a route uses to hop over a neighbour. */
 const HOP_LIFT = 9;
 /** How far the feedback arc bulges out past the right edge of its node. */
 const FEEDBACK_BULGE = 30;
@@ -226,22 +226,31 @@ function bottomY(slot: Slot): number {
   return slot.y + NODE_H;
 }
 
-/** The lane in the gap under a row, where a route runs sideways. */
-function crossY(row: number): number {
+/**
+ * The middle of the gap under a row, where a route runs sideways.
+ *
+ * It was `crossY()` here and `laneY()` in `wide-layout.ts`, which is one object
+ * under two names — the doc comment was identical word for word and the two
+ * compute the same quantity. Renaming only the wide one would have replaced a
+ * collision with a synonym: the next reader greps `gapY` and finds half the
+ * drawing. So both carry the name the glossary settles on, and the two modules
+ * naming this independently was not a decision anybody took.
+ */
+function gapY(row: number): number {
   return MARGIN_Y + (row + 1) * NODE_H + row * ROW_GAP + ROW_GAP / 2;
 }
 
-/** The lane just above a row, for the routes that hop over a neighbour. */
+/** The gap just above a row, for the routes that hop over a neighbour. */
 function hopY(row: number): number {
   return MARGIN_Y + row * (NODE_H + ROW_GAP) - HOP_LIFT;
 }
 
 /**
- * The vertical lane beside a column. It is in the gap between the columns (or in
- * the right margin for the last one), which is what makes a long drop safe: a
+ * The vertical gutter beside a column. It is in the gap between the columns (or
+ * in the right margin for the last one), which is what makes a long drop safe: a
  * vertical run in a gutter never crosses a node.
  */
-function laneX(column: number): number {
+function gutterX(column: number): number {
   return column < COLUMNS - 1
     ? MARGIN_X + column * (NODE_W + COL_GAP) + NODE_W + COL_GAP / 2
     : CANVAS_W - MARGIN_X / 2;
@@ -261,20 +270,20 @@ function routePath(from: Slot, into: Slot): string {
     return `M ${topX(from)} ${from.y} V ${hopY(from.row)} H ${topX(into)} V ${into.y}`;
   }
   if (into.row === from.row + 1) {
-    return `M ${topX(from)} ${bottomY(from)} V ${crossY(from.row)} H ${topX(into)} V ${into.y}`;
+    return `M ${topX(from)} ${bottomY(from)} V ${gapY(from.row)} H ${topX(into)} V ${into.y}`;
   }
   return (
-    `M ${topX(from)} ${bottomY(from)} V ${crossY(from.row)} ` +
-    `H ${laneX(from.column)} V ${hopY(into.row)} H ${topX(into)} V ${into.y}`
+    `M ${topX(from)} ${bottomY(from)} V ${gapY(from.row)} ` +
+    `H ${gutterX(from.column)} V ${hopY(into.row)} H ${topX(into)} V ${into.y}`
   );
 }
 
-/** A portadora's drop onto the bus: straight down, or down the lane beside it. */
+/** A portadora's drop onto the bus: straight down, or down the gutter beside it. */
 function busDrop(slot: Slot): string {
   if (slot.row === ROWS - 1) {
     return `M ${topX(slot)} ${bottomY(slot)} V ${BUS_Y}`;
   }
-  return `M ${topX(slot)} ${bottomY(slot)} V ${crossY(slot.row)} H ${laneX(slot.column)} V ${BUS_Y}`;
+  return `M ${topX(slot)} ${bottomY(slot)} V ${gapY(slot.row)} H ${gutterX(slot.column)} V ${BUS_Y}`;
 }
 
 /** The bus, from the leftmost thing that drops onto it to `OUT L/R`. */
@@ -282,7 +291,9 @@ function busLine(carriers: readonly Slot[]): string | null {
   if (carriers.length === 0) {
     return null;
   }
-  const entries = carriers.map((slot) => (slot.row === ROWS - 1 ? topX(slot) : laneX(slot.column)));
+  const entries = carriers.map((slot) =>
+    slot.row === ROWS - 1 ? topX(slot) : gutterX(slot.column),
+  );
   return `M ${Math.min(...entries)} ${BUS_Y} H ${CANVAS_W - MARGIN_X}`;
 }
 

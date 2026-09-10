@@ -164,7 +164,7 @@ describe('diagram layout', () => {
     const from = slot(slots, 1);
 
     // Op1 and Op2 are side by side, and a straight line between two nodes in a
-    // row would cross whatever sits between them: the lane is above the row.
+    // row would cross whatever sits between them: the gap is above the row.
     expect(points(line?.path ?? '')[1]).toBe(from.y);
     expect(points(line?.path ?? '')[2]).toBeLessThan(from.y);
   });
@@ -178,7 +178,7 @@ describe('diagram layout', () => {
       expect(points(drop.path).at(-1)).toBe(BUS_Y);
     }
     // A portadora in the bottom row drops straight down; one further up steps
-    // into the lane beside it first, because a drop through a node is a lie.
+    // into the gutter beside it first, because a drop through a node is a lie.
     expect(points(bus[4].path)).toHaveLength(3);
     expect(points(bus[0].path).length).toBeGreaterThan(3);
     expect(slot(slots, 4).row).toBeLessThan(ROWS - 1);
