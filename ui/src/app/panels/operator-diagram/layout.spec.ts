@@ -85,6 +85,11 @@ function points(path: string): number[] {
     .map(Number);
 }
 
+/** Whether a point of the drawing falls within a node's box. */
+function inside(at: { x: number; y: number }, box: Slot): boolean {
+  return at.x >= box.x && at.x <= box.x + box.w && at.y >= box.y && at.y <= box.y + box.h;
+}
+
 describe('diagram layout', () => {
   it('lays the eight out by chain depth, deepest first', () => {
     const { slots } = layout(ALGORITHM_2);
@@ -191,6 +196,43 @@ describe('diagram layout', () => {
     expect(points(feedback?.path ?? '')[0]).toBe(op1.x + NODE_W);
     expect(feedback?.labelX ?? 0).toBeGreaterThan(op1.x + NODE_W);
     expect(feedback?.labelY ?? 0).toBeLessThan(op1.y + NODE_H);
+  });
+
+  /**
+   * The label rule, at this seam: the anchor is the label's near edge and the words run
+   * away from the boxes, so a point clear of every node is a label clear of
+   * every node. It used to be the label's *centre*, one half-ear out, which put
+   * the first characters back over the node's own right edge — and under it,
+   * the nodes being drawn last — so `FB 0` read `B 0` (#68).
+   *
+   * The wrapping loop is in the sweep on purpose: it is the one case where the
+   * two ends of the arc are different boxes, so it is the one where an anchor
+   * taken off the wrong end would still look right on a self-loop.
+   */
+  it('writes FB n past the arc and clear of every node', () => {
+    const wrapped = topology(
+      12,
+      [
+        [3, 4],
+        [4, 5],
+        [6, 7],
+        [7, 8],
+      ],
+      [1, 2, 5, 8],
+      [5, 3],
+    );
+
+    for (const drawn of [ALGORITHM_1, ALGORITHM_2, ALGORITHM_66, wrapped]) {
+      const { slots, feedback } = layout(drawn);
+      const anchor = { x: feedback?.labelX ?? 0, y: feedback?.labelY ?? 0 };
+
+      for (const box of slots) {
+        expect(inside(anchor, box), `algorithm ${drawn.number}, Op${box.operator}`).toBe(false);
+      }
+      // And inside the drawing: the words start in the margin the arc bulges
+      // into, never off the right-hand end of the canvas.
+      expect(anchor.x).toBeLessThan(CANVAS_W);
+    }
   });
 
   it('reaches back up the drawing when the loop wraps a chain', () => {

@@ -106,11 +106,21 @@ export interface DrawnBus {
   readonly path: string;
 }
 
-/** The loop, with somewhere to write `FB n` that is not on top of it. */
+/**
+ * The loop, with somewhere to write `FB n` that is not on top of it — and not on
+ * top of the node it belongs to either.
+ *
+ * `labelX` is the label's **near edge** and not its centre: the words start there
+ * and run away from the boxes. It used to be a centre, which put half of `FB 0`
+ * back over the node's own right edge and — the nodes being drawn after the
+ * labels — under it, so the figure read `B 0` (#68). A centre is the wrong datum
+ * for a label whose whole job is to sit beside something.
+ */
 export interface DrawnFeedback {
   readonly from: number;
   readonly into: number;
   readonly path: string;
+  /** The label's near edge, past the arc's bulge. The words run rightwards from it. */
   readonly labelX: number;
   readonly labelY: number;
 }
@@ -291,7 +301,13 @@ function feedbackArc(from: Slot, into: Slot): DrawnFeedback {
     from: from.operator,
     into: into.operator,
     path: `M ${out.x} ${out.y} C ${bulge} ${out.y}, ${bulge} ${back.y}, ${back.x} ${back.y}`,
-    labelX: bulge - FEEDBACK_BULGE / 2,
+    // Past the bulge, and never so far out that the words leave the drawing: in
+    // the last column the arc already bulges into the outer half of the margin,
+    // so the label is held at the inner edge of that half and writes across it.
+    // Nothing else is needed here — `COL_GAP` is 82 units against the arc's 30,
+    // so this label never has a neighbouring node to walk into. `wide-layout.ts`,
+    // where eight columns leave a gutter of 8, does need more.
+    labelX: Math.min(bulge, CANVAS_W - MARGIN_X / 2),
     labelY: Math.min(out.y, back.y) - 8,
   };
 }

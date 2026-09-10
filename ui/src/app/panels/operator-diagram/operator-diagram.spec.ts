@@ -134,6 +134,11 @@ function datums(host: HTMLElement): HTMLElement[] {
   return Array.from(host.querySelectorAll<HTMLElement>('.node__datum'));
 }
 
+/** A `left: 12.5%` back as the number, which is how the drawing rides the canvas. */
+function percent(value: string | undefined): number {
+  return Number.parseFloat(value ?? '');
+}
+
 /**
  * The patch the app boots into, and #67's case: `Init Normal (FM-X)` reads
  * `99 · 14 · 16 · 99 · 99 · 99 · 9 · 53`, so the ceiling is at the top of the
@@ -223,6 +228,21 @@ const ALGORITHM_66: Topology = {
   feedback: { from: 1, into: 1 },
   depth: [7, 6, 5, 4, 3, 2, 1, 0],
   branch: [1, 1, 1, 1, 1, 1, 1, 1],
+  provenance: 'documented',
+};
+
+/**
+ * The **1**: eight portadoras on the bus and not one line between them. The
+ * widest the wide drawing gets, so the gutter between two cards is at its
+ * narrowest — which is what put `FB 0` on top of Op2 (#68).
+ */
+const ALGORITHM_1: Topology = {
+  number: 1,
+  routes: [],
+  carriers: [1, 2, 3, 4, 5, 6, 7, 8],
+  feedback: { from: 1, into: 1 },
+  depth: [0, 0, 0, 0, 0, 0, 0, 0],
+  branch: [1, 2, 3, 4, 5, 6, 7, 8],
   provenance: 'documented',
 };
 
@@ -351,6 +371,77 @@ describe('OperatorDiagram', () => {
     backend.patch.set({ ...backend.patch(), feedback: polled(3, NOW) });
     await fixture.whenStable();
     expect(host.querySelector('.label--feedback')?.textContent?.trim()).toBe('FB 3');
+  });
+
+  /**
+   * The label rule, and the reason it broke: the labels were written before the nodes,
+   * so the node painted over the left half of `FB 0` and the anillo's figure
+   * read `B 0` (#68). Paint order was a consequence of template order and
+   * nothing said so, which is why nothing failed when it changed.
+   *
+   * Both halves are asserted because either alone passes while the other fails.
+   * The order settles it between siblings that share a stacking context; the
+   * `z-index` settles it if a card ever gets one of its own — a transform, a
+   * filter — and quietly wins its way back on top.
+   */
+  it('draws every label after the nodes, and says so in the sheet too', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.operators.set(eight(NOW, IDLE_PASS_MS));
+    backend.topology.set(ALGORITHM_2);
+    await fixture.whenStable();
+
+    const drawn = nodes(host);
+    const written = Array.from(host.querySelectorAll<HTMLElement>('.label'));
+    expect(drawn.length).toBe(8);
+    expect(written.length).toBe(2);
+    for (const label of written) {
+      for (const node of drawn) {
+        // DOCUMENT_POSITION_FOLLOWING: the label comes after the node.
+        expect(node.compareDocumentPosition(label) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      }
+    }
+
+    const rule = componentCss().match(/\.label\[[^\]]*\]\s*\{[^}]*\}/)?.[0] ?? '';
+    expect(rule).toMatch(/z-index:\s*1/);
+    // And the anchor is the label's near edge, not its centre: a centred label
+    // is one that starts half its width back over the box it belongs to.
+    expect(rule).toContain('translateY(-50%)');
+    expect(rule).not.toContain('translate(-50%');
+  });
+
+  /**
+   * The 1 in the wide drawing: eight cards on the bus row, so the gutter beside
+   * Op1 is `COL_GAP` and the words do not fit in it. The label goes into the gap
+   * above the row instead, and what the test asserts is the property — the
+   * anchor is not inside any card — rather than which of the two places it
+   * ended up in, which is `wide-layout.spec.ts`'s question.
+   */
+  it('never anchors the feedback label inside a node, at the widest algorithm', async () => {
+    const { backend, fixture, host } = await renderDiagram({ wide: true });
+
+    backend.operators.set(eight(NOW, IDLE_PASS_MS));
+    for (const drawn of [ALGORITHM_1, ALGORITHM_2]) {
+      backend.topology.set(drawn);
+      await fixture.whenStable();
+
+      const label = host.querySelector<HTMLElement>('.label--feedback');
+      const at = { x: percent(label?.style.left), y: percent(label?.style.top) };
+      for (const node of nodes(host)) {
+        const box = {
+          left: percent(node.style.left),
+          top: percent(node.style.top),
+          width: percent(node.style.width),
+          height: percent(node.style.height),
+        };
+        const over =
+          at.x >= box.left &&
+          at.x <= box.left + box.width &&
+          at.y >= box.top &&
+          at.y <= box.top + box.height;
+        expect(over, `algorithm ${drawn.number}, Op${node.dataset['operator']}`).toBe(false);
+      }
+    }
   });
 
   it('draws the loop inert when the feedback amount is zero, and keeps the figure', async () => {

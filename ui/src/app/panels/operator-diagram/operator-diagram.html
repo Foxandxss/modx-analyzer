@@ -89,27 +89,6 @@
       }
     </svg>
 
-    <!-- Los rótulos son HTML y no <text>: el viewBox se estira sin conservar la
-         proporción, y una letra estirada es una letra mal escrita. -->
-    @if (feedback(); as arc) {
-      <span
-        class="label label--feedback"
-        [style.left.%]="arc.labelLeft"
-        [style.top.%]="arc.labelTop"
-      >
-        {{ arc.label }}
-      </span>
-    }
-    @if (busLine()) {
-      <span class="label label--out" [style.top.%]="outLabel().top">OUT L/R</span>
-    }
-
-    <!-- El algoritmo contestó un número que no está en las 88. No se dibuja una
-         topología plausible: se dice que no la hay. -->
-    @if (missingTable(); as number) {
-      <p class="no-table">ALGORITHM {{ number }} · NO TABLE</p>
-    }
-
     @for (node of nodes(); track node.operator) {
       <div
         class="node"
@@ -206,6 +185,35 @@
           </svg>
         </span>
       </div>
+    }
+
+    <!-- Los rótulos son HTML y no <text>: el viewBox se estira sin conservar la
+         proporción, y una letra estirada es una letra mal escrita.
+
+         Van DESPUÉS de los nodos, y es una decisión y no el orden en que se
+         escribió la plantilla: ningún nodo tapa nunca un rótulo. Iban
+         antes, así que la tarjeta se comía la mitad de `FB 0` y la cifra se leía
+         `B 0` — una cifra que el anillo fue a leer, medio cubierta por el dibujo
+         al que pertenece (#68). El `z-index` lo dice además del orden, para que
+         una tarjeta con contexto de apilamiento propio no lo deshaga en
+         silencio; `operator-diagram.spec.ts` falla si alguien los sube. -->
+    @if (feedback(); as arc) {
+      <span
+        class="label label--feedback"
+        [style.left.%]="arc.labelLeft"
+        [style.top.%]="arc.labelTop"
+      >
+        {{ arc.label }}
+      </span>
+    }
+    @if (busLine()) {
+      <span class="label label--out" [style.top.%]="outLabel().top">OUT L/R</span>
+    }
+
+    <!-- El algoritmo contestó un número que no está en las 88. No se dibuja una
+         topología plausible: se dice que no la hay. -->
+    @if (missingTable(); as number) {
+      <p class="no-table">ALGORITHM {{ number }} · NO TABLE</p>
     }
   </div>
 

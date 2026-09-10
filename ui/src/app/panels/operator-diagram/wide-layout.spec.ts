@@ -121,6 +121,24 @@ function overlap(a: Slot, b: Slot): boolean {
   return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 }
 
+/** Whether a point of the drawing falls within a node's box. */
+function inside(at: { x: number; y: number }, box: Slot): boolean {
+  return at.x >= box.x && at.x <= box.x + box.w && at.y >= box.y && at.y <= box.y + box.h;
+}
+
+/**
+ * How far right the feedback arc actually reaches, off the path the layout drew.
+ *
+ * The two control points of the cubic both sit at the bulge, so the curve gets
+ * three quarters of the way there and no further: `x(½) = ⅛(P₀ + 3P₁ + 3P₂ + P₃)`.
+ * Read from the path rather than recomputed, so the assertion is about the ink
+ * and not about a second copy of the arithmetic that drew it.
+ */
+function arcTipX(path: string): number {
+  const [x0, , c1x, , c2x, , x3] = points(path);
+  return (x0 + 3 * c1x + 3 * c2x + x3) / 8;
+}
+
 describe('the wide diagram layout', () => {
   it('stands the portadoras on the bus row and everything else above them', () => {
     const { slots } = wideLayout(ALGORITHM_2, []);
@@ -285,6 +303,65 @@ describe('the wide diagram layout', () => {
     expect(band([1]).right).toBeLessThanOrEqual(band([2]).left);
     expect(band([2]).right).toBeLessThanOrEqual(chain.left);
     expect(chain.right).toBeLessThanOrEqual(other.left);
+  });
+
+  /**
+   * The label rule at the seam that decides it. The anchor is the label's near edge and
+   * the words run away from the boxes, so a point clear of every node is a label
+   * clear of every node — and a point *inside* one is what the screen showed:
+   * `FB 0` half under its own card, reading `B 0` (#68).
+   *
+   * Algorithm 1 is in the sweep because it is the case that breaks the obvious
+   * fix. Eight operators on the bus row is eight columns, and eight columns
+   * leave a `COL_GAP` of 8 units between two cards — narrower than the word — so
+   * a label merely moved off its own node lands squarely on Op2's. The lift out
+   * of the row is what that case is for, and nothing else in the 88 makes it
+   * fail this loudly.
+   */
+  it('writes FB n past the arc and clear of every node', () => {
+    for (const drawn of [ALGORITHM_2, ...THE_WORST_CASES]) {
+      const { slots, feedback } = wideLayout(drawn, []);
+      const anchor = { x: feedback?.labelX ?? 0, y: feedback?.labelY ?? 0 };
+
+      for (const box of slots) {
+        expect(inside(anchor, box), `algorithm ${drawn.number}, Op${box.operator}`).toBe(false);
+      }
+      // Past the ink it names, and never off the end of the drawing.
+      expect(anchor.x).toBeGreaterThan(arcTipX(feedback?.path ?? ''));
+      expect(anchor.x).toBeLessThan(WIDE_CANVAS_W);
+      expect(anchor.y).toBeGreaterThan(0);
+    }
+  });
+
+  it('lifts the label out of its row only when a box stands to its right', () => {
+    // The 1: Op1 carries the loop and Op2 through Op8 are beside it on the bus
+    // row, so the gutter is 8 units and the words go into the gap above.
+    const crowded = wideLayout(ALGORITHM_1, []);
+    const op1 = slot(crowded.slots, 1);
+    expect(crowded.slots.some((box) => box.row === op1.row && box.x > op1.x)).toBe(true);
+    expect(crowded.feedback?.labelY ?? 0).toBeLessThan(op1.y);
+
+    // The 66 is a single chain, so Op1 is alone on the top row and the whole
+    // right of the drawing is empty: the label stays on the arc's own line, and
+    // a lift there would move a figure away from the thing it names for nothing.
+    const roomy = wideLayout(ALGORITHM_66, []);
+    const loop = slot(roomy.slots, 1);
+    expect(roomy.slots.some((box) => box.row === loop.row && box.x > loop.x)).toBe(false);
+    expect(roomy.feedback?.labelY ?? 0).toBeGreaterThan(loop.y);
+  });
+
+  it('keeps OUT L/R below every box, so the bus can be labelled at its own end', () => {
+    // The rótulo is drawn at `height - 20` and hard against the right edge; what
+    // has to be true is that the last row ends above it in every algorithm,
+    // including the deepest, where the rows are at their tightest.
+    for (const drawn of [ALGORITHM_2, ...THE_WORST_CASES]) {
+      const { slots, height } = wideLayout(drawn, []);
+      for (const box of slots) {
+        expect(box.y + box.h, `algorithm ${drawn.number}, Op${box.operator}`).toBeLessThan(
+          height - 20,
+        );
+      }
+    }
   });
 
   it('draws the eight in operator order when no algorithm has been read', () => {

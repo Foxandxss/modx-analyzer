@@ -143,9 +143,18 @@
   fill: var(--modulator);
 }
 
+// Ningún nodo tapa nunca un rótulo: es la regla que #68 abre y que la ronda 10
+// propone para `DESIGN.md` §20 (#87 la escribe allí). Dos cosas la sostienen y hacen
+// falta las dos: el orden en la plantilla —los rótulos van después de los
+// nodos— y este `z-index`, que es lo que impide que una tarjeta con contexto de
+// apilamiento propio (una sombra, una transformada) lo deshaga sin que nada
+// falle. El `left` que llega es el borde de ARRANQUE del rótulo y no su centro,
+// así que las palabras salen del nodo en vez de cruzarlo: centrarlo es lo que
+// dejaba media `FB 0` bajo su propia tarjeta (#68).
 .label {
   position: absolute;
-  transform: translate(-50%, -50%);
+  z-index: 1;
+  transform: translateY(-50%);
   font-family: var(--font-num);
   font-size: var(--text-micro);
   letter-spacing: 0.08em;
@@ -157,15 +166,18 @@
   color: var(--carrier);
 }
 
+// `OUT L/R` se alinea al canto derecho del lienzo, que está bajo el bus y por
+// debajo de la última fila en las dos composiciones: se aleja de las cajas por
+// el mismo motivo, y no por estar en otro sitio.
 .label--out {
   right: 0;
-  transform: translateY(-50%);
   color: var(--signal-primary);
 }
 
 // Un número que no está en las 88 no se dibuja: se dice.
 .no-table {
   position: absolute;
+  z-index: 1;
   left: 50%;
   bottom: 0;
   transform: translateX(-50%);

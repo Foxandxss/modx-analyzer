@@ -231,7 +231,7 @@ export function wideLayout(topology: Topology | null, cut: readonly number[]): D
           `${shape.busY} H ${WIDE_CANVAS_W - MARGIN_X}`,
     feedback:
       drawn(feedback.from) && drawn(feedback.into)
-        ? feedbackArc(slotOf(feedback.from), slotOf(feedback.into), shape)
+        ? feedbackArc(slotOf(feedback.from), slotOf(feedback.into), shape, slots)
         : null,
     stubs: parked.map((operator) => stub(slotOf(operator), shape)),
     squat,
@@ -366,18 +366,50 @@ function stub(slot: Slot, shape: Shape): DrawnStub {
  *
  * The decision is made where the amount is: `OperatorDiagram.feedback`, over the
  * polled figure. Both compositions read it, so both drawings say the same thing.
+ *
+ * ## Where `FB n` goes, and why it is not simply beside the arc
+ *
+ * The rule #68 opened, and what round 10 proposes for `DESIGN.md` §20 (#87 puts
+ * it there): a label is never painted over by a node, and it is aligned **away**
+ * from the boxes rather than centred over an edge. The anchor is therefore the
+ * label's near edge, one bulge past the node, and the words run outward from it.
+ *
+ * That is the whole rule in the narrow grid, where two columns are `COL_GAP = 82`
+ * units apart. Here they are **eight**, so at the widest algorithms the gutter is
+ * narrower than the word `FB`, and a label written into it lands on the next
+ * card. So when another box stands to the right in the same row, the label is
+ * **lifted out of the row** into the gap above it — the same clear band a route
+ * hops through ({@link hopY}), which is why the lift is that function and not a
+ * number: a gap wide enough for a line to run sideways in is the gap the drawing
+ * has, and if the row pitch ever changes the label follows it.
+ *
+ * It is lifted only where the lift lands inside the drawing. On the top row of an
+ * algorithm deep enough to fill the box there is neither a gutter nor a gap, and
+ * the label stays on the arc's line and crosses its neighbour. That is not a
+ * choice made here — it is the round's other proposed rule, that a gap must hold
+ * what is drawn in it, failing at the same depth for the same reason. #82 is
+ * where the drawing folds instead of running out of room; until it lands, the
+ * paint order is what keeps those labels readable, and #91 carries the six
+ * algorithms it still bites.
  */
-function feedbackArc(from: Slot, into: Slot, shape: Shape): DrawnFeedback {
+function feedbackArc(from: Slot, into: Slot, shape: Shape, slots: readonly Slot[]): DrawnFeedback {
   const out = { x: from.x + shape.nodeW, y: from.y + shape.nodeH * 0.68 };
   const back = { x: into.x + shape.nodeW, y: into.y + shape.nodeH * 0.3 };
   const ear = Math.min(FEEDBACK_BULGE, (shape.pitchX - shape.nodeW) / 2 + MARGIN_X);
   const bulge = Math.max(out.x, back.x) + ear;
 
+  // The label belongs to the higher of the two boxes: for all but two of the 88
+  // they are the same box, and where the loop wraps a chain the words go at the
+  // end the arc comes back to.
+  const anchor = from.y <= into.y ? from : into;
+  const crowded = slots.some((slot) => slot.row === anchor.row && slot.x > anchor.x);
+  const lift = hopY(anchor, shape);
+
   return {
     from: from.operator,
     into: into.operator,
     path: `M ${out.x} ${out.y} C ${bulge} ${out.y}, ${bulge} ${back.y}, ${back.x} ${back.y}`,
-    labelX: Math.max(out.x, back.x) + ear / 2,
-    labelY: Math.min(out.y, back.y) - 8,
+    labelX: Math.min(bulge, WIDE_CANVAS_W - MARGIN_X),
+    labelY: crowded && lift >= MARGIN_Y ? lift : Math.min(out.y, back.y) - 8,
   };
 }
