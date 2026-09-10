@@ -137,6 +137,52 @@ describe('App (4a)', () => {
   });
 
   /**
+   * Emptying both hands the algorithm the screen and leaves a handle behind, so
+   * that one press brings a panel back. Two handles, one per ranura, each
+   * labelled with the panel it will put back — the fixed geometry does not lapse
+   * because the halves are empty.
+   */
+  it('collapses the column to a rail with two handles when both ranuras are emptied', async () => {
+    const { host, fixture } = await renderApp();
+    const composition = TestBed.inject(Composition);
+
+    composition.choose(0, null);
+    await fixture.whenStable();
+
+    expect(host.querySelector('app-glass-column')).toBeNull();
+    expect(host.querySelector('.body')?.classList.contains('body--rail')).toBe(true);
+    const handles = [...host.querySelectorAll<HTMLButtonElement>('app-column-rail .handle')];
+    expect(handles.map((handle) => handle.textContent?.trim())).toEqual(['SCOPE', 'SPECTRUM']);
+
+    // One press, and the panel that half was holding is back in that half.
+    handles[0].click();
+    await fixture.whenStable();
+
+    expect(composition.slots()).toEqual(['SCOPE', null]);
+    expect(host.querySelector('app-column-rail')).toBeNull();
+    expect(host.querySelector('app-glass-column app-scope canvas')).not.toBeNull();
+    expect(host.querySelector('.body')?.classList.contains('body--rail')).toBe(false);
+  });
+
+  /**
+   * The pin has its own handle — itself, lit, in the header of the panel it is
+   * about — so there is no rail beside it. A second control for the same one
+   * press is a second thing to learn.
+   */
+  it('leaves no rail under KEEP IT BIG, whatever the pair holds', async () => {
+    const { host, fixture } = await renderApp();
+    const pin = host.querySelector<HTMLButtonElement>('.pin')!;
+
+    pin.click();
+    await fixture.whenStable();
+
+    expect(host.querySelector('app-column-rail')).toBeNull();
+    expect(host.querySelector('app-glass-column')).toBeNull();
+    expect(host.querySelector('.body')?.classList.contains('body--wide')).toBe(true);
+    expect(host.querySelector('.body')?.classList.contains('body--rail')).toBe(false);
+  });
+
+  /**
    * One signal is never drawn twice in one frame, and the emptied strip hands
    * its 156 px back rather than staying as a box holding a panel that moved out.
    */

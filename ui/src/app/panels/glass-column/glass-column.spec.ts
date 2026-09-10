@@ -8,6 +8,7 @@ import { FakeBackendGateway } from '../../backend/fake-backend-gateway';
 import { DEAD_MARK } from '../../provenance/provenance';
 import { Composition, Ranura, RanuraIndex } from '../../shell/composition';
 import { GlassColumn } from './glass-column';
+import { EMPTY_LABEL } from './ranura-chooser';
 
 /** One bloque with no period in it at all, loud enough to clear the floor. */
 function noise(seed: number): Float32Array {
@@ -42,6 +43,7 @@ async function renderColumn(pair: readonly [Ranura, Ranura] = ['SPECTRUM', 'HARM
     composition,
     fixture,
     host,
+    settle: () => fixture.whenStable(),
     async put(ranura: RanuraIndex, view: Ranura) {
       composition.choose(ranura, view);
       await fixture.whenStable();
@@ -82,8 +84,21 @@ async function renderColumn(pair: readonly [Ranura, Ranura] = ['SPECTRUM', 'HARM
       }
       await fixture.whenStable();
     },
+    /**
+     * The two titles, which are the two choosers. There are always two: an empty
+     * ranura says {@link EMPTY_LABEL} rather than saying nothing, because the
+     * title is the only way back into that half.
+     */
     titles: () =>
-      [...host.querySelectorAll('.view__title')].map((title) => title.textContent?.trim()),
+      [...host.querySelectorAll('.chooser__name')].map((title) => title.textContent?.trim()),
+    /** Open the chooser of one ranura and read the list it offers. */
+    async openChooser(ranura: RanuraIndex) {
+      const buttons = host.querySelectorAll<HTMLButtonElement>('.chooser');
+      buttons[ranura].click();
+      await fixture.whenStable();
+      const menu = host.querySelectorAll('.view')[ranura].querySelector('.menu');
+      return [...(menu?.querySelectorAll<HTMLButtonElement>('.menu__item') ?? [])];
+    },
     readouts: () =>
       [...host.querySelectorAll('.view__readout')].map((line) => line.textContent?.trim()),
     text: (selector: string) => host.querySelector(selector)?.textContent?.trim() ?? null,
@@ -110,8 +125,11 @@ describe('GlassColumn', () => {
     const { host, titles } = await renderColumn(['SCOPE', null]);
 
     expect(host.querySelectorAll('.view')).toHaveLength(2);
-    expect(titles()).toEqual(['SCOPE']);
-    expect(host.querySelectorAll('.view')[1].textContent?.trim()).toBe('');
+    expect(titles()).toEqual(['SCOPE', EMPTY_LABEL]);
+    // Empty glass: the frame is drawn and there is nothing painting inside it.
+    const empty = host.querySelectorAll('.view')[1];
+    expect(empty.querySelector('.view__frame')?.children).toHaveLength(0);
+    expect(empty.querySelector('.view__readout')).toBeNull();
   });
 
   it('puts a panel in a ranura and takes it out again without touching the other', async () => {
@@ -122,9 +140,72 @@ describe('GlassColumn', () => {
     expect(host.querySelector('app-harmonics canvas')).not.toBeNull();
 
     await put(1, null);
-    expect(titles()).toEqual(['SCOPE']);
+    expect(titles()).toEqual(['SCOPE', EMPTY_LABEL]);
     expect(host.querySelector('app-harmonics')).toBeNull();
     expect(host.querySelector('app-scope canvas')).not.toBeNull();
+  });
+
+  /**
+   * The control for a panel is where the panel is: its own title. Five entries,
+   * the same five in both ranuras, and **none greyed** — choosing what the other
+   * half holds swaps them, so there is nothing the chooser has to refuse and
+   * therefore nothing it would have to explain.
+   */
+  it('offers the same five entries in both ranuras, none of them greyed', async () => {
+    const { openChooser } = await renderColumn(['SPECTRUM', 'HARMONICS']);
+
+    for (const ranura of [0, 1] as const) {
+      const entries = await openChooser(ranura);
+      expect(entries.map((entry) => entry.textContent?.trim())).toEqual([
+        'SPECTRUM',
+        'HARMONICS',
+        'SCOPE',
+        'WATERFALL',
+        EMPTY_LABEL,
+      ]);
+      expect(entries.some((entry) => entry.disabled)).toBe(false);
+    }
+  });
+
+  it('is the panel title that opens it, caret and all', async () => {
+    const { host, titles } = await renderColumn(['SPECTRUM', null]);
+
+    const chooser = host.querySelector('.chooser')!;
+    expect(titles()[0]).toBe('SPECTRUM');
+    // No space between them in the markup: the air is the flex gap, so the
+    // caret cannot be left behind on a line of its own.
+    expect(chooser.textContent?.replace(/\s+/g, '')).toBe('SPECTRUM▾');
+    expect(chooser.getAttribute('aria-expanded')).toBe('false');
+    expect(host.querySelector('.view__title')?.tagName).toBe('H2');
+  });
+
+  it('puts the chosen panel in the ranura whose title was pressed', async () => {
+    const { openChooser, titles, settle } = await renderColumn(['SPECTRUM', null]);
+
+    (await openChooser(1))[2].click();
+    await settle();
+
+    expect(titles()).toEqual(['SPECTRUM', 'SCOPE']);
+  });
+
+  /** The chooser never refuses: the panel the other half holds changes places. */
+  it('swaps the two when the panel chosen is the one the other half holds', async () => {
+    const { openChooser, titles, settle } = await renderColumn(['SPECTRUM', 'SCOPE']);
+
+    (await openChooser(0))[2].click();
+    await settle();
+
+    expect(titles()).toEqual(['SCOPE', 'SPECTRUM']);
+  });
+
+  it('gives an empty ranura the title that fills it again', async () => {
+    const { openChooser, titles, settle } = await renderColumn(['SCOPE', null]);
+
+    expect(titles()[1]).toBe(EMPTY_LABEL);
+    (await openChooser(1))[1].click();
+    await settle();
+
+    expect(titles()).toEqual(['SCOPE', 'HARMONICS']);
   });
 
   it('draws both live canvases from the first frame', async () => {

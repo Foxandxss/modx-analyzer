@@ -1,0 +1,91 @@
+// Layout only. The boxes this participates in are modelled in
+// `column-geometry.ts`; the head band there assumes this control costs the row
+// nothing, which is what the negative margin below is for.
+
+:host {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* El título del panel Y su mando, que es lo mismo. Los 44 px de lo que se pulsa
+   salen del margen del propio botón y no del alto de la cabecera —el truco del
+   pin (#19)—, así que la cabecera sigue midiendo lo que mide el rótulo y el
+   marco de debajo no cede ni un pixel por tener mando. */
+.chooser {
+  all: unset;
+  cursor: pointer;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: var(--hit-min);
+  margin-block: calc((var(--text-label) - var(--hit-min)) / 2);
+  font-size: var(--text-label);
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--ink-secondary);
+  white-space: nowrap;
+}
+
+.chooser:hover .chooser__name,
+.chooser--open .chooser__name {
+  color: var(--ink-primary);
+}
+
+.chooser:focus-visible {
+  outline: var(--rule-min) solid var(--signal-primary);
+  outline-offset: 3px;
+}
+
+// La punta de flecha en tinta inerte: dice que hay lista, no es una lectura.
+.chooser__caret {
+  font-size: var(--text-micro);
+  color: var(--ink-inert);
+}
+
+/* La lista sale por encima del cristal y no empuja nada: abrirla no puede
+   recolocar el panel del que habla. */
+.menu {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 4px);
+  left: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  min-width: 148px;
+  border: var(--rule-min) solid var(--rule-color-strong);
+  border-radius: var(--radius-view);
+  background: var(--surface-base);
+  /* El mismo levantamiento del cajón, del revés: esta lista cae y aquélla sube,
+     así que reutilizar el token tal cual dejaría la sombra por el lado que no
+     es. Los tres valores son los suyos. */
+  box-shadow: 0 22px 44px -20px oklch(0 0 0 / 0.9);
+}
+
+/* Ninguna entrada se apaga nunca: elegir el panel que tiene la otra ranura las
+   intercambia, así que no hay nada que negar y por tanto nada que explicar. */
+.menu__item {
+  all: unset;
+  cursor: pointer;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--hit-min);
+  padding: 0 10px;
+  border-radius: calc(var(--radius-view) - 6px);
+  font-family: var(--font-num);
+  font-size: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  color: var(--ink-secondary);
+}
+
+.menu__item:hover {
+  background: var(--surface-sunken);
+  color: var(--ink-primary);
+}
+
+.menu__item:focus-visible {
+  outline: var(--rule-min) solid var(--signal-primary);
+  outline-offset: -2px;
+}

@@ -1,4 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
+import { ColumnShape, columnShape } from '../panels/glass-column/column-geometry';
 
 /**
  * The four Vistas vivas, which are exactly what a Ranura can hold.
@@ -31,6 +32,16 @@ export type RanuraIndex = 0 | 1;
  * inversion ADR-0007 exists to record.
  */
 export const FACTORY_PAIR: Pair = ['SCOPE', null];
+
+/**
+ * What each rail handle gives back before that ranura has held anything.
+ *
+ * The top gives back the factory pair's own panel and the bottom the first of
+ * the four, so the one press that brings a panel back never lands on the panel
+ * the other handle would bring: a rail pressed twice fills the column rather
+ * than swapping one panel between its two halves.
+ */
+export const FACTORY_HANDLES: readonly [LiveView, LiveView] = ['SCOPE', 'SPECTRUM'];
 
 /**
  * Where the pin is kept. `localStorage` and no store plugin: it is a preference
@@ -72,6 +83,12 @@ const RANURA_SEPARATOR = ',';
  *   `WATERFALL` in a ranura empties the strip, and pressing `KEEP IT BIG` —
  *   which takes the whole column off screen without touching the pair — hands it
  *   back to the strip rather than leaving the signal undrawn.
+ * - **Emptying both leaves a handle behind, and the pin does not.** With both
+ *   ranuras empty the column collapses to a rail carrying the two handles, so
+ *   one press brings a panel back; with the pin down the column is not there at
+ *   all, because `KEEP IT BIG` is itself the handle and it is one press away in
+ *   the header of the panel it is about. The three shapes are
+ *   {@link columnShape}'s, which is where the boxes for them are.
  * - **The pair is a preference and not data.** Same guarded `localStorage` path
  *   as the pin: no plugin, no schema, no migration. Storage that cannot be read
  *   or that holds something this build does not recognise costs the pair and
@@ -89,14 +106,24 @@ export class Composition {
   /** What each of the two ranuras holds. It survives a relaunch. */
   readonly slots = this.pair.asReadonly();
 
-  /** Nothing in the column, or the pin down: the algorithm has the room. */
-  readonly wide = computed(() => {
+  /**
+   * Which of the three shapes the column is in, from the one rule that decides
+   * it: {@link columnShape}. The geometry module owns the rule because it is the
+   * module that says what each shape's boxes are.
+   */
+  readonly shape = computed<ColumnShape>(() => {
     const [top, bottom] = this.pair();
-    return this.pin() || (top === null && bottom === null);
+    return columnShape([top !== null, bottom !== null], this.pin());
   });
 
-  /** Whether the glass column is on screen at all. */
-  readonly panels = computed(() => !this.wide());
+  /** Nothing in the column, or the pin down: the algorithm has the room. */
+  readonly wide = computed(() => this.shape() !== 'ranuras');
+
+  /** Whether the two ranuras are on screen with their glass. */
+  readonly panels = computed(() => this.shape() === 'ranuras');
+
+  /** Whether what is left of the column is the two handles. */
+  readonly rail = computed(() => this.shape() === 'rail');
 
   /**
    * What the bottom strip holds: the waterfall, or nothing and it collapses.
@@ -109,6 +136,18 @@ export class Composition {
   readonly strip = computed<LiveView | null>(() =>
     this.panels() && this.pair().includes('WATERFALL') ? null : 'WATERFALL',
   );
+
+  private readonly held = signal<readonly [LiveView, LiveView]>(FACTORY_HANDLES);
+
+  /**
+   * What each rail handle would put back, top first.
+   *
+   * The handle is labelled with it, so the one press the rail promises is a
+   * press whose result is written on it. **Not persisted**: it is the memory of
+   * a gesture — «I emptied this, put it back» — and a relaunch is not that
+   * gesture. What survives a relaunch is the pair, which is the state.
+   */
+  readonly handles = this.held.asReadonly();
 
   /** Press `KEEP IT BIG`, or let it up. Written through to the next launch. */
   togglePin(): void {
@@ -133,7 +172,22 @@ export class Composition {
     }
     const chosen: Pair = [next[0], next[1]];
     this.pair.set(chosen);
+    // Each half remembers the last panel it held, and an emptied one keeps the
+    // name it just lost: that is what the rail's handle is labelled with.
+    const held = this.held();
+    this.held.set([chosen[0] ?? held[0], chosen[1] ?? held[1]]);
     write(RANURAS_KEY, `${chosen[0] ?? ''}${RANURA_SEPARATOR}${chosen[1] ?? ''}`);
+  }
+
+  /**
+   * Bring a panel back into `ranura` from the rail, in one press.
+   *
+   * It goes through {@link choose}, so a handle that would restore the panel the
+   * other half already holds swaps them instead of drawing it twice — the same
+   * rule the chooser obeys, and there is only one of it.
+   */
+  restore(ranura: RanuraIndex): void {
+    this.choose(ranura, this.held()[ranura]);
   }
 }
 

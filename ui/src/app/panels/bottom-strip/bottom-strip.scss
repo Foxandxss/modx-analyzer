@@ -1,4 +1,6 @@
-// Layout only.
+// Layout only. This band and the box the frame gets out of it are `STRIP_H` and
+// `stripFrame()` in `column-geometry.ts`, which is where «the scope stopped
+// being a flat line when it left here» is a figure rather than a claim.
 
 :host {
   flex: 0 0 156px;

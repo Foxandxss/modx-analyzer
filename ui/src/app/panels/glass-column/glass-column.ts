@@ -3,7 +3,8 @@ import { AXIS_HIGH_MULTIPLE, AXIS_LOW_MULTIPLE } from 'modx-dsp';
 import { AudioService } from '../../audio/audio-service';
 import { Anchor } from '../../provenance/anchor';
 import { DEAD_MARK } from '../../provenance/provenance';
-import { Composition, LiveView } from '../../shell/composition';
+import { Composition, LiveView, Ranura, RanuraIndex } from '../../shell/composition';
+import { RanuraChooser } from './ranura-chooser';
 import { Harmonics } from '../harmonics/harmonics';
 import { NotAHarmonic } from '../not-a-harmonic';
 import { Scope } from '../scope/scope';
@@ -17,9 +18,14 @@ import { Waterfall } from '../waterfall/waterfall';
  * The two ranuras are **fixed and never configurable**: the top half is always
  * the top half, whatever either holds, so a panel somebody has learned to read
  * is the same size every time they look at it. An empty ranura is empty glass —
- * `flex: 1` on both, unconditionally — and not room the other panel takes.
- * Which of the four is in each is {@link Composition}'s business, and the user
- * gets at it through the chooser that arrives with the ranura control.
+ * `flex: 1` on both, unconditionally — and not room the other panel takes. The
+ * boxes that come out of that are modelled in `column-geometry.ts`, which is
+ * where the claim is checkable.
+ *
+ * Which of the four is in each is {@link Composition}'s business, and the pianist
+ * gets at it through {@link RanuraChooser} — the panel's own title, in the head,
+ * because the control for a panel belongs where the panel is. An empty ranura
+ * keeps its head for exactly that reason: the title is the way back.
  *
  * These panels are the one place that never dies — a vista viva is audio
  * entering now, so it is never invalidated and it carries nothing from the
@@ -34,42 +40,47 @@ import { Waterfall } from '../waterfall/waterfall';
 @Component({
   selector: 'app-glass-column',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Spectrum, Harmonics, Scope, Waterfall, NotAHarmonic],
+  imports: [Spectrum, Harmonics, Scope, Waterfall, NotAHarmonic, RanuraChooser],
   template: `
-    @for (ranura of ranuras(); track $index) {
+    @for (ranura of ranuras(); track ranura.index) {
       <section class="view">
-        @if (ranura !== null) {
-          <div class="view__head">
-            <h2 class="view__title">{{ ranura }}</h2>
+        <!-- La cabecera está SIEMPRE, tenga panel o no: el rótulo es el mando,
+             así que una ranura vacía sin cabecera sería cristal sin manera de
+             llenarlo. -->
+        <div class="view__head">
+          <h2 class="view__title">
+            <app-ranura-chooser [ranura]="ranura.index" [holds]="ranura.holds" />
+          </h2>
+          @if (ranura.holds; as view) {
             <span class="view__live" [class.view__live--dead]="stopped()">{{ liveStamp() }}</span>
             @if (patchChanged()) {
               <span class="view__alive">STILL TRUE · THIS IS AUDIO</span>
             }
-            <span class="view__readout">{{ readout(ranura) }}</span>
-            @if (ranura === 'SPECTRUM' && artefact(); as hz) {
+            <span class="view__readout">{{ readout(view) }}</span>
+            @if (view === 'SPECTRUM' && artefact(); as hz) {
               <app-not-a-harmonic class="view__artefact" [hz]="hz" />
             }
-            @if (ranura === 'WATERFALL') {
+            @if (view === 'WATERFALL') {
               <span class="view__axes">{{ axes }}</span>
             }
-          </div>
-          <div class="view__frame">
-            @switch (ranura) {
-              @case ('SPECTRUM') {
-                <app-spectrum />
-              }
-              @case ('HARMONICS') {
-                <app-harmonics />
-              }
-              @case ('SCOPE') {
-                <app-scope />
-              }
-              @case ('WATERFALL') {
-                <app-waterfall />
-              }
+          }
+        </div>
+        <div class="view__frame">
+          @switch (ranura.holds) {
+            @case ('SPECTRUM') {
+              <app-spectrum />
             }
-          </div>
-        }
+            @case ('HARMONICS') {
+              <app-harmonics />
+            }
+            @case ('SCOPE') {
+              <app-scope />
+            }
+            @case ('WATERFALL') {
+              <app-waterfall />
+            }
+          }
+        </div>
       </section>
     }
   `,
@@ -78,8 +89,23 @@ import { Waterfall } from '../waterfall/waterfall';
 export class GlassColumn {
   private readonly audio = inject(AudioService);
 
-  /** The pair, top first. Both entries are drawn; either may be empty glass. */
-  protected readonly ranuras = inject(Composition).slots;
+  private readonly slots = inject(Composition).slots;
+
+  /**
+   * The pair, top first, each half carrying which half it is.
+   *
+   * Both entries are drawn and either may be empty glass. The index travels with
+   * the contents because the chooser in the head speaks for a *ranura* and not
+   * for a panel: it is the top half's title whether or not the top half holds
+   * anything.
+   */
+  protected readonly ranuras = computed<readonly Slot[]>(() => {
+    const [top, bottom] = this.slots();
+    return [
+      { index: 0, holds: top },
+      { index: 1, holds: bottom },
+    ];
+  });
 
   protected readonly axes = WATERFALL_AXES;
 
@@ -158,4 +184,10 @@ export class GlassColumn {
         return waterfallCaption(this.audio.waterfall());
     }
   }
+}
+
+/** One half of the column: which half it is, and what it holds. */
+interface Slot {
+  readonly index: RanuraIndex;
+  readonly holds: Ranura;
 }

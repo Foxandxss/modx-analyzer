@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AudioService } from './audio/audio-service';
 import { BottomStrip } from './panels/bottom-strip/bottom-strip';
 import { FiguresColumn } from './panels/figures-column/figures-column';
+import { ColumnRail } from './panels/glass-column/column-rail';
 import { GlassColumn } from './panels/glass-column/glass-column';
 import { OperatorDiagram } from './panels/operator-diagram/operator-diagram';
 import { AlertStrip } from './shell/alert-strip/alert-strip';
@@ -30,6 +31,7 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
     UnhappyCards,
     OperatorDiagram,
     GlassColumn,
+    ColumnRail,
     FiguresColumn,
     BottomStrip,
     BenchDrawer,
@@ -43,12 +45,18 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
     <app-reread-strip />
     <!-- Dos composiciones de los mismos elementos, y lo que elige entre ellas es
          el estado de las dos Ranuras: nada de esta pantalla se mueve ya que no
-         haya movido el pianista. La columna no se encoge: se va, porque un panel
-         de 0 px sigue pintando 33 veces por segundo algo que nadie mira. -->
-    <div class="body" [class.body--wide]="wide()">
+         haya movido el pianista. La columna no se encoge: o está entera, o se
+         queda en el asa, o no está —un panel de 0 px sigue pintando 33 veces por
+         segundo algo que nadie mira. -->
+    <div class="body" [class.body--wide]="wide()" [class.body--rail]="rail()">
       <app-operator-diagram />
       @if (panels()) {
         <app-glass-column />
+      } @else if (rail()) {
+        <!-- Vaciar las dos deja un asa: 52 px con el vocabulario del cajón
+             cerrado, y una pulsación devuelve el panel que esa mitad tenía. Con
+             el pin echado no hay asa aquí porque el pin ES el asa. -->
+        <app-column-rail />
       }
       <app-figures-column />
     </div>
@@ -100,6 +108,9 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
     :host {
       --composition-diagram: 700px;
       --composition-column: 208px;
+      /* El asa del cajón, de canto. Es RAIL_W en column-geometry.ts, que es
+         donde está modelada la caja de este carril. */
+      --composition-rail: var(--drawer-grab);
     }
 
     /* El "filete" del cuerpo es un hueco de 2 px sobre el color de la rejilla,
@@ -133,17 +144,18 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
     app-operator-diagram {
       grid-column: 1;
     }
-    app-glass-column {
+    app-glass-column,
+    app-column-rail {
       grid-column: 2;
     }
     app-figures-column {
       grid-column: 3;
     }
 
-    /* Las dos ranuras vacías, o el pin echado: el carril de en medio se cierra y
-       el diagrama se lleva su holgura entera —los 368 px de la columna de
-       cristal, 1 070 px a 1280 de ventana—. La columna de cifras se queda: es la
-       que dice qué llenaría la medida que no hay (#33).
+    /* El pin echado: el carril de en medio se cierra del todo y el diagrama se
+       lleva su holgura entera —los 368 px de la columna de cristal, 1 070 px a
+       1280 de ventana—. La columna de cifras se queda: es la que dice qué
+       llenaría la medida que no hay (#33).
        El filete se parte por la mitad porque aquí hay dos huecos pegados con un
        carril de 0 px entre ellos, y dos filetes juntos se leen como una regla
        del doble de gruesa. */
@@ -151,14 +163,27 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
       grid-template-columns: minmax(0, 1fr) 0px var(--composition-column);
       column-gap: calc(var(--rule-min) / 2);
     }
+
+    /* Con las dos ranuras vacías el carril no se cierra del todo: se queda en el
+       asa. Va DESPUÉS de .body--wide a propósito —las dos reglas tienen la
+       misma especificidad, así que el orden es todo el mecanismo (#57)— y el
+       cuerpo lleva las dos clases, porque el algoritmo se lleva la holgura
+       igual. El filete vuelve a ser entero: aquí no hay dos huecos pegados. */
+    .body--rail {
+      grid-template-columns: minmax(0, 1fr) var(--composition-rail) var(--composition-column);
+      column-gap: var(--rule-min);
+    }
   `,
 })
 export class App {
   private readonly composition = inject(Composition);
 
-  /** The algorithm has the room, and the glass column is not on screen. */
+  /** The algorithm has the room, and the two ranuras are not on screen. */
   protected readonly wide = this.composition.wide;
   protected readonly panels = this.composition.panels;
+
+  /** Both ranuras empty and the pin up: what is left of the column is the handles. */
+  protected readonly rail = this.composition.rail;
 
   /** The waterfall is down here, or it is up in a ranura and there is no strip. */
   protected readonly strip = this.composition.strip;

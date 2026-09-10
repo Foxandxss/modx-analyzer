@@ -1,4 +1,7 @@
-// Layout only.
+// Layout only. The boxes these declarations produce are modelled in
+// `column-geometry.ts` — `.view`'s padding, the head's band and the filete
+// between the two halves are numbers there. Change one here, change it there in
+// the same commit.
 
 :host {
   display: flex;
@@ -74,12 +77,14 @@
   color: var(--signal-primary);
 }
 
+/* El rótulo es el mando, así que el `h2` no es más que su caja: lo que se lee y
+   lo que se pulsa están los dos en `ranura-chooser.scss`. Se conserva el
+   encabezado porque el panel sigue siendo una sección con nombre. */
 .view__title {
   margin: 0;
+  display: flex;
   font-size: var(--text-label);
   font-weight: 400;
-  letter-spacing: var(--tracking-eyebrow);
-  color: var(--ink-secondary);
 }
 
 .view__readout {

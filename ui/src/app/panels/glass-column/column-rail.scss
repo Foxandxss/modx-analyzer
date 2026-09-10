@@ -1,0 +1,64 @@
+// Layout only. Its width is `RAIL_W` in `column-geometry.ts`, which is
+// `--drawer-grab`: the rail IS the closed drawer's handle, stood on its end.
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface-base);
+}
+
+/* Las dos mitades siguen siendo mitades cuando están vacías: la de arriba se
+   llena con el asa de arriba. La geometría fija no se suspende porque no haya
+   nada dentro. */
+.handle {
+  all: unset;
+  cursor: pointer;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 0;
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  letter-spacing: 0.18em;
+  color: var(--ink-inert);
+
+  & + & {
+    border-top: var(--rule-min) solid var(--rule-color);
+  }
+}
+
+.handle:hover {
+  color: var(--ink-tertiary);
+}
+
+.handle:hover .handle__grip {
+  background: var(--rule-color-strong);
+}
+
+.handle:focus-visible {
+  outline: var(--rule-min) solid var(--signal-primary);
+  outline-offset: -4px;
+}
+
+// El agarre del cajón, girado: 44 px de barra, aquí en vertical.
+.handle__grip {
+  flex: 0 0 auto;
+  width: 5px;
+  height: 44px;
+  border-radius: 3px;
+  background: var(--rule-color);
+}
+
+/* El nombre del panel que vuelve, leído de abajo arriba: en 52 px no cabe en
+   horizontal y partirlo en letras sueltas no es una palabra. */
+.handle__name {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+}

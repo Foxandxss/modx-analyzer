@@ -6,7 +6,13 @@ import { fakeBlock, heldNote } from '../audio/fake-block';
 import { anchorAnswers, anchorWatching } from '../backend/anchor-driver';
 import { BACKEND_GATEWAY } from '../backend/backend-gateway';
 import { FakeBackendGateway } from '../backend/fake-backend-gateway';
-import { FACTORY_PAIR, KEEP_IT_BIG_KEY, RANURAS_KEY, Composition } from './composition';
+import {
+  Composition,
+  FACTORY_HANDLES,
+  FACTORY_PAIR,
+  KEEP_IT_BIG_KEY,
+  RANURAS_KEY,
+} from './composition';
 
 /** 50 bloques of 1 323 frames: 66 150 samples, the first window with room. */
 const BLOCKS_FOR_A_MEDIDA = 50;
@@ -229,6 +235,70 @@ describe('Composition (8f)', () => {
 
     expect(second.composition.slots()).toEqual([null, null]);
     expect(second.composition.wide()).toBe(true);
+  });
+
+  /**
+   * The three shapes, which is what `wide()` was hiding: a pinned composición
+   * has no column at all, and an emptied one keeps the rail its handles are on.
+   */
+  it('tells the rail apart from the column that is not there', () => {
+    const { composition } = setUp();
+
+    expect(composition.shape()).toBe('ranuras');
+
+    composition.choose(0, null);
+    expect(composition.shape()).toBe('rail');
+    expect(composition.rail()).toBe(true);
+    expect(composition.wide()).toBe(true);
+
+    composition.togglePin();
+    expect(composition.shape()).toBe('gone');
+    expect(composition.rail()).toBe(false);
+  });
+
+  /**
+   * What the rail gives back in one press: the panel that half was holding. It
+   * is the memory of a gesture and not state, so nothing writes it through.
+   */
+  it('gives a half back the panel it last held, and labels the handle with it', () => {
+    const { composition } = setUp();
+    composition.choose(1, 'HARMONICS');
+    composition.choose(0, null);
+    composition.choose(1, null);
+
+    expect(composition.handles()).toEqual(['SCOPE', 'HARMONICS']);
+
+    composition.restore(1);
+    expect(composition.slots()).toEqual([null, 'HARMONICS']);
+    expect(localStorage.getItem(RANURAS_KEY)).toBe(',HARMONICS');
+  });
+
+  it('offers the factory handles before either half has held anything', () => {
+    localStorage.setItem(RANURAS_KEY, ',');
+    TestBed.resetTestingModule();
+    const { composition } = setUp();
+
+    expect(composition.handles()).toEqual(FACTORY_HANDLES);
+
+    // Two presses fill the column rather than moving one panel between halves.
+    composition.restore(0);
+    composition.restore(1);
+    expect(composition.slots()).toEqual(['SCOPE', 'SPECTRUM']);
+  });
+
+  /**
+   * The rail obeys the chooser's rule because it goes through it: a handle that
+   * would restore what the other half holds swaps them rather than drawing the
+   * same signal twice.
+   */
+  it('swaps rather than duplicating when a handle would restore the other half', () => {
+    const { composition } = setUp();
+    composition.choose(1, 'SCOPE');
+
+    expect(composition.slots()).toEqual([null, 'SCOPE']);
+
+    composition.restore(0);
+    expect(composition.slots()).toEqual(['SCOPE', null]);
   });
 
   it('falls back to the factory pair for storage this build cannot read', () => {
