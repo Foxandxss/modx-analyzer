@@ -25,12 +25,18 @@ import { LiveCanvas } from '../live-canvas';
  * A bar is the height of a quantity and not a cell: nothing is drawn where there
  * is no note, and a harmonic that is not there is a bar of no height, never a
  * bar at the bottom of the frame with a zero next to it.
+ *
+ * **And the legend goes with them.** `MEASURED` qualifies the bars; with no note
+ * there are no bars, so the word would be qualifying an empty frame. See
+ * {@link bars}.
  */
 @Component({
   selector: 'app-harmonics',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<canvas #canvas class="harmonics" aria-label="Live harmonics"></canvas>
-    <p class="legend"><span class="legend__swatch" aria-hidden="true"></span>{{ measured }}</p>`,
+    @if (bars()) {
+      <p class="legend"><span class="legend__swatch" aria-hidden="true"></span>{{ measured }}</p>
+    }`,
   styles: `
     :host {
       display: block;
@@ -72,6 +78,24 @@ export class Harmonics extends LiveCanvas {
 
   /** The stamp's own word, so the legend and the figures cannot say it twice. */
   protected readonly measured = PROVENANCE_LABEL.measured;
+
+  /**
+   * Whether there are bars under the legend to call `MEASURED`.
+   *
+   * A stamp is drawn beside a figure or it is not drawn: with no note there are
+   * no bars, and a swatch and the word `MEASURED` over an empty frame label the
+   * emptiness — the same failure `provenance.ts` maps `invalidated` to the empty
+   * string to prevent. The axis stays, because an axis is not a reading.
+   *
+   * {@link AudioService.drawing} is the signal for it, and it is exactly the
+   * right one: in `liveFrame` the curve and the bars are the **same** `null`,
+   * both written by `fundamentalHz === null`, and the dead trama has both. This
+   * panel reads `live` inside the paint loop, which is not reactive by design
+   * (see {@link LiveCanvas}); `drawing` is the coalesced signal for the one bit
+   * of it a template is allowed to move on, and the readout is forced the moment
+   * that bit changes rather than waiting for the 4 Hz tick.
+   */
+  protected readonly bars = this.audio.drawing;
 
   protected override paint(
     context: CanvasRenderingContext2D,

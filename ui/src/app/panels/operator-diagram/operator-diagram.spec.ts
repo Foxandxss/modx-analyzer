@@ -403,7 +403,12 @@ describe('OperatorDiagram', () => {
       ],
     });
     await fixture.whenStable();
-    expect(nodes(host)[0].querySelector('.node__hz')?.textContent).toContain(DEAD_MARK);
+    // The dash keeps the line's shape; the word does not stand beside it. A
+    // stamp on a blank is a stamp on the blank, and it is what the whole eight
+    // did in idle before #56.
+    const idle = nodes(host)[0].querySelector('.node__hz')?.textContent ?? '';
+    expect(idle).toContain(DEAD_MARK);
+    expect(idle).not.toContain('PREDICTED');
 
     // Middle C. Equal temperament says 261.63; the MODX measures 261.763, which
     // is the disagreement the stamp exists to keep visible.
@@ -412,6 +417,27 @@ describe('OperatorDiagram', () => {
     const line = nodes(host)[0].querySelector('.node__hz')?.textContent ?? '';
     expect(line).toContain('261.63 Hz');
     expect(line).toContain('PREDICTED');
+  });
+
+  // The whole eight, not the one node the test above holds: with nothing held
+  // every one of them is a dash, so every one of them is a bare stamp.
+  it('writes no PREDICTED anywhere in the panel with no note held', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.operators.set(theBuildsOwnPatch(NOW));
+    await fixture.whenStable();
+
+    expect(nodes(host)).toHaveLength(8);
+    for (const node of nodes(host)) {
+      expect(node.querySelector('.node__hz')?.textContent).toContain(DEAD_MARK);
+      expect(node.querySelector('.node__hz-stamp')?.textContent?.trim()).toBe('');
+    }
+
+    backend.lowestLivePitch.set(60);
+    await fixture.whenStable();
+    for (const node of nodes(host)) {
+      expect(node.querySelector('.node__hz-stamp')?.textContent?.trim()).toBe('PREDICTED');
+    }
   });
 
   it('hangs one ceiling datum at the loudest operator, across all eight nodes', async () => {

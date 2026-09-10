@@ -41,7 +41,10 @@ interface NodeView {
    * `×0.50 ...`, and `spectral-glyph.ts` is what replaces it.
    */
   readonly glyph: string | null;
-  /** The real frequency of this operator for the live note. `PREDICTED`, always. */
+  /**
+   * The real frequency of this operator for the live note: `PREDICTED` whenever
+   * there is one, and `invalidated` — dash, no stamp — when there is not.
+   */
   readonly hz: PolledValue<string>;
   /** The node's one stamp, taken from the weakest figure in it. */
   readonly stamp: Provenance;

@@ -164,10 +164,15 @@
           </div>
 
           <!-- La frecuencia real de la nota viva. Es TEORÍA y lo dice: el
-               fundamental que mide el MODX no cae donde dice la fórmula. -->
+               fundamental que mide el MODX no cae donde dice la fórmula.
+
+               El sello sale del mapa, como el de la cabecera, y NUNCA de una
+               clave fija: sin nota no hay cifra, e `invalidated` está mapeado a
+               la cadena vacía precisamente porque una palabra al lado de un
+               hueco rotula el hueco (`provenance.ts`). -->
           <div class="node__hz">
             <app-figure [value]="node.hz" [unit]="' Hz'" />
-            <span class="node__hz-stamp">{{ labels.theory }}</span>
+            <span class="node__hz-stamp">{{ labels[node.hz.provenance] }}</span>
           </div>
         </div>
 

@@ -51,17 +51,27 @@ async function renderHarmonics() {
   await fixture.whenStable();
   const host = fixture.nativeElement as HTMLElement;
 
+  // One running sequence for the whole test, so a phrase and the silence after
+  // it are the same stream and not two: the bridge counts gaps, and the note's
+  // phase carries across the blocks the way a held key does.
+  let sequence = 0;
+  const emit = (mono?: Float32Array) => {
+    backend.emitBlock(fakeBlock({ sequence, sentAtMicros: sequence * 30_000, mono }));
+    sequence += 1;
+  };
+
   return {
     host,
     async hold(frequency: number, blocks = 10) {
-      for (let sequence = 0; sequence < blocks; sequence += 1) {
-        backend.emitBlock(
-          fakeBlock({
-            sequence,
-            sentAtMicros: sequence * 30_000,
-            mono: heldNote(frequency, sequence * BLOCK_FRAMES),
-          }),
-        );
+      for (let block = 0; block < blocks; block += 1) {
+        emit(heldNote(frequency, sequence * BLOCK_FRAMES));
+      }
+      await fixture.whenStable();
+    },
+    /** The key let go: blocks of digital zeros, which is no note and no bars. */
+    async silence(blocks = 10) {
+      for (let block = 0; block < blocks; block += 1) {
+        emit();
       }
       await fixture.whenStable();
     },
@@ -84,10 +94,31 @@ async function renderHarmonics() {
 
 describe('Harmonics', () => {
   it('says the bars are MEASURED, and says nothing else', async () => {
-    const { host } = await renderHarmonics();
+    const { hold, host } = await renderHarmonics();
+
+    await hold(261.626);
 
     expect(host.querySelector('.legend')?.textContent?.trim()).toBe('MEASURED');
     expect(host.textContent).not.toContain('PREDICTED');
+  });
+
+  // A stamp beside nothing labels the nothing: `MEASURED` is what the bars are,
+  // and with no note there are no bars for it to be about.
+  it('writes no legend at all while there are no bars', async () => {
+    const { host } = await renderHarmonics();
+
+    expect(host.querySelector('.legend')).toBeNull();
+    expect(host.textContent).not.toContain('MEASURED');
+  });
+
+  it('takes the legend away again when the note goes', async () => {
+    const { hold, silence, host } = await renderHarmonics();
+
+    await hold(261.626);
+    expect(host.querySelector('.legend')).not.toBeNull();
+
+    await silence();
+    expect(host.querySelector('.legend')).toBeNull();
   });
 
   // No fit, no fitted index, no Level→index mapping: the dashed Bessel curve
