@@ -14,7 +14,8 @@ import { DEAD_MARK, PROVENANCE_LABEL } from '../../provenance/provenance';
 import { equalTemperamentHz } from '../../provenance/theory';
 import { FOLDING } from './folding';
 import { LEGEND } from './legend';
-import { DrawnBus, DrawnRoute, DrawnStub, Slot, layout } from './layout';
+import { DrawnBus, DrawnRoute, DrawnStub, LevelAxis, Slot, layout } from './layout';
+import { levelTrackInset } from './node-geometry';
 import { spectralGlyph } from './spectral-glyph';
 import { wideLayout } from './wide-layout';
 
@@ -34,8 +35,16 @@ interface NodeView {
   readonly role: OperatorRole | null;
   readonly roleLabel: PolledValue<string>;
   readonly level: PolledValue<number>;
-  /** Height of the luminous fill, 0-100. The Level **is** this height. */
-  readonly fill: number;
+  /**
+   * The luminous fill's box inside the track, in percentages of it. The Level
+   * **is** the length along the carrying axis; the other dimension is the whole
+   * of the track and says nothing.
+   *
+   * Both are written rather than one being left to the sheet, so that which axis
+   * carries the measurement is a fact in the rendered drawing and not something
+   * a reader has to reconstruct from a class name and a rule.
+   */
+  readonly fill: Extent;
   readonly ratio: PolledValue<string>;
   /**
    * The spectral form's drawing, or `null` for a form nobody read. Never a word:
@@ -62,6 +71,40 @@ interface Box {
   readonly height: number;
 }
 
+/** A size in both of the node's dimensions, as percentages of the track. */
+interface Extent {
+  readonly width: number;
+  readonly height: number;
+}
+
+/**
+ * Where the ceiling datum hangs inside the track, as a percentage of it.
+ *
+ * The mark is positioned along the axis that carries Level and pinned at the
+ * origin on the other, so one of these two is the ceiling and the other is
+ * always `0`. Which is which is the only difference between the two
+ * compositions' datums, and it is the only thing this pair exists to say.
+ */
+interface DatumAt {
+  readonly left: number;
+  readonly bottom: number;
+}
+
+/**
+ * The track's four insets inside the card, in CSS pixels.
+ *
+ * Three of them are zero and the fourth is the headroom the datum's ink needs at
+ * the far end of the carrying axis. All four are written, because *nowhere else*
+ * is half of what the rule says and a zero that is only in a stylesheet is a
+ * zero no test can fail on.
+ */
+interface Inset {
+  readonly top: number;
+  readonly right: number;
+  readonly bottom: number;
+  readonly left: number;
+}
+
 /** A line of the drawing, plus whether the operator it leaves has been cut. */
 interface LineView {
   readonly key: string;
@@ -84,15 +127,20 @@ interface LineView {
  * Four things are deliberate here. The role is a **shape** before it is a colour
  * — total curve for a portadora, live corner for a modulador, dashed outline for
  * an operator at zero — so it reads without a legend and without colour vision.
- * The Level is the **height of the fill**, the number under it only confirms what
- * the height already said, and one **ceiling datum** at the patch's highest Level
- * crosses all eight so the eye reads the gaps rather than eight private
- * baselines. That fill measures its Level against a **track** and not against the
- * card: the scale's top used to be the card's own border, which left a ceiling of
- * 99 nowhere to be drawn (#67, `node-geometry.ts`). The claim is unchanged —
- * linear, zero-anchored, the same scale on all eight — and what moved was the
- * accident that a border was doubling as the top of a measurement.
- * The routes come from the algorithm the ring read
+ * The Level is the **length of the fill**, the number under it only confirms what
+ * the length already said, and a **ceiling datum** at the patch's highest Level
+ * is repeated on all eight at the same offset, so the eye reads the gaps rather
+ * than eight private baselines. Which direction that length runs is the
+ * composición's to say and never the box's ({@link levelAxis}): the narrow grid
+ * measures up the node and the wide drawing measures along it, because there the
+ * vertical was already carrying depth and two quantities on one axis is what
+ * drew 99 and 96 a third of a pixel apart. That fill measures its Level against
+ * a **track** and not against the card: the scale used to end at the card's own
+ * border, which left a ceiling of 99 nowhere to be drawn (#67,
+ * `node-geometry.ts`). The claim is unchanged — linear, zero-anchored, the same
+ * scale on all eight — and what has moved out from under it twice now is an
+ * accident: first that the fill was the card, then that the length was the
+ * height. The routes come from the algorithm the ring read
  * and are laid out by chain depth, so any of the 88 draws without a hand-made
  * sheet (`layout.ts`). And nothing is guessed: until the algorithm has been read
  * there is no topology, so there is no role and there are no lines, and an
@@ -210,6 +258,37 @@ export class OperatorDiagram {
   /** The node lays its five facts in a row: the depth left it no height to stack. */
   protected readonly squat = computed(() => this.drawing().squat);
 
+  /**
+   * Which of the node's two dimensions carries Level here, taken from the layout
+   * that stated it and computed from nothing.
+   *
+   * The narrow grid says `height` and the wide composición says `width`; neither
+   * is read off a box, because the boxes are `viewBox` units the panel stretches
+   * and the ratio on screen belongs to the panel (`layout.ts`, {@link LevelAxis}).
+   */
+  protected readonly levelAxis = computed<LevelAxis>(() => this.drawing().levelAxis);
+
+  /**
+   * What the far end of the carrying axis costs the track, in CSS pixels, as an
+   * inset the sheet is told rather than one it declares.
+   *
+   * 8 px on the narrow grid and 7 in the wide composición — two numbers, both
+   * earned against their own composición's narrowest card and neither written
+   * down (`node-geometry.ts`). It is bound as a pair with a zero in it, so the
+   * assertion that the headroom is at **one end and nowhere else** is a fact
+   * about the rendered node rather than about a stylesheet.
+   */
+  protected readonly trackInset = computed<Inset>(() => {
+    const inset = levelTrackInset(this.levelAxis());
+    const alongWidth = this.levelAxis() === 'width';
+    return {
+      top: alongWidth ? 0 : inset,
+      right: alongWidth ? inset : 0,
+      bottom: 0,
+      left: 0,
+    };
+  });
+
   protected readonly viewBox = computed(() => {
     const drawn = this.drawing();
     return `0 0 ${drawn.width} ${drawn.height}`;
@@ -238,9 +317,18 @@ export class OperatorDiagram {
   });
 
   /**
-   * The ceiling datum: the highest Level in the patch, drawn as one dashed line
-   * across all eight nodes.
+   * The ceiling datum: the highest Level in the patch, drawn as **a repeated
+   * mark on eight identical boxes** at the same offset in each.
    *
+   * It has never been one continuous line across the eight, in either drawing,
+   * and the code used to say it was. Where the cards are stacked and measure
+   * from a shared origin the marks line up into a rule the eye can sight along;
+   * in the 3 × 3 grid, and wherever the wide drawing puts two cards side by side
+   * in different bands, they read per node. What makes the eight comparable is
+   * that every mark sits at the same fraction of an identical track — one origin
+   * and one scale — and not that a single element crosses them.
+   *
+
    * Real patches cluster their operators near the top — the running build's own
    * reads `90 · 90 · 71 · 90 · 90 · 85 · 90 · 99`, six of the eight identical to
    * the eye — so eight fills each with their own private baseline are eight
@@ -281,7 +369,7 @@ export class OperatorDiagram {
    *   highest of. A line here would be a baseline invented out of eight dashes.
    * - **Read, and everything silent.** There is a ceiling and it is `0`. The line
    *   is still not drawn, and not because the figure is missing: the datum's
-   *   whole job is to turn eight absolute heights into seven gaps, and against a
+   *   whole job is to turn eight absolute lengths into seven gaps, and against a
    *   flat floor there are no gaps to make. `THE LOUDEST OPERATOR IN THIS PATCH`
    *   naming a silent one is a legend entry pointing at no content — the defect
    *   #67 was opened about, one layer in.
@@ -289,6 +377,26 @@ export class OperatorDiagram {
   protected readonly ceilingLine = computed<number | null>(() => {
     const ceiling = this.ceiling();
     return ceiling === null || ceiling === 0 ? null : ceiling;
+  });
+
+  /**
+   * The mark's place in the track: along the carrying axis, at the origin on the
+   * other.
+   *
+   * One of the two is the ceiling and the other is `0`, and that is the whole of
+   * the rotation as far as the datum is concerned — the ink, the stroke and the
+   * suppressions above are untouched. Written as a pair rather than as a class
+   * the sheet interprets, so that a test can read which way the mark is hung off
+   * the rendered node.
+   */
+  protected readonly datumAt = computed<DatumAt | null>(() => {
+    const ceiling = this.ceilingLine();
+    if (ceiling === null) {
+      return null;
+    }
+    return this.levelAxis() === 'width'
+      ? { left: ceiling, bottom: 0 }
+      : { left: 0, bottom: ceiling };
   });
 
   /** The modulation lines, dashed when they leave an operator that is cut. */
@@ -367,7 +475,7 @@ export class OperatorDiagram {
       level,
       // An operator that has not answered has no fill at all, which is not the
       // same drawing as one that answered 0: that one is dashed and cut.
-      fill: level.value ?? 0,
+      fill: extent(this.levelAxis(), level.value ?? 0),
       ratio: text(ratio, (held) => `×${held.toFixed(2)}`),
       glyph: spectralGlyph(spectralForm.value),
       hz: this.theoryHz(ratio.value),
@@ -408,6 +516,19 @@ export class OperatorDiagram {
     // characters that would push `PREDICTED` off the 118 px node.
     return { value: hz.toFixed(decimals(hz)), provenance: 'theory', readAt: null };
   }
+}
+
+/**
+ * A Level as the fill's box: the figure along the axis that carries it, and the
+ * whole of the track across the other one.
+ *
+ * The cross dimension is written as 100 rather than left to the sheet's
+ * anchoring, so that a node rendered in either composición says out loud which
+ * of its two numbers is the measurement. That is the claim the rotation moves,
+ * and a claim only a stylesheet makes is one no test in this suite can reach.
+ */
+function extent(axis: LevelAxis, level: number): Extent {
+  return axis === 'width' ? { width: level, height: 100 } : { width: 100, height: level };
 }
 
 /** The operators of a cut mask, in operator order. */

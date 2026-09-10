@@ -191,6 +191,20 @@ function arcTipX(path: string): number {
 }
 
 describe('the wide diagram layout', () => {
+  it('states that Level runs along the node, in both of its boxes', () => {
+    // The four worst cases cover both node classes — the 66 is eight rows of
+    // batten and the 1 is one row of stacked node — and the answer is the same
+    // for both, including the drawing with no topology read. One axis per
+    // composición: a rule that read the box would answer differently on an 8 : 1
+    // batten and a 1.7 : 1 card, which is the same drawing.
+    for (const drawn of [...THE_WORST_CASES, null]) {
+      const wide = wideLayout(drawn, []);
+      expect(wide.levelAxis).toBe('width');
+    }
+    expect(wideLayout(ALGORITHM_66, []).squat).toBe(true);
+    expect(wideLayout(ALGORITHM_1, []).squat).toBe(false);
+  });
+
   it('stands the portadoras on the bus row and everything else above them', () => {
     const { slots } = wideLayout(ALGORITHM_2, []);
 

@@ -45,10 +45,23 @@ function node(host: HTMLElement, operator: number): HTMLElement {
   return found;
 }
 
-/** The height of one node's fill, as a share of its track. The Level *is* this. */
+/**
+ * The length of one node's fill along the axis that carries Level, as a share of
+ * its track. The Level *is* this.
+ *
+ * Which axis that is comes off the node the composición drew, and is not assumed
+ * to be the height: the bench opens on the narrow grid, where it is, and the
+ * wide drawing measures along the width instead (`layout.ts`, `LevelAxis`). A
+ * helper that read `style.height` regardless would go on returning a number
+ * after the bench was pointed at the other composición, and it would be 100.
+ */
 function fill(host: HTMLElement, operator: number): number {
-  const drawn = node(host, operator).querySelector<HTMLElement>('.node__fill');
-  return Number.parseFloat(drawn?.style.height ?? '');
+  const card = node(host, operator);
+  const drawn = card.querySelector<HTMLElement>('.node__fill');
+  const along = card.classList.contains('node--level-width')
+    ? drawn?.style.width
+    : drawn?.style.height;
+  return Number.parseFloat(along ?? '');
 }
 
 /** A `top: 12.5%` back as the number, which is how the drawing rides the canvas. */

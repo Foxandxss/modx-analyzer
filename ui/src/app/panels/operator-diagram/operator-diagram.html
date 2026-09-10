@@ -97,6 +97,7 @@
         [class.node--inert]="node.role === 'inert'"
         [class.node--stale]="node.stamp === 'stale'"
         [class.node--squat]="squat()"
+        [class.node--level-width]="levelAxis() === 'width'"
         [style.left.%]="node.box.left"
         [style.top.%]="node.box.top"
         [style.width.%]="node.box.width"
@@ -105,25 +106,47 @@
         [attr.data-role]="node.role"
         [attr.data-stamp]="node.stamp"
       >
-        <!-- La PISTA del relleno: el interior de la tarjeta menos el hueco de
-             arriba. La escala terminaba en el borde de la propia tarjeta, y por
-             eso un techo de 99 no tenía dónde dibujarse (#67). El Level sigue
-             siendo la altura del relleno; lo que se ha separado de la cifra es
-             el borde que hacía de tope. Sin recorte: el trazo del techo sube a
-             propósito hasta el hueco, y una pista que recortara volvería a
-             comérselo una caja más adentro (`node-geometry.ts`). -->
-        <div class="node__track" aria-hidden="true">
-          <!-- El Level ES la altura del relleno; la cifra sólo lo confirma. -->
-          <div class="node__fill" [style.height.%]="node.fill"></div>
+        <!-- La PISTA del relleno: el interior de la tarjeta menos el hueco del
+             extremo lejano del eje que lleva el Level. La escala terminaba en el
+             borde de la propia tarjeta, y por eso un techo de 99 no tenía dónde
+             dibujarse (#67). El Level sigue siendo el LARGO del relleno; lo que
+             se ha separado de la cifra es el borde que hacía de tope. Sin
+             recorte: el trazo del techo se mete a propósito en el hueco, y una
+             pista que recortara volvería a comérselo una caja más adentro.
 
-          <!-- El techo del patch: la MISMA altura en los ocho, así que los ocho
-               rellenos se leen por el hueco que les queda encima y no por su
-               altura absoluta. Es el Level más alto que hay, nunca una constante.
-               Se compara con null y no por verdad: un techo de 0 es una medida
-               real y no una ausencia, y era la verdad de `@if` la que las
-               confundía sin que nadie lo hubiera decidido. -->
-          @if (ceilingLine() !== null) {
-            <div class="node__datum" [style.bottom.%]="ceilingLine()"></div>
+             Los cuatro insets se atan desde el módulo y no se declaran en la
+             hoja: son 8 px en la rejilla y 7 en la composición ancha, cada uno
+             ganado contra la tarjeta más pequeña de SU composición, y tres ceros
+             que dicen «el hueco está en un extremo y en ninguno más»
+             (`node-geometry.ts`). -->
+        <div
+          class="node__track"
+          aria-hidden="true"
+          [style.top.px]="trackInset().top"
+          [style.right.px]="trackInset().right"
+          [style.bottom.px]="trackInset().bottom"
+          [style.left.px]="trackInset().left"
+        >
+          <!-- El Level ES el largo del relleno; la cifra sólo lo confirma. La
+               otra dimensión es la pista entera y no dice nada: escritas las dos,
+               el nodo dibujado declara cuál de sus dos números es la medida. -->
+          <div
+            class="node__fill"
+            [style.width.%]="node.fill.width"
+            [style.height.%]="node.fill.height"
+          ></div>
+
+          <!-- El techo del patch: la MISMA marca en los ocho, al mismo punto de
+               una pista idéntica, así que los ocho rellenos se leen por el hueco
+               que les queda por delante y no por su largo absoluto. Nunca ha sido
+               una línea que cruce los ocho — donde las tarjetas se apilan y
+               comparten origen las marcas se alinean en una regla, y en la
+               rejilla se leen nodo a nodo. Es el Level más alto que hay, nunca
+               una constante. Se compara con null y no por verdad: un techo de 0
+               es una medida real y no una ausencia, y era la verdad de `@if` la
+               que las confundía sin que nadie lo hubiera decidido. -->
+          @if (datumAt(); as at) {
+            <div class="node__datum" [style.left.%]="at.left" [style.bottom.%]="at.bottom"></div>
           }
         </div>
 

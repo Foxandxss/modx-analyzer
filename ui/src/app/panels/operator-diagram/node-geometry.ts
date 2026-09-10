@@ -1,7 +1,7 @@
-import { BODY_FLOOR } from '../glass-column/column-geometry';
-import { CANVAS_H, NODE_H } from './layout';
-import { LEGEND_H } from './legend';
-import { WIDE_CANVAS_H, WIDE_ROWS, wideRowPitch } from './wide-layout';
+import { BODY_FLOOR, DESIGN_BODY_W, diagramLane } from '../glass-column/column-geometry';
+import { CANVAS_H, LevelAxis, NODE_H } from './layout';
+import { LEGEND_H, ZONE_PAD_X } from './legend';
+import { COL_GAP, MARGIN_X, WIDE_CANVAS_W, WIDE_COLUMNS } from './wide-layout';
 
 /**
  * The node's interior, in CSS pixels: where the fill's scale ends, and how much
@@ -12,143 +12,155 @@ import { WIDE_CANVAS_H, WIDE_ROWS, wideRowPitch } from './wide-layout';
  * `layout.ts` says in its own header that its numbers are `viewBox` units and
  * that the panel stretches them with `preserveAspectRatio="none"`. Every number
  * here is a CSS pixel and has to stay one. That is the whole point of the
- * daylight being a constant rather than a share: headroom that scaled with card
- * height would give the datum different clearance in every column shape and
- * collapse back toward the border at the composition where the card is smallest
+ * daylight being a constant rather than a share: headroom that scaled with the
+ * card would give the datum different clearance in every column shape and
+ * collapse back toward the border at the composición where the card is smallest
  * — the same defect reappearing at one shape only, which is the hardest kind to
  * find twice. Putting px arithmetic behind an export surface whose stated
  * contract is stretchable units is how a correct-looking edit goes wrong two
  * months from now, so the two live apart.
  *
- * The boundary between them is one line: a card's height on screen is its share
- * of the canvas's own rendered height. `layout.ts` and `wide-layout.ts` own the
- * share; this module owns the pixels.
+ * The boundary between them is one line: a card's size on screen is its share of
+ * the canvas's own rendered box. `layout.ts` and `wide-layout.ts` own the share;
+ * this module owns the pixels.
  *
  * ## Why the fill has a track at all
  *
- * The Level is the height of the fill and the figure under it only confirms what
- * the height already said (`DESIGN.md` §20.2). That claim is untouched here.
+ * The Level is the length of the fill and the figure under it only confirms what
+ * the length already said (`DESIGN.md` §20.2). That claim is untouched here.
  * What changed is an accident underneath it: the fill *was* the card, so a Level
- * of 99 out of 99 left one percent of the card above it, and the patch the app
+ * of 99 out of 99 left one percent of the card past it, and the patch the app
  * boots into — `Init Normal (FM-X)`, `99 · 14 · 16 · 99 · 99 · 99 · 9 · 53` —
  * put the ceiling datum inside the card's own 2 px border, where there was
  * nothing to see (#67).
  *
  * So the fill keeps its scale and is given a **track**: the card's interior less
- * {@link TRACK_INSET} at the top, and nowhere else. Level is still the height of
- * the fill, still linear, still zero-anchored, still comparable across the eight.
- * What it is no longer is a measurement whose top edge is a border.
+ * {@link levelTrackInset} at the far end of the carrying axis, and nowhere else.
+ * Level is still the length of the fill, still linear, still zero-anchored,
+ * still the same scale on all eight. What it is no longer is a measurement whose
+ * far edge is a border.
+ *
+ * ## Which axis, and why this module never asks the box
+ *
+ * Round 10 turned Level onto the width in the wide composición and left the
+ * narrow grid on the height ({@link LevelAxis}). Every function here therefore
+ * takes **the card along the axis that carries Level** and does not care which
+ * of the two that is: the arithmetic is identical in both directions, and the
+ * one thing that would make it wrong is a caller measuring the other side. That
+ * is why the two insets are named per composición at {@link levelTrackInset}
+ * rather than computed from whichever number a caller happens to hold.
  *
  * ## Where the inset comes from
  *
- * The datum is drawn with `border-top` on a zero-height box positioned by
- * `bottom`, so its **bottom edge is the datum** and its ink rises into the space
- * above it: at Level `L` the stroke occupies `[L, L + DATUM_STROKE]`. That is
- * deliberate and not a rounding. At the loudest node the datum and the fill's top
- * are the same height, and drawing the stroke on the empty side is what keeps it
- * from covering the fill it is a statement about — the one node where the reading
- * matters most is the one node a centred stroke would be half-drawn on.
+ * The datum is drawn with a border on a zero-thickness box positioned along the
+ * axis, so its **near edge is the datum** and its ink extends past it into the
+ * empty side: at Level `L` the stroke occupies `[L, L + DATUM_STROKE]`. That is
+ * deliberate and not a rounding. At the loudest node the datum and the fill's
+ * far end are the same place, and drawing the stroke on the empty side is what
+ * keeps it from covering the fill it is a statement about — the one node where
+ * the reading matters most is the one node a centred stroke would be half-drawn
+ * on.
  *
- * The consequence is that at the top of the range the stroke's top overshoots the
+ * The consequence is that at the top of the range the stroke overshoots the
  * track, and the inset is what buys room for it:
  *
  * ```text
- * I = d + DATUM_STROKE − 0.01 · T
+ * I = d + DATUM_STROKE − T / LEVEL_SCALE
  * ```
  *
- * `d` is {@link DAYLIGHT_FLOOR}, the dark surface left between the stroke and the
- * card's border. `DATUM_STROKE` is the ink the datum spends above the line it
- * names. `0.01 · T` is what the last percent of the track gives back, `T` being
- * the track's own height.
+ * `d` is {@link DAYLIGHT_CRITERION}, the dark surface left between the stroke
+ * and the card's border. `DATUM_STROKE` is the ink the datum spends past the
+ * line it names. `T / LEVEL_SCALE` is what the last Level point of the track
+ * gives back, `T` being the track's own length. {@link trackInset} is that
+ * expression solved for a card rather than for a track, since the inset is part
+ * of what it is buying room for.
  *
  * **The track must not clip.** `overflow: visible` on `.node__track` is part of
- * this derivation and not an implementation detail: the stroke is *meant* to rise
- * into the headroom, and a clipping track would cut it off at the track's top
- * exactly as the card's border cut it off before — recreating #67 one box in,
- * with the arithmetic here still reading six pixels. `.node` keeps its own
- * `overflow: hidden`, which is what rounds the fill into the role's radius, and
- * the inset is **top-only**, so the fill's other three edges stay where they were
- * and nothing about its corners changes.
+ * this derivation and not an implementation detail: the stroke is *meant* to
+ * reach into the headroom, and a clipping track would cut it off at the track's
+ * own edge exactly as the card's border cut it off before — recreating #67 one
+ * box in, with the arithmetic here still reading six pixels. `.node` keeps its
+ * own `overflow: hidden`, which is what rounds the fill into the role's radius,
+ * and the inset is at **one end only**, so the fill's other three edges stay
+ * where they were and nothing about its corners changes.
  */
 
 /** `--rule-min`, which is `.node`'s border on all four sides. */
 const NODE_BORDER = 2;
 
-/** `.node__datum`'s `border-top`, also `--rule-min`. */
+/** `.node__datum`'s border, also `--rule-min`. */
 export const DATUM_STROKE = 2;
 
 /**
  * The top of the Level range (`backend-gateway.ts`, `OperatorView.level`).
  *
  * The worst case for the datum, and the reason #67 exists: the higher the
- * ceiling, the more of the stroke has to live above the track.
+ * ceiling, the more of the stroke has to live past the track.
  */
 export const LEVEL_MAX = 99;
+
+/**
+ * What the fill divides by, which is **not** {@link LEVEL_MAX}.
+ *
+ * The fill is written as a percentage of the track and the Level is that
+ * percentage, so one Level point is `T / 100` and a patch at the top of its
+ * range still leaves a point of track unfilled. That last point is the
+ * `T / LEVEL_SCALE` term of the inset — the room the range gives back — and it
+ * is also the figure the whole rotation is about: on the narrowest card the wide
+ * composición draws it is about **1.02 px**, and on the vertical axis it was
+ * **0.12 px**, which is why two operators three points apart used to be drawn a
+ * third of a pixel apart.
+ */
+const LEVEL_SCALE = 100;
 
 /**
  * How much dark surface has to remain between the datum's ink and the card's
  * border, in CSS pixels.
  *
- * ### The verdict
+ * **6 px, and the criterion is all that survives the rotation.** The number was
+ * judged once, on the vertical axis, and that verdict is retired rather than
+ * deleted — it is carried into ADR-0008 with its value, its card, its patch as
+ * Levels and the sentence that the geometry it was judged in no longer exists
+ * (#84). Recorded here until that document is in the tree, because a judgement
+ * deleted silently is the same defect as one kept past its geometry:
  *
- * **6 px, judged and kept.** Someone looked at it, which is the whole difference
- * between this number and one that is merely true.
- *
- * - **What was on screen.** The wide composition, both ranuras empty so the
+ * - **What was on screen.** The wide composición, both ranuras empty so the
  *   156 px strip is up, window restored and dragged down, on a 2× display.
  * - **Which patch, as Levels.** Algorithm 66 with `99 · 0 · 99 · 99 · 0 · 0 · 99
  *   · 99` — a ceiling of 99 with a **lit carrier at the ceiling**, which is the
- *   case worth judging: the datum then lies against `--carrier` at full strength,
- *   the louder of the two lines. A reading with no carrier at the ceiling never
- *   puts it there and cannot answer the question. (Spelled out rather than named:
- *   the instrument still said `Init Normal (FM-X)` because the patch was edited
- *   without renaming, and those Levels are **not** what `theBootPatch` encodes.)
+ *   case worth judging: the datum then lies against `--carrier` at full strength.
  * - **What was measured**, off the PNG at 1:1 on OP8's card: 4 device px of
  *   border ink, 13 device px of clean `--surface-raised`, 4 device px of datum.
- *   About 6.5 CSS px, which is the derivation.
+ *   About 6.5 CSS px.
  * - **How it read.** A rule at a common height, clearly clear of the border, and
- *   not as a rim on the fill — `--carrier-fill` fading to `.04` at its top is
- *   visible in the pixels, the fill entering as a gradient a row below the line.
+ *   not as a rim on the fill.
  *
- * ### Why the judgement is not about the card it was judged on
+ * ### Why the criterion transfers and the verdict does not
  *
- * The card measured was about 31 px, taller than {@link worstCardHeight}'s squat
- * card. That does not weaken it. The daylight runs border-to-datum and **both
- * ends are fixed by the inset**: the only card-dependent term in the derivation
- * is `0.01 · T`, worth 0.44 px across the entire range from the squat card to the
- * narrow grid's. Hence the same 13 device px on a carrier card and a modulator
- * card of the same height, and hence the transfer: card height decides how much
- * track the fill gets, not what was looked at. The judgement holds at the squat
- * card without having been taken there.
+ * The daylight runs border-to-datum and **both ends are fixed by the inset**, so
+ * it is explicitly independent of the dimension being measured — which is why it
+ * carried from a 31 px card to a 24 px one in the first place, and why it
+ * carries across ninety degrees now. What does not carry is what six pixels of
+ * *that* surface looked like: it was a judgement about a horizontal rule lying
+ * on an amber border with `--carrier-fill` fading underneath it, and in the
+ * rotated drawing the datum is a **vertical** rule with different ink beside it.
+ *
+ * So the two rotated daylights are **derived and nobody has looked at them**:
+ * about **6.0 px** on the narrowest card this build can draw and 7.9 px on the
+ * batten at three columns. They are the same kind of number `bottom: 99%` was,
+ * and they are looks 2 and 3 of the round's verification list (#88), to be taken
+ * on the **wide stacked node at the column cap** and not only on the batten —
+ * taking it on the roomy box is the same trap as judging the old datum on the
+ * grid card.
  *
  * ### Why not 5
  *
- * 5 would probably read, and it would give a pixel of fill back on the squat card
- * where fill height is scarcest, so the trade is real. Rejected on margin: the
- * pixel is invisible in the fill, and the daylight is the only thing between this
- * and the defect the issue is named after, on the composition the app boots into.
- *
- * ### The instrument, since it was thrown away
- *
- * `FakeBackendGateway` subclassed and seeded at the gateway only — connection,
- * ancla, algorithm 66's topology and the eight Levels — provided for
- * `BACKEND_GATEWAY` in `app.config.ts` in place of `TauriBackendGateway`, then
- * `npx ng serve`. Five minutes to rebuild, which is the honest reason it was safe
- * to delete. #72 is the ticket for not rebuilding it a third time.
+ * 5 would probably read, and it would give a pixel of fill back where the track
+ * is scarcest, so the trade is real. Rejected on margin: the pixel is invisible
+ * in the fill, and the daylight is the only thing between this and the defect
+ * #67 is named after.
  */
-export const DAYLIGHT_FLOOR = 6;
-
-/**
- * `.node__track`'s top inset, mirrored by `operator-diagram.scss`.
- *
- * The smallest integer that clears {@link DAYLIGHT_FLOOR} at
- * {@link worstCardHeight}, by the derivation in this module's header. It is
- * authored here and asserted by the spec against a card recomputed from the
- * constants, rather than written into the sheet with a comment explaining where
- * it came from: a constant a test merely describes is a constant the test cannot
- * fail on.
- */
-export const TRACK_INSET = 8;
+export const DAYLIGHT_CRITERION = 6;
 
 /**
  * `.zone`'s own chrome above and below the canvas, in CSS pixels.
@@ -164,8 +176,7 @@ export const TRACK_INSET = 8;
  * amount by which it does not matter is the useful part: daylight moves about
  * 0.0008 px per pixel of canvas height, so being ten pixels wrong here shifts the
  * assertion by under a hundredth of a pixel. What this arithmetic is sensitive to
- * is {@link TRACK_INSET} and the row count, which is where the interesting
- * failures are.
+ * is the inset and the row count, which is where the interesting failures are.
  */
 const ZONE_PAD_TOP = 12;
 const ZONE_HEAD_BAND = 18;
@@ -191,44 +202,122 @@ export function floorCanvasHeight(): number {
 }
 
 /**
- * The smallest card either composition can put on screen, in CSS pixels.
+ * The canvas's rendered width in the narrowest lane the wide composición claims,
+ * which is the **rail** shape at the shipped window.
  *
- * Two candidates, and the wide one wins by a factor of three. The narrow grid's
- * node is a constant share of its canvas (`NODE_H / CANVAS_H`, 23.8 %). The wide
- * composition sizes its node by how deep the algorithm is, and at `WIDE_ROWS` —
- * algorithm 66, the single chain of eight, the deepest of the 88 — the share is
- * 8.25 %. At the floor that is a card of roughly 24 px, and it is the card the
- * inset has to be earned against.
- *
- * Nothing here is hard-coded to 24. If #69 lands and the deepest algorithms fold,
- * or if `BODY_FLOOR` moves again as it did for the legend's second row, this
- * re-derives and the spec's assertion either stays green honestly or goes red. A
- * hard-coded worst case would have quietly become a number about a card the
- * layout no longer draws.
+ * There is no floor under this the way `BODY_FLOOR` is a floor under the height:
+ * `tauri.conf.json` has no `minWidth` and `diagramLane()` is not floored, so any
+ * drag makes the drawing narrower than anything here. That is #86's ticket and
+ * not this module's, and until it lands the honest thing is to earn the inset
+ * against **the narrowest lane the app ships with** rather than against a floor
+ * that does not exist yet. The rail is that lane — 1 016 px against the pinned
+ * shape's 1 070 — and it is the binding arm by 54 px.
  */
-export function worstCardHeight(): number {
-  const canvas = floorCanvasHeight();
-  const wide = (wideRowPitch(WIDE_ROWS).nodeH / WIDE_CANVAS_H) * canvas;
-  const grid = (NODE_H / CANVAS_H) * canvas;
-  return Math.min(wide, grid);
+export function floorCanvasWidth(): number {
+  return diagramLane('rail', DESIGN_BODY_W) - 2 * ZONE_PAD_X;
+}
+
+/**
+ * The smallest card the narrow 3 × 3 grid puts on screen, along the axis that
+ * carries Level there: its **height**, in CSS pixels.
+ *
+ * The grid node is a constant share of its canvas (`NODE_H / CANVAS_H`, 23.8 %),
+ * so at the body's floor it is about 68 px. It used to lose this comparison to
+ * the wide composición's card by a factor of three, and it no longer competes
+ * with it at all: the wide boxes carry Level along their width now, so their
+ * height is not a Level scale and a `Math.min` across the two would be comparing
+ * a measurement with a dimension that no longer measures anything.
+ */
+export function narrowestGridCard(): number {
+  return (NODE_H / CANVAS_H) * floorCanvasHeight();
+}
+
+/**
+ * The smallest card the wide composición puts on screen, along the axis that
+ * carries Level there: its **width**, in CSS pixels.
+ *
+ * Recomputed from the four constants that decide it — `WIDE_CANVAS_W`, the two
+ * margins, the gutter and the eight columns — and from no cap. `NODE_W_MAX` and
+ * `SQUAT_NODE_W_MAX` are ceilings that at eight columns both sit above this
+ * number and never decide it, so a card derived from one of them would be a card
+ * about a drawing the layout never makes; and it would make this a property of
+ * the node class, which it is not — at the column cap a batten and a stacked
+ * node are exactly as wide as each other. `wide-layout.spec.ts` re-derives the
+ * same width independently and asserts the layout's own `Math.min` agrees with
+ * it, which is what keeps the claim that no cap binds from being an assumption
+ * (#75).
+ *
+ * Eight columns is the whole surface (#40), including the any-parking case:
+ * parking adds a stub column but removes an operator from the branches, so the
+ * total never passes eight.
+ */
+export function narrowestWideCard(): number {
+  const pitchX = (WIDE_CANVAS_W - 2 * MARGIN_X) / WIDE_COLUMNS;
+  return ((pitchX - COL_GAP) / WIDE_CANVAS_W) * floorCanvasWidth();
+}
+
+/**
+ * The inset a card needs at the far end of its carrying axis, in whole CSS
+ * pixels: the smallest integer that clears {@link DAYLIGHT_CRITERION}.
+ *
+ * The criterion is #67's and unchanged — `I = d + DATUM_STROKE − T / LEVEL_SCALE`
+ * — but a caller holds a **card** and not a track, and the track is
+ * `card − 2 · NODE_BORDER − I`, so the inset stands on both sides of it. Solved
+ * for `I` and rounded up:
+ *
+ * ```text
+ * I = ⌈ (d + DATUM_STROKE − (card − 2 · NODE_BORDER) / LEVEL_SCALE)
+ *       ÷ (1 − 1 / LEVEL_SCALE) ⌉
+ * ```
+ *
+ * Two things follow from it being derived, and both are worth saying because the
+ * proposal that produced this round got one of them backwards. **The daylight
+ * cannot be a second criterion**: it clears `d` by construction at every card,
+ * so quoting it as a floor alongside the track's is one criterion wearing two
+ * hats. And when `d` moves, what moves is the **inset** — never the track floor,
+ * which is #86's and is about readability rather than about a border.
+ */
+export function trackInset(card: number): number {
+  const given = (card - 2 * NODE_BORDER) / LEVEL_SCALE;
+  return Math.ceil((DAYLIGHT_CRITERION + DATUM_STROKE - given) / (1 - 1 / LEVEL_SCALE));
+}
+
+/**
+ * The inset the sheet actually draws, per composición, in CSS pixels.
+ *
+ * One authored value per composición, earned against **that composición's own
+ * narrowest card**, because the inset is a single declaration and the daylight
+ * only ever grows as the card does. It comes to **8 px on the narrow grid** —
+ * the number that shipped, re-earned rather than kept — and **7 px in the wide
+ * composición**, which is the whole of what the rotation moves here.
+ *
+ * It is handed to the template rather than written into the sheet. `TRACK_INSET`
+ * used to be authored here and mirrored by `operator-diagram.scss`, which was
+ * two declarations of one number in a module whose stated contract is that they
+ * mirror each other; now the sheet declares no inset at all and the drawing is
+ * told, on each of the four edges, what that edge costs. There are two numbers
+ * and both of them are here.
+ */
+export function levelTrackInset(axis: LevelAxis): number {
+  return trackInset(axis === 'height' ? narrowestGridCard() : narrowestWideCard());
 }
 
 /** The fill's scale, in CSS pixels: the card's interior, less the headroom. */
-export function trackHeight(cardHeight: number): number {
-  return cardHeight - 2 * NODE_BORDER - TRACK_INSET;
+export function trackLength(card: number, axis: LevelAxis): number {
+  return card - 2 * NODE_BORDER - levelTrackInset(axis);
 }
 
 /**
  * The dark surface between the datum's ink and the card's border, at a ceiling
- * that puts the line as high as the range allows.
+ * that puts the line as far along the axis as the range allows.
  *
  * This is the number #67 is about. Before the track it was negative — the stroke
  * sat inside the border and `overflow: hidden` had already taken most of it — and
  * the only check that existed asserted the element was in the DOM, which it was,
  * on a line nobody could see.
  */
-export function datumDaylight(cardHeight: number, level: number = LEVEL_MAX): number {
-  const track = trackHeight(cardHeight);
-  const overshoot = DATUM_STROKE - track * (1 - level / 100);
-  return TRACK_INSET - overshoot;
+export function datumDaylight(card: number, axis: LevelAxis, level: number = LEVEL_MAX): number {
+  const track = trackLength(card, axis);
+  const overshoot = DATUM_STROKE - track * (1 - level / LEVEL_SCALE);
+  return levelTrackInset(axis) - overshoot;
 }

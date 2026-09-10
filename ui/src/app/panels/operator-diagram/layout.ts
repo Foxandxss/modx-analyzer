@@ -56,6 +56,19 @@ const MARGIN_Y = 18;
 export const COLUMNS = 3;
 export const ROWS = 3;
 
+/**
+ * The 3 × 3 grid carries Level in the node's **height**, and round 10 did not
+ * change it.
+ *
+ * The rotation is the wide composición's (`wide-layout.ts`): there the vertical
+ * direction was carrying depth across nodes and Level inside them, and this
+ * drawing never had that overload — its rows are a reading order and not a
+ * depth axis, so nothing here was bidding for the same pixels. Level stays where
+ * it was, which is why the two compositions now disagree about the direction and
+ * why the value is written down in each of them rather than inferred anywhere.
+ */
+const LEVEL_AXIS: LevelAxis = 'height';
+
 export const CANVAS_W = 2 * MARGIN_X + COLUMNS * NODE_W + (COLUMNS - 1) * COL_GAP;
 const GRID_H = ROWS * NODE_H + (ROWS - 1) * ROW_GAP;
 export const BUS_Y = MARGIN_Y + GRID_H + BUS_OFFSET;
@@ -125,9 +138,31 @@ export interface DrawnFeedback {
   readonly labelY: number;
 }
 
+/**
+ * Which of the node's two dimensions carries Level.
+ *
+ * The two values are the box's **named** dimensions and never its long side and
+ * its short one. `layout.ts`'s numbers are `viewBox` units stretched with
+ * `preserveAspectRatio="none"`, so the ratio a card has on screen belongs to the
+ * panel and not to this module: at one moment the wide stacked node is about
+ * 1.7 : 1 and the batten about 8 : 1, both carrying Level the same way. A rule
+ * phrased as *whichever axis the box actually has* would let a window resize
+ * flip the direction of a measurement with nothing failing — which is the shape
+ * of the defect this round is named after, one geometry along.
+ *
+ * So the axis is **stated per composición**, once, by the module that lays that
+ * composición out, and read by nobody who could compute it instead.
+ */
+export type LevelAxis = 'height' | 'width';
+
 export interface DiagramLayout {
   readonly width: number;
   readonly height: number;
+  /**
+   * Which way Level runs in this composición's nodes. A literal in each of the
+   * two layout modules, never derived from a box (see {@link LevelAxis}).
+   */
+  readonly levelAxis: LevelAxis;
   /** The eight, in operator order, whatever order they are drawn in. */
   readonly slots: readonly Slot[];
   readonly routes: readonly DrawnRoute[];
@@ -158,6 +193,7 @@ export function layout(topology: Topology | null): DiagramLayout {
     return {
       width: CANVAS_W,
       height: CANVAS_H,
+      levelAxis: LEVEL_AXIS,
       slots,
       routes: [],
       bus: [],
@@ -176,6 +212,7 @@ export function layout(topology: Topology | null): DiagramLayout {
   return {
     width: CANVAS_W,
     height: CANVAS_H,
+    levelAxis: LEVEL_AXIS,
     slots,
     routes: topology.routes.map((route) => ({
       ...route,

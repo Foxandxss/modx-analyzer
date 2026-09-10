@@ -1,5 +1,5 @@
 import { Topology } from '../../backend/backend-gateway';
-import { DiagramLayout, DrawnFeedback, DrawnStub, Slot } from './layout';
+import { DiagramLayout, DrawnFeedback, DrawnStub, LevelAxis, Slot } from './layout';
 
 /**
  * The wide composition's own layout: role read from position, and the position
@@ -54,6 +54,42 @@ export const WIDE_COLUMNS = 8;
 export const WIDE_ROWS = 8;
 
 /**
+ * This composición carries Level in the node's **width**, in both of its boxes.
+ *
+ * ## The bidding, which is the whole argument
+ *
+ * The vertical direction was carrying two quantities at once. Across nodes it
+ * means depth in the chain; inside a node it meant Level. Those were never
+ * comparable numbers, and they were bidding for the same pixels: at the body's
+ * floor the deepest algorithm leaves a card of about 24 px, of which the fill's
+ * track is 11.6, so two operators at 99 and 96 were drawn **0.35 px apart** —
+ * two individually correct rules, the winner starving the loser to a third of a
+ * pixel. Turning Level onto the other axis is what pays the loser: at the
+ * narrowest card this layout draws, one Level point is about **1.02 px**.
+ *
+ * ## Both boxes, and never per box
+ *
+ * The batten and the wide stacked node carry it the same way. One axis per
+ * composición: the alternative — vertical in the stacked node, horizontal in the
+ * batten — would flip the direction of a measurement *inside one drawing*, at a
+ * boundary ({@link STACK_H}) the pianist has no reason to know about. And it
+ * must not be read off the box either; see {@link LevelAxis}, which is where
+ * that temptation is refused.
+ *
+ * ## What it costs, and what it does not
+ *
+ * The far end of this axis is now the **loud** end, so an operator parked at
+ * zero can no longer be parked there: that would put its position in direct
+ * contradiction with its own figure, on the one composición whose stated
+ * principle is that position says it without a caption. Parking leaves the
+ * *stack* instead, which is #83 and not this commit — until it lands, the third
+ * rule above still parks to the right and the drawing is knowingly saying two
+ * things at once. Depth is still height, every arrow still points down, and no
+ * line in this module moved.
+ */
+const LEVEL_AXIS: LevelAxis = 'width';
+
+/**
  * Room for the feedback ear on the right and for the stub's cross-bar.
  *
  * ## Why this is part of the module's surface now
@@ -67,9 +103,11 @@ export const WIDE_ROWS = 8;
  *
  * A re-declaration is a copy, and a check whose subject is a copy goes green
  * while the screen says something else — the defect `legend.ts` was written to
- * remove and the one {@link wideRowPitch} is exported to avoid. So the inputs to
- * the floor are what this module promises, not how it happens to be written, and
- * an edit to either of them moves the floor in one place.
+ * remove. So the inputs to the floor are what this module promises, not how it
+ * happens to be written, and an edit to any of them moves the floor in one
+ * place: `node-geometry.ts` recomputes the narrowest card off these four, and
+ * `wide-layout.spec.ts` recomputes it a third time on purpose, to check that the
+ * layout's own `Math.min` agrees and that neither width cap binds.
  */
 export const MARGIN_X = 16;
 const MARGIN_Y = 6;
@@ -106,18 +144,21 @@ const STUB_BAR = 34;
 /**
  * How tall a row is at a given row count, and how much of that the node gets.
  *
- * Exported, and called by {@link wideLayout} itself rather than copied, because
- * `node-geometry.ts` asks this same question to find the smallest card the
- * layout can produce. Two derivations of one number is the defect `legend.ts`
- * was written to remove — a check whose subject is a copy can go green while the
- * screen says something else — and here the copy would be worse than that: a
- * check asserting daylight in a card the drawing never draws.
+ * It was exported so that `node-geometry.ts` could ask this same question to
+ * find the smallest card the layout draws, and {@link wideLayout} calls it
+ * rather than repeating it so that the two could not answer differently. **That
+ * caller has gone**: this composición carries Level along the width now, so the
+ * card that has to be earned against is the one {@link MARGIN_X} names and this
+ * height is no longer a Level scale. It goes back to module-private rather than
+ * standing as an export nobody imports — #81 measures the body's floor on the
+ * unfolded drawing and will want it again, and one keyword is a cheaper thing to
+ * carry than an export whose stated reason is a caller that left.
  *
  * `viewBox` units, like everything else in this module. What the card measures
  * on screen is that share of the canvas's own rendered height, which is
  * `node-geometry.ts`'s half of the arithmetic and not this one's.
  */
-export function wideRowPitch(slotRows: number): {
+function wideRowPitch(slotRows: number): {
   readonly pitchY: number;
   readonly rowGap: number;
   readonly nodeH: number;
@@ -217,6 +258,7 @@ export function wideLayout(topology: Topology | null, cut: readonly number[]): D
     return {
       width: WIDE_CANVAS_W,
       height: WIDE_CANVAS_H,
+      levelAxis: LEVEL_AXIS,
       slots,
       routes: [],
       bus: [],
@@ -234,6 +276,7 @@ export function wideLayout(topology: Topology | null, cut: readonly number[]): D
   return {
     width: WIDE_CANVAS_W,
     height: WIDE_CANVAS_H,
+    levelAxis: LEVEL_AXIS,
     slots,
     routes: topology.routes
       .filter((route) => drawn(route.from) && drawn(route.into))

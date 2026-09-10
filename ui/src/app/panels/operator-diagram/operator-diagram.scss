@@ -233,29 +233,35 @@
   }
 }
 
-// La pista: el interior de la tarjeta menos el hueco de arriba, y NADA más.
-// El inset es SÓLO por arriba —abajo, izquierda y derecha siguen coincidiendo
-// con la caja de relleno de `.node`—, así que el relleno conserva sus esquinas
-// redondeadas: las recorta el `overflow: hidden` de la tarjeta, igual que antes.
-// Un inset por los cuatro lados las dejaría cuadradas dentro de una tarjeta
-// curva, que es un cambio en el §20.2 disfrazado de limpieza.
+// La pista: el interior de la tarjeta menos el hueco de UN extremo, y NADA más.
+// El inset va sólo en el extremo lejano del eje que lleva el Level —los otros
+// tres lados siguen coincidiendo con la caja de relleno de `.node`—, así que el
+// relleno conserva sus esquinas redondeadas: las recorta el `overflow: hidden`
+// de la tarjeta, igual que antes. Un inset por los cuatro lados las dejaría
+// cuadradas dentro de una tarjeta curva, que es un cambio en el §20.2 disfrazado
+// de limpieza.
 //
 // `overflow: visible` es PARTE de la derivación y no un detalle: el trazo del
-// techo sube a propósito 2 px por encima de la línea que nombra, y una pista que
+// techo se mete a propósito 2 px más allá de la línea que nombra, y una pista que
 // recortara se lo comería en su propio borde exactamente como se lo comía el de
 // la tarjeta (#67), con la aritmética de `node-geometry.ts` marcando 6 px
 // igualmente. Es la única reversión que vuelve a esconder la línea en silencio.
 //
-// 8 px es `TRACK_INSET`. El número se autoriza allí y se comprueba contra la
-// tarjeta más pequeña que el layout sabe dibujar; aquí sólo se refleja.
+// Los cuatro insets NO se declaran aquí: los ata la plantilla desde
+// `levelTrackInset()`. Eran dos declaraciones de un número —8 px aquí y 8 px
+// allí— en el módulo cuyo contrato es justamente que la hoja y el modelo se
+// reflejan; ahora hay una sola y son dos valores, 8 en la rejilla y 7 en la
+// composición ancha.
 .node__track {
   position: absolute;
-  inset: 8px 0 0 0;
   overflow: visible;
   pointer-events: none;
 }
 
-// El relleno es la cifra: capa anclada abajo cuya altura ES el Level.
+// El relleno es la cifra: capa anclada en el origen del eje que mide, y el largo
+// por ese eje ES el Level. La rejilla mide hacia arriba desde el suelo de la
+// tarjeta; la composición ancha mide hacia la derecha desde su borde izquierdo,
+// que es el origen COMPARTIDO de los ocho.
 .node__fill {
   position: absolute;
   inset: auto 0 0 0;
@@ -263,9 +269,17 @@
   pointer-events: none;
 }
 
-// El techo del patch. Cruza el nodo de lado a lado y está a la MISMA altura en
-// los ocho, que es lo que convierte ocho alturas absolutas en siete huecos.
-// Neutro a propósito: no es del rol de este nodo, es del patch.
+.node--level-width .node__fill {
+  inset: 0 auto 0 0;
+}
+
+// El techo del patch. Cruza el nodo de lado a lado, perpendicular al eje que
+// mide, y está en el MISMO punto de los ocho, que es lo que convierte ocho
+// largos absolutos en siete huecos. El borde se dibuja SIEMPRE del lado vacío —
+// `border-top` sobre una caja de alto 0 colgada por `bottom`, `border-left`
+// sobre una de ancho 0 colgada por `left`— para que en el nodo más alto la marca
+// no se dibuje encima del relleno del que habla. Neutro a propósito: no es del
+// rol de este nodo, es del patch.
 .node__datum {
   position: absolute;
   left: 0;
@@ -273,6 +287,16 @@
   height: 0;
   border-top: var(--datum-ceiling-stroke) dashed var(--datum-ceiling-color);
   pointer-events: none;
+}
+
+.node--level-width .node__datum {
+  top: 0;
+  bottom: 0;
+  right: auto;
+  width: 0;
+  height: auto;
+  border-top: none;
+  border-left: var(--datum-ceiling-stroke) dashed var(--datum-ceiling-color);
 }
 
 .node--carrier .node__fill {

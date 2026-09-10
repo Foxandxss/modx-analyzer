@@ -16,16 +16,16 @@ import { Clock } from '../../provenance/clock';
 import { Composition } from '../../shell/composition';
 import { staleAfterMs } from '../../provenance/freshness';
 import { DEAD_MARK } from '../../provenance/provenance';
-import { CANVAS_H, CANVAS_W, NODE_H } from './layout';
+import { CANVAS_H, CANVAS_W } from './layout';
 import { LEGEND } from './legend';
 import {
-  DAYLIGHT_FLOOR,
+  DAYLIGHT_CRITERION,
   LEVEL_MAX,
-  TRACK_INSET,
   datumDaylight,
-  floorCanvasHeight,
-  trackHeight,
-  worstCardHeight,
+  levelTrackInset,
+  narrowestGridCard,
+  narrowestWideCard,
+  trackLength,
 } from './node-geometry';
 import { OperatorDiagram } from './operator-diagram';
 import { SPECTRAL_GLYPH } from './spectral-glyph';
@@ -132,6 +132,25 @@ function nodes(host: HTMLElement): HTMLElement[] {
 
 function datums(host: HTMLElement): HTMLElement[] {
   return Array.from(host.querySelectorAll<HTMLElement>('.node__datum'));
+}
+
+/**
+ * One node's fill, as the two percentages the drawing wrote on it.
+ *
+ * Both are read, never just the one the caller expects: the Level is the length
+ * along the axis its composición carries it on, and the other dimension is the
+ * whole of the track. A helper that returned a single number would be making the
+ * choice the test is supposed to be checking.
+ */
+function fillOf(node: HTMLElement): { width: string; height: string } {
+  const fill = node.querySelector<HTMLElement>('.node__fill');
+  return { width: fill?.style.width ?? '', height: fill?.style.height ?? '' };
+}
+
+/** Where a node's ceiling mark hangs, as the pair the template wrote. */
+function datumOf(node: HTMLElement): { left: string; bottom: string } {
+  const datum = node.querySelector<HTMLElement>('.node__datum');
+  return { left: datum?.style.left ?? '', bottom: datum?.style.bottom ?? '' };
 }
 
 /** A `left: 12.5%` back as the number, which is how the drawing rides the canvas. */
@@ -511,18 +530,98 @@ describe('OperatorDiagram', () => {
     expect(drawn[0].querySelector('.node__role')?.textContent?.trim()).toBe('ZERO');
   });
 
-  it('makes the Level the height of the fill and the number only confirm it', async () => {
+  it('makes the Level the length of the fill and the number only confirm it', async () => {
     const { backend, fixture, host } = await renderDiagram();
 
     backend.operators.set(eight(NOW, IDLE_PASS_MS));
     await fixture.whenStable();
 
     const drawn = nodes(host);
-    expect(drawn[3].querySelector<HTMLElement>('.node__fill')?.style.height).toBe('99%');
+    expect(fillOf(drawn[3]).height).toBe('99%');
     expect(drawn[3].querySelector('.node__level')?.textContent?.trim()).toBe('99');
-    expect(drawn[2].querySelector<HTMLElement>('.node__fill')?.style.height).toBe('75%');
+    expect(fillOf(drawn[2]).height).toBe('75%');
     // An operator at zero has no fill at all, and it is cut, not absent.
-    expect(drawn[0].querySelector<HTMLElement>('.node__fill')?.style.height).toBe('0%');
+    expect(fillOf(drawn[0]).height).toBe('0%');
+  });
+
+  it('carries Level in the grid node’s height, which round 10 did not turn', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+    backend.operators.set(eight(NOW, IDLE_PASS_MS));
+    await fixture.whenStable();
+
+    // The 3 × 3 grid measures up the node, and the cross dimension is the whole
+    // of the track and says nothing. Both numbers are written, so which of them
+    // is the measurement is a fact about the drawing rather than about a rule.
+    const node = nodes(host)[2];
+    expect(node.classList.contains('node--level-width')).toBe(false);
+    expect(fillOf(node)).toEqual({ width: '100%', height: '75%' });
+  });
+
+  it('carries Level in the width in both of the wide composición’s boxes', async () => {
+    const { backend, fixture, host } = await renderDiagram({ wide: true });
+
+    // Algorithm 66 is eight rows deep, so its cards are battens; algorithm 2 is
+    // three, so they are stacked nodes. Two boxes with different proportions and
+    // one axis: the axis is the composición's and never the box's, and a rule
+    // read off the proportions would answer differently on these two — and would
+    // change its answer again on a window resize, with nothing failing.
+    backend.topology.set(ALGORITHM_66);
+    backend.operators.set(eight(NOW, IDLE_PASS_MS));
+    await fixture.whenStable();
+
+    const batten = nodes(host)[2];
+    expect(batten.classList.contains('node--squat')).toBe(true);
+    expect(batten.classList.contains('node--level-width')).toBe(true);
+    expect(fillOf(batten)).toEqual({ width: '75%', height: '100%' });
+
+    backend.topology.set(ALGORITHM_2);
+    await fixture.whenStable();
+
+    const stacked = nodes(host)[2];
+    expect(stacked.classList.contains('node--squat')).toBe(false);
+    expect(stacked.classList.contains('node--level-width')).toBe(true);
+    expect(fillOf(stacked)).toEqual({ width: '75%', height: '100%' });
+  });
+
+  it('measures the fill against the track and never against the card', async () => {
+    // The claim is about pixels and jsdom lays nothing out, so what the rendered
+    // node can say is that the fill's box is the *track*'s and the track is the
+    // card less the headroom at one end. The px half is `node-geometry.ts`'s.
+    const { backend, fixture, host } = await renderDiagram();
+    backend.operators.set(theBuildsOwnPatch(NOW));
+    await fixture.whenStable();
+
+    const track = nodes(host)[2].querySelector<HTMLElement>('.node__track');
+    expect(track?.style.top).toBe(`${levelTrackInset('height')}px`);
+    // At one end and nowhere else: three zeros, written rather than left to the
+    // sheet, because a zero only a stylesheet holds is one no test can fail on.
+    expect(track?.style.right).toBe('0px');
+    expect(track?.style.bottom).toBe('0px');
+    expect(track?.style.left).toBe('0px');
+
+    // 71 against a ceiling of 99 is 28 % of the **track**, which on the smallest
+    // card the grid draws is about 15.7 px of gap — and that gap is the whole
+    // comparison. Against the card it would be a fifth wider and its far end
+    // would be the border the ceiling has to be drawn against (#67).
+    const gap = ((99 - 71) / 100) * trackLength(narrowestGridCard(), 'height');
+    expect(gap).toBeCloseTo(15.7, 1);
+    expect(gap).toBeLessThan(((99 - 71) / 100) * narrowestGridCard());
+  });
+
+  it('puts the headroom at the far end of the axis that carries Level, in the wide drawing', async () => {
+    const { backend, fixture, host } = await renderDiagram({ wide: true });
+    backend.topology.set(ALGORITHM_66);
+    backend.operators.set(theBuildsOwnPatch(NOW));
+    await fixture.whenStable();
+
+    // The loud end is the right one now, so that is where the datum's ink needs
+    // its room — and the other three edges are the card's own, which is what
+    // keeps the fill's corners rounded by `.node`'s `overflow: hidden`.
+    const track = nodes(host)[2].querySelector<HTMLElement>('.node__track');
+    expect(track?.style.right).toBe(`${levelTrackInset('width')}px`);
+    expect(track?.style.top).toBe('0px');
+    expect(track?.style.bottom).toBe('0px');
+    expect(track?.style.left).toBe('0px');
   });
 
   it('says the ring cadence it measured, not the one on paper', async () => {
@@ -630,25 +729,51 @@ describe('OperatorDiagram', () => {
     }
   });
 
-  it('hangs one ceiling datum at the loudest operator, across all eight nodes', async () => {
+  it('repeats the ceiling mark on all eight at one offset, in both compositions', async () => {
     const { backend, fixture, host } = await renderDiagram();
 
     backend.operators.set(theBuildsOwnPatch(NOW));
     await fixture.whenStable();
 
     expect(datums(host)).toHaveLength(8);
-    // One line, so one height: the eight are read by the gap above each fill.
-    for (const datum of datums(host)) {
-      expect(datum.style.bottom).toBe('99%');
+    // Not one line across the eight — it never was one, in either drawing. What
+    // makes the eight comparable is that the mark sits at the same fraction of
+    // an identical track on every card: one origin and one scale. Asserted as
+    // the offset and not as `element-exists`, which is the check that stayed
+    // green for the whole life of the old defect.
+    for (const node of nodes(host)) {
+      expect(datumOf(node)).toEqual({ left: '0%', bottom: '99%' });
+      expect(fillOf(node).width).toBe('100%');
     }
 
-    // 71 against a ceiling of 99 is 28 % of the track — which at the narrow
-    // composition's card is about 27 px of daylight, and that gap is the whole
-    // comparison. Read against the track and no longer against the card: the
-    // fill's scale stops at `TRACK_INSET` below the border (#67).
-    const fill = nodes(host)[2].querySelector<HTMLElement>('.node__fill');
-    expect(fill?.style.height).toBe('71%');
-    expect(((99 - 71) / 100) * trackHeight(NODE_H)).toBeCloseTo(27, 0);
+    // The gap the mark measures is the fill's, so the loudest operator's fill
+    // ends where every card's mark is and the other seven are read off it.
+    expect(fillOf(nodes(host)[2]).height).toBe('71%');
+    expect(fillOf(nodes(host)[7]).height).toBe('99%');
+  });
+
+  it('turns the ceiling mark with the axis, and hangs it off the shared origin', async () => {
+    const { backend, fixture, host } = await renderDiagram({ wide: true });
+
+    backend.topology.set(ALGORITHM_66);
+    backend.operators.set(theBuildsOwnPatch(NOW));
+    await fixture.whenStable();
+
+    // The same claim, ninety degrees round: the mark is positioned along the
+    // carrying axis and pinned at the origin on the other, on all eight. Where
+    // the cards are stacked in one column they measure from the same left edge
+    // at the same scale, so the eight marks line up into a rule that can be
+    // sighted along — which is the deep case, and the case the datum was
+    // failing hardest in.
+    expect(datums(host)).toHaveLength(8);
+    for (const node of nodes(host)) {
+      expect(datumOf(node)).toEqual({ left: '99%', bottom: '0%' });
+      expect(fillOf(node).height).toBe('100%');
+    }
+    const left = nodes(host).map((node) => node.style.left);
+    const width = nodes(host).map((node) => node.style.width);
+    expect(new Set(left).size).toBe(1);
+    expect(new Set(width).size).toBe(1);
   });
 
   it('hangs no datum until something has answered its Level', async () => {
@@ -713,7 +838,7 @@ describe('OperatorDiagram', () => {
     for (const datum of hung) {
       expect(datum.style.bottom).toBe('99%');
     }
-    expect(nodes(host)[1].querySelector<HTMLElement>('.node__fill')?.style.height).toBe('0%');
+    expect(fillOf(nodes(host)[1]).height).toBe('0%');
   });
 
   it('leaves the datum daylight against the card border, on the boot patch', async () => {
@@ -727,48 +852,74 @@ describe('OperatorDiagram', () => {
     // operators tied at it, in the drawing that makes the smallest card.
     const hung = datums(host);
     expect(hung).toHaveLength(8);
-    for (const datum of hung) {
-      expect(datum.style.bottom).toBe('99%');
+    for (const node of nodes(host)) {
+      expect(datumOf(node)).toEqual({ left: '99%', bottom: '0%' });
     }
 
     // And the claim about it, which jsdom cannot lay out and `node-geometry.ts`
-    // therefore models: at that `bottom`, the stroke's ink clears the card's own
-    // border by `DAYLIGHT_FLOOR`. Before the track this was negative — the line
-    // was inside the border and `overflow: hidden` had taken most of it — while
-    // an assertion that the element existed went green on a line nobody could
-    // see (#67).
-    const card = worstCardHeight();
-    expect(datumDaylight(card, LEVEL_MAX)).toBeGreaterThanOrEqual(DAYLIGHT_FLOOR);
+    // therefore models: at that offset, the stroke's ink clears the card's own
+    // border by `DAYLIGHT_CRITERION`. Before the track this was negative — the
+    // line was inside the border and `overflow: hidden` had taken most of it —
+    // while an assertion that the element existed went green on a line nobody
+    // could see (#67).
+    const card = narrowestWideCard();
+    expect(datumDaylight(card, 'width', LEVEL_MAX)).toBeGreaterThanOrEqual(DAYLIGHT_CRITERION);
   });
 
-  it('earns the track inset against the smallest card either composition draws', () => {
-    // Recomputed, never hard-coded: `BODY_FLOOR`, the legend's rows, the zone's
-    // chrome and `WIDE_ROWS`. If #69 folds the deepest algorithms, or the floor
-    // moves again as it did for the legend's second row, this re-derives instead
-    // of staying a number about a card the layout no longer draws.
-    const card = worstCardHeight();
+  it('earns one inset per composición against that composición’s narrowest card', () => {
+    // Two numbers now, because the two compositions measure along different
+    // axes and their narrowest cards are different boxes. Both recomputed,
+    // never written down: the grid's from `BODY_FLOOR`, the legend's rows and
+    // the zone's chrome; the wide one from the lane the rail shape leaves at the
+    // shipped window and the four constants that decide a card at eight columns.
+    expect(levelTrackInset('height')).toBe(8);
+    expect(levelTrackInset('width')).toBe(7);
 
-    // The wide composition at algorithm 66's depth, not the narrow grid's node.
-    expect(card).toBeLessThan((NODE_H / CANVAS_H) * floorCanvasHeight());
-    expect(card).toBeCloseTo(23.6, 1);
+    // The grid keeps the inset it shipped with, and it is no longer earned
+    // against the wide composición's card: that card is three times smaller and
+    // it no longer carries Level in its height, so a `Math.min` across the two
+    // would be comparing a measurement with a dimension that stopped measuring.
+    expect(narrowestGridCard()).toBeCloseTo(68.0, 1);
+    expect(narrowestWideCard()).toBeCloseTo(113.0, 1);
+    expect(narrowestWideCard()).toBeGreaterThan(narrowestGridCard());
 
-    expect(datumDaylight(card, LEVEL_MAX)).toBeGreaterThanOrEqual(DAYLIGHT_FLOOR);
-    // And one pixel less of inset would not clear it, which is what makes the
-    // constant earned rather than chosen.
-    expect(datumDaylight(card, LEVEL_MAX) - 1).toBeLessThan(DAYLIGHT_FLOOR);
+    for (const [card, axis] of [
+      [narrowestGridCard(), 'height'],
+      [narrowestWideCard(), 'width'],
+    ] as const) {
+      const daylight = datumDaylight(card, axis, LEVEL_MAX);
+      expect(daylight).toBeGreaterThanOrEqual(DAYLIGHT_CRITERION);
+      // And one pixel less of inset would not clear it, which is what makes each
+      // of them earned rather than chosen. A pixel of inset is worth a pixel of
+      // daylight less the point of track it takes back.
+      expect(daylight - (1 - 1 / 100)).toBeLessThan(DAYLIGHT_CRITERION);
+    }
+  });
+
+  it('draws one Level point at more than a pixel on the axis that carries it', () => {
+    // The number the whole rotation is about, and the reason it is not a taste
+    // argument: on the vertical axis at the body's floor the deepest algorithm
+    // drew a Level point at about a tenth of a pixel, so 99 and 96 were three
+    // points and a third of a pixel apart. The floor itself is #86's; what is
+    // asserted here is that the axis the drawing now measures along clears a
+    // pixel per point at the narrowest card this build can draw.
+    expect(trackLength(narrowestWideCard(), 'width') / 100).toBeGreaterThan(1);
   });
 
   it('does not clip the track, which is the one revert that hides the line again', async () => {
     await renderDiagram();
 
-    // The datum's ink rises above the line it names, on purpose, into the
+    // The datum's ink reaches past the line it names, on purpose, into the
     // headroom the inset just bought. A clipping track cuts it off at its own
-    // top exactly as the card's border did (#67) — and every other check here
+    // edge exactly as the card's border did (#67) — and every other check here
     // would still pass, because the arithmetic would be unchanged.
     // Angular writes its own `[_ngcontent-…]` between the class and the brace.
     const track = /\.node__track[^{]*\{[^}]*\}/.exec(componentCss())?.[0] ?? '';
     expect(track).toContain('overflow: visible');
-    expect(track).toContain(`inset: ${TRACK_INSET}px 0 0 0`);
+    // And the sheet declares no inset of its own: there are two of them now and
+    // both live in `node-geometry.ts`, bound onto the track. A sheet that kept a
+    // copy is how the model came to disagree with the screen in the first place.
+    expect(track).not.toContain('inset:');
   });
 
   it('draws the spectral form and never writes its name', async () => {

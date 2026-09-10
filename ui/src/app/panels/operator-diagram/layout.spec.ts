@@ -91,6 +91,16 @@ function inside(at: { x: number; y: number }, box: Slot): boolean {
 }
 
 describe('diagram layout', () => {
+  it('states that Level runs up the node, at every algorithm and with none read', () => {
+    // A literal in this module and nothing computed: the axis belongs to the
+    // composición, and the boxes here are `viewBox` units the panel stretches,
+    // so anything derived from a card's proportions would flip the direction of
+    // a measurement on a window resize with nothing failing.
+    for (const drawn of [ALGORITHM_1, ALGORITHM_2, ALGORITHM_66, null]) {
+      expect(layout(drawn).levelAxis).toBe('height');
+    }
+  });
+
   it('lays the eight out by chain depth, deepest first', () => {
     const { slots } = layout(ALGORITHM_2);
 

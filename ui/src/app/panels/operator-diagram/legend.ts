@@ -157,8 +157,16 @@ const ROW_H = 14;
 const RULE = 2;
 const PAD_TOP = 9;
 const PAD_BOTTOM = 11;
-/** `.zone`'s `padding: 12px 18px 0` — what the lane keeps off the legend. */
-const ZONE_PAD_X = 18;
+/**
+ * `.zone`'s `padding: 12px 18px 0` — what the lane keeps off the legend.
+ *
+ * Exported because it is the zone's and not the legend's: the canvas above the
+ * legend is inset by the same declaration, so `node-geometry.ts` reads this to
+ * turn a lane into the width the drawing actually gets. It is declared here
+ * because the legend's row width needed it first, and one declaration in an
+ * odd house beats two in tidy ones — which is the whole of #76 in one line.
+ */
+export const ZONE_PAD_X = 18;
 
 /**
  * How wide these words rasterise, in CSS pixels.
