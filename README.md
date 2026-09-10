@@ -28,6 +28,43 @@ pnpm install
 pnpm dev        # abre la app con recarga en caliente
 ```
 
+## El banco sin teclado
+
+Para ver un patch en pantalla sin el MODX delante y sin el lado Rust corriendo:
+
+```
+pnpm run harness   # abre el banco en el navegador, con recarga en caliente
+```
+
+Es la app entera —los mismos componentes, las mismas hojas, la misma geometría— con tres cambios
+de cableado: la pasarela es `FakeBackendGateway`, el worker de audio es el falso y el interruptor
+del pliegue está atado a algo que se puede mover con la mano. La tira negra de abajo a la derecha
+es el banco: algoritmo (1-88, o 89 para `ALGORITHM n · NO TABLE`), los ocho Levels, el nombre que
+lee el ancla, la nota que se está pisando y el pliegue. Se oculta con un botón, porque una mirada
+tomada con un panel encima del dibujo es una mirada al panel.
+
+El banco abre en la composición **estrecha**, como la app (ADR-0007): el dibujo ancho se consigue
+con `KEEP IT BIG` o vaciando las dos Ranuras, igual que delante del teclado.
+
+Lo que **no** trae es audio: no llegan bloques, así que las Vistas vivas se quedan en su aspecto
+vacío y no hay Medida. Una medida es la lectura de un instrumento y el banco no tiene ninguno.
+
+La ventana es la del navegador, así que se arrastra y se redimensiona como cualquier otra: es lo
+que hace falta para medir el suelo del cuerpo (#81).
+
+Los 88 algoritmos viven en Rust (ADR-0003) y el teclado sólo contesta un *número*, así que el
+banco no puede deducir el dibujo de nada: lleva un volcado de la tabla en
+`ui/src/app/dev/algorithms.json`, escrito por `every_topology()` en `src-tauri/src/patch.rs`. Si
+se toca una ruta de la tabla, el volcado se regenera y el test lo dice:
+
+```
+MODX_WRITE_HARNESS_TABLE=1 cargo test -p modx-analyzer-app
+```
+
+Nada de `ui/src/app/dev/` es alcanzable desde `src/main.ts`: el banco es una **entrada aparte**
+(`src/main.harness.ts`), así que «no llega a un build de producción» es un hecho del grafo de
+módulos y no una promesa.
+
 ## Los tres bucles
 
 ```

@@ -62,6 +62,21 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            // El banco sin teclado (#79). Es una ENTRADA aparte y no una
+            // bandera dentro de main.ts: así «no llega a un build de
+            // producción» es un hecho del grafo de módulos —nada de lo que
+            // main.ts importa toca src/app/dev— y no una promesa que dependa
+            // de que el empaquetador sepa podar. Cómo se arranca está en el
+            // README.
+            "harness": {
+              "browser": "src/main.harness.ts",
+              // Sale como index.html: el servidor de desarrollo sirve la raíz,
+              // y un nombre distinto obligaría a escribir la ruta a mano.
+              "index": { "input": "src/index.harness.html", "output": "index.html" },
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
             }
           },
           "defaultConfiguration": "production"
@@ -79,6 +94,9 @@
             },
             "development": {
               "buildTarget": "ui:build:development"
+            },
+            "harness": {
+              "buildTarget": "ui:build:harness"
             }
           },
           "defaultConfiguration": "development"

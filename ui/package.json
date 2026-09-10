@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "harness": "ng serve --configuration harness",
     "build": "ng build",
     "test": "ng test",
     "lint": "eslint ."

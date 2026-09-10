@@ -18,6 +18,7 @@
     "build:rust": "cargo build --workspace",
     "tauri": "tauri",
     "dev": "tauri dev",
+    "harness": "pnpm --filter ui run harness",
     "format": "prettier --write ."
   },
   "devDependencies": {

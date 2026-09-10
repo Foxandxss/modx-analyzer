@@ -159,6 +159,30 @@ impl TopologyView {
     }
 }
 
+/// The whole table, entry by entry, exactly as the front receives one of them.
+///
+/// The dev harness (#79) draws a patch with no keyboard and no Rust side running,
+/// and the drawing of a patch **is** its topology: the keyboard answers a number
+/// and never says who modulates whom, so a harness with no table could only draw
+/// a plausible diagram of a patch that does not exist — the one silent mistake
+/// `algorithms.rs` is written to prevent.
+///
+/// So the harness carries a dump of this table, and this is what dumps it: the
+/// same [`TopologyView`] the event carries, so what the harness replays is the
+/// payload and not a second transcription of the chart. The dump is committed
+/// under `ui/` and `the_harness_table_is_this_table` is what keeps it from
+/// drifting.
+/// `#[cfg(test)]` because the only caller is that check, run once with
+/// `MODX_WRITE_HARNESS_TABLE=1` when the chart changes: a dump nobody asked for
+/// has no business in the shipped binary.
+#[cfg(test)]
+pub fn every_topology() -> Vec<TopologyView> {
+    algorithms::ALGORITHMS
+        .iter()
+        .map(TopologyView::of)
+        .collect()
+}
+
 /// What the header says about the loaded patch.
 #[derive(Clone, Default, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -804,5 +828,58 @@ mod tests {
         assert!(drawn.ratio.is_none());
         assert!(drawn.spectral_form.is_none());
         assert_eq!(ring.last_pass(), None);
+    }
+
+    /// Where the dev harness keeps its copy of the table, from this crate.
+    const HARNESS_TABLE: &str = "../ui/src/app/dev/algorithms.json";
+
+    /// The 88 the harness draws are the 88 this table has.
+    ///
+    /// The harness (#79) renders with no Rust side running, so it cannot ask for
+    /// a topology and has to carry one. A carried copy of a rule is exactly the
+    /// failure this project keeps finding — a check whose subject is a copy goes
+    /// green while the screen says something else — so the copy is **generated**
+    /// and this is the check: edit a route in `algorithms.rs` and the harness
+    /// stops matching here rather than quietly drawing last week's chart.
+    ///
+    /// Regenerate with `MODX_WRITE_HARNESS_TABLE=1 cargo test -p modx-analyzer-app`.
+    ///
+    /// Line endings are normalised before comparing: `core.autocrlf` is on in this
+    /// working copy, so the committed file arrives with CRLF while `serde_json`
+    /// writes LF, and that difference is about git and not about the chart.
+    #[test]
+    fn the_harness_table_is_this_table() {
+        let ours = serde_json::to_string_pretty(&every_topology()).unwrap() + "\n";
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(HARNESS_TABLE);
+
+        if std::env::var_os("MODX_WRITE_HARNESS_TABLE").is_some() {
+            std::fs::write(&path, &ours).expect("the harness folder is in the tree");
+        }
+
+        let carried = std::fs::read_to_string(&path)
+            .unwrap_or_else(|why| panic!("{} no se puede leer: {why}", path.display()))
+            .replace("\r\n", "\n");
+        assert_eq!(
+            carried, ours,
+            "la tabla del banco ya no es esta tabla: regenerar con MODX_WRITE_HARNESS_TABLE=1"
+        );
+    }
+
+    /// What the dump has to be for the harness to be able to draw anything at
+    /// all: the 88, in order, each one the entry its own number picks.
+    #[test]
+    fn the_dump_is_the_eighty_eight_in_order() {
+        let dumped = every_topology();
+
+        assert_eq!(dumped.len(), usize::from(algorithms::COUNT));
+        for (index, drawn) in dumped.iter().enumerate() {
+            assert_eq!(usize::from(drawn.number), index + 1);
+            assert_eq!(drawn.depth.len(), usize::from(OPERATORS));
+            assert_eq!(drawn.branch.len(), usize::from(OPERATORS));
+            assert!(
+                !drawn.carriers.is_empty(),
+                "un algoritmo sin portadora no suena"
+            );
+        }
     }
 }

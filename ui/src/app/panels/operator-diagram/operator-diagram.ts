@@ -12,6 +12,7 @@ import { RingFreshness } from '../../provenance/freshness';
 import { Composition } from '../../shell/composition';
 import { DEAD_MARK, PROVENANCE_LABEL } from '../../provenance/provenance';
 import { equalTemperamentHz } from '../../provenance/theory';
+import { FOLDING } from './folding';
 import { LEGEND } from './legend';
 import { DrawnBus, DrawnRoute, DrawnStub, Slot, layout } from './layout';
 import { spectralGlyph } from './spectral-glyph';
@@ -125,11 +126,25 @@ interface LineView {
   imports: [Figure],
   templateUrl: './operator-diagram.html',
   styleUrl: './operator-diagram.scss',
+  // Cómo está puesto el interruptor del pliegue, y nada más. En la app no hay
+  // atributo: FOLDING viene encendido, así que esto es `null` y el marcado es
+  // el mismo de siempre. Lo pone el banco (#79) y lo lee #82.
+  host: { '[attr.data-folding]': "folding() ? null : 'off'" },
 })
 export class OperatorDiagram {
   private readonly backend = inject(BACKEND_GATEWAY);
   private readonly freshness = inject(RingFreshness);
   private readonly composition = inject(Composition);
+
+  /**
+   * Whether the drawing may fold its facts (`folding.ts`).
+   *
+   * Nothing in this file folds anything yet — that is #82 — so all this does
+   * today is publish which way the switch is set, on the host. It is read here
+   * rather than in #82's commit so that the bench the floor is measured in
+   * (#79) can be built and asserted before there is a fold to switch off.
+   */
+  protected readonly folding = inject(FOLDING);
 
   protected readonly labels = PROVENANCE_LABEL;
   /** Where the glyph goes when nobody has read the form: the dash, never a Sine. */

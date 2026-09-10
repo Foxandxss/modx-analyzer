@@ -13,3 +13,8 @@ ui/src/styles/design-tokens.css
 
 # Prose in Spanish, hand-wrapped. Prettier would reflow it.
 **/*.md
+
+# Generado por `every_topology()` en src-tauri: es un volcado de la tabla de los
+# 88, no código, y el test `the_harness_table_is_this_table` compara byte a byte
+# con lo que Rust escribe. Reformatearlo aquí lo pondría en rojo allí.
+ui/src/app/dev/algorithms.json
