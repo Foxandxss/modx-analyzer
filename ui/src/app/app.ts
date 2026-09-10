@@ -129,10 +129,16 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
       transition: grid-template-columns var(--dur-settle) var(--ease-instrument);
       /* El suelo va en la FILA, no en el cuerpo: el cuerpo se encoge con la
          ventana —así que en reposo no sobra nada y no hay barra— pero su fila
-         nunca baja de 360 px, que es donde los ocho nodos dejan de tener
-         números dentro y las vistas se quedan sin curva (#19). Cuando una
-         tarjeta se lleva el alto, lo que scrollea es esta caja y sólo ella. */
-      grid-template-rows: minmax(360px, 1fr);
+         nunca baja de 378 px. Ese número NO es el de #19: #19 midió 360, que es
+         donde los ocho nodos dejan de tener números dentro y las vistas se
+         quedan sin curva, y lo midió con la leyenda a una fila. La leyenda son
+         dos desde #65 y su banda sale del lienzo, así que el diagrama necesita
+         esos 18 px de vuelta para seguir cumpliendo lo que 360 prometía. Las
+         vistas no los necesitaban: por eso BODY_FLOOR se DERIVA de las dos
+         medidas por separado en column-geometry.ts, y por eso este 378 se
+         cambia allí en el mismo commit. Cuando una tarjeta se lleva el alto, lo
+         que scrollea es esta caja y sólo ella. */
+      grid-template-rows: minmax(378px, 1fr);
       overflow-y: auto;
       gap: var(--rule-min);
       background: var(--rule-color);

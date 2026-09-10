@@ -43,8 +43,16 @@
                   "maximumError": "1MB"
                 },
                 {
+                  // Los dos números venían del scaffold de `ng new` y nadie los
+                  // había tocado. El aviso subió a 7 kB en #65: la hoja del
+                  // diagrama estaba justo en 6,00 y la segunda fila de la
+                  // leyenda la pasó por 61 bytes. Se sube el aviso y NO el
+                  // error, que sigue en el 10 kB del scaffold, porque 6 kB no es
+                  // una medida de nada —a diferencia de BODY_FLOOR, que sí lo
+                  // es— y limar reglas ajenas para comprar 61 bytes contra un
+                  // valor por defecto sale más caro que el aviso.
                   "type": "anyComponentStyle",
-                  "maximumWarning": "6kB",
+                  "maximumWarning": "7kB",
                   "maximumError": "10kB"
                 }
               ],

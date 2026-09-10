@@ -3,6 +3,7 @@ import {
   BODY_FLOOR,
   Box,
   ColumnState,
+  DESIGN_BODY_W,
   DIAGRAM_W,
   FIGURES_W,
   FLAT,
@@ -11,8 +12,10 @@ import {
   columnGeometry,
   columnShape,
   cycleAspect,
+  diagramLane,
   stripFrame,
 } from './column-geometry';
+import { LEGEND_H, legendHeight } from '../operator-diagram/legend';
 
 /** 1280 × 800, the window the design is drawn at, minus the 58 px header band. */
 const ROOM: Box = { width: 1280, height: 742 };
@@ -126,6 +129,30 @@ describe('columnGeometry', () => {
     const { body } = columnGeometry(state(), { width: 1280, height: 300 });
 
     expect(body.height).toBe(BODY_FLOOR);
+  });
+
+  it('leaves the drawing the height #19 measured, whatever the legend costs', () => {
+    // The floor is `minmax(378px, 1fr)` in app.ts, and 378 is not #19's number.
+    // #19 measured 360 with the legend at one row; the legend is two rows since
+    // #65 and its band comes out of the canvas, so the floor carries the extra.
+    //
+    // The claim is the relation, not the number: whatever the legend takes, the
+    // canvas is left with exactly what it was left with when 360 was measured.
+    // Written this way the floor follows a future change to the legend's rows
+    // instead of becoming a constant nobody can re-earn.
+    expect(BODY_FLOOR - LEGEND_H).toBe(360 - legendHeight(1));
+    expect(BODY_FLOOR).toBe(378);
+  });
+
+  it('gives the diagram exactly DIAGRAM_W with the ranuras open', () => {
+    // The 700 is declared once, as the column's remainder in app.ts. Reading it
+    // back through the lane arithmetic keeps the legend's width check and the
+    // sheet talking about the same box.
+    expect(diagramLane('ranuras', DESIGN_BODY_W)).toBe(DIAGRAM_W);
+    // And the other two are wider, which is why the ranuras lane is the one that
+    // binds the legend. Neither is floored — see diagramLane.
+    expect(diagramLane('rail', DESIGN_BODY_W)).toBeGreaterThan(DIAGRAM_W);
+    expect(diagramLane('gone', DESIGN_BODY_W)).toBeGreaterThan(DIAGRAM_W);
   });
 });
 

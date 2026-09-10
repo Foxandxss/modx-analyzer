@@ -1,7 +1,7 @@
 # ADR-0007: Dos dibujos de un algoritmo, y cuál es el de por defecto
 
 Fecha: 2026-09-10 · Estado: aceptada · Contexto: #54, #42, #29 · Revisada en #63 contra lo que 3a
-(#58) y 3b (#62) dejaron efectivamente en la build
+(#58) y 3b (#62) dejaron efectivamente en la build · §3 ampliada con la leyenda en #65
 
 ## El problema
 
@@ -41,8 +41,9 @@ estrecha en esta sesión.
 2. La **estrecha** no enseña topología **por la posición** y no pretende hacerlo. Dibuja las mismas
    líneas y los mismos nodos ordenados por profundidad, y lo que no pone en el sitio lo pone en la
    palabra.
-3. Lo que el usuario **lleva** de la ancha a la estrecha son dos cosas, y hay que separarlas porque
-   la segunda estaba mal escrita en la primera redacción de esta ADR:
+3. Lo que el usuario **lleva** de la ancha a la estrecha son tres cosas, y hay que separarlas porque
+   la segunda estaba mal escrita en la primera redacción de esta ADR y la tercera faltaba entera
+   (añadida en #65):
 
    - **El nodo entero.** Hay un componente y una plantilla para los dos dibujos, así que los cinco
      hechos del nodo son literalmente los mismos: la identidad (`OP1`…`OP8`) con el rol escrito al
@@ -55,6 +56,22 @@ estrecha en esta sesión.
      realimentación con su `FB n` se dibujan en las **dos**, y la discontinua del `FB 0` (#57)
      también. **«Quién modula a quién» no es exclusivo de la ancha**: está en las dos, y decir lo
      contrario era describir la rejilla como un inventario sin líneas, que no es lo que es.
+
+   - **La leyenda.** Las cuatro entradas del pie son las mismas en las tres formas de la columna, y
+     no puede ser de otra manera: sus muestras **son contornos de nodo** —el redondeado de la
+     portadora, el del modulador, la discontinua de `--inert` y la del techo— y el nodo es un
+     componente con una plantilla para los dos dibujos, que es el primer punto de esta lista. Lo que
+     la leyenda nombra está dibujado igual en la rejilla y en la ancha.
+
+     Y **pesa más en la estrecha, no menos**, que es lo contrario de lo que sugiere el punto 4: si
+     ahí el rol no se lee del sitio sino de la palabra del nodo y de la forma del contorno, la
+     leyenda es la traducción de esa forma. Una leyenda que dependiera de la composición acabaría
+     recortándose justo en el dibujo que menos enseña por la posición.
+
+     El coste es de alto y se paga arriba: son dos filas en las tres formas —los cuatro rótulos en
+     una sola son 906 px y la banda del diagrama en `ranuras` son 664 (#65)— y la ancha, que es la
+     que tiene sitio de sobra, carga con la segunda fila para que la leyenda no cambie de forma al
+     pulsar `KEEP IT BIG`.
 
 4. Lo que **no** lleva es la **posición**, no el dato:
 

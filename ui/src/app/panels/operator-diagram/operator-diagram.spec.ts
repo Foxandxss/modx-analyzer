@@ -17,6 +17,7 @@ import { Composition } from '../../shell/composition';
 import { staleAfterMs } from '../../provenance/freshness';
 import { DEAD_MARK } from '../../provenance/provenance';
 import { CANVAS_H, CANVAS_W, NODE_H } from './layout';
+import { LEGEND } from './legend';
 import { OperatorDiagram } from './operator-diagram';
 import { SPECTRAL_GLYPH } from './spectral-glyph';
 import { WIDE_CANVAS_H, WIDE_CANVAS_W } from './wide-layout';
@@ -618,13 +619,43 @@ describe('OperatorDiagram', () => {
     expect(host.textContent).not.toContain('the corner');
   });
 
-  it('names the shared datum in the legend, once', async () => {
+  it('draws the legend that legend.ts measures, in its rows and in order', async () => {
     const { host } = await renderDiagram();
 
-    // Without this the dashed line crossing the eight nodes is a line that does
-    // not say what it is of.
+    // The bridge between the drawing and the arithmetic. `legend.spec.ts` proves
+    // each row of LEGEND fits its lane; this proves LEGEND is what is on screen.
+    // Without it the width check would be summing a second copy of the strings
+    // and could stay green while the panel said something else — which is the
+    // shape of the assertion #65 replaced, one layer down.
+    //
+    // Read from LEGEND's own structure, so a copy edit that moves an entry
+    // between rows fails here instead of silently redefining what is summed.
+    const rows = host.querySelectorAll('.legend__row');
+    expect(rows).toHaveLength(LEGEND.length);
+
+    LEGEND.forEach((row, i) => {
+      const items = rows[i].querySelectorAll('.legend__item');
+      expect(items).toHaveLength(row.length);
+
+      row.forEach((entry, j) => {
+        // Order, not membership: the pairing is a rule, and a set check over
+        // four strings passes whether AT ZERO · SILENT is on row 1 or row 2.
+        expect(items[j].textContent?.trim()).toBe(entry.words);
+        expect(items[j].querySelector(`.legend__swatch--${entry.swatch}`)).not.toBeNull();
+      });
+    });
+  });
+
+  it('names both dashed vocabularies, each once', async () => {
+    const { host } = await renderDiagram();
+
+    // Two dashes, not one. `--dash-inactive` is the shared one — the route out
+    // of an operator at zero, its drop to the bus, the FB 0 arc (#57), the stub
+    // and the inert contour — and `AT ZERO · SILENT` names it. The patch's
+    // ceiling has its own, `--datum-ceiling-*`, and without the fourth entry it
+    // is a line crossing all eight nodes that does not say what it is of.
     const legend = host.querySelector('.legend');
-    expect(legend?.textContent).toContain('THE LOUDEST OPERATOR IN THIS PATCH');
+    expect(legend?.querySelectorAll('.legend__swatch--inert')).toHaveLength(1);
     expect(legend?.querySelectorAll('.legend__swatch--datum')).toHaveLength(1);
   });
 

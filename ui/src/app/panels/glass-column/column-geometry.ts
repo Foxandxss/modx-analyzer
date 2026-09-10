@@ -1,4 +1,5 @@
 import { SCOPE_CYCLES } from 'modx-dsp';
+import { LEGEND_H, legendHeight } from '../operator-diagram/legend';
 
 /**
  * Where the glass column's boxes are, in CSS pixels, for any state of the two
@@ -98,8 +99,37 @@ export const RAIL_W = 52;
 export const STRIP_H = 156;
 /** What the bench drawer costs the screen, open or shut. */
 export const DRAWER_GRAB = 52;
-/** `grid-template-rows: minmax(360px, 1fr)`: under this the body scrolls. */
-export const BODY_FLOOR = 360;
+/**
+ * `tauri.conf.json`'s window `width`. The body gets all of it: the three lanes
+ * divide the window, so this is what the design widths below are taken at.
+ * There is no `minWidth` beside it, and no floor here for the width either —
+ * see {@link diagramLane}.
+ */
+export const DESIGN_BODY_W = 1280;
+
+/**
+ * #19's two halves. Someone drove the window down and watched two different
+ * things stop saying what they say, and both landed on the same body row of
+ * 360 px — measured when the legend was one row.
+ *
+ * They are two constants and not one because only one of them grew. The legend
+ * went to two rows (#65) and the band it takes comes out of the canvas, so the
+ * diagram needs the extra back; the vistas never needed it and nothing here
+ * should quietly say they did.
+ */
+const VIEWS_FLOOR = 360;
+/** The diagram's half of #19, with the one-row legend's band taken back out. */
+const NODES_FLOOR = 360 - legendHeight(1);
+
+/**
+ * `grid-template-rows: minmax(378px, 1fr)` in `app.ts`: under this the body
+ * scrolls.
+ *
+ * Derived, so it follows the legend the next time its row count changes rather
+ * than becoming a number nobody can re-earn. 360 was measured; 378 is that
+ * measurement plus the legend's second row.
+ */
+export const BODY_FLOOR = Math.max(NODES_FLOOR + LEGEND_H, VIEWS_FLOOR);
 
 /** `.view`'s padding in `glass-column.scss`. */
 const VIEW_PAD_X = 16;
@@ -185,6 +215,24 @@ export function stripFrame(width: number): Box {
  */
 export function cycleAspect(frame: Box, cycles: number = SCOPE_CYCLES): number {
   return frame.width / cycles / (frame.height * TRACE_FILL);
+}
+
+/**
+ * The diagram's own lane, which is the first track and takes what the other two
+ * leave. In `ranuras` that comes to exactly {@link DIAGRAM_W}, because the
+ * column is the one written as a remainder; in `rail` and `gone` the diagram is
+ * the remainder instead and the number moves with the window.
+ *
+ * **It is not floored.** Under about 912 px of body it drops below
+ * {@link DIAGRAM_W} in every shape, and down there {@link FIGURES_W} is still
+ * hard-coded and the grid's percentage-positioned nodes are long past what #19
+ * measured. The height has a floor with a measurement behind it; the width has
+ * none, and one picked to make an arithmetic test pass would be a constant
+ * earned by the test instead of by a measurement. So callers state which widths
+ * they are claiming for, and the floor is #66.
+ */
+export function diagramLane(shape: ColumnShape, bodyWidth: number): number {
+  return bodyWidth - laneWidth(shape, bodyWidth) - FIGURES_W - 2 * RULE;
 }
 
 function laneWidth(shape: ColumnShape, bodyWidth: number): number {

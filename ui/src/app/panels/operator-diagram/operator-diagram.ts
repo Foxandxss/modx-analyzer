@@ -12,6 +12,7 @@ import { RingFreshness } from '../../provenance/freshness';
 import { Composition } from '../../shell/composition';
 import { DEAD_MARK, PROVENANCE_LABEL } from '../../provenance/provenance';
 import { equalTemperamentHz } from '../../provenance/theory';
+import { LEGEND } from './legend';
 import { DrawnBus, DrawnRoute, DrawnStub, Slot, layout } from './layout';
 import { spectralGlyph } from './spectral-glyph';
 import { wideLayout } from './wide-layout';
@@ -128,6 +129,12 @@ export class OperatorDiagram {
   protected readonly labels = PROVENANCE_LABEL;
   /** Where the glyph goes when nobody has read the form: the dash, never a Sine. */
   protected readonly deadMark = DEAD_MARK;
+  /**
+   * The legend's words and their rows, from the module that also measures them.
+   * The template renders this list and `legend.ts` sums this list, so a width
+   * check cannot stay green about copy the screen no longer shows (#65).
+   */
+  protected readonly legend = LEGEND;
 
   /**
    * `KEEP IT BIG`, drawn here because this is the panel it is about.

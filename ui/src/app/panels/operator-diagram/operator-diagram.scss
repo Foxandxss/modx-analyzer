@@ -418,11 +418,23 @@
   color: var(--node-ink);
 }
 
+// Dos filas SIEMPRE, en las tres formas de la columna. Los cuatro rótulos en una
+// sola fila son 906 px y la banda del diagrama son 664: la cuarta entrada se
+// cortaba (#65). No lleva flex-wrap a propósito —el número de filas dejaría de
+// ser una declaración y pasaría a depender del texto rasterizado, que es lo que
+// jsdom no ve y lo que hacía imposible una comprobación que fallara— y además
+// una leyenda que es una fila a 1016 px y dos en cuanto se pulsa KEEP IT BIG es
+// una forma que hay que aprender dos veces.
+//
+// El reparto es una regla y no el orden del código: arriba los dos roles que da
+// el algoritmo, abajo los dos hechos que no son roles. Está en `legend.ts`, que
+// es de donde salen los rótulos y quien mide que cada fila quepa.
 .legend {
   flex: 0 0 auto;
   display: flex;
-  align-items: center;
-  gap: var(--space-5);
+  flex-direction: column;
+  // Las dos filas son una leyenda, no dos listas.
+  gap: var(--space-1);
   padding: 9px 0 11px;
   border-top: var(--rule-min) solid var(--rule-color);
   font-size: var(--text-micro);
@@ -430,9 +442,18 @@
   color: var(--ink-secondary);
 }
 
+// Una fila y una entrada son la misma caja acostada; sólo cambia el hueco.
+.legend__row,
 .legend__item {
   display: flex;
   align-items: center;
+}
+
+.legend__row {
+  gap: var(--space-5);
+}
+
+.legend__item {
   gap: var(--space-2);
   white-space: nowrap;
 }
@@ -457,7 +478,10 @@
     border-radius: var(--radius-modulator);
   }
 
-  // La discontinua compartida, en la misma tinta con la que cruza los ocho nodos.
+  // La discontinua DEL TECHO, en la misma tinta con la que cruza los ocho nodos.
+  // No es la compartida: la compartida es `--dash-inactive`, la de `--inert`
+  // aquí arriba, que llevan la ruta cortada, el cabo, el bus inerte y el arco de
+  // FB 0 (#57). Son dos vocabularios de discontinua y la leyenda nombra los dos.
   &--datum {
     height: 0;
     border-top: var(--datum-ceiling-stroke) dashed var(--datum-ceiling-color);

@@ -197,24 +197,30 @@
     }
   </div>
 
+  <!-- La leyenda sale de LEGEND (`legend.ts`) y no de aquí: es la misma lista que
+       la aritmética mide, así que un cambio de copia no puede dejar verde una
+       comprobación de ancho que ya no habla de lo que se dibuja (#65).
+
+       Son DOS discontinuas y no una: `--dash-inactive` es la compartida —la ruta
+       del operador a cero, su bajada al bus, el arco de FB 0 (#57), el cabo y el
+       contorno inerte— y la nombra `AT ZERO · SILENT`; el techo del patch lleva
+       la suya, `--datum-ceiling-*`, y la nombra la cuarta entrada. Sin esa cuarta
+       hay una línea cruzando los ocho nodos que no dice de qué es. La esquina NO
+       se nombra: su línea entra con el editor que abre (#39). -->
   <div class="legend">
-    <span class="legend__item">
-      <span class="legend__swatch legend__swatch--carrier" aria-hidden="true"></span>CARRIERS · YOU
-      HEAR THESE
-    </span>
-    <span class="legend__item">
-      <span class="legend__swatch legend__swatch--modulator" aria-hidden="true"></span>MODULATORS ·
-      THEY COLOUR IT
-    </span>
-    <span class="legend__item">
-      <span class="legend__swatch legend__swatch--inert" aria-hidden="true"></span>AT ZERO · SILENT
-    </span>
-    <!-- La discontinua compartida se nombra una vez, aquí: sin esto es una línea
-         que cruza los ocho nodos y no dice de qué es. La esquina NO se nombra —
-         su línea entra con el editor que abre (#39). -->
-    <span class="legend__item">
-      <span class="legend__swatch legend__swatch--datum" aria-hidden="true"></span>THE LOUDEST
-      OPERATOR IN THIS PATCH
-    </span>
+    @for (row of legend; track $index) {
+      <div class="legend__row">
+        @for (entry of row; track entry.words) {
+          <span class="legend__item">
+            <span
+              class="legend__swatch"
+              [class]="'legend__swatch--' + entry.swatch"
+              aria-hidden="true"
+            ></span
+            >{{ entry.words }}
+          </span>
+        }
+      </div>
+    }
   </div>
 </div>
