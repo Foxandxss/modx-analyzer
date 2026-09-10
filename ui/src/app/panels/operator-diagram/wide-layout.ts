@@ -53,11 +53,32 @@ export const WIDE_CANVAS_H = 400;
 export const WIDE_COLUMNS = 8;
 export const WIDE_ROWS = 8;
 
-/** Room for the feedback ear on the right and for the stub's cross-bar. */
-const MARGIN_X = 16;
+/**
+ * Room for the feedback ear on the right and for the stub's cross-bar.
+ *
+ * ## Why this is part of the module's surface now
+ *
+ * The narrowest card this layout can draw is about to become the basis of a
+ * floor the whole composición is earned against (#75, and #86 behind it), and
+ * that card is decided by exactly four numbers: {@link WIDE_CANVAS_W}, this one,
+ * {@link COL_GAP} and {@link WIDE_COLUMNS}. Two of them were module-private, so
+ * «the check recomputes it from four constants» was a claim about an interface
+ * that did not exist and the check would have had to re-declare them.
+ *
+ * A re-declaration is a copy, and a check whose subject is a copy goes green
+ * while the screen says something else — the defect `legend.ts` was written to
+ * remove and the one {@link wideRowPitch} is exported to avoid. So the inputs to
+ * the floor are what this module promises, not how it happens to be written, and
+ * an edit to either of them moves the floor in one place.
+ */
+export const MARGIN_X = 16;
 const MARGIN_Y = 6;
-/** The narrowest gutter between two nodes, which is what eight columns leave. */
-const COL_GAP = 8;
+/**
+ * The narrowest gutter between two nodes, which is what eight columns leave.
+ *
+ * Exported, and part of the surface, for the reason written at {@link MARGIN_X}.
+ */
+export const COL_GAP = 8;
 const ROW_GAP_MAX = 26;
 /** How far under the last row the bus runs, and the room `OUT L/R` needs below it. */
 const BUS_OFFSET = 20;

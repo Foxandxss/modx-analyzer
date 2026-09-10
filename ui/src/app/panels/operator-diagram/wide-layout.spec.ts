@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { Topology } from '../../backend/backend-gateway';
 import { Slot } from './layout';
-import { WIDE_CANVAS_H, WIDE_CANVAS_W, WIDE_COLUMNS, WIDE_ROWS, wideLayout } from './wide-layout';
+import {
+  COL_GAP,
+  MARGIN_X,
+  WIDE_CANVAS_H,
+  WIDE_CANVAS_W,
+  WIDE_COLUMNS,
+  WIDE_ROWS,
+  wideLayout,
+} from './wide-layout';
 
 /** A topology as the table sends it, with the depth and the branch computed alike. */
 function topology(
@@ -107,6 +115,49 @@ const THE_WORST_CASES = [ALGORITHM_1, ALGORITHM_66, ALGORITHM_68, ALGORITHM_12];
 
 function slot(slots: readonly Slot[], operator: number): Slot {
   return slots[operator - 1];
+}
+
+/**
+ * The narrowest card the wide layout can draw, recomputed rather than written
+ * down, from the four constants that decide it and from nothing else.
+ *
+ * Eight columns is the whole surface (#40, {@link WIDE_COLUMNS}), so the
+ * narrowest card is what one column of eight leaves once the two margins and the
+ * gutter are spent. That number is about to be the basis of a floor the whole
+ * composición is earned against (#86), so it is recomputed here from the
+ * module's own constants: a literal would be a fifth declaration of it, silently
+ * correct until the day somebody moves one of the four.
+ *
+ * **Neither node-width cap is in this derivation, and that is deliberate.**
+ * `NODE_W_MAX` and `SQUAT_NODE_W_MAX` are ceilings, and at eight columns both
+ * sit above this number and never decide it — a floor derived from a cap would
+ * be a floor about a card the layout never draws, and it would make the floor a
+ * property of the node class, which it is not: at the column cap a squat card
+ * and a stacked one are the same width. Which is also what stops the assertion
+ * below being a tautology: `wideLayout` takes a `Math.min` of this geometry and
+ * a cap, so it agreeing with the geometry is exactly the claim that the cap did
+ * not bind.
+ *
+ * ## What this check catches, and what it cannot
+ *
+ * Made to fail on purpose, one constant at a time. It goes red on
+ * {@link WIDE_COLUMNS} moving either way — the layout counts its own columns off
+ * the table and never reads that constant, so the two disagree immediately — and
+ * on either cap dropping under the geometry.
+ *
+ * It stays green on {@link MARGIN_X}, {@link COL_GAP} and {@link WIDE_CANVAS_W},
+ * and no arrangement of it could do otherwise: the layout and this function read
+ * the same three numbers, so they move together by construction. #75 asked for
+ * both «recompute it, never write the value down» and «go red when any of the
+ * four moves», and those two are exclusive — the only witness that could fail on
+ * a margin edit is the literal the first half forbids. The first half is the one
+ * worth having, because the failure it prevents is the silent one: a floor
+ * carrying a number nobody re-earned. An edit to a margin is not silent — it
+ * moves the floor here, in one place, and #86's floor is computed from it.
+ */
+function narrowestCardWidth(): number {
+  const pitchX = (WIDE_CANVAS_W - 2 * MARGIN_X) / WIDE_COLUMNS;
+  return pitchX - COL_GAP;
 }
 
 /** The `M x y V y2 H x2 …` of a path, as numbers, so a test can read a line. */
@@ -285,6 +336,37 @@ describe('the wide diagram layout', () => {
     expect(deep.squat).toBe(true);
     expect(slot(deep.slots, 1).h).toBeLessThan(slot(shallow.slots, 1).h);
     expect(slot(deep.slots, 1).w).toBeGreaterThan(slot(shallow.slots, 1).w);
+  });
+
+  /**
+   * The floor's inputs, asserted as a fact about the drawing rather than as a
+   * number in a file.
+   *
+   * Two things are being claimed, and the second is what makes the first worth
+   * having. The **1** is the eight-column case, and the card it draws is the
+   * geometry — margins and gutter — with no cap in it. And nothing the layout
+   * draws is narrower, parking included: a parked operator takes its column out
+   * of the branches before it takes one on the stub, so the total never passes
+   * eight and the floor cannot be undercut from behind.
+   *
+   * What this does **not** assert is a lane width, a body width or a per-class
+   * share. Those are presentations of this same number, and asserting one of
+   * them would put the floor's derivation somewhere it can drift from the card.
+   */
+  it('draws its narrowest card at eight columns, and no cap decides it', () => {
+    // The eight-column case, drawn: the 1 stands eight portadoras on the bus row.
+    const wide = wideLayout(ALGORITHM_1, []);
+    expect(new Set(wide.slots.map((each) => each.column)).size).toBe(WIDE_COLUMNS);
+    expect(slot(wide.slots, 1).w).toBe(narrowestCardWidth());
+
+    // And nothing narrower exists, over the measured worst cases and over the
+    // parkings that move operators from the branches onto the stubs.
+    const everyCard = [ALGORITHM_2, ...THE_WORST_CASES].flatMap((drawn) =>
+      [[], [1], [1, 5], [1, 2, 5, 6, 7, 8]].flatMap((cut) =>
+        wideLayout(drawn, cut).slots.map((each) => each.w),
+      ),
+    );
+    expect(Math.min(...everyCard, wideLayout(null, []).slots[0].w)).toBe(narrowestCardWidth());
   });
 
   it('stands whole branches side by side and never crosses one with another', () => {
