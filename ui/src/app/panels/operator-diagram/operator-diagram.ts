@@ -86,7 +86,12 @@ interface LineView {
  * The Level is the **height of the fill**, the number under it only confirms what
  * the height already said, and one **ceiling datum** at the patch's highest Level
  * crosses all eight so the eye reads the gaps rather than eight private
- * baselines. The routes come from the algorithm the ring read
+ * baselines. That fill measures its Level against a **track** and not against the
+ * card: the scale's top used to be the card's own border, which left a ceiling of
+ * 99 nowhere to be drawn (#67, `node-geometry.ts`). The claim is unchanged —
+ * linear, zero-anchored, the same scale on all eight — and what moved was the
+ * accident that a border was doubling as the top of a measurement.
+ * The routes come from the algorithm the ring read
  * and are laid out by chain depth, so any of the 88 draws without a hand-made
  * sheet (`layout.ts`). And nothing is guessed: until the algorithm has been read
  * there is no topology, so there is no role and there are no lines, and an
@@ -227,13 +232,48 @@ export class OperatorDiagram {
    * absolute heights nobody can compare. One shared line turns them into seven
    * **gaps**, which is what the eye is good at. It is the patch's own highest
    * Level and never a constant: a fixed 99 would be a baseline the patch does not
-   * have. With nothing read there is no ceiling and no line.
+   * have.
+   *
+   * This is the **measurement**, and it answers `0` for a patch whose eight
+   * operators have all been read at zero. That is not the same fact as a patch
+   * nobody has read, and the two are kept apart here for the reason `FB 0` is
+   * kept apart from a feedback nobody polled: a configured zero is something the
+   * ring went and found out, and collapsing it into "unknown" erases a reading.
+   * Nothing on screen needs the distinction today. The next thing to ask this
+   * signal a question would have got a wrong answer with no way to tell.
+   *
+   * What gets drawn is {@link ceilingLine}, which is a different question.
    */
   protected readonly ceiling = computed<number | null>(() => {
     const levels = this.nodes()
       .map((node) => node.level.value)
       .filter((level): level is number => level !== null);
     return levels.length === 0 ? null : Math.max(...levels);
+  });
+
+  /**
+   * The ceiling **as a line**: the Level to hang the datum at, or nothing.
+   *
+   * There are two suppressions here and they suppress for different reasons.
+   * They used to be one, and they were not written at all — `@if (ceiling())`
+   * tested truthiness, so a patch read at eight zeros took the same branch as a
+   * patch nobody had read, and the prose above named only the second. Behaviour
+   * nobody decided, riding under a sentence about the neighbouring case. The same
+   * shape turned up in `wide-layout.ts`'s route filter the same morning (#70), so
+   * it is worth naming rather than fixing twice in silence.
+   *
+   * - **Nothing read.** There is no ceiling, because there is no Level to be the
+   *   highest of. A line here would be a baseline invented out of eight dashes.
+   * - **Read, and everything silent.** There is a ceiling and it is `0`. The line
+   *   is still not drawn, and not because the figure is missing: the datum's
+   *   whole job is to turn eight absolute heights into seven gaps, and against a
+   *   flat floor there are no gaps to make. `THE LOUDEST OPERATOR IN THIS PATCH`
+   *   naming a silent one is a legend entry pointing at no content — the defect
+   *   #67 was opened about, one layer in.
+   */
+  protected readonly ceilingLine = computed<number | null>(() => {
+    const ceiling = this.ceiling();
+    return ceiling === null || ceiling === 0 ? null : ceiling;
   });
 
   /** The modulation lines, dashed when they leave an operator that is cut. */

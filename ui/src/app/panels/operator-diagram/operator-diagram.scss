@@ -221,6 +221,28 @@
   }
 }
 
+// La pista: el interior de la tarjeta menos el hueco de arriba, y NADA más.
+// El inset es SÓLO por arriba —abajo, izquierda y derecha siguen coincidiendo
+// con la caja de relleno de `.node`—, así que el relleno conserva sus esquinas
+// redondeadas: las recorta el `overflow: hidden` de la tarjeta, igual que antes.
+// Un inset por los cuatro lados las dejaría cuadradas dentro de una tarjeta
+// curva, que es un cambio en el §20.2 disfrazado de limpieza.
+//
+// `overflow: visible` es PARTE de la derivación y no un detalle: el trazo del
+// techo sube a propósito 2 px por encima de la línea que nombra, y una pista que
+// recortara se lo comería en su propio borde exactamente como se lo comía el de
+// la tarjeta (#67), con la aritmética de `node-geometry.ts` marcando 6 px
+// igualmente. Es la única reversión que vuelve a esconder la línea en silencio.
+//
+// 8 px es `TRACK_INSET`. El número se autoriza allí y se comprueba contra la
+// tarjeta más pequeña que el layout sabe dibujar; aquí sólo se refleja.
+.node__track {
+  position: absolute;
+  inset: 8px 0 0 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
 // El relleno es la cifra: capa anclada abajo cuya altura ES el Level.
 .node__fill {
   position: absolute;

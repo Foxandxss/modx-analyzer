@@ -51,9 +51,25 @@ los ocho nodos. No es del rol de ningún operador: es del patch, y por eso es lo
 que no nombra un rol. Existe porque los patches reales agrupan sus operadores entre 71 y 99, donde
 ocho alturas absolutas se ven iguales; contra una línea compartida lo que se lee son los **huecos**,
 que son siete y son la comparación que importa. Es siempre el Level más alto leído, nunca una cifra
-fija, y sin nada leído no hay techo y no hay línea.
+fija.
+El techo es una **medida** y se calcula siempre; lo que se suprime es la línea, y se suprime por dos
+razones distintas que no hay que confundir. Sin nada leído no hay techo, porque no hay Level del que
+ser el más alto. Con los ocho leídos a cero sí hay techo y vale 0, y la línea tampoco se dibuja: no
+por falta de cifra, sino porque contra un suelo plano no hay huecos que hacer, y `THE LOUDEST
+OPERATOR IN THIS PATCH` estaría nombrando a uno callado.
 _Avoid_: techo fijo, máximo, 99
 _Pantalla_: sin palabra en el nodo —es una línea—; en la leyenda, `THE LOUDEST OPERATOR IN THIS PATCH`.
+
+**Pista del relleno**:
+La escala contra la que se dibuja el Level: el interior del nodo menos un hueco constante arriba. El
+relleno **era** la tarjeta, así que un Level de 99 sobre 99 dejaba un uno por ciento por encima y el
+techo caía dentro del propio borde, donde no había nada que ver —que es el patch de arranque, y es
+lo primero que abre cualquiera (#67)—. El Level sigue siendo la altura del relleno, lineal y anclado
+en cero: lo que se ha separado de la cifra es el borde que hacía de tope. El hueco se mide en píxeles
+y nunca en porcentaje, porque un hueco proporcional cambia con la forma de la columna y vuelve a
+cerrarse en la composición donde la tarjeta es más pequeña.
+_Avoid_: margen, padding del relleno, hueco relativo
+_Pantalla_: nada —es donde la escala deja de estar, no algo que se dibuje—.
 
 **Cadena**:
 Lo que hay entre los operadores y la salida Main L/R de la Part: filtro, inserciones, EQ y sends.

@@ -18,6 +18,15 @@ import { staleAfterMs } from '../../provenance/freshness';
 import { DEAD_MARK } from '../../provenance/provenance';
 import { CANVAS_H, CANVAS_W, NODE_H } from './layout';
 import { LEGEND } from './legend';
+import {
+  DAYLIGHT_FLOOR,
+  LEVEL_MAX,
+  TRACK_INSET,
+  datumDaylight,
+  floorCanvasHeight,
+  trackHeight,
+  worstCardHeight,
+} from './node-geometry';
 import { OperatorDiagram } from './operator-diagram';
 import { SPECTRAL_GLYPH } from './spectral-glyph';
 import { WIDE_CANVAS_H, WIDE_CANVAS_W } from './wide-layout';
@@ -119,6 +128,43 @@ function eight(readAt: number, passMs: number): OperatorsView {
 
 function nodes(host: HTMLElement): HTMLElement[] {
   return Array.from(host.querySelectorAll<HTMLElement>('.node'));
+}
+
+function datums(host: HTMLElement): HTMLElement[] {
+  return Array.from(host.querySelectorAll<HTMLElement>('.node__datum'));
+}
+
+/**
+ * The patch the app boots into, and #67's case: `Init Normal (FM-X)` reads
+ * `99 · 14 · 16 · 99 · 99 · 99 · 9 · 53`, so the ceiling is at the top of the
+ * range and four operators are tied at it.
+ *
+ * Not the same thing as the two hardware readings that confirmed the defect —
+ * those were taken with the algorithm and the Levels edited on the keyboard, so
+ * the ancla still said `Init Normal (FM-X)` while the patch was no longer it.
+ * This is the factory patch as it ships, which is what the acceptance is about:
+ * it is the first thing anyone opens.
+ */
+function theBootPatch(readAt: number): OperatorsView {
+  const levels = [99, 14, 16, 99, 99, 99, 9, 53];
+  return {
+    operators: levels.map((level, index) =>
+      reading(index + 1, { role: index === 7 ? 'carrier' : 'modulator', level, ratio: 1 }, readAt),
+    ),
+    passMs: IDLE_PASS_MS,
+    passes: 12,
+  };
+}
+
+/** Eight operators read, every one of them at zero. A ceiling with no gaps under it. */
+function everythingSilent(readAt: number): OperatorsView {
+  return {
+    operators: [1, 2, 3, 4, 5, 6, 7, 8].map((operator) =>
+      reading(operator, { role: 'modulator', level: 0, ratio: 1 }, readAt),
+    ),
+    passMs: IDLE_PASS_MS,
+    passes: 12,
+  };
 }
 
 /**
@@ -499,25 +545,139 @@ describe('OperatorDiagram', () => {
     backend.operators.set(theBuildsOwnPatch(NOW));
     await fixture.whenStable();
 
-    const datums = Array.from(host.querySelectorAll<HTMLElement>('.node__datum'));
-    expect(datums).toHaveLength(8);
+    expect(datums(host)).toHaveLength(8);
     // One line, so one height: the eight are read by the gap above each fill.
-    for (const datum of datums) {
+    for (const datum of datums(host)) {
       expect(datum.style.bottom).toBe('99%');
     }
 
-    // 71 against a ceiling of 99 is 28 % of the node's 108 px — 30 px of
-    // daylight, which is what makes the difference visible at all.
+    // 71 against a ceiling of 99 is 28 % of the track — which at the narrow
+    // composition's card is about 27 px of daylight, and that gap is the whole
+    // comparison. Read against the track and no longer against the card: the
+    // fill's scale stops at `TRACK_INSET` below the border (#67).
     const fill = nodes(host)[2].querySelector<HTMLElement>('.node__fill');
     expect(fill?.style.height).toBe('71%');
-    expect(((99 - 71) / 100) * NODE_H).toBeCloseTo(30, 0);
+    expect(((99 - 71) / 100) * trackHeight(NODE_H)).toBeCloseTo(27, 0);
   });
 
   it('hangs no datum until something has answered its Level', async () => {
     const { host } = await renderDiagram();
 
     // A ceiling over eight dashes would be a baseline the patch does not have.
-    expect(host.querySelectorAll('.node__datum')).toHaveLength(0);
+    expect(datums(host)).toHaveLength(0);
+  });
+
+  it('hangs no datum when every operator has answered zero', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.operators.set(everythingSilent(NOW));
+    await fixture.whenStable();
+
+    // Not because the figure is missing — it is 0 and it was read. The datum
+    // turns eight heights into seven gaps, and a flat floor has none to make, so
+    // `THE LOUDEST OPERATOR IN THIS PATCH` would be naming a silent one.
+    expect(datums(host)).toHaveLength(0);
+  });
+
+  it('keeps the ceiling as a measurement even where it draws nothing', async () => {
+    const { backend, fixture } = await renderDiagram();
+    const panel = fixture.componentInstance as unknown as {
+      ceiling: () => number | null;
+      ceilingLine: () => number | null;
+    };
+
+    expect(panel.ceiling()).toBeNull();
+
+    backend.operators.set(everythingSilent(NOW));
+    await fixture.whenStable();
+
+    // Read-and-silent is not unread, exactly as `FB 0` is not a feedback nobody
+    // polled. Only the drawing collapses them; the model must not, or the next
+    // thing to ask gets a wrong answer with no way to tell.
+    expect(panel.ceiling()).toBe(0);
+    expect(panel.ceilingLine()).toBeNull();
+  });
+
+  it('still hangs the datum over an operator that answered zero', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.operators.set({
+      ...eight(NOW, IDLE_PASS_MS),
+      operators: [
+        reading(1, { role: 'carrier', level: 99, ratio: 1 }, NOW),
+        reading(2, { role: 'modulator', level: 0, ratio: 1 }, NOW),
+        ...[3, 4, 5, 6, 7, 8].map((operator) =>
+          reading(operator, { role: 'modulator', level: 40, ratio: 1 }, NOW),
+        ),
+      ],
+    });
+    await fixture.whenStable();
+
+    // One ceiling, so one height on all eight — including the node at zero,
+    // whose whole gap is the reading. A `level > 0` filter drifting out of the
+    // ceiling and into the nodes would take this node's line away and leave the
+    // other seven looking correct.
+    const hung = datums(host);
+    expect(hung).toHaveLength(8);
+    for (const datum of hung) {
+      expect(datum.style.bottom).toBe('99%');
+    }
+    expect(nodes(host)[1].querySelector<HTMLElement>('.node__fill')?.style.height).toBe('0%');
+  });
+
+  it('leaves the datum daylight against the card border, on the boot patch', async () => {
+    const { backend, fixture, host } = await renderDiagram({ wide: true });
+
+    backend.topology.set(ALGORITHM_66);
+    backend.operators.set(theBootPatch(NOW));
+    await fixture.whenStable();
+
+    // The rendered subject: the ceiling is at the top of the range, four
+    // operators tied at it, in the drawing that makes the smallest card.
+    const hung = datums(host);
+    expect(hung).toHaveLength(8);
+    for (const datum of hung) {
+      expect(datum.style.bottom).toBe('99%');
+    }
+
+    // And the claim about it, which jsdom cannot lay out and `node-geometry.ts`
+    // therefore models: at that `bottom`, the stroke's ink clears the card's own
+    // border by `DAYLIGHT_FLOOR`. Before the track this was negative — the line
+    // was inside the border and `overflow: hidden` had taken most of it — while
+    // an assertion that the element existed went green on a line nobody could
+    // see (#67).
+    const card = worstCardHeight();
+    expect(datumDaylight(card, LEVEL_MAX)).toBeGreaterThanOrEqual(DAYLIGHT_FLOOR);
+  });
+
+  it('earns the track inset against the smallest card either composition draws', () => {
+    // Recomputed, never hard-coded: `BODY_FLOOR`, the legend's rows, the zone's
+    // chrome and `WIDE_ROWS`. If #69 folds the deepest algorithms, or the floor
+    // moves again as it did for the legend's second row, this re-derives instead
+    // of staying a number about a card the layout no longer draws.
+    const card = worstCardHeight();
+
+    // The wide composition at algorithm 66's depth, not the narrow grid's node.
+    expect(card).toBeLessThan((NODE_H / CANVAS_H) * floorCanvasHeight());
+    expect(card).toBeCloseTo(23.6, 1);
+
+    expect(datumDaylight(card, LEVEL_MAX)).toBeGreaterThanOrEqual(DAYLIGHT_FLOOR);
+    // And one pixel less of inset would not clear it, which is what makes the
+    // constant earned rather than chosen.
+    expect(datumDaylight(card, LEVEL_MAX) - 1).toBeLessThan(DAYLIGHT_FLOOR);
+  });
+
+  it('does not clip the track, which is the one revert that hides the line again', async () => {
+    await renderDiagram();
+
+    // The datum's ink rises above the line it names, on purpose, into the
+    // headroom the inset just bought. A clipping track cuts it off at its own
+    // top exactly as the card's border did (#67) — and every other check here
+    // would still pass, because the arithmetic would be unchanged.
+    // Angular writes its own `[_ngcontent-…]` between the class and the brace.
+    const track = /\.node__track[^{]*\{[^}]*\}/.exec(componentCss())?.[0] ?? '';
+    expect(track).toContain('overflow: visible');
+    expect(track).toContain(`inset: ${TRACK_INSET}px 0 0 0`);
   });
 
   it('draws the spectral form and never writes its name', async () => {

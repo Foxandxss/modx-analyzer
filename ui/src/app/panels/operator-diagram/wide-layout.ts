@@ -82,6 +82,30 @@ const FEEDBACK_BULGE = 20;
 /** How wide the bar is that closes a parked operator's stub. */
 const STUB_BAR = 34;
 
+/**
+ * How tall a row is at a given row count, and how much of that the node gets.
+ *
+ * Exported, and called by {@link wideLayout} itself rather than copied, because
+ * `node-geometry.ts` asks this same question to find the smallest card the
+ * layout can produce. Two derivations of one number is the defect `legend.ts`
+ * was written to remove — a check whose subject is a copy can go green while the
+ * screen says something else — and here the copy would be worse than that: a
+ * check asserting daylight in a card the drawing never draws.
+ *
+ * `viewBox` units, like everything else in this module. What the card measures
+ * on screen is that share of the canvas's own rendered height, which is
+ * `node-geometry.ts`'s half of the arithmetic and not this one's.
+ */
+export function wideRowPitch(slotRows: number): {
+  readonly pitchY: number;
+  readonly rowGap: number;
+  readonly nodeH: number;
+} {
+  const pitchY = (WIDE_CANVAS_H - MARGIN_Y - BUS_OFFSET - OUT_ROOM) / slotRows;
+  const rowGap = Math.min(ROW_GAP_MAX, pitchY / 4);
+  return { pitchY, rowGap, nodeH: pitchY - rowGap };
+}
+
 interface Placement {
   readonly row: number;
   /** Which column slot the node is centred over. Fractional inside a band. */
@@ -114,9 +138,7 @@ export function wideLayout(topology: Topology | null, cut: readonly number[]): D
   const rows = placed.length === 0 ? 1 : Math.max(...placed.map(depthOf)) + 1;
   const slotRows = Math.max(rows, MIN_ROWS);
 
-  const pitchY = (WIDE_CANVAS_H - MARGIN_Y - BUS_OFFSET - OUT_ROOM) / slotRows;
-  const rowGap = Math.min(ROW_GAP_MAX, pitchY / 4);
-  const nodeH = pitchY - rowGap;
+  const { pitchY, rowGap, nodeH } = wideRowPitch(slotRows);
   const squat = nodeH < STACK_H;
 
   const grid = place(topology, placed, rows, depthOf);

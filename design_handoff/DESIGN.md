@@ -353,6 +353,29 @@ pushed the other five into ellipsis.
 meaning the figure, which is the spreadsheet trap in a new costume: a shape that lies is worse than a
 number on its own.
 
+**The fill is measured against a track, not against the card.** _(Corrected by the build, #67.)_ This
+rule was doing two jobs at once and only one of them was load-bearing. "Level is the height of the
+fill" is the semantic claim — linear, zero-anchored, comparable across the eight — and it stands
+unchanged. "The fill is the card" was an implementation detail that happened to be true, and it is
+exactly the detail that made the ceiling undrawable at the top of its own range: at Level 99 of 99
+the fill left one percent of the card above it, so the ceiling datum landed inside the card's own
+2 px border. On `Init Normal (FM-X)` — `99 · 14 · 16 · 99 · 99 · 99 · 9 · 53`, the patch the app
+boots into and the first thing anyone opens — there was nothing on screen to see.
+
+So the fill's scale is the card's interior less a constant inset at the top, and nowhere else. The
+inset is in pixels and never a share: headroom that scaled with card height would give the datum
+different clearance in every column shape, and close back up at the composition where the card is
+smallest. It is earned against the smallest card the layout can produce — the wide drawing at
+algorithm 66's depth, at the body's floor — and recomputed from those constants rather than written
+down, so that folding the deepest algorithms (#69) or moving the floor again re-derives it instead of
+leaving a number about a card that no longer exists.
+
+**This is a correction, not a precedent.** The handoff is edited here for the same reason as in
+`46a041c`: the build proved a sentence wrong. What is being separated is a claim from an accident
+that was riding underneath it, which is the opposite of the rule bending — the claim came out of it
+narrower and harder to misread. A change that reversed §20.2 rather than sharpening it would need an
+ADR, and this one deliberately does not.
+
 **The ceiling datum.** Real patches cluster their operators between 71 and 99 — the running build's
 patch reads `90 · 90 · 71 · 90 · 90 · 85 · 90 · 99`, six of the eight identical to the eye — so eight
 fills each with their own private baseline are unreadable. One shared **ceiling datum**, a 2 px dashed
@@ -873,7 +896,10 @@ mode" and no "desktop mode" to maintain separately. The left hand is on the MODX
    `--radius-modulator` (live corner). Never two nodes with the same radius and different colours.
 2. **Level is the height of the luminous fill** inside the node, linear 0-99, against the shared ceiling
    datum (§9). The mono figure is confirmation. Level 0 is not painted grey: dashed outline, no fill,
-   and the route leaving it dashed too.
+   and the route leaving it dashed too. The fill's scale is the node's **track** — its interior less a
+   constant inset at the top — and not the card itself, so that a Level at the top of the range still
+   leaves the ceiling datum somewhere to be drawn (§9, #67). The claim is unchanged by that; what
+   moved is that a border had been doubling as the top of a measurement.
 3. A continuous parameter **has no `input type=number`**. A circular knob (vertical drag), a bipolar
    control with a visible centre (`--track-bipolar`), or a draggable point on the curve. The number is
    shown next to the control, never in its place.
