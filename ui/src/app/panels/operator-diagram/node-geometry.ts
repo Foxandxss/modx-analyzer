@@ -177,6 +177,12 @@ export const DAYLIGHT_CRITERION = 6;
  * 0.0008 px per pixel of canvas height, so being ten pixels wrong here shifts the
  * assertion by under a hundredth of a pixel. What this arithmetic is sensitive to
  * is the inset and the row count, which is where the interesting failures are.
+ *
+ * **All three were read off the screen in #81** and all three hold: in the
+ * harness at 1280 × 800 the zone's chrome above and below the canvas comes to
+ * `12 + 18 + 8` px, with the head's box at 14 and its `--space-1` margin at 4.
+ * The term that did **not** hold is the legend's, which is `legend.ts`'s and is
+ * corrected there — it is worth 8 px of canvas and it reaches this function.
  */
 const ZONE_PAD_TOP = 12;
 const ZONE_HEAD_BAND = 18;
@@ -187,8 +193,10 @@ const CANVAS_MARGIN_Y = 8;
  *
  * The diagram's zone is a whole grid column of the body, so its height *is* the
  * body's, and the body never goes under `BODY_FLOOR`: below that the eight nodes
- * lose the figures inside them and the vistas lose their curve (#19), and what
- * gives way is the scroll rather than the drawing. Out of that the zone spends
+ * lose the figures inside them and the vistas lose their curve, and what
+ * gives way is the scroll rather than the drawing. That criterion is not #19's,
+ * whatever the constant used to say it was — `column-geometry.ts` has what that
+ * ticket does and does not contain. Out of that the zone spends
  * its chrome and the legend's band, and `.canvas` is `flex: 1` on what is left.
  *
  * Taken from `BODY_FLOOR` and not from its `NODES_FLOOR` term on purpose. The

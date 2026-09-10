@@ -9,6 +9,7 @@ import {
   WIDE_COLUMNS,
   WIDE_ROWS,
   wideLayout,
+  wideRowPitch,
 } from './wide-layout';
 
 /** A topology as the table sends it, with the depth and the branch computed alike. */
@@ -458,6 +459,69 @@ describe('the wide diagram layout', () => {
         );
       }
     }
+  });
+
+  /**
+   * The property the body's floor is anchored on (#81).
+   *
+   * The floor is measured on the **unfolded drawing at the deepest algorithm**
+   * and taken as the floor at every depth. That cut only works if the deepest
+   * algorithm really is the worst case — if a shallower one could ask for a
+   * taller card, a floor measured at the 66 would sit silently under what the
+   * drawing needs, with nothing failing.
+   *
+   * Two claims, and the second is what makes the first worth having. The card's
+   * height is decided by the row count and by **nothing else** — not by the
+   * patch, not by which operators are parked, not by the node class — and it
+   * never grows as the row count does. Together they say: measure at eight rows
+   * and you have measured every drawing there is.
+   *
+   * Asserted over the layout's own output rather than over `wideRowPitch()`
+   * alone, so what is checked is the card a node is given and not the arithmetic
+   * behind it; the parked variants are in because parking is the one thing that
+   * changes how many boxes are in the branches.
+   */
+  it('never gives a card more height at a greater depth, whatever the patch', () => {
+    /** Under three rows the node stops growing — the module's own `MIN_ROWS`. */
+    const STOPS_GROWING_AT = 3;
+    const classes = new Set<boolean>();
+    const byRows = new Map<number, number>();
+
+    for (const drawn of [ALGORITHM_2, ...THE_WORST_CASES]) {
+      for (const cut of [[], [1], [1, 2], [3, 5, 7]]) {
+        const { slots, squat } = wideLayout(drawn, cut);
+        const placed = slots.filter((box) => !cut.includes(box.operator));
+        const rows = Math.max(...placed.map((box) => box.row)) + 1;
+        const pitch = wideRowPitch(Math.max(rows, STOPS_GROWING_AT));
+        const where = `algorithm ${drawn.number}, cut ${cut}`;
+
+        // One card for the whole drawing, and it is the pitch's — not the
+        // patch's, and not the parked operators'.
+        for (const box of slots) {
+          expect(box.h, `${where}, Op${box.operator}`).toBe(pitch.nodeH);
+        }
+        // The class rides that number rather than deciding it: at a given row
+        // count a batten and a stacked node are the same box.
+        const seen = byRows.get(rows);
+        expect(seen ?? pitch.nodeH, where).toBe(pitch.nodeH);
+        byRows.set(rows, pitch.nodeH);
+        classes.add(squat);
+      }
+    }
+
+    // Both wide node classes are in the sweep above, so «whatever the patch» is
+    // a claim about the drawing and not about one of its two boxes.
+    expect(classes).toEqual(new Set([true, false]));
+
+    // Non-increasing over every row count the 88 can produce, so the deepest is
+    // the worst case and a floor measured there is a floor at every depth. Eight
+    // rows is the whole surface (#40).
+    for (let rows = 1; rows < WIDE_ROWS; rows += 1) {
+      expect(wideRowPitch(rows + 1).nodeH).toBeLessThanOrEqual(wideRowPitch(rows).nodeH);
+    }
+    // The 66's card, which is the one the floor was measured on: 33 of the 400
+    // units the box is authored in, which the harness drew at 22.9 px.
+    expect(wideRowPitch(WIDE_ROWS).nodeH).toBeCloseTo(33, 6);
   });
 
   it('draws the eight in operator order when no algorithm has been read', () => {

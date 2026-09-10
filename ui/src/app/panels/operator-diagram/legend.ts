@@ -44,7 +44,7 @@
  * hands it the three design widths. Below roughly 912 px of body the diagram's
  * lane drops under `DIAGRAM_W` in every shape, and down there the figures column
  * is still hard-coded to `FIGURES_W` and the grid's percentage-positioned nodes
- * are long past what #19 measured. The width under which the composición is not
+ * are long past anything anyone has looked at. The width under which the composición is not
  * claimed to work is #66; when it lands it goes into what calls
  * {@link legendRoom}, not here.
  */
@@ -141,18 +141,45 @@ const FONT_SIZE = 10;
 /** `.legend`'s `letter-spacing: 0.12em`. CSS adds it after every glyph. */
 const TRACKING = 0.12 * FONT_SIZE;
 
-/** `.legend__swatch`'s box, and the `--space-2` between it and its words. */
+/**
+ * `.legend__swatch`'s declared box, the rule drawn around it, and the
+ * `--space-2` between it and its words.
+ *
+ * **The rule is drawn outside the 22 × 14 and this module used to spend it
+ * nowhere.** Nothing sets `box-sizing: border-box` for the swatch, so each of
+ * the four `--rule-min` sides is added to the declared box and the screen draws
+ * **26 × 18**. Measured in the harness at 1280 × 800, off the rendered boxes:
+ * `.legend__swatch` 26 × 18, `.legend__row` 18, `.legend` **62 px against the
+ * 54 this module computed** (#81).
+ *
+ * That is not a cosmetic eight pixels. {@link LEGEND_H} is a term of
+ * `BODY_FLOOR`, so a legend that costs more than it says leaves the drawing less
+ * than the floor promises it: the canvas at the floor was **278 px** on screen
+ * where `floorCanvasHeight()` computed 286. The height is the term that reaches
+ * the floor; the width is the term that reaches #65's clipping check, and both
+ * were four pixels light per swatch.
+ *
+ * Kept as three declarations rather than folded into two totals because that is
+ * what the sheet declares: `width: 22px`, `height: 14px` and a border. A reader
+ * checking this against `operator-diagram.scss` has to find the same three
+ * numbers there, and the sum is what CSS does with them.
+ */
 const SWATCH_W = 22;
+const SWATCH_H = 14;
+const SWATCH_BORDER = 2;
 const SWATCH_GAP = 8;
+/** What one swatch actually occupies, rule and all. */
+const SWATCH_BOX_W = SWATCH_W + 2 * SWATCH_BORDER;
 /** `--space-5`, between two entries of the same row. */
 const ITEM_GAP = 20;
 /** `--space-1`, between the two rows. They are one legend, not two lists. */
 const ROW_GAP = 4;
 /**
- * A row is as tall as its swatch: at `--text-micro` the line box is shorter, and
- * `.legend__row` centres them.
+ * A row is as tall as its swatch: at `--text-micro` the line box is shorter (11
+ * px against 18), and `.legend__row` centres them. Its swatch, drawn — see
+ * {@link SWATCH_W}.
  */
-const ROW_H = 14;
+const ROW_H = SWATCH_H + 2 * SWATCH_BORDER;
 /** `.legend`'s own band: the `--rule-min` rule above it, and its padding. */
 const RULE = 2;
 const PAD_TOP = 9;
@@ -195,7 +222,7 @@ export function textWidth(words: string): number {
 
 /** How wide one row's content comes out, swatches and gaps included. */
 export function legendRowWidth(row: readonly LegendEntry[]): number {
-  const items = row.reduce((w, e) => w + SWATCH_W + SWATCH_GAP + textWidth(e.words), 0);
+  const items = row.reduce((w, e) => w + SWATCH_BOX_W + SWATCH_GAP + textWidth(e.words), 0);
   return items + ITEM_GAP * (row.length - 1);
 }
 
@@ -209,5 +236,13 @@ export function legendHeight(rows: number): number {
   return RULE + PAD_TOP + rows * ROW_H + (rows - 1) * ROW_GAP + PAD_BOTTOM;
 }
 
-/** The band it takes as it actually is, which is what the canvas does not get. */
+/**
+ * The band it takes as it actually is, which is what the canvas does not get.
+ *
+ * **62 px, and it is an input to the body's floor**, not only to this panel:
+ * `column-geometry.ts` spends it twice — once raising `BODY_FLOOR` and once
+ * subtracting it back out at `floorCanvasHeight()` — so it is named at both
+ * sites rather than left as a term nobody traces. It was 54 here until #81 read
+ * the rendered band; see {@link SWATCH_W} for the four pixels per swatch.
+ */
 export const LEGEND_H = legendHeight(LEGEND.length);

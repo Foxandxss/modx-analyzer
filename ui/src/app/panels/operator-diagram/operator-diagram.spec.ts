@@ -16,6 +16,7 @@ import { Clock } from '../../provenance/clock';
 import { Composition } from '../../shell/composition';
 import { staleAfterMs } from '../../provenance/freshness';
 import { DEAD_MARK } from '../../provenance/provenance';
+import { FOLDING } from './folding';
 import { CANVAS_H, CANVAS_W } from './layout';
 import { LEGEND } from './legend';
 import {
@@ -58,7 +59,7 @@ function composition(wide: boolean) {
   };
 }
 
-async function renderDiagram({ wide = false } = {}) {
+async function renderDiagram({ wide = false, folding = true } = {}) {
   const backend = new FakeBackendGateway();
   const room = composition(wide);
   // The clock is handed over rather than left running: the thing under test is a
@@ -71,6 +72,9 @@ async function renderDiagram({ wide = false } = {}) {
       { provide: BACKEND_GATEWAY, useValue: backend },
       { provide: Clock, useValue: clock },
       { provide: Composition, useValue: room },
+      // The bench's switch, handed over the same way (`folding.ts`). The app
+      // never sees it off; #81 measures the floor on the drawing it makes.
+      { provide: FOLDING, useValue: signal(folding).asReadonly() },
     ],
   });
   const fixture = TestBed.createComponent(OperatorDiagram);
@@ -583,6 +587,74 @@ describe('OperatorDiagram', () => {
     expect(fillOf(stacked)).toEqual({ width: '75%', height: '100%' });
   });
 
+  /**
+   * The claim the body's floor is anchored on: **folding can only ever buy
+   * margin** (#81).
+   *
+   * The floor is measured on the unfolded drawing at the deepest algorithm and
+   * taken as the floor at every depth. That cuts the loop — a floor measured on
+   * the folded drawing sets a threshold that shallows the binding case that
+   * lowers the floor again — but only while a folded node is never *taller* than
+   * the unfolded one whose facts it collapses, at the same row count. It is
+   * exactly the shape of a fact that stops being true quietly: a band that grows
+   * a second line, a stamp that needs its own row, and the anchor sits silently
+   * below the real floor with nothing failing.
+   *
+   * **Written against the switch and not against the fold**, which is why it can
+   * be here before #82 is. `FOLDING` is the seam the fold reads (`folding.ts`),
+   * so what this compares is the drawing the app makes against the drawing the
+   * bench makes, at the same algorithm — the two are equal today, because the
+   * only thing folding changes so far is an attribute, and this goes red the day
+   * a folded band comes out taller than the card it replaced.
+   *
+   * Both wide classes, forced by algorithm number: the 66 is eight rows and a
+   * batten, the 2 is three rows and a stacked node, and the 1 is the shallowest
+   * drawing there is. A predicate could drift; a number cannot.
+   */
+  it('never gives a node a taller card with folding on than with it off', async () => {
+    const classes = new Set<boolean>();
+    for (const drawn of [ALGORITHM_66, ALGORITHM_2, ALGORITHM_1]) {
+      const cards = [];
+      for (const folding of [false, true]) {
+        // Two drawings in one test, so the module is torn down between them: the
+        // switch is a provider, and the whole claim is that it is the only thing
+        // that differs.
+        TestBed.resetTestingModule();
+        const { backend, fixture, host } = await renderDiagram({ wide: true, folding });
+        backend.topology.set(drawn);
+        // The patch the floor was measured on, and nothing at zero: a parked
+        // operator leaves the branches and would draw a shallower 66 than the
+        // one the anchor is about.
+        backend.operators.set(theBuildsOwnPatch(NOW));
+        await fixture.whenStable();
+
+        cards.push(
+          nodes(host).map((node) => ({
+            operator: node.dataset['operator'],
+            row: percent(node.style.top),
+            height: percent(node.style.height),
+            squat: node.classList.contains('node--squat'),
+          })),
+        );
+      }
+      const [unfolded, folded] = cards;
+
+      for (const [index, node] of folded.entries()) {
+        const where = `algorithm ${drawn.number}, Op${node.operator}`;
+        expect(node.height, where).toBeLessThanOrEqual(unfolded[index].height);
+        // And the positions do not fold: depth is height, so an operator that
+        // gave up its facts is still above what it modulates.
+        expect(node.row, where).toBe(unfolded[index].row);
+        expect(node.operator, where).toBe(unfolded[index].operator);
+        classes.add(node.squat);
+      }
+    }
+    // Both wide classes are in the sweep, so this is about the drawing and not
+    // about whichever box the deepest algorithm happens to use: the 66 at eight
+    // rows is a batten, the 1 at one row is a stacked node.
+    expect(classes).toEqual(new Set([true, false]));
+  });
+
   it('measures the fill against the track and never against the card', async () => {
     // The claim is about pixels and jsdom lays nothing out, so what the rendered
     // node can say is that the fill's box is the *track*'s and the track is the
@@ -600,11 +672,16 @@ describe('OperatorDiagram', () => {
     expect(track?.style.left).toBe('0px');
 
     // 71 against a ceiling of 99 is 28 % of the **track**, which on the smallest
-    // card the grid draws is about 15.7 px of gap — and that gap is the whole
+    // card the grid draws is about 15.4 px of gap — and that gap is the whole
     // comparison. Against the card it would be a fifth wider and its far end
     // would be the border the ceiling has to be drawn against (#67).
+    //
+    // It was 15.7 until #81 read the legend's rendered band: the legend takes 8
+    // px more than this build was spending, the floor grew by 4 to keep what the
+    // 360 promised the canvas, and the canvas at the floor came out 4 px shorter
+    // than the model said. Every figure derived through that scale moved with it.
     const gap = ((99 - 71) / 100) * trackLength(narrowestGridCard(), 'height');
-    expect(gap).toBeCloseTo(15.7, 1);
+    expect(gap).toBeCloseTo(15.4, 1);
     expect(gap).toBeLessThan(((99 - 71) / 100) * narrowestGridCard());
   });
 
@@ -879,7 +956,12 @@ describe('OperatorDiagram', () => {
     // against the wide composición's card: that card is three times smaller and
     // it no longer carries Level in its height, so a `Math.min` across the two
     // would be comparing a measurement with a dimension that stopped measuring.
-    expect(narrowestGridCard()).toBeCloseTo(68.0, 1);
+    //
+    // 67.1 and not the 68.0 that shipped: the canvas at the floor is 282 px and
+    // not 286, because the legend's band is 62 px and not 54 (#81). The inset it
+    // earns is 8 either way, and the pixel-at-a-time check below is what says so
+    // rather than the number itself.
+    expect(narrowestGridCard()).toBeCloseTo(67.1, 1);
     expect(narrowestWideCard()).toBeCloseTo(113.0, 1);
     expect(narrowestWideCard()).toBeGreaterThan(narrowestGridCard());
 

@@ -145,20 +145,21 @@ const STUB_BAR = 34;
  * How tall a row is at a given row count, and how much of that the node gets.
  *
  * It was exported so that `node-geometry.ts` could ask this same question to
- * find the smallest card the layout draws, and {@link wideLayout} calls it
- * rather than repeating it so that the two could not answer differently. **That
- * caller has gone**: this composición carries Level along the width now, so the
- * card that has to be earned against is the one {@link MARGIN_X} names and this
- * height is no longer a Level scale. It goes back to module-private rather than
- * standing as an export nobody imports — #81 measures the body's floor on the
- * unfolded drawing and will want it again, and one keyword is a cheaper thing to
- * carry than an export whose stated reason is a caller that left.
+ * find the smallest card the layout draws; that caller left with the axis, and
+ * the export went module-private with it. **#81 is the caller it was said to be
+ * waiting for**, and what it wants is not a Level scale but the property the
+ * body's floor is anchored on: the deepest algorithm is the worst case, so a
+ * floor measured there is a floor at every depth. That is a claim about *this*
+ * function — `nodeH` is decided by the row count and by nothing else, and it
+ * never grows with one — and a spec cannot make it without being handed the
+ * function. {@link wideLayout} calls it rather than repeating it, so the two
+ * cannot answer differently and the assertion is about what the drawing does.
  *
  * `viewBox` units, like everything else in this module. What the card measures
  * on screen is that share of the canvas's own rendered height, which is
  * `node-geometry.ts`'s half of the arithmetic and not this one's.
  */
-function wideRowPitch(slotRows: number): {
+export function wideRowPitch(slotRows: number): {
   readonly pitchY: number;
   readonly rowGap: number;
   readonly nodeH: number;

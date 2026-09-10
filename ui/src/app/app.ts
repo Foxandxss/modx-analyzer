@@ -139,16 +139,21 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
       transition: grid-template-columns var(--dur-settle) var(--ease-instrument);
       /* El suelo va en la FILA, no en el cuerpo: el cuerpo se encoge con la
          ventana —así que en reposo no sobra nada y no hay barra— pero su fila
-         nunca baja de 378 px. Ese número NO es el de #19: #19 midió 360, que es
-         donde los ocho nodos dejan de tener números dentro y las vistas se
-         quedan sin curva, y lo midió con la leyenda a una fila. La leyenda son
-         dos desde #65 y su banda sale del lienzo, así que el diagrama necesita
-         esos 18 px de vuelta para seguir cumpliendo lo que 360 prometía. Las
-         vistas no los necesitaban: por eso BODY_FLOOR se DERIVA de las dos
-         medidas por separado en column-geometry.ts, y por eso este 378 se
-         cambia allí en el mismo commit. Cuando una tarjeta se lleva el alto, lo
-         que scrollea es esta caja y sólo ella. */
-      grid-template-rows: minmax(378px, 1fr);
+         nunca baja de 382 px. Ese número NO es una medida: la medida de la que
+         sale es 360 —donde los ocho nodos dejan de tener números dentro y las
+         vistas se quedan sin curva, con la leyenda a una fila— y NO la trae el
+         ticket que se citaba: el #19 es «Text collides at full size» y no lleva
+         ninguna medida de alto (#81, y la primera medida de verdad está en
+         docs/results/2026-09-10-el-suelo-del-cuerpo.md). La leyenda son dos
+         filas desde #65 y su banda sale del lienzo, así que el diagrama necesita
+         esos 22 px de vuelta para seguir cumpliendo lo que 360 prometía —22 y no
+         18: el filete del cuadrito de la leyenda se dibuja FUERA de su caja
+         declarada, y esos 4 px por fila los cobraba la pantalla y no los pagaba
+         el modelo—. Las vistas no los necesitaban: por eso BODY_FLOOR se DERIVA
+         de las dos medidas por separado en column-geometry.ts, y por eso este
+         382 se cambia allí en el mismo commit. Cuando una tarjeta se lleva el
+         alto, lo que scrollea es esta caja y sólo ella. */
+      grid-template-rows: minmax(382px, 1fr);
       overflow-y: auto;
       /* column-gap NO está aquí: lo ata bodyGap() en column-geometry.ts, que es
          el único sitio donde se decide cuánto mide este filete. Hay una sola

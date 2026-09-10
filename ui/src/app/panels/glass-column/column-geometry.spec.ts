@@ -133,17 +133,45 @@ describe('columnGeometry', () => {
     expect(body.height).toBe(BODY_FLOOR);
   });
 
-  it('leaves the drawing the height #19 measured, whatever the legend costs', () => {
-    // The floor is `minmax(378px, 1fr)` in app.ts, and 378 is not #19's number.
-    // #19 measured 360 with the legend at one row; the legend is two rows since
-    // #65 and its band comes out of the canvas, so the floor carries the extra.
+  it('leaves the drawing the height the 360 promised, whatever the legend costs', () => {
+    // The floor is `minmax(382px, 1fr)` in app.ts, and 382 is not the 360.
+    // 360 was taken with the legend at one row; the legend is two rows since #65
+    // and its band comes out of the canvas, so the floor carries the extra.
+    //
+    // The 360 is cited to #19 nowhere any more, because #19 is "Text collides at
+    // full size" and has no height in it at all (#81). What is left is an
+    // unwitnessed number and a relation that is worth keeping either way.
     //
     // The claim is the relation, not the number: whatever the legend takes, the
-    // canvas is left with exactly what it was left with when 360 was measured.
+    // canvas is left with exactly what it was left with when 360 was taken.
     // Written this way the floor follows a future change to the legend's rows
     // instead of becoming a constant nobody can re-earn.
     expect(BODY_FLOOR - LEGEND_H).toBe(360 - legendHeight(1));
-    expect(BODY_FLOOR).toBe(378);
+    expect(BODY_FLOOR).toBe(382);
+  });
+
+  /**
+   * The legend's band is an input to the floor, and it is the one that moved.
+   *
+   * The floor was 378 for as long as this module believed the legend's band was
+   * 54 px. It is 62 on screen — the swatch's rule is drawn outside its declared
+   * box, four pixels per swatch — so the canvas at the floor was 278 px where
+   * `floorCanvasHeight()` computed 286, and every figure derived through that
+   * scale was 3 % optimistic (#81).
+   *
+   * Asserted as the relation and not as 62: the number is `legend.ts`'s to hold,
+   * and a copy of it here is the second declaration that lets the two drift. What
+   * this owns is that a pixel the legend takes is a pixel the floor grows by, in
+   * both directions, so the term can never go quietly unspent again.
+   */
+  it('is decided by the drawing’s half, so the legend’s band reaches it', () => {
+    // Which of the two halves wins is what makes the legend an input at all: the
+    // floor is a `Math.max`, and if the vistas' 360 were the larger the legend
+    // could take a whole extra row without the floor moving a pixel — and the
+    // canvas would silently lose it. Asserted as the comparison rather than as
+    // 62, whose one declaration is `legend.ts`'s.
+    expect(360 - legendHeight(1) + LEGEND_H).toBeGreaterThan(360);
+    expect(BODY_FLOOR).toBe(360 - legendHeight(1) + LEGEND_H);
   });
 
   it('gives the diagram exactly DIAGRAM_W with the ranuras open', () => {

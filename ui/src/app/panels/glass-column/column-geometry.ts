@@ -116,26 +116,67 @@ export const DRAWER_GRAB = 52;
 export const DESIGN_BODY_W = 1280;
 
 /**
- * #19's two halves. Someone drove the window down and watched two different
- * things stop saying what they say, and both landed on the same body row of
- * 360 px — measured when the legend was one row.
+ * The 360 both halves of the floor stand on, and **the ticket it cites does not
+ * contain it.**
  *
- * They are two constants and not one because only one of them grew. The legend
- * went to two rows (#65) and the band it takes comes out of the canvas, so the
- * diagram needs the extra back; the vistas never needed it and nothing here
- * should quietly say they did.
+ * The comment here said someone drove the window down and watched two different
+ * things stop saying what they say, and cited #19. GitHub **#19 is «Text
+ * collides at full size»** — the struck-through name under the `ALG` chip and
+ * `TEORÍA` over `SONDEADO` — and its three acceptance criteria are legibility
+ * ones at the *design* window. It contains no height measurement. 360 appears in
+ * no results document and nowhere in the design handoff; its only witness was
+ * this comment, pointing at a ticket that does not have it (#81).
+ *
+ * So the 360 is left standing and its provenance is written down instead of
+ * invented: it is an **unwitnessed** number, and #81's measurement is a
+ * **first** one that supersedes nothing — see {@link BODY_FLOOR}. The two
+ * constants stay two because only one of them grew: the legend went to two rows
+ * (#65) and its band comes out of the canvas, so the diagram needs the extra
+ * back; the vistas never needed it and nothing here should quietly say they did.
  */
 const VIEWS_FLOOR = 360;
-/** The diagram's half of #19, with the one-row legend's band taken back out. */
+/** The diagram's half of the 360, with the one-row legend's band taken back out. */
 const NODES_FLOOR = 360 - legendHeight(1);
 
 /**
- * `grid-template-rows: minmax(378px, 1fr)` in `app.ts`: under this the body
+ * `grid-template-rows: minmax(382px, 1fr)` in `app.ts`: under this the body
  * scrolls.
  *
  * Derived, so it follows the legend the next time its row count changes rather
- * than becoming a number nobody can re-earn. 360 was measured; 378 is that
- * measurement plus the legend's second row.
+ * than becoming a number nobody can re-earn. The relation is the claim and the
+ * number is the consequence: **whatever the legend takes, the canvas is left
+ * with what it was left with when 360 was measured.**
+ *
+ * ## The legend is an input to this, twice
+ *
+ * {@link LEGEND_H} is added here and subtracted again at `floorCanvasHeight()`,
+ * so the drawing only ever sees the difference — and the floor is wrong by
+ * exactly as much as the legend's band is wrong by. #81 found it wrong by 8 px:
+ * the swatch's rule is drawn outside its declared box, so the band the screen
+ * gives the legend is 62 px and this module was spending 54. The floor is 382
+ * for that reason and not because a window was dragged four pixels further.
+ *
+ * ## What #81 measured, and why this is not that number
+ *
+ * The measurement is at `docs/results/2026-09-10-el-suelo-del-cuerpo.md`, taken
+ * in the harness with the fold switched off, on the deepest algorithm — the
+ * anchor the round asked for.
+ *
+ * - **Criterion.** A gap holds its arrowhead plus a visible segment, and a node
+ *   holds its five facts.
+ * - **Geometry.** Wide composición, pinned and rail, Chrome at 1280 CSS px wide
+ *   and DPR 1, folding off, algorithm **66** — eight rows, the batten class.
+ * - **Patch, as Levels.** `90 · 90 · 71 · 90 · 90 · 85 · 90 · 99`, the bench's.
+ * - **What came back.** The five facts need a body of **561 px**; the gap needs
+ *   about **1 300**. The window the app ships gives the body **534**.
+ *
+ * Neither is this floor, and the reason is written here rather than left for the
+ * next reader to rediscover: **both are criteria the fold resolves** (#82), and
+ * clamping the window at either would put the app's own design window under its
+ * floor — the body would scroll at rest, on every machine, to protect a drawing
+ * that after #82 is never drawn. What the anchor buys is what it was asked to
+ * buy: it is above every shallower drawing's need, so the fold can only ever
+ * buy margin, and the threshold derived at this floor cannot spiral.
  */
 export const BODY_FLOOR = Math.max(NODES_FLOOR + LEGEND_H, VIEWS_FLOOR);
 
@@ -184,8 +225,10 @@ export function columnShape(filled: readonly [boolean, boolean], pinned: boolean
  * `room` is the whole screen below the header band — what the body, the bottom
  * strip and the drawer's handle divide between them. The body is what is left of
  * it, and it never goes under {@link BODY_FLOOR}: below that the eight nodes lose
- * the figures inside them and the vistas lose their curve (#19), so what gives
- * way is the scroll and not the drawing.
+ * the figures inside them and the vistas lose their curve, so what gives way is
+ * the scroll and not the drawing. That sentence is the floor's criterion and it
+ * is not #19's: see {@link BODY_FLOOR} for what that ticket does and does not
+ * contain.
  */
 export function columnGeometry(state: ColumnState, room: Box): Geometry {
   const shape = columnShape(state.filled, state.pinned);
@@ -235,8 +278,9 @@ export function cycleAspect(frame: Box, cycles: number = SCOPE_CYCLES): number {
  *
  * **It is not floored.** Under about 910 px of body it drops below
  * {@link DIAGRAM_W} in every shape, and down there {@link FIGURES_W} is still
- * hard-coded and the grid's percentage-positioned nodes are long past what #19
- * measured. The height has a floor with a measurement behind it; the width has
+ * hard-coded and the grid's percentage-positioned nodes are long past anything
+ * anyone has looked at. The height has a floor with a measurement behind it — it
+ * has had one since #81 — and the width has
  * none, and one picked to make an arithmetic test pass would be a constant
  * earned by the test instead of by a measurement. So callers state which widths
  * they are claiming for, and the floor is #66.

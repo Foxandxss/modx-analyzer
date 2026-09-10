@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DESIGN_BODY_W, diagramLane, type ColumnShape } from '../glass-column/column-geometry';
-import { LEGEND, legendRoom, legendRowWidth, textWidth } from './legend';
+import { LEGEND, legendHeight, legendRoom, legendRowWidth, textWidth } from './legend';
 
 /**
  * The three shapes the column takes, at the one body width the app is designed
@@ -61,6 +61,38 @@ describe('the diagram legend', () => {
     const room = legendRoom(diagramLane('ranuras', DESIGN_BODY_W));
 
     expect(legendRowWidth(everything)).toBeGreaterThan(room);
+  });
+
+  /**
+   * The swatch's rule is drawn **outside** its declared box, and both of this
+   * module's numbers used to spend it nowhere.
+   *
+   * `.legend__swatch` is `22 × 14` with a `--rule-min` border and no
+   * `box-sizing: border-box` anywhere near it, so what the screen gives it is
+   * `26 × 18`. Measured in the harness at 1280 × 800, off the rendered boxes:
+   * swatch 26 × 18, row 18, legend 62 px against the 54 this module computed
+   * (#81).
+   *
+   * The height is the half that reaches the body's floor — `LEGEND_H` is a term
+   * of `BODY_FLOOR` — and the width is the half that reaches #65's clipping
+   * check, which was passing with four pixels per swatch it had not counted.
+   * Both are asserted here, because neither can be read off `legendHeight()`
+   * alone: they are the same 2 px seen from two directions.
+   */
+  describe('spends the rule drawn around the swatch', () => {
+    it('gives a row the swatch’s drawn height, not its declared one', () => {
+      // One row plus the gap between rows. It was 18 while the border went
+      // unspent; the four pixels are the two rules above and below the swatch.
+      expect(legendHeight(2) - legendHeight(1)).toBe(22);
+      expect(legendHeight(2)).toBe(62);
+    });
+
+    it('gives an entry the swatch’s drawn width, not its declared one', () => {
+      const [entry] = LEGEND[0];
+      // 26 of drawn swatch and 8 of `--space-2`, which is the whole of what an
+      // entry costs beyond its words.
+      expect(legendRowWidth([entry]) - textWidth(entry.words)).toBe(34);
+    });
   });
 
   describe('measuring words', () => {
