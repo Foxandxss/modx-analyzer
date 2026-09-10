@@ -7,6 +7,10 @@
   background: var(--surface-base);
 }
 
+/* Geometría fija: las dos ranuras se reparten la columna por igual pase lo que
+   pase dentro. Una ranura vacía es cristal vacío —conserva su mitad— y no sitio
+   que el otro panel se lleva: un panel que cambia de tamaño según lo que tenga
+   al lado es una forma que hay que volver a aprender. */
 .view {
   flex: 1;
   min-height: 0;
@@ -39,6 +43,7 @@
 .view__artefact,
 .view__alive,
 .view__title,
+.view__axes,
 .view__readout {
   flex-shrink: 0;
   white-space: nowrap;
@@ -84,6 +89,14 @@
   font-family: var(--font-num);
   font-size: var(--text-micro);
   letter-spacing: 0.06em;
+  color: var(--ink-inert);
+}
+
+// Los ejes del waterfall, la única leyenda que tiene el dibujo.
+.view__axes {
+  font-family: var(--font-num);
+  font-size: var(--text-micro);
+  letter-spacing: 0.08em;
   color: var(--ink-inert);
 }
 

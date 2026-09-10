@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AudioService } from './audio/audio-service';
+import { BottomStrip } from './panels/bottom-strip/bottom-strip';
 import { FiguresColumn } from './panels/figures-column/figures-column';
+import { GlassColumn } from './panels/glass-column/glass-column';
 import { OperatorDiagram } from './panels/operator-diagram/operator-diagram';
-import { SignalViews } from './panels/signal-views/signal-views';
-import { TabPanel } from './panels/tab-panel/tab-panel';
 import { AlertStrip } from './shell/alert-strip/alert-strip';
 import { BenchDrawer } from './shell/bench-drawer/bench-drawer';
 import { Composition } from './shell/composition';
@@ -29,9 +29,9 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
     RereadStrip,
     UnhappyCards,
     OperatorDiagram,
-    SignalViews,
+    GlassColumn,
     FiguresColumn,
-    TabPanel,
+    BottomStrip,
     BenchDrawer,
   ],
   template: `
@@ -42,17 +42,22 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
     <app-unhappy-cards />
     <app-reread-strip />
     <!-- Dos composiciones de los mismos elementos, y lo que elige entre ellas es
-         si hay una Medida avalada. Las dos vistas vivas no se encogen: se van,
-         porque un panel de 0 px sigue pintando 33 veces por segundo algo que
-         nadie mira. -->
+         el estado de las dos Ranuras: nada de esta pantalla se mueve ya que no
+         haya movido el pianista. La columna no se encoge: se va, porque un panel
+         de 0 px sigue pintando 33 veces por segundo algo que nadie mira. -->
     <div class="body" [class.body--wide]="wide()">
       <app-operator-diagram />
       @if (panels()) {
-        <app-signal-views />
+        <app-glass-column />
       }
       <app-figures-column />
     </div>
-    <app-tab-panel />
+    <!-- La tira de abajo existe cuando tiene algo dentro. Con el waterfall en una
+         ranura no queda ni la caja: sus 156 px vuelven al cuerpo, que es lo que
+         hace que no haya nada dibujado a un tamaño al que no se puede leer. -->
+    @if (strip()) {
+      <app-bottom-strip />
+    }
     <!-- Los cinco instrumentos con los que se mide la sesión, no parte del
          diseño: 52 px de asa, cerrada, y cada chip con el número del ticket que
          la retira. Se abre POR ENCIMA de la tira de abajo, así que lo que hay
@@ -81,8 +86,8 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
      * problema se leía perfecta encima (#19). Una tarjeta sola cuesta lo mismo
      * que dos: las tarjetas van en dos columnas siempre.
      *
-     * El waterfall y las lecturas de abajo no se mueven nunca: lo que cede es
-     * el cuerpo, y lo que no cabe dentro del cuerpo se baja con el dedo ahí
+     * La tira de abajo, cuando la hay, no cede altura: lo que cede es el
+     * cuerpo, y lo que no cabe dentro del cuerpo se baja con el dedo ahí
      * dentro. La app entera no scrollea. */
     :host > :not(.body) {
       flex-shrink: 0;
@@ -123,22 +128,22 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
     }
 
     /* Cada panel en su carril por nombre y no por orden de llegada: sin esto, el
-       día que las vistas vivas no están la columna de cifras se metería en el
+       día que la columna de cristal no está, la columna de cifras se metería en el
        carril que acaba de cerrarse. */
     app-operator-diagram {
       grid-column: 1;
     }
-    app-signal-views {
+    app-glass-column {
       grid-column: 2;
     }
     app-figures-column {
       grid-column: 3;
     }
 
-    /* Nada medido: el carril de en medio se cierra y el diagrama se lleva su
-       holgura entera —los 368 px de las dos vistas vivas, 1 070 px a 1280 de
-       ventana—. La columna de cifras se queda: es la que dice qué llenaría la
-       medida que no hay (#33), y este es exactamente el estado en que lo dice.
+    /* Las dos ranuras vacías, o el pin echado: el carril de en medio se cierra y
+       el diagrama se lleva su holgura entera —los 368 px de la columna de
+       cristal, 1 070 px a 1280 de ventana—. La columna de cifras se queda: es la
+       que dice qué llenaría la medida que no hay (#33).
        El filete se parte por la mitad porque aquí hay dos huecos pegados con un
        carril de 0 px entre ellos, y dos filetes juntos se leen como una regla
        del doble de gruesa. */
@@ -151,9 +156,12 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
 export class App {
   private readonly composition = inject(Composition);
 
-  /** The algorithm has the room, and the two live panels are not on screen. */
+  /** The algorithm has the room, and the glass column is not on screen. */
   protected readonly wide = this.composition.wide;
   protected readonly panels = this.composition.panels;
+
+  /** The waterfall is down here, or it is up in a ranura and there is no strip. */
+  protected readonly strip = this.composition.strip;
 
   constructor() {
     // The audio bridge is opened from the screen that draws it, once. Nothing

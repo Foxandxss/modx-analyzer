@@ -8,6 +8,7 @@ import { anchorAnswers, anchorWatching } from './backend/anchor-driver';
 import { BACKEND_GATEWAY, noOperators } from './backend/backend-gateway';
 import { FakeBackendGateway } from './backend/fake-backend-gateway';
 import { DEAD_MARK } from './provenance/provenance';
+import { Composition } from './shell/composition';
 
 /** 50 bloques of 1 323 frames: 66 150 samples, the first window with room. */
 const BLOCKS_FOR_A_MEDIDA = 50;
@@ -32,8 +33,9 @@ async function renderApp() {
     host: fixture.nativeElement as HTMLElement,
     /**
      * A capture the ancla vouched for at both ends of its window, which is the
-     * only kind that reaches the screen — and, since #41, the only thing that
-     * gives the two live panels their room back.
+     * only kind that reaches the screen. Since the ranuras decide the
+     * composición it moves no panel at all, which is what one of these tests is
+     * for.
      */
     async capture(): Promise<void> {
       for (let sequence = 0; sequence < BLOCKS_FOR_A_MEDIDA; sequence += 1) {
@@ -78,6 +80,10 @@ async function openChip(
   await fixture.whenStable();
 }
 
+// The pin and the pair are both preferences, and both are written through the
+// moment they are touched: nothing of one test leaks into the next.
+afterEach(() => localStorage.clear());
+
 describe('App (4a)', () => {
   it('has the whole shape of the screen from the first frame', async () => {
     const { host } = await renderApp();
@@ -85,32 +91,36 @@ describe('App (4a)', () => {
     expect(host.querySelector('app-header')).not.toBeNull();
     expect(host.querySelector('app-operator-diagram')).not.toBeNull();
     expect(host.querySelector('app-figures-column')).not.toBeNull();
-    expect(host.querySelector('app-tab-panel')).not.toBeNull();
+    expect(host.querySelector('app-bottom-strip')).not.toBeNull();
   });
 
   /**
    * The main screen is two compositions of the same elements, and what chooses
-   * between them is the state that matters most: whether there is a capture.
+   * between them is the state of the two Ranuras. The factory pair is `SCOPE`
+   * and empty, so the app opens **narrow** — the inversion ADR-0007 records.
    */
-  it('opens with the algorithm holding the room and the two live panels away', async () => {
+  it('opens on the factory pair, with the scope in the column', async () => {
     const { host } = await renderApp();
 
-    expect(host.querySelector('.body')?.classList.contains('body--wide')).toBe(true);
-    // Not shrunk to nothing: absent. A panel of 0 px is still painting a curve
-    // 33 times a second for nobody.
-    expect(host.querySelector('app-signal-views')).toBeNull();
+    expect(host.querySelector('.body')?.classList.contains('body--wide')).toBe(false);
+    expect(host.querySelector('app-glass-column app-scope canvas')).not.toBeNull();
   });
 
-  it('gives the panels their room back when a vouched capture lands', async () => {
+  /**
+   * The retired behaviour, and the one this session was asked for: nothing on
+   * this screen moves that the pianist did not move.
+   */
+  it('moves nothing in the composition when a vouched capture lands', async () => {
     const { host, capture } = await renderApp();
 
     await capture();
 
     expect(host.querySelector('.body')?.classList.contains('body--wide')).toBe(false);
-    expect(host.querySelector('app-signal-views')).not.toBeNull();
+    expect(host.querySelector('app-glass-column app-scope canvas')).not.toBeNull();
+    expect(host.querySelector('app-bottom-strip')).not.toBeNull();
   });
 
-  it('pins the big composition with KEEP IT BIG, and the panels stay away', async () => {
+  it('pins the big composition with KEEP IT BIG, and the column goes away', async () => {
     const { host, fixture, capture } = await renderApp();
     const pin = host.querySelector<HTMLButtonElement>('.pin')!;
     expect(pin.textContent?.trim()).toBe('KEEP IT BIG');
@@ -121,8 +131,30 @@ describe('App (4a)', () => {
 
     expect(pin.getAttribute('aria-pressed')).toBe('true');
     expect(host.querySelector('.body')?.classList.contains('body--wide')).toBe(true);
-    expect(host.querySelector('app-signal-views')).toBeNull();
-    localStorage.clear();
+    // Not shrunk to nothing: absent. A panel of 0 px is still painting a curve
+    // 33 times a second for nobody.
+    expect(host.querySelector('app-glass-column')).toBeNull();
+  });
+
+  /**
+   * One signal is never drawn twice in one frame, and the emptied strip hands
+   * its 156 px back rather than staying as a box holding a panel that moved out.
+   */
+  it('takes the bottom strip off screen when a ranura holds the waterfall', async () => {
+    const { host, fixture } = await renderApp();
+    const composition = TestBed.inject(Composition);
+
+    composition.choose(1, 'WATERFALL');
+    await fixture.whenStable();
+
+    expect(host.querySelectorAll('app-waterfall')).toHaveLength(1);
+    expect(host.querySelector('app-bottom-strip')).toBeNull();
+    expect(host.querySelector('app-glass-column app-waterfall')).not.toBeNull();
+
+    composition.choose(1, null);
+    await fixture.whenStable();
+
+    expect(host.querySelector('app-bottom-strip app-waterfall')).not.toBeNull();
   });
 
   it('draws the eight operator nodes with their shape kept and their number lost', async () => {
@@ -183,8 +215,8 @@ describe('App (4a)', () => {
 
   it('takes every polled figure to the dash when the Performance changes underneath', async () => {
     const { backend, fixture, host, capture } = await renderApp();
-    // With a capture on screen the two live panels are drawn, which is what lets
-    // this test check the one figure that survives the change.
+    // The glass column is on screen on the factory pair alone, which is what
+    // lets this test check the one figure that survives the change.
     await capture();
     backend.anchorReads('Init Normal (FM-X)');
     backend.patch.update((patch) => ({
@@ -223,7 +255,7 @@ describe('App (4a)', () => {
 
     // And the one thing that never dies says so, because it is the only figure
     // left standing on a screen that just went to dashes.
-    expect(host.querySelector('app-signal-views')?.textContent).toContain(
+    expect(host.querySelector('app-glass-column')?.textContent).toContain(
       'STILL TRUE · THIS IS AUDIO',
     );
   });
@@ -276,13 +308,15 @@ describe('App (4a)', () => {
     expect(host.querySelector('app-sweep-readout')).not.toBeNull();
     // The strip it opened over is still there behind it: a drawer that replaced
     // the screen would take away the thing the instrument is measuring.
-    expect(host.querySelector('app-tab-panel')).not.toBeNull();
+    expect(host.querySelector('app-bottom-strip')).not.toBeNull();
   });
 
-  it('opens on the waterfall, the default the moment a note is live', async () => {
+  it('holds the waterfall in the bottom strip, with nothing to choose between', async () => {
     const { host } = await renderApp();
 
-    const selected = host.querySelector('.tabs__tab--on');
-    expect(selected?.textContent?.trim()).toBe('WATERFALL');
+    expect(host.querySelector('app-bottom-strip .head__title')?.textContent?.trim()).toBe(
+      'WATERFALL',
+    );
+    expect(host.querySelector('[role="tab"]')).toBeNull();
   });
 });

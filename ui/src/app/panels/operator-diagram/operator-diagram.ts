@@ -132,9 +132,10 @@ export class OperatorDiagram {
   /**
    * `KEEP IT BIG`, drawn here because this is the panel it is about.
    *
-   * It is a **pin and not a mode**: with it up the composition is decided by
-   * whether a capture exists, which is the state the app already holds and the
-   * bookkeeping nobody should be asked to do.
+   * It is a **pin and not a mode**: with it up the composition is decided by the
+   * two Ranuras, and pressing it holds the wide drawing without touching the
+   * pair the pianist chose. Emptying and refilling two ranuras is four presses;
+   * this is one, and letting it up gives the pair back exactly.
    */
   protected readonly pinned = this.composition.pinned;
 

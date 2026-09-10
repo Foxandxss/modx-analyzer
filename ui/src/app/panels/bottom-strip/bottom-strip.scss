@@ -11,43 +11,34 @@
   background: var(--surface-base);
 }
 
-.tabs {
+/* La fila que antes eran dos pestañas. El título ocupa el sitio de la pestaña
+   encendida —mismo alto de banda— para que quitar la elección no mueva el
+   marco de debajo ni un pixel. */
+.head {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: var(--space-1);
+  min-height: var(--hit-tab);
   padding: 9px 0 8px;
 }
 
-.tabs__tab {
-  all: unset;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  min-height: var(--hit-tab);
-  padding: 11px 20px;
-  cursor: pointer;
-  border: var(--rule-min) solid var(--rule-color);
-  border-radius: 11px;
+.head__title {
+  margin: 0;
   font-family: var(--font-num);
   font-size: 11px;
+  font-weight: 400;
   letter-spacing: var(--tracking-label);
-  color: var(--ink-tertiary);
-
-  &--on {
-    border-color: var(--signal-primary-dim);
-    background: var(--signal-fill);
-    color: var(--signal-primary);
-  }
+  color: var(--ink-secondary);
 }
 
-.tabs__note {
+.head__note {
   margin-left: 14px;
   font-size: 13px;
   color: var(--ink-tertiary);
 }
 
-.tabs__axes {
+.head__axes {
   margin-left: auto;
   font-family: var(--font-num);
   font-size: var(--text-micro);
