@@ -180,6 +180,14 @@ describe('FiguresColumn · the resting state', () => {
     expect(foot().disabled).toBe(true);
     expect(audio.canMeasure()).toBe(false);
 
+    // La pista de la nota es de la cabecera, que se lee en frío. Aquí encima hay
+    // celdas que acaban de decirlo en sus propias unidades, y la Nota viva no la
+    // trae al pie ni cuando hay teclas abajo (#55).
+    backend.liveNotes.set(3);
+    await fixture.whenStable();
+    expect(host.querySelector('.measure__hint')).toBeNull();
+    expect(host.textContent).not.toContain('HELD');
+
     backend.lowestLivePitch.set(60);
     for (let sequence = 0; sequence < BLOCKS_FOR_A_MEDIDA; sequence += 1) {
       backend.emitBlock(

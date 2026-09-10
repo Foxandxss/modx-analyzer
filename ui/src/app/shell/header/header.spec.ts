@@ -349,6 +349,19 @@ async function renderWithAudio() {
   };
 }
 
+/**
+ * The `.measure__hint` rule as the browser got it. jsdom lays nothing out, so
+ * «the block is the same height in both states» is asserted as the rule that
+ * decides it, the way #39 reads a stylesheet.
+ */
+function hintRule(): string {
+  const css = Array.from(document.querySelectorAll('style'))
+    .map((style) => style.textContent ?? '')
+    .join('\n');
+  const start = css.indexOf('.measure__hint');
+  return start === -1 ? '' : css.slice(start, css.indexOf('}', start));
+}
+
 describe('Header · el obturador', () => {
   it('dibuja CAPTURE desde el primer fotograma, con su ventana y su nota sostenida', async () => {
     const { host } = await renderHeader();
@@ -357,6 +370,81 @@ describe('Header · el obturador', () => {
     expect(measure?.textContent).toContain('CAPTURE');
     expect(measure?.textContent).toContain('65536');
     expect(measure?.textContent).toContain('NEEDS A HELD NOTE');
+  });
+
+  /**
+   * La pista responde en las dos direcciones. Mientras no hay nada pulsado la
+   * condición está sin cumplir y decirla es exacto; con notas abajo ya está
+   * cumplida, y repetirla sería la cabecera pidiendo lo que el pianista ya hace
+   * mientras el scope de al lado lee `LOCKED`.
+   */
+  it('cambia la pista con la Nota viva, y vuelve a pedirla cuando se levanta', async () => {
+    const { backend, fixture, host } = await renderHeader();
+    const hint = () => host.querySelector('.measure__hint')?.textContent?.trim();
+
+    expect(hint()).toBe('65536NEEDS A HELD NOTE');
+
+    backend.liveNotes.set(3);
+    await fixture.whenStable();
+
+    expect(hint()).toBe('655363 HELD');
+    expect(host.querySelector('.measure')?.textContent).not.toContain('NEEDS A HELD NOTE');
+
+    // Una sola tecla no es un caso aparte: la cifra es la cuenta, no un plural.
+    backend.liveNotes.set(1);
+    await fixture.whenStable();
+    expect(hint()).toBe('655361 HELD');
+
+    backend.liveNotes.set(0);
+    await fixture.whenStable();
+    expect(hint()).toBe('65536NEEDS A HELD NOTE');
+  });
+
+  /**
+   * La ventana se queda al lado en todos los estados y el bloque no cambia de
+   * alto con la pista: dos renglones siempre, y `nowrap` es lo que impide el
+   * tercero. Un transporte que da un salto al levantar el dedo es la cabecera
+   * moviéndose sola.
+   */
+  it('mantiene la ventana y el mismo alto de bloque con nota y sin ella', async () => {
+    const { backend, fixture, host } = await renderHeader();
+    const block = () => host.querySelector('.measure__hint')!;
+    const lines = () => block().querySelectorAll('br').length + 1;
+
+    expect(block().textContent).toContain('65536');
+    expect(lines()).toBe(2);
+
+    backend.liveNotes.set(3);
+    await fixture.whenStable();
+
+    expect(block().textContent).toContain('65536');
+    expect(lines()).toBe(2);
+    expect(hintRule()).toContain('nowrap');
+  });
+
+  /**
+   * La pista y el botón leen hechos distintos a propósito. Armado sin ninguna
+   * tecla pulsada es un estado real y correcto: es el que produce la respuesta
+   * «el obturador se abrió sobre un silencio».
+   */
+  it('no toca el armado del botón en ninguno de esos estados', async () => {
+    const { button, hold, settle, backend, host } = await renderWithAudio();
+
+    // Sin audio no se arma, ni con tres teclas abajo.
+    backend.liveNotes.set(3);
+    await settle();
+    expect(button().disabled).toBe(true);
+    expect(host.querySelector('.measure__hint')?.textContent).toContain('3 HELD');
+
+    // Con audio se arma, y soltarlo todo no lo desarma.
+    await hold(261.626, 10);
+    expect(button().disabled).toBe(false);
+
+    backend.liveNotes.set(0);
+    await settle();
+    expect(button().disabled).toBe(false);
+    expect(button().className).toContain('measure--on');
+    expect(host.querySelector('.measure__hint')?.textContent).toContain('NEEDS A HELD NOTE');
   });
 
   it('está apagado mientras el anillo no tiene nada que medir', async () => {
