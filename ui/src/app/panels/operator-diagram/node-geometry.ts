@@ -331,8 +331,9 @@ export function narrowestGridCard(): number {
  * (#75).
  *
  * Eight columns is the whole surface (#40), including the any-parking case:
- * parking adds a stub column but removes an operator from the branches, so the
- * total never passes eight.
+ * since #83 a parked operator takes a place in the band above the deepest row and
+ * not a stub column of its own, and it leaves the branches to do it, so the
+ * drawing's columns are the wider of the two counts and never their sum.
  */
 export function narrowestWideCard(): number {
   const pitchX = (WIDE_CANVAS_W - 2 * MARGIN_X) / WIDE_COLUMNS;

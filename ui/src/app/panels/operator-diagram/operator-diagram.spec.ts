@@ -569,21 +569,27 @@ describe('OperatorDiagram', () => {
   it('carries Level in the width in both of the wide composición’s boxes', async () => {
     const { backend, fixture, host } = await renderDiagram({ wide: true });
 
-    // Algorithm 66 is eight rows deep, so its cards are battens; algorithm 2 is
-    // three, so they are stacked nodes. Two boxes with different proportions and
-    // one axis: the axis is the composición's and never the box's, and a rule
-    // read off the proportions would answer differently on these two — and would
-    // change its answer again on a window resize, with nothing failing.
+    // Algorithm 66 is eight rows deep, so its cards are battens; algorithm 2 with
+    // six of the eight at zero is three, so they are stacked nodes. Two boxes with
+    // different proportions and one axis: the axis is the composición's and never
+    // the box's, and a rule read off the proportions would answer differently on
+    // these two — and would change its answer again on a window resize, with
+    // nothing failing.
+    //
+    // The batten is drawn on a patch with **nothing** at zero, and it has to be
+    // since #83: a parked operator leaves the stack and the stack closes up behind
+    // it, so the 66 with six parked is a two-row chain and not an eight-row one.
     backend.topology.set(ALGORITHM_66);
-    backend.operators.set(eight(NOW, IDLE_PASS_MS));
+    backend.operators.set(theBuildsOwnPatch(NOW));
     await fixture.whenStable();
 
     const batten = nodes(host)[2];
     expect(batten.classList.contains('node--squat')).toBe(true);
     expect(batten.classList.contains('node--level-width')).toBe(true);
-    expect(fillOf(batten)).toEqual({ width: '75%', height: '100%' });
+    expect(fillOf(batten)).toEqual({ width: '71%', height: '100%' });
 
     backend.topology.set(ALGORITHM_2);
+    backend.operators.set(eight(NOW, IDLE_PASS_MS));
     await fixture.whenStable();
 
     const stacked = nodes(host)[2];
@@ -1208,8 +1214,54 @@ describe('OperatorDiagram', () => {
       // nodes, drawn and never deleted.
       expect(nodes(host)).toHaveLength(8);
       expect(nodes(host)[0].classList.contains('node--inert')).toBe(true);
-      const parked = parseFloat(nodes(host)[0].style.left);
-      expect(parked).toBeGreaterThan(parseFloat(nodes(host)[2].style.left));
+      // Out of the stack and not along the Level axis (#83): Op1 is drawn above
+      // Op3, which is still in the branches, and at the same origin — the far end
+      // of that axis is the loud end, and a silent operator drawn there would be a
+      // position contradicting its own figure.
+      expect(parseFloat(nodes(host)[0].style.top)).toBeLessThan(
+        parseFloat(nodes(host)[2].style.top),
+      );
+      expect(parseFloat(nodes(host)[0].style.left)).toBe(parseFloat(nodes(host)[2].style.left));
+    });
+
+    /**
+     * The inversion #70 reported, in the drawing's own ink: a live modulator whose
+     * destination is parked is **drawn**, and it is drawn inert, so the drawing
+     * never says less about a sounding operator than about a quiet one.
+     *
+     * The ink is the vocabulary `FB 0` already speaks (#57) — dashed and inert,
+     * drawn and never deleted — and it is decided here rather than in the layout,
+     * because this is where the Levels are. Both drawings therefore say it the same
+     * way: the check below takes the wide one, where the route lands on a dead end,
+     * and the narrow grid's `cuts the route of an operator at zero` covers the ink.
+     */
+    it('draws a live modulator into a parked operator, inert rather than not at all', async () => {
+      const { backend, fixture, host } = await renderDiagram({ wide: true });
+
+      // Algorithm 66 with Op2 alone at zero: Op1 is a modulador at 90 whose
+      // documented destination is real and parked. It used to draw nothing at all.
+      backend.topology.set(ALGORITHM_66);
+      const patch = theBuildsOwnPatch(NOW);
+      backend.operators.set({
+        ...patch,
+        operators: patch.operators.map((node) =>
+          node.operator === 2 ? reading(2, { role: 'inert', level: 0, ratio: 1 }, NOW) : node,
+        ),
+      });
+      await fixture.whenStable();
+
+      expect(host.querySelectorAll('.stub')).toHaveLength(1);
+      const drawn = routes(host);
+      // Seven routes in the chain, less the one out of Op2, is six — and the one
+      // into Op2 is among them, inert.
+      expect(drawn).toHaveLength(6);
+      const inert = drawn.filter((route) => route.classList.contains('route--inert'));
+      expect(inert).toHaveLength(1);
+      // It ends on the bar that closes Op2's stub, which is where the parked
+      // operator now lives: `M x foot V bar …` against a route ending `… V bar`.
+      const bar = (host.querySelector<SVGPathElement>('.stub')?.getAttribute('d') ?? '').split(' ');
+      const ink = (inert[0].getAttribute('d') ?? '').split(' ');
+      expect(Number(ink.at(-1))).toBeCloseTo(Number(bar[4]), 6);
     });
 
     it('lays the facts of the node in a row when the depth leaves no height', async () => {

@@ -83,6 +83,14 @@ const FEEDBACK_BULGE = 30;
 /** One node's box in the canvas, and which slot of the grid it landed in. */
 export interface Slot {
   readonly operator: number;
+  /**
+   * Which row of the drawing the node stands in, counted from the top.
+   *
+   * In the wide composición it is the depth read upside down, and an operator
+   * parked at zero answers `PARKED_BAND_ROW` — a row above the deepest, out of
+   * the depth axis entirely, because it has no depth in the chain
+   * (`wide-layout.ts`).
+   */
   readonly row: number;
   readonly column: number;
   readonly x: number;

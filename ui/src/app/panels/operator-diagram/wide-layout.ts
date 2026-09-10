@@ -13,17 +13,84 @@ import { DiagramLayout, DrawnFeedback, DrawnStub, FoldRule, LevelAxis, Slot } fr
  * - **Depth is height and every arrow points down.** A route always drops the
  *   chain depth by at least one (`Topology::chain_depth`), so it always runs
  *   from a row to a lower one, and there is no case here — unlike the narrow
- *   grid — of a line that has to hop over a neighbour to reach it.
- * - **An operator at zero is parked to the right on a stub that ends nowhere**,
- *   off the branches, drawn and never deleted. Its routes are not drawn: a line
- *   out of an operator whose Level is 0 carries nothing, and drawing it into the
- *   branches would be a shape making a claim about the sound that the figures
- *   underneath do not make.
+ *   grid — of a line that has to hop over a neighbour to reach it. The one
+ *   exception is a route into the parking band, which has left the depth axis;
+ *   it is the paragraph below and it is drawn inert.
+ * - **An operator at zero leaves the depth stack**, into a band above the
+ *   deepest row, drawn and never deleted and keeping the dashed stub that ends
+ *   nowhere. It does **not** move along the axis that carries Level. A line
+ *   **out of** it is not drawn; a line **into** it is, inert, onto the bar that
+ *   closes its stub. Those are two decisions and the paragraph below is both of
+ *   them.
  *
  * Whole **branches** stand side by side: each connected structure gets a band of
  * columns to itself (`Topology.branch`, computed in Rust beside the depth), and
  * inside its band each row is centred. So no line ever crosses from one branch
  * to another, because there is no line between them to cross.
+ *
+ * ## Parking, and the two directions of a route
+ *
+ * Parking used to be *to the right*, off the branches, and round 10 is what
+ * retires that direction (#83; ADR-0007 §4's principle is untouched). Right is
+ * now the **loud** end of the measurement: a silent operator parked there would
+ * put its position in direct contradiction with its own figure, on the one
+ * composición whose stated principle is that position says it without a caption.
+ *
+ * So a parked operator leaves the **stack**. It has no depth in the chain, so it
+ * is not in the depth axis at all, and it goes into a band above the deepest row
+ * at the origin end of the Level axis, laid out from {@link PARKED_BAND_ROW}.
+ *
+ * **What that costs is a row, and the currency is the point.** Parking used to
+ * cost a *column* — a stub column narrowed every card in the drawing — and since
+ * the rotation a column is the Level scale, so parking was paying for itself out
+ * of the measurement. A row is depth, which is position, and positions are what
+ * this drawing is allowed to spend. The band is never wider than the columns
+ * parking frees either: an operator leaves the branches before it takes a place
+ * in the band, so {@link wideLayout} takes a `Math.max` of the two rather than a
+ * sum and an ordinary parking leaves the cards **wider** than they were.
+ *
+ * **The band is the room parking freed, and that is load-bearing.** The stack
+ * closes up behind a parked operator — {@link place} lays out the depths that are
+ * actually *occupied*, so a depth nobody is standing at is not a row — and a band
+ * needs one row for any number of parked operators, there being eight columns and
+ * at most eight of them. So the drawing is never deeper than the eight rows the
+ * deepest of the 88 draws unparked, which is the worst case the body's floor was
+ * measured at (#81) and the case the fold's own band was checked against. Asserted
+ * rather than assumed, in `wide-layout.spec.ts`: no parking of any algorithm gets
+ * a card shorter than the 66's.
+ *
+ * **A route out of a parked operator is not drawn; a route into one is.** Two
+ * facts, so two predicates — `drawn(from) && drawn(into)` answered both, which is
+ * why a live modulator at Level 99 whose destination was parked drew nothing at
+ * all while the silent operator it fed got a dashed drop to a cross-bar, and why
+ * no test could tell the two decisions apart (#70).
+ *
+ * The asymmetry's reason is **geometric and not audibility**: both directions end
+ * in no audio, so audibility cannot be what decides that one gets ink. Parking
+ * has already displaced the operator onto its stub bar, so its inbound edges land
+ * where it now lives and are drawable; its outbound edges would have to run back
+ * into the chain it was removed from, re-tangling the run parking exists to clear.
+ * The asymmetry is therefore a consequence of a decision already taken.
+ *
+ * **What it costs is said out loud:** an outbound route is a documented route the
+ * drawing does not show. What makes that acceptable is a decision the app has
+ * already taken and this rule inherits rather than re-takes — the drawing is of
+ * the algorithm **as configured** and not of the algorithm abstractly, and
+ * parking is itself patch-dependent geometry.
+ *
+ * The ink is not new: a feedback amount of zero already ships dashed and inert on
+ * exactly this reasoning (#57, {@link feedbackArc}), because the arc comes from
+ * the documented topology and not from the amount. A route into a parked operator
+ * is the same sentence about a different line — *this is in the algorithm and it
+ * carries nothing* — and it is said the same way, in `--inert` on
+ * `--dash-inactive`, decided where the Levels are (`OperatorDiagram.routes`).
+ *
+ * It is also the one line in this drawing that runs **upward**, which is the
+ * price of the band being above the deepest row; a drawing that drew it downward
+ * would be a drawing that had parked the operator back into the depth axis. It
+ * lands on the bar rather than on a card, and {@link deadEndPath} is where the
+ * gap under the band is split so that the bar and the line landing on it are not
+ * fighting for the same pixels.
  *
  * ## Why the node is not a constant size here
  *
@@ -98,10 +165,9 @@ export const WIDE_COLUMNS = 8;
  * zero can no longer be parked there: that would put its position in direct
  * contradiction with its own figure, on the one composición whose stated
  * principle is that position says it without a caption. Parking leaves the
- * *stack* instead, which is #83 and not this commit — until it lands, the third
- * rule above still parks to the right and the drawing is knowingly saying two
- * things at once. Depth is still height, every arrow still points down, and no
- * line in this module moved.
+ * *stack* instead — the third rule above, and it arrived in #83 one commit after
+ * the axis did. Depth is still height, and the only line that does not point down
+ * is the one that goes into the band parking moved to.
  */
 const LEVEL_AXIS: LevelAxis = 'width';
 
@@ -167,6 +233,38 @@ const FEEDBACK_BULGE = 20;
 
 /** How wide the bar is that closes a parked operator's stub. */
 const STUB_BAR = 34;
+
+/**
+ * The row a parked operator is drawn in: the band above the deepest, which is
+ * one above the top of the stack and therefore not a row of the depth axis.
+ *
+ * It is a number and not a `null` because a slot's row is read by things that
+ * compare rows — {@link feedbackArc}'s crowding, {@link busDrop}'s bus row — and
+ * a parked operator has to answer those questions wrongly-but-safely rather than
+ * not answer them. Minus one is the answer that makes every one of them false:
+ * it is in no row any placed operator is in, and it is above all of them in the
+ * same sense the band is.
+ */
+export const PARKED_BAND_ROW = -1;
+
+/**
+ * How the gap under the parking band is split, as shares of that gap.
+ *
+ * The bar that closes a stub hangs in it and a route into that stub has to reach
+ * the bar without running along it, so the two cannot both have the middle. The
+ * bar takes the near share and the route crosses **under** every bar in the far
+ * one, which leaves the route's last segment — the one the arrowhead sits on —
+ * the {@link STUB_LANE} − {@link STUB_BAR_AT} between them. That is about a third
+ * of the gap, against the half a route gets to turn down into a card, and it is
+ * the same gap either way: a drawing whose gap cannot hold an arrowhead plus a
+ * visible segment folds (`folding.ts`), and that floor is what both of these
+ * shares are spent out of.
+ *
+ * The far share stops short of the row below, so a line crossing under the bars
+ * never touches the cards of the deepest row.
+ */
+const STUB_BAR_AT = 0.4;
+const STUB_LANE = 0.75;
 
 /**
  * How tall a row is at a given row count, and how much of that the node gets.
@@ -266,18 +364,23 @@ export function wideLayout(
   const placed = operators.filter((operator) => !parked.includes(operator));
 
   const depthOf = (operator: number) => topology?.depth[operator - 1] ?? 0;
-  const rows = placed.length === 0 ? 1 : Math.max(...placed.map(depthOf)) + 1;
-  const slotRows = Math.max(rows, MIN_ROWS);
 
-  const grid = place(topology, placed, rows, depthOf);
-  // The stub never takes the bus row: a dead end reaching down to the bus would
-  // be touching the one line that means «you hear this».
-  const stubRows = Math.max(1, slotRows - 1);
-  const stubColumns = Math.ceil(parked.length / stubRows);
-  const columns = Math.max(1, grid.columns + stubColumns);
+  const grid = place(topology, placed, depthOf);
+  // With nothing left in the branches there is still a bus row, so that the one
+  // line meaning «you hear this» is where it always is in a drawing that has one.
+  const rows = Math.max(grid.rows, 1);
+  // One row for the band, whatever is in it, and it is the row the stack gave up:
+  // `place()` lays out the occupied depths, so a parked operator takes its own
+  // row out of the chain before the band takes one. Eight stays the deepest
+  // drawing there is, which is what the body's floor is anchored on (#81).
+  const slotRows = Math.max(rows + (parked.length === 0 ? 0 : 1), MIN_ROWS);
+  // A `max` and not a sum, for the same reason: an operator is either in the
+  // branches or in the band, so the band is never wider than the columns parking
+  // freed, and the drawing never passes `WIDE_COLUMNS`.
+  const columns = Math.max(1, grid.columns, parked.length);
   // The columns are the fold's business and the fold is not theirs: parking
-  // moves a box from the branches onto a stub and neither one folds anything, so
-  // this width is the same in both drawings.
+  // moves a box out of the branches and into the band and neither one folds
+  // anything, so this width is the same in both drawings.
   const pitchX = (WIDE_CANVAS_W - 2 * MARGIN_X) / columns;
 
   const unfolded = wideRowPitch(slotRows);
@@ -290,7 +393,9 @@ export function wideLayout(
   const nodeW = cardWidth(pitchX, squat);
 
   // The grid hangs off the bus: with fewer rows than slots the air is at the
-  // top, because depth is height and a shallow patch is a short drawing.
+  // top, because depth is height and a shallow patch is a short drawing. Row
+  // `PARKED_BAND_ROW` is inside the box for the same reason the band is a row —
+  // with anything parked there is at least one slot row above the chain.
   const rowY = (row: number) => MARGIN_Y + (slotRows - rows + row) * pitchY;
   const boxX = (column: number) => MARGIN_X + column * pitchX + (pitchX - nodeW) / 2;
 
@@ -307,15 +412,17 @@ export function wideLayout(
         h: nodeH,
       };
     }
-    const index = parked.indexOf(operator);
-    const column = grid.columns + Math.floor(index / stubRows);
-    const row = index % stubRows;
+    // Out of the stack and into the band above the deepest row, laid out from the
+    // origin end of the Level axis in operator order. Never along that axis: the
+    // far end of it is the loud end, and a silent operator drawn there would be a
+    // position contradicting its own figure.
+    const column = parked.indexOf(operator);
     return {
       operator,
-      row,
+      row: PARKED_BAND_ROW,
       column,
       x: boxX(column),
-      y: MARGIN_Y + row * pitchY,
+      y: rowY(PARKED_BAND_ROW),
       w: nodeW,
       h: nodeH,
     };
@@ -346,8 +453,25 @@ export function wideLayout(
     };
   }
 
-  const drawn = (operator: number) => placed.includes(operator);
-  const carriers = topology.carriers.filter(drawn);
+  /**
+   * Whether a route **out of** this operator is drawn at all. It is not, when the
+   * operator is parked: that line would have to run back into the chain the
+   * operator was removed from, re-tangling the run parking exists to clear. The
+   * cost — a documented route the drawing does not show — is named in the header.
+   */
+  const sends = (operator: number) => !parked.includes(operator);
+  /**
+   * Whether a route **into** this operator ends on a dead end rather than on a
+   * card. It does, when the operator is parked — and it is still *drawn*, because
+   * parking has already put the operator somewhere its inbound edges can land.
+   *
+   * Two predicates and not one conjunction: these answer different questions, and
+   * one predicate answering both is what drew nothing at all out of a modulator at
+   * Level 99 whose destination was parked (#70).
+   */
+  const deadEnds = (operator: number) => parked.includes(operator);
+
+  const carriers = topology.carriers.filter(sends);
   const feedback = topology.feedback;
 
   return {
@@ -356,10 +480,12 @@ export function wideLayout(
     levelAxis: LEVEL_AXIS,
     slots,
     routes: topology.routes
-      .filter((route) => drawn(route.from) && drawn(route.into))
+      .filter((route) => sends(route.from))
       .map((route) => ({
         ...route,
-        path: routePath(slotOf(route.from), slotOf(route.into), shape),
+        path: deadEnds(route.into)
+          ? deadEndPath(slotOf(route.from), slotOf(route.into), shape)
+          : routePath(slotOf(route.from), slotOf(route.into), shape),
       })),
     bus: carriers.map((carrier) => ({
       carrier,
@@ -370,8 +496,15 @@ export function wideLayout(
         ? null
         : `M ${Math.min(...carriers.map((carrier) => centreX(slotOf(carrier), nodeW)))} ` +
           `${shape.busY} H ${WIDE_CANVAS_W - MARGIN_X}`,
+    // The loop is read through the same two predicates, and it answers no to
+    // both: for 86 of the 88 its two ends are one operator, so the outbound rule
+    // decides it alone. What the other two — algorithms 12 and 14, where the arc
+    // wraps a chain — do **not** get is the inbound rule above. The arc is an ear
+    // on a card's right edge and a card in the parking band has no ear to take it
+    // without the arc being redrawn, which is a geometry nobody has decided; it is
+    // written here rather than resolved in silence.
     feedback:
-      drawn(feedback.from) && drawn(feedback.into)
+      sends(feedback.from) && !deadEnds(feedback.into)
         ? feedbackArc(slotOf(feedback.from), slotOf(feedback.into), shape, slots)
         : null,
     stubs: parked.map((operator) => stub(slotOf(operator), shape)),
@@ -388,15 +521,29 @@ export function wideLayout(
  * out left to right in the order of the operator that names them, so the drawing
  * is stable: the same algorithm is always the same picture, whatever the ring
  * happened to read first.
+ *
+ * ## The rows are the depths that are *occupied*
+ *
+ * With the eight in the branches every depth from the bus up is occupied, by
+ * construction: an operator at depth `d` has a route into something at `d − 1`
+ * (`Topology::chain_depth`), so a depth with nobody in it cannot exist and this
+ * reads exactly as «row is depth» for all of the 88 drawn whole.
+ *
+ * It is parking that makes the difference, and it is the point: the stack **closes
+ * up** behind an operator that leaves it, rather than keeping an empty row where
+ * it stood. Every route still runs downward, because dropping the depth by at
+ * least one still drops the rank by at least one. And the row the stack gave up is
+ * the row the parking band takes, which is what keeps a drawing with anything
+ * parked from being deeper than the deepest of the 88 ({@link wideLayout}).
  */
 function place(
   topology: Topology | null,
   placed: readonly number[],
-  rows: number,
   depthOf: (operator: number) => number,
-): { columns: number; at: Map<number, Placement> } {
+): { rows: number; columns: number; at: Map<number, Placement> } {
   const at = new Map<number, Placement>();
-  const rowOf = (operator: number) => rows - 1 - depthOf(operator);
+  const ranks = [...new Set(placed.map(depthOf))].sort((a, b) => b - a);
+  const rowOf = (operator: number) => ranks.indexOf(depthOf(operator));
   const branchOf = (operator: number) => topology?.branch[operator - 1] ?? operator;
 
   const labels = [...new Set(placed.map(branchOf))].sort((a, b) => a - b);
@@ -419,7 +566,7 @@ function place(
     column += width;
   }
 
-  return { columns: column, at };
+  return { rows: ranks.length, columns: column, at };
 }
 
 function centreX(slot: Slot, nodeW: number): number {
@@ -455,6 +602,9 @@ function gutterX(slot: Slot, shape: Shape): number {
  * One modulation line, in orthogonal segments and always downward. Into the row
  * straight below it goes down, across the gap and down again; further than that
  * it takes the gutter, so a long drop never falls through a node.
+ *
+ * A route whose destination is parked is {@link deadEndPath} and not this one:
+ * the destination has left the depth axis, so there is no row below to drop into.
  */
 function routePath(from: Slot, into: Slot, shape: Shape): string {
   const start = `M ${centreX(from, shape.nodeW)} ${from.y + shape.nodeH} V ${gapY(from, shape)}`;
@@ -480,16 +630,50 @@ function busDrop(slot: Slot, rows: number, shape: Shape): string {
  * The dead end of a parked operator: a short dashed drop that stops in a bar
  * across it. It is drawn so that an operator at zero is not merely a node
  * standing on its own — it is a node whose output goes nowhere, said in a line.
+ *
+ * The drop is a **share of the gap** and no longer a maximum with a floor of
+ * eight units in it. Since parking moved into a band (#83) the bar hangs in a gap
+ * that also has to let a route reach it, so the two split that gap between them
+ * ({@link STUB_BAR_AT}) instead of the stub taking most of it; and the gap below
+ * which this drawing folds rather than shrink anything further is the fold's
+ * floor, which is what makes a share safe where it used not to be.
  */
 function stub(slot: Slot, shape: Shape): DrawnStub {
   const x = centreX(slot, shape.nodeW);
   const from = slot.y + shape.nodeH;
-  const end = from + Math.max(8, shape.rowGap * 0.7);
+  const end = stubBarY(slot, shape);
   const bar = Math.min(STUB_BAR, shape.nodeW / 3);
   return {
     operator: slot.operator,
     path: `M ${x} ${from} V ${end} M ${x - bar / 2} ${end} H ${x + bar / 2}`,
   };
+}
+
+/** Where the bar that closes a parked operator's stub hangs, in the gap under it. */
+function stubBarY(slot: Slot, shape: Shape): number {
+  return slot.y + shape.nodeH + shape.rowGap * STUB_BAR_AT;
+}
+
+/**
+ * A route into a parked operator: the same orthogonal segments as any other, run
+ * the other way and ending on the bar that closes the operator's stub.
+ *
+ * It leaves the source's **top** edge, because the band it is going to is above
+ * the deepest row, and it is the only line in this drawing that climbs. The two
+ * cases are {@link routePath}'s two, mirrored: out of the row directly under the
+ * band it goes straight up into the lane; from deeper than that it lifts into the
+ * gap above its own row and climbs the gutter, where a long run crosses no card.
+ *
+ * The last two segments are what the ticket asks for and what the gap was split
+ * for: across in the lane **under** every bar, so a parked operator's dead end is
+ * never run along or crossed, then up onto its own bar, which is the segment the
+ * arrowhead sits on.
+ */
+function deadEndPath(from: Slot, into: Slot, shape: Shape): string {
+  const lane = into.y + shape.nodeH + shape.rowGap * STUB_LANE;
+  const start = `M ${centreX(from, shape.nodeW)} ${from.y}`;
+  const climb = from.row === 0 ? '' : ` V ${hopY(from, shape)} H ${gutterX(from, shape)}`;
+  return `${start}${climb} V ${lane} H ${centreX(into, shape.nodeW)} V ${stubBarY(into, shape)}`;
 }
 
 /**

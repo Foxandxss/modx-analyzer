@@ -6,6 +6,7 @@ import { floorCanvasHeight, foldedBandHeight } from './node-geometry';
 import {
   COL_GAP,
   MARGIN_X,
+  PARKED_BAND_ROW,
   WIDE_CANVAS_H,
   WIDE_CANVAS_W,
   WIDE_COLUMNS,
@@ -303,29 +304,194 @@ describe('the wide diagram layout', () => {
     }
   });
 
-  it('parks an operator at zero on a stub off the branches and draws no line of its', () => {
+  /**
+   * The exception to «every arrow points down», named and fenced.
+   *
+   * A route into the parking band climbs, because the band is above the deepest row
+   * and the operator in it has left the depth axis; a drawing that drew that line
+   * downward would have parked the operator back into the axis it was taken out of.
+   * What this holds is that it is the **only** exception: over every parking of the
+   * worst cases, a route whose destination is still in the branches runs down into
+   * a card's top edge, and a route whose destination is parked is the one that
+   * climbs, onto a bar.
+   */
+  it('climbs only into the parking band, and nowhere else', () => {
+    for (const drawn of [ALGORITHM_2, ...THE_WORST_CASES]) {
+      for (const cut of [[1], [2, 4, 5, 6], [1, 2, 5, 6, 7, 8]]) {
+        const { slots, routes } = wideLayout(drawn, cut, NEVER_FOLDS);
+        const where = `algorithm ${drawn.number}, cut ${cut}`;
+
+        for (const route of routes) {
+          const from = slot(slots, route.from);
+          const into = slot(slots, route.into);
+          const line = points(route.path);
+          const climbs = (line.at(-1) as number) < from.y + from.h;
+          expect(climbs, `${where}, ${route.from}→${route.into}`).toBe(cut.includes(route.into));
+          if (climbs) {
+            // Onto the bar, which hangs in the gap under the band and therefore
+            // above the card of the row below it.
+            expect(line.at(-1), `${where}, ${route.from}→${route.into}`).toBeGreaterThan(
+              into.y + into.h,
+            );
+            expect(line[1], `${where}, ${route.from}→${route.into}`).toBe(from.y);
+          } else {
+            expect(from.row, `${where}, ${route.from}→${route.into}`).toBeLessThan(into.row);
+            expect(line.at(-1), `${where}, ${route.from}→${route.into}`).toBe(into.y);
+          }
+        }
+      }
+    }
+  });
+
+  /**
+   * The band's own geometry, which is three clearances and nothing else.
+   *
+   * The gap under the parking band holds two things that could fight — the bar
+   * that closes each stub, and the line that has to reach that bar — so it is
+   * split, and what the split has to keep is asserted here rather than read off
+   * the two shares: the bar is inside the gap, the lane a route crosses in is
+   * **under** every bar so no dead end is ever run along, and the lane clears the
+   * cards of the row below, so a line crossing under the band never touches the
+   * deepest row.
+   */
+  it('splits the gap under the band between the bars and the line that reaches them', () => {
+    const cut = [2, 4, 5, 6];
+    const { slots, routes, stubs } = wideLayout(ALGORITHM_66, cut, NEVER_FOLDS);
+    const band = slot(slots, 2);
+    const deepest = Math.min(
+      ...slots.filter((box) => box.row !== PARKED_BAND_ROW).map((box) => box.y),
+    );
+
+    for (const dead of stubs) {
+      const [, foot, bar] = points(dead.path);
+      expect(bar).toBeGreaterThan(foot);
+      expect(bar).toBeLessThan(deepest);
+    }
+    // `… H x V bar`: the lane is the y the route crosses at, and it is between the
+    // bars and the row below — under the one, clear of the other.
+    const line = points(routes.find((route) => route.into === 2)?.path ?? '');
+    const lane = line.at(-3) as number;
+    const bar = points(stubs.find((dead) => dead.operator === 2)?.path ?? '')[2];
+    expect(lane).toBeGreaterThan(bar);
+    expect(lane).toBeLessThan(deepest);
+    expect(band.y + band.h).toBeLessThan(bar);
+  });
+
+  /**
+   * Parking is not paid for out of the measurement.
+   *
+   * It used to be: a parked operator took a stub column of its own, so every card
+   * in the drawing got narrower — and since the rotation a card's width *is* the
+   * Level scale, which made crossing zero cost the reading of the seven operators
+   * that had not. Now it costs a row, and a row is depth, which is what this
+   * drawing is allowed to spend.
+   *
+   * Not a universal: the 66 with seven parked needs seven columns for its band
+   * where the chain needed one, and there the cards really are narrower. The claim
+   * is that an ordinary parking — fewer boxes in the band than the branches had
+   * columns — never narrows them, which is every case a patch in use produces.
+   */
+  it('never narrows the Level axis to park an operator, in the ordinary case', () => {
+    for (const drawn of [ALGORITHM_2, ALGORITHM_1, ALGORITHM_68, ALGORITHM_12]) {
+      for (const cut of [[1], [1, 5], [3, 5, 7]]) {
+        const whole = wideLayout(drawn, [], NEVER_FOLDS).slots[0];
+        const parked = wideLayout(drawn, cut, NEVER_FOLDS).slots[0];
+        expect(parked.w, `algorithm ${drawn.number}, cut ${cut}`).toBeGreaterThanOrEqual(whole.w);
+      }
+    }
+  });
+
+  /**
+   * Parking, out of the stack and not along the Level axis (#83).
+   *
+   * The two halves are the criterion. **Out of the stack**: the parked boxes are
+   * above every box still in the branches, which is a statement about the depth
+   * axis and costs a row. **Not along the Level axis**: they are at the origin end
+   * of it, which is what the old direction got backwards — right is now the loud
+   * end, and a silent operator drawn there is a position contradicting its own
+   * figure.
+   *
+   * Asserted as the shared origin rather than as «further left than something»:
+   * the band is laid out from column 0, so its first box is at the very x the
+   * branches' own first column is at, and a card in the band measures its Level
+   * from the same zero as every other card.
+   */
+  it('parks an operator at zero out of the stack, at the origin of the Level axis', () => {
     const { slots, routes, bus, stubs } = wideLayout(ALGORITHM_2, [1, 5], NEVER_FOLDS);
 
-    // Op1 modulates Op2 and Op5 is a portadora; both are cut, so both stand to
-    // the right of every operator still in the drawing.
-    const branchesRight = Math.max(
-      ...[2, 3, 4, 6, 7, 8].map((operator) => slot(slots, operator).x),
-    );
-    expect(slot(slots, 1).x).toBeGreaterThan(branchesRight);
-    expect(slot(slots, 5).x).toBeGreaterThan(branchesRight);
+    // Op1 modulates Op2 and Op5 is a portadora; both are cut, so both leave the
+    // depth stack for the band above the deepest row.
+    const branches = [2, 3, 4, 6, 7, 8].map((operator) => slot(slots, operator));
+    for (const dead of [slot(slots, 1), slot(slots, 5)]) {
+      expect(dead.y + dead.h).toBeLessThanOrEqual(Math.min(...branches.map((box) => box.y)));
+      expect(dead.x).toBeGreaterThanOrEqual(Math.min(...branches.map((box) => box.x)));
+    }
+    // And the band starts where the branches start: one origin, one scale, and the
+    // parked box is not displaced along the axis that carries Level by being parked.
+    expect(slot(slots, 1).x).toBe(Math.min(...slots.map((box) => box.x)));
+    expect(slot(slots, 1).x).toBe(Math.min(...branches.map((box) => box.x)));
 
-    // Its route and its drop are not drawn at all: a line out of an operator at
-    // zero carries nothing, and drawing it would claim it did.
+    // Its route out and its drop are not drawn at all: a line out of an operator
+    // at zero carries nothing, and drawing it would claim it did.
     expect(routes.map((route) => route.from)).not.toContain(1);
     expect(bus.map((drop) => drop.carrier)).toEqual([4, 6, 7, 8]);
 
     // What it gets instead is a dead end: a drop out of the node, a bar across
     // it, and nothing after it.
     expect(stubs.map((dead) => dead.operator)).toEqual([1, 5]);
-    const dead = points(stubs[0].path);
-    expect(dead[1]).toBe(slot(slots, 1).y + slot(slots, 1).h);
-    expect(dead[3]).toBeGreaterThan(dead[1]);
-    expect(dead.at(-1)).toBeGreaterThan(dead[4]);
+    // `M x foot V bar M left bar H right`: the drop leaves the card's own bottom
+    // edge, goes down, and the bar crosses it at the end and stops there.
+    const [x, foot, bar, left, again, right] = points(stubs[0].path);
+    expect(foot).toBe(slot(slots, 1).y + slot(slots, 1).h);
+    expect(bar).toBeGreaterThan(foot);
+    expect(again).toBe(bar);
+    expect(left).toBeLessThan(x);
+    expect(right).toBeGreaterThan(x);
+  });
+
+  /**
+   * The inversion #70 reported, which is a bug in the shape of a predicate and
+   * not in a value: `drawn(from) && drawn(into)` answered both directions, so a
+   * modulator at Level 99 whose destination was parked drew **nothing at all** —
+   * no line out and no stub — while the silent operator it fed got a dashed drop
+   * to a cross-bar. The drawing said less about a sounding operator than about a
+   * quiet one.
+   *
+   * Taken on the patch the inversion was reported on: algorithm 66, the single
+   * chain of eight, with Op2, Op4, Op5 and Op6 parked. Both directions are
+   * asserted separately, which is the other half of the ticket — one predicate
+   * answering two questions is a pair of decisions no test can tell apart.
+   */
+  it('draws a route into a parked operator and none out of one', () => {
+    const cut = [2, 4, 5, 6];
+    const { slots, routes } = wideLayout(ALGORITHM_66, cut, NEVER_FOLDS);
+    const pair = (route: { from: number; into: number }) => `${route.from}→${route.into}`;
+
+    // Into: Op1 is live and its documented destination is Op2, which is parked.
+    // The route is drawn, and Op1 is no longer the one box in the drawing with
+    // nothing attached to it.
+    expect(routes.map(pair)).toContain('1→2');
+    // Out: every route whose source is parked is gone, and there are four of them.
+    for (const operator of cut) {
+      expect(routes.map((route) => route.from)).not.toContain(operator);
+    }
+    expect(routes.map(pair)).toEqual(['1→2', '3→4', '7→8']);
+
+    // It lands on the bar that closes Op2's stub, reached from underneath: across
+    // in the lane under the band's bars, then up onto the bar itself, which is the
+    // segment the arrowhead sits on.
+    const bar = points(
+      wideLayout(ALGORITHM_66, cut, NEVER_FOLDS).stubs.find((dead) => dead.operator === 2)?.path ??
+        '',
+    );
+    const into = points(routes.find((route) => pair(route) === '1→2')?.path ?? '');
+    expect(into.at(-1)).toBeCloseTo(bar[2], 6);
+    expect(into.at(-2)).toBeCloseTo(slot(slots, 2).x + slot(slots, 2).w / 2, 6);
+    // Up, which is the one direction no other line in this drawing runs: the band
+    // it goes to has left the depth axis, and a line drawn downward into it would
+    // have parked the operator back into that axis.
+    expect(into.at(-1)).toBeLessThan(into.at(-3) as number);
+    expect(into[1]).toBe(slot(slots, 1).y);
   });
 
   it('never lets a stub reach the bus, whatever is left in the drawing', () => {
@@ -343,10 +509,20 @@ describe('the wide diagram layout', () => {
   });
 
   it('holds the measured worst cases inside 1232 × 400, with nothing overlapping', () => {
-    for (const drawn of THE_WORST_CASES) {
+    // Over every parking as well as over the whole drawings, because the parking
+    // band is the one thing in this layout that puts boxes in a row of their own:
+    // a band that did not fit, or that stood where the branches stand, would be
+    // eight boxes in seven places and nothing else here would notice.
+    const drawings = [ALGORITHM_2, ...THE_WORST_CASES].flatMap((drawn) =>
+      [[], [1], [2, 4, 5, 6], [1, 2, 5, 6, 7, 8], [1, 2, 3, 4, 5, 6, 7, 8]].map((cut) => ({
+        drawn,
+        cut,
+      })),
+    );
+    for (const { drawn, cut } of drawings) {
       const { slots, routes, bus, busLine, feedback, width, height } = wideLayout(
         drawn,
-        [],
+        cut,
         NEVER_FOLDS,
       );
 
@@ -362,10 +538,14 @@ describe('the wide diagram layout', () => {
         expect(each.y + each.h).toBeLessThanOrEqual(WIDE_CANVAS_H);
       }
       // Eight boxes, and not one of them on top of another: the 66 is eight rows
-      // and the 1 is eight columns, which is the whole surface (#40).
+      // and the 1 is eight columns, which is the whole surface (#40), and a parked
+      // box stands in the band above the deepest row rather than in it.
       for (const a of slots) {
         for (const b of slots) {
-          expect(a === b || !overlap(a, b)).toBe(true);
+          expect(
+            a === b || !overlap(a, b),
+            `algorithm ${drawn.number}, cut ${cut}, Op${a.operator} over Op${b.operator}`,
+          ).toBe(true);
         }
       }
 
@@ -380,7 +560,11 @@ describe('the wide diagram layout', () => {
           expect(value).toBeLessThanOrEqual(Math.max(WIDE_CANVAS_W, WIDE_CANVAS_H));
         }
       }
-      expect(feedback).not.toBeNull();
+      // The loop is the one line parking can take away entirely, and the outbound
+      // rule is what takes it: its two ends are the same operator for 86 of the 88.
+      expect(feedback === null, `algorithm ${drawn.number}, cut ${cut}`).toBe(
+        cut.includes(drawn.feedback.from) || cut.includes(drawn.feedback.into),
+      );
     }
   });
 
@@ -522,9 +706,18 @@ describe('the wide diagram layout', () => {
    *
    * Two claims, and the second is what makes the first worth having. The card's
    * height is decided by the row count and by **nothing else** — not by the
-   * patch, not by which operators are parked, not by the node class — and it
+   * patch, not by the node class, and not by *which* operators are parked — and it
    * never grows as the row count does. Together they say: measure at eight rows
    * and you have measured every drawing there is.
+   *
+   * **Parking is a row of that count since #83**, which is the one thing here that
+   * moved: a parked operator leaves the stack for a band above the deepest row, so
+   * the band is a row like any other and the cards are sized for it. What keeps
+   * the anchor is that the band is the row the stack gave up — `place()` lays out
+   * the depths that are *occupied* — so no patch and no parking is ever deeper
+   * than the deepest of the 88 drawn whole. That is asserted directly below, on
+   * the card rather than on the row count: nothing in the sweep gets a card
+   * shorter than the 66's.
    *
    * Asserted over the layout's own output rather than over `wideRowPitch()`
    * alone, so what is checked is the card a node is given and not the arithmetic
@@ -536,12 +729,15 @@ describe('the wide diagram layout', () => {
     const STOPS_GROWING_AT = 3;
     const classes = new Set<boolean>();
     const byRows = new Map<number, number>();
+    const deepest = wideRowPitch(DEEPEST_ROWS).nodeH;
 
     for (const drawn of [ALGORITHM_2, ...THE_WORST_CASES]) {
       for (const cut of [[], [1], [1, 2], [3, 5, 7]]) {
         const { slots, squat } = wideLayout(drawn, cut, NEVER_FOLDS);
         const placed = slots.filter((box) => !cut.includes(box.operator));
-        const rows = Math.max(...placed.map((box) => box.row)) + 1;
+        // The rows the drawing has: the branches' own, plus the one the parking
+        // band takes when anything is parked.
+        const rows = Math.max(...placed.map((box) => box.row)) + 1 + (cut.length === 0 ? 0 : 1);
         const pitch = wideRowPitch(Math.max(rows, STOPS_GROWING_AT));
         const where = `algorithm ${drawn.number}, cut ${cut}`;
 
@@ -550,6 +746,10 @@ describe('the wide diagram layout', () => {
         for (const box of slots) {
           expect(box.h, `${where}, Op${box.operator}`).toBe(pitch.nodeH);
         }
+        // And the deepest of the 88 drawn whole is still the worst case there is,
+        // which is the property the body's floor is anchored on. Parking cannot
+        // undercut it: it takes a row out of the stack before the band takes one.
+        expect(pitch.nodeH, where).toBeGreaterThanOrEqual(deepest);
         // The class rides that number rather than deciding it: at a given row
         // count a batten and a stacked node are the same box.
         const seen = byRows.get(rows);
@@ -601,6 +801,21 @@ describe('the wide diagram layout', () => {
     expect(folds(ALGORITHM_66)).toBe(true);
     expect(folds(ALGORITHM_55)).toBe(false);
     expect(folds(ALGORITHM_2)).toBe(false);
+
+    // And a parking is a row of that count since #83, so it can fold a drawing
+    // that would not have folded whole: the 55 is five rows and the deepest that
+    // does not fold, and with one portadora at zero it is five plus the band and
+    // it does. That is the depth trigger reading the drawing it is given rather
+    // than the algorithm, which is what it was always written to do — the gap is
+    // as short either way — and it is why the fold is something a Level crossing
+    // zero can bring on, not only a deep algorithm.
+    expect(wideLayout(ALGORITHM_55, [1], rule).folded).toBe(true);
+    // Parking an operator whose depth nobody else stands at is free, because the
+    // stack closes up behind it: the 66 with Op1 at zero is seven chain rows and
+    // the band, which is the eight it drew whole.
+    expect(wideLayout(ALGORITHM_66, [1], rule).slots[0].h).toBe(
+      wideLayout(ALGORITHM_66, [], rule).slots[0].h,
+    );
 
     // The margin, in the units the criterion is written in: what is left of the
     // gap once the arrowhead has taken its nine units, at the scale the canvas

@@ -164,8 +164,9 @@ interface LineView {
  * layout to carry it: the eight stand in a depth-sorted 3 × 3 grid (`layout.ts`)
  * and the shape is what says who is a portadora. With the width the algorithm
  * takes when nothing is measured, **position says it instead** — the bottom row
- * is the output bus, every arrow points down, and an operator at zero is parked
- * to the right on a stub that ends nowhere (`wide-layout.ts`). The shape survives
+ * is the output bus, every arrow points down, and an operator at zero leaves the
+ * depth stack for a band above it, keeping the stub that ends nowhere and keeping
+ * the routes that arrive at it (`wide-layout.ts`). The shape survives
  * underneath as confirmation, so there is nothing new to learn, and the swap is
  * a different drawing of the same eight nodes rather than a different panel.
  *
@@ -430,12 +431,26 @@ export class OperatorDiagram {
       : { left: 0, bottom: ceiling };
   });
 
-  /** The modulation lines, dashed when they leave an operator that is cut. */
+  /**
+   * The modulation lines, dashed when either end of them is an operator at zero.
+   *
+   * **Either end, and that is round 10's half of this.** The ink says one thing —
+   * *this is in the algorithm and it carries nothing* — and it is as true of a
+   * live modulator feeding a silent operator as of a silent one feeding anything:
+   * the modulation happens and nobody hears it. It used to read the source alone,
+   * which left the wide drawing saying less about a sounding operator than about a
+   * quiet one (#70) and the narrow grid drawing the same route at full strength.
+   *
+   * The decision is made here, over the roles, because this is where the Levels
+   * are; the wide layout decides what the line *is* — a route onto a card, or a
+   * route onto the bar that closes a parked operator's stub — and both drawings
+   * then say the same thing the same way, as `FB 0` already does (#57).
+   */
   protected readonly routes = computed<LineView[]>(() =>
     this.drawing().routes.map((route: DrawnRoute) => ({
       key: `${route.from}:${route.into}`,
       path: route.path,
-      inert: this.isInert(route.from),
+      inert: this.isInert(route.from) || this.isInert(route.into),
     })),
   );
 
