@@ -155,6 +155,28 @@ export interface DrawnFeedback {
  */
 export type LevelAxis = 'height' | 'width';
 
+/**
+ * What a drawing has to keep, or it folds its facts — in the `viewBox` units
+ * this module and `wide-layout.ts` are written in.
+ *
+ * Two numbers and no behaviour, and the reason is the boundary the two halves of
+ * this drawing are split along: the criteria behind them are in **CSS pixels**
+ * (a gap that holds its arrowhead plus a visible segment; a card that holds five
+ * facts), and a layout module that could read a pixel would be a layout module
+ * that had to know what the window is doing. So `folding.ts` earns them in
+ * pixels and converts them once, here they are stretchable units like everything
+ * else, and the conditions that read them are one `||` at the site that draws.
+ *
+ * The narrow 3 × 3 grid never takes one: three rows are three rows at every
+ * window, and its card is the one the fitted width is *measured on*.
+ */
+export interface FoldRule {
+  /** The gap the drawing keeps under a row, at and below which the facts fold. */
+  readonly rowGapMin: number;
+  /** The narrowest card that still holds five facts, at the lane in hand. */
+  readonly cardMin: number;
+}
+
 export interface DiagramLayout {
   readonly width: number;
   readonly height: number;
@@ -178,6 +200,13 @@ export interface DiagramLayout {
    * because it is the only thing that knows how many rows shared the height.
    */
   readonly squat: boolean;
+  /**
+   * The drawing could not hold its facts, so it kept identity and Level and gave
+   * up the other three (`folding.ts`). Positions never fold: this says nothing
+   * about where any node is, and every slot above is the slot the unfolded
+   * drawing would have given it.
+   */
+  readonly folded: boolean;
 }
 
 /**
@@ -201,6 +230,7 @@ export function layout(topology: Topology | null): DiagramLayout {
       feedback: null,
       stubs: [],
       squat: false,
+      folded: false,
     };
   }
 
@@ -223,6 +253,7 @@ export function layout(topology: Topology | null): DiagramLayout {
     feedback: feedbackArc(slotOf(topology.feedback.from), slotOf(topology.feedback.into)),
     stubs: [],
     squat: false,
+    folded: false,
   };
 }
 

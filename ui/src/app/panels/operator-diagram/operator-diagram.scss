@@ -469,6 +469,37 @@
   }
 }
 
+// La BANDA: el nodo plegado que además se ha quedado sin alto, que es el caso
+// que el pliegue existe para resolver —de las 88, el 37 a seis filas y el 66 a
+// ocho—. Dos datos en una línea que no envuelve: envolver aquí no es una segunda
+// línea, es una cifra cortada por el borde de la tarjeta, que es exactamente lo
+// que el pliegue vino a impedir.
+//
+// El cuerpo del que sale esta aritmética está en `node-geometry.ts`
+// (`foldedBandHeight()`), y es la única cifra de la ronda que puede decir que el
+// pliegue ha FALLADO: 1 px de aire por lado, una línea a --text-micro con
+// line-height 1 y el filete de la propia tarjeta son 16 px, contra los 18,7 que
+// la tarjeta plegada mide a ocho filas en el suelo del cuerpo. Si se toca uno de
+// los tres, se toca allí en el mismo commit.
+//
+// El nodo plegado que SÍ tiene alto —el que se pliega por estrecho, no por
+// hondo— no entra aquí: apila sus dos datos como apilaba los cinco, con su tipo
+// de siempre, porque lo que le faltaba era ancho y el ancho no lo arregla el
+// tipo.
+.node--folded.node--squat {
+  .node__body {
+    flex-wrap: nowrap;
+    padding: 1px var(--hit-min) 1px 10px;
+    line-height: 1;
+  }
+
+  .node__id,
+  .node__level {
+    font-size: var(--text-micro);
+    line-height: 1;
+  }
+}
+
 // El rol tiñe el contenido del nodo con UNA variable, y cada slot conserva su
 // color de reposo como valor por defecto. Sin rol leído no hay --node-ink y el
 // nodo se dibuja neutro, que es lo que un algoritmo sin leer tiene que parecer.

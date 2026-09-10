@@ -1,16 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import { Topology } from '../../backend/backend-gateway';
+import { ARROWHEAD, NEVER_FOLDS, VISIBLE_SEGMENT, foldRule, rowGapFloor } from './folding';
 import { Slot } from './layout';
+import { floorCanvasHeight, foldedBandHeight } from './node-geometry';
 import {
   COL_GAP,
   MARGIN_X,
   WIDE_CANVAS_H,
   WIDE_CANVAS_W,
   WIDE_COLUMNS,
-  WIDE_ROWS,
   wideLayout,
   wideRowPitch,
 } from './wide-layout';
+
+/**
+ * The deepest of the 88, in rows: the **66**'s chain of eight, `MAX_DEPTH` + 1.
+ *
+ * It was `WIDE_ROWS` in the module until #82 and it is here now, which is a move
+ * and not a copy: it is a fact about the *table*, and the module has stopped
+ * having a deepest drawing — past six rows it folds its facts rather than
+ * drawing rows it cannot hold. Left in the module it would read as a bound the
+ * layout enforces, which it never was and now especially is not.
+ */
+const DEEPEST_ROWS = 8;
 
 /** A topology as the table sends it, with the depth and the branch computed alike. */
 function topology(
@@ -111,6 +123,38 @@ const ALGORITHM_12 = topology(
   [5, 3],
 );
 
+/**
+ * The **37**: Op3 down a chain of six into Op8, with 1 and 2 on the bus beside
+ * it. Six rows, and one of exactly two algorithms the depth trigger fires on.
+ */
+const ALGORITHM_37 = topology(
+  37,
+  [
+    [3, 4],
+    [4, 5],
+    [5, 6],
+    [6, 7],
+    [7, 8],
+  ],
+  [1, 2, 8],
+  [3, 3],
+);
+
+/**
+ * The **55**: the same chain one shorter. Five rows — the deepest drawing that
+ * does *not* fold, and the one the threshold's margin is read at.
+ */
+const ALGORITHM_55 = topology(
+  55,
+  [
+    [4, 5],
+    [5, 6],
+    [6, 7],
+    [7, 8],
+  ],
+  [1, 2, 3, 8],
+);
+
 /** The four the maxima of #40 were measured on, which is what the box is sized to. */
 const THE_WORST_CASES = [ALGORITHM_1, ALGORITHM_66, ALGORITHM_68, ALGORITHM_12];
 
@@ -199,15 +243,15 @@ describe('the wide diagram layout', () => {
     // composición: a rule that read the box would answer differently on an 8 : 1
     // batten and a 1.7 : 1 card, which is the same drawing.
     for (const drawn of [...THE_WORST_CASES, null]) {
-      const wide = wideLayout(drawn, []);
+      const wide = wideLayout(drawn, [], NEVER_FOLDS);
       expect(wide.levelAxis).toBe('width');
     }
-    expect(wideLayout(ALGORITHM_66, []).squat).toBe(true);
-    expect(wideLayout(ALGORITHM_1, []).squat).toBe(false);
+    expect(wideLayout(ALGORITHM_66, [], NEVER_FOLDS).squat).toBe(true);
+    expect(wideLayout(ALGORITHM_1, [], NEVER_FOLDS).squat).toBe(false);
   });
 
   it('stands the portadoras on the bus row and everything else above them', () => {
-    const { slots } = wideLayout(ALGORITHM_2, []);
+    const { slots } = wideLayout(ALGORITHM_2, [], NEVER_FOLDS);
 
     // Depth is height, read from the bus up: Op4 is a portadora and Op1 is three
     // deep, so Op1 is three rows above it.
@@ -223,7 +267,7 @@ describe('the wide diagram layout', () => {
 
   it('touches the bus with every portadora and with nothing else', () => {
     for (const drawn of THE_WORST_CASES) {
-      const { slots, bus, busLine } = wideLayout(drawn, []);
+      const { slots, bus, busLine } = wideLayout(drawn, [], NEVER_FOLDS);
 
       expect(bus.map((drop) => drop.carrier)).toEqual([...drawn.carriers]);
       const busY = points(busLine ?? '')[1];
@@ -245,7 +289,7 @@ describe('the wide diagram layout', () => {
 
   it('runs every route downward, and never sideways', () => {
     for (const drawn of THE_WORST_CASES) {
-      const { slots, routes } = wideLayout(drawn, []);
+      const { slots, routes } = wideLayout(drawn, [], NEVER_FOLDS);
 
       for (const route of routes) {
         const from = slot(slots, route.from);
@@ -260,7 +304,7 @@ describe('the wide diagram layout', () => {
   });
 
   it('parks an operator at zero on a stub off the branches and draws no line of its', () => {
-    const { slots, routes, bus, stubs } = wideLayout(ALGORITHM_2, [1, 5]);
+    const { slots, routes, bus, stubs } = wideLayout(ALGORITHM_2, [1, 5], NEVER_FOLDS);
 
     // Op1 modulates Op2 and Op5 is a portadora; both are cut, so both stand to
     // the right of every operator still in the drawing.
@@ -287,7 +331,7 @@ describe('the wide diagram layout', () => {
   it('never lets a stub reach the bus, whatever is left in the drawing', () => {
     // Six of the eight at zero is an ordinary two-operator patch, not an edge
     // case: it is what the running build reads off the keyboard.
-    const { busLine, stubs } = wideLayout(ALGORITHM_2, [1, 2, 5, 6, 7, 8]);
+    const { busLine, stubs } = wideLayout(ALGORITHM_2, [1, 2, 5, 6, 7, 8], NEVER_FOLDS);
 
     const busY = points(busLine ?? '')[1];
     expect(stubs).toHaveLength(6);
@@ -300,11 +344,15 @@ describe('the wide diagram layout', () => {
 
   it('holds the measured worst cases inside 1232 × 400, with nothing overlapping', () => {
     for (const drawn of THE_WORST_CASES) {
-      const { slots, routes, bus, busLine, feedback, width, height } = wideLayout(drawn, []);
+      const { slots, routes, bus, busLine, feedback, width, height } = wideLayout(
+        drawn,
+        [],
+        NEVER_FOLDS,
+      );
 
       expect(width).toBe(WIDE_CANVAS_W);
       expect(height).toBe(WIDE_CANVAS_H);
-      expect(new Set(slots.map((each) => each.row)).size).toBeLessThanOrEqual(WIDE_ROWS);
+      expect(new Set(slots.map((each) => each.row)).size).toBeLessThanOrEqual(DEEPEST_ROWS);
       expect(new Set(slots.map((each) => each.column)).size).toBeLessThanOrEqual(WIDE_COLUMNS);
 
       for (const each of slots) {
@@ -340,14 +388,14 @@ describe('the wide diagram layout', () => {
     // Three rows is the narrow composition's own count: under it the room the
     // depth did not use is air, not a bigger node, or the drawing would change
     // size every time the Performance did.
-    const shallow = wideLayout(ALGORITHM_1, []);
-    const two = wideLayout(topology(6, [[1, 2]], [2, 3, 4, 5, 6, 7, 8]), []);
+    const shallow = wideLayout(ALGORITHM_1, [], NEVER_FOLDS);
+    const two = wideLayout(topology(6, [[1, 2]], [2, 3, 4, 5, 6, 7, 8]), [], NEVER_FOLDS);
     expect(slot(two.slots, 1).h).toBe(slot(shallow.slots, 1).h);
     expect(shallow.squat).toBe(false);
 
     // The 66 is eight rows in the same box: the node cannot stack five facts in
     // an eighth of it, so it is told to lay them in a row and given the width.
-    const deep = wideLayout(ALGORITHM_66, []);
+    const deep = wideLayout(ALGORITHM_66, [], NEVER_FOLDS);
     expect(deep.squat).toBe(true);
     expect(slot(deep.slots, 1).h).toBeLessThan(slot(shallow.slots, 1).h);
     expect(slot(deep.slots, 1).w).toBeGreaterThan(slot(shallow.slots, 1).w);
@@ -370,7 +418,7 @@ describe('the wide diagram layout', () => {
    */
   it('draws its narrowest card at eight columns, and no cap decides it', () => {
     // The eight-column case, drawn: the 1 stands eight portadoras on the bus row.
-    const wide = wideLayout(ALGORITHM_1, []);
+    const wide = wideLayout(ALGORITHM_1, [], NEVER_FOLDS);
     expect(new Set(wide.slots.map((each) => each.column)).size).toBe(WIDE_COLUMNS);
     expect(slot(wide.slots, 1).w).toBe(narrowestCardWidth());
 
@@ -378,14 +426,16 @@ describe('the wide diagram layout', () => {
     // parkings that move operators from the branches onto the stubs.
     const everyCard = [ALGORITHM_2, ...THE_WORST_CASES].flatMap((drawn) =>
       [[], [1], [1, 5], [1, 2, 5, 6, 7, 8]].flatMap((cut) =>
-        wideLayout(drawn, cut).slots.map((each) => each.w),
+        wideLayout(drawn, cut, NEVER_FOLDS).slots.map((each) => each.w),
       ),
     );
-    expect(Math.min(...everyCard, wideLayout(null, []).slots[0].w)).toBe(narrowestCardWidth());
+    expect(Math.min(...everyCard, wideLayout(null, [], NEVER_FOLDS).slots[0].w)).toBe(
+      narrowestCardWidth(),
+    );
   });
 
   it('stands whole branches side by side and never crosses one with another', () => {
-    const { slots } = wideLayout(ALGORITHM_12, []);
+    const { slots } = wideLayout(ALGORITHM_12, [], NEVER_FOLDS);
 
     // 1 · 2 · [3 4 5] · [6 7 8]: four branches, and each one keeps a band of
     // columns to itself, so no line ever has to cross from one to another.
@@ -417,7 +467,7 @@ describe('the wide diagram layout', () => {
    */
   it('writes FB n past the arc and clear of every node', () => {
     for (const drawn of [ALGORITHM_2, ...THE_WORST_CASES]) {
-      const { slots, feedback } = wideLayout(drawn, []);
+      const { slots, feedback } = wideLayout(drawn, [], NEVER_FOLDS);
       const anchor = { x: feedback?.labelX ?? 0, y: feedback?.labelY ?? 0 };
 
       for (const box of slots) {
@@ -433,7 +483,7 @@ describe('the wide diagram layout', () => {
   it('lifts the label out of its row only when a box stands to its right', () => {
     // The 1: Op1 carries the loop and Op2 through Op8 are beside it on the bus
     // row, so the gutter is 8 units and the words go into the gap above.
-    const crowded = wideLayout(ALGORITHM_1, []);
+    const crowded = wideLayout(ALGORITHM_1, [], NEVER_FOLDS);
     const op1 = slot(crowded.slots, 1);
     expect(crowded.slots.some((box) => box.row === op1.row && box.x > op1.x)).toBe(true);
     expect(crowded.feedback?.labelY ?? 0).toBeLessThan(op1.y);
@@ -441,7 +491,7 @@ describe('the wide diagram layout', () => {
     // The 66 is a single chain, so Op1 is alone on the top row and the whole
     // right of the drawing is empty: the label stays on the arc's own line, and
     // a lift there would move a figure away from the thing it names for nothing.
-    const roomy = wideLayout(ALGORITHM_66, []);
+    const roomy = wideLayout(ALGORITHM_66, [], NEVER_FOLDS);
     const loop = slot(roomy.slots, 1);
     expect(roomy.slots.some((box) => box.row === loop.row && box.x > loop.x)).toBe(false);
     expect(roomy.feedback?.labelY ?? 0).toBeGreaterThan(loop.y);
@@ -452,7 +502,7 @@ describe('the wide diagram layout', () => {
     // has to be true is that the last row ends above it in every algorithm,
     // including the deepest, where the rows are at their tightest.
     for (const drawn of [ALGORITHM_2, ...THE_WORST_CASES]) {
-      const { slots, height } = wideLayout(drawn, []);
+      const { slots, height } = wideLayout(drawn, [], NEVER_FOLDS);
       for (const box of slots) {
         expect(box.y + box.h, `algorithm ${drawn.number}, Op${box.operator}`).toBeLessThan(
           height - 20,
@@ -489,7 +539,7 @@ describe('the wide diagram layout', () => {
 
     for (const drawn of [ALGORITHM_2, ...THE_WORST_CASES]) {
       for (const cut of [[], [1], [1, 2], [3, 5, 7]]) {
-        const { slots, squat } = wideLayout(drawn, cut);
+        const { slots, squat } = wideLayout(drawn, cut, NEVER_FOLDS);
         const placed = slots.filter((box) => !cut.includes(box.operator));
         const rows = Math.max(...placed.map((box) => box.row)) + 1;
         const pitch = wideRowPitch(Math.max(rows, STOPS_GROWING_AT));
@@ -516,16 +566,201 @@ describe('the wide diagram layout', () => {
     // Non-increasing over every row count the 88 can produce, so the deepest is
     // the worst case and a floor measured there is a floor at every depth. Eight
     // rows is the whole surface (#40).
-    for (let rows = 1; rows < WIDE_ROWS; rows += 1) {
+    for (let rows = 1; rows < DEEPEST_ROWS; rows += 1) {
       expect(wideRowPitch(rows + 1).nodeH).toBeLessThanOrEqual(wideRowPitch(rows).nodeH);
     }
     // The 66's card, which is the one the floor was measured on: 33 of the 400
     // units the box is authored in, which the harness drew at 22.9 px.
-    expect(wideRowPitch(WIDE_ROWS).nodeH).toBeCloseTo(33, 6);
+    expect(wideRowPitch(DEEPEST_ROWS).nodeH).toBeCloseTo(33, 6);
+  });
+
+  /**
+   * The depth trigger, forced by algorithm number and never by a predicate.
+   *
+   * The threshold is **derived** — it is the row count at which the gap the
+   * pitch leaves falls under what a gap has to hold — so what a test can add is
+   * that the derivation lands where the drawing is: exactly `{37, 66}` of the
+   * 88, which is the six-row bin and the eight-row bin (#81 read the histogram
+   * off the drawing: `1×1, 2×26, 3×37, 4×17, 5×5, 6×1, 8×1`). A predicate could
+   * drift into agreeing with itself; two numbers cannot.
+   *
+   * **The margin is asserted and the classification is not**, which is the whole
+   * lesson of `bottom: 99%`: at five rows the drawing clears the criterion by
+   * **0.06 px** of visible line, and it is the tightest figure in the round —
+   * inside the rounding of the one term of `floorCanvasHeight()` that is a font
+   * metric. A check that only said «five rows does not fold» would stay green
+   * through the edit that takes that 0.06 negative.
+   */
+  it('folds the drawings too deep for their rows, and no others', () => {
+    const rule = foldRule('rail');
+    const folds = (drawn: Topology) => wideLayout(drawn, [], rule).folded;
+
+    // Six rows and eight rows fold; five and three do not. The 1 is not in this
+    // list: it folds, and for the other reason entirely.
+    expect(folds(ALGORITHM_37)).toBe(true);
+    expect(folds(ALGORITHM_66)).toBe(true);
+    expect(folds(ALGORITHM_55)).toBe(false);
+    expect(folds(ALGORITHM_2)).toBe(false);
+
+    // The margin, in the units the criterion is written in: what is left of the
+    // gap once the arrowhead has taken its nine units, at the scale the canvas
+    // is drawn at when the body is at its floor.
+    const perPixel = floorCanvasHeight() / WIDE_CANVAS_H;
+    const visible = (rows: number) => (wideRowPitch(rows).rowGap - ARROWHEAD) * perPixel;
+    expect(visible(5) - VISIBLE_SEGMENT).toBeCloseTo(0.06, 2);
+    expect(visible(6)).toBeLessThan(VISIBLE_SEGMENT);
+
+    // And the fold buys the gap back: the drawing that folded has a gap that
+    // clears the criterion, which is what folding was for.
+    for (const drawn of [ALGORITHM_37, ALGORITHM_66]) {
+      const rows = new Set(wideLayout(drawn, [], rule).slots.map((each) => each.row)).size;
+      const gap = wideRowPitch(rows, rule.rowGapMin).rowGap;
+      expect((gap - ARROWHEAD) * perPixel, `algorithm ${drawn.number}`).toBeCloseTo(
+        VISIBLE_SEGMENT,
+        6,
+      );
+    }
+  });
+
+  /**
+   * The width trigger, at the actual card and forced by algorithm number.
+   *
+   * Algorithm 1 stands its eight operators on the bus row, so it is the
+   * eight-column case and its card is the narrowest the layout draws — 142 units
+   * against a fitted width of 164.7 in the rail lane. It folds **at the shipped
+   * window**, with no window dragged and nothing measured, which is what makes
+   * the fold ordinary rather than a curiosity of two algorithms in eighty-eight.
+   *
+   * The comparison is against `fittedCard()` and not against a number typed
+   * here: the fitted width is the card the *narrow* composición draws these same
+   * five facts in, so both sides move together and neither can be tuned until an
+   * algorithm folds.
+   */
+  it('folds a card too narrow for its five facts, at the lane the shape claims', () => {
+    const card = (drawn: Topology, shape: 'rail' | 'gone') =>
+      wideLayout(drawn, [], foldRule(shape)).slots[0];
+
+    // The card that folds is the narrowest one there is, and it is under the
+    // fitted width in both of the wide composición's lanes.
+    expect(card(ALGORITHM_1, 'rail').w).toBe(narrowestCardWidth());
+    expect(narrowestCardWidth()).toBeLessThan(foldRule('rail').cardMin);
+    expect(narrowestCardWidth()).toBeLessThan(foldRule('gone').cardMin);
+    expect(wideLayout(ALGORITHM_1, [], foldRule('rail')).folded).toBe(true);
+    expect(wideLayout(ALGORITHM_1, [], foldRule('gone')).folded).toBe(true);
+
+    // Three columns and three rows is the ordinary drawing — 37 of the 88 are
+    // three rows — and it folds for neither reason.
+    expect(wideLayout(ALGORITHM_2, [], foldRule('rail')).folded).toBe(false);
+    expect(card(ALGORITHM_2, 'rail').w).toBeGreaterThan(foldRule('rail').cardMin);
+
+    // The pinned lane is 54 px wider, so it asks less of a card: the same
+    // drawing can fold in the rail and not pinned, and the fold is therefore
+    // something a press on `KEEP IT BIG` can change.
+    expect(foldRule('gone').cardMin).toBeLessThan(foldRule('rail').cardMin);
+  });
+
+  /**
+   * What folds, and what may never fold.
+   *
+   * The fold gives up facts and keeps positions: the card is the only thing in
+   * the drawing that is allowed to change, and it may only get **shorter**. That
+   * last one is the property the body's floor is anchored on (#81) — a floor
+   * measured on the unfolded drawing is a floor at every depth only while
+   * folding can do nothing but buy margin.
+   *
+   * Asserted over the layout's whole output rather than over the row pitch,
+   * because «positions never fold» is a claim about slots, routes, drops and
+   * stubs, and any one of them moving would be the topology folding.
+   */
+  it('folds facts and never positions, and never gives the card more height', () => {
+    for (const drawn of [ALGORITHM_1, ALGORITHM_2, ALGORITHM_37, ALGORITHM_66]) {
+      for (const cut of [[], [1, 5]]) {
+        const before = wideLayout(drawn, cut, NEVER_FOLDS);
+        const after = wideLayout(drawn, cut, foldRule('rail'));
+        const where = `algorithm ${drawn.number}, cut ${cut}`;
+
+        for (const [index, box] of after.slots.entries()) {
+          const was = before.slots[index];
+          expect(box.operator, where).toBe(was.operator);
+          expect([box.row, box.column, box.x, box.y], `${where}, Op${box.operator}`).toEqual([
+            was.row,
+            was.column,
+            was.x,
+            was.y,
+          ]);
+          expect(box.w, `${where}, Op${box.operator}`).toBe(was.w);
+          expect(box.h, `${where}, Op${box.operator}`).toBeLessThanOrEqual(was.h);
+        }
+        // The lines are **redrawn** and not preserved, and that is the point:
+        // they land on the edges of the cards, so a shorter card is a shorter
+        // drop. What may not change is which lines there are — every route, every
+        // portadora's drop and every dead end, the same ones out of the same
+        // operators into the same operators.
+        expect(
+          after.routes.map((route) => [route.from, route.into]),
+          where,
+        ).toEqual(before.routes.map((route) => [route.from, route.into]));
+        expect(
+          after.bus.map((drop) => drop.carrier),
+          where,
+        ).toEqual(before.bus.map((drop) => drop.carrier));
+        expect(
+          after.stubs.map((dead) => dead.operator),
+          where,
+        ).toEqual(before.stubs.map((dead) => dead.operator));
+        expect(after.feedback?.from, where).toBe(before.feedback?.from);
+      }
+    }
+  });
+
+  /**
+   * The one number that can say the fold **failed**.
+   *
+   * Folding is worth doing only if what it keeps is drawable in what it kept it
+   * in. At the body's floor, at eight rows — the deepest of the 88, and the case
+   * the fold exists for — the card comes to 18.7 px and the band needs 16, so
+   * the margin is 2.7 px. Derived, not judged: whether a band that size reads as
+   * depth or as a footnote is look 5 of the verification list (#88).
+   *
+   * The two halves are on purpose. The card is `viewBox` units and the band is
+   * CSS pixels, and this is the one place the round asks them the same question,
+   * so the conversion is here in the open rather than inside either module.
+   */
+  it('leaves a folded card the band it kept, at the deepest algorithm and the floor', () => {
+    const rule = foldRule('rail');
+    const drawing = wideLayout(ALGORITHM_66, [], rule);
+    expect(drawing.folded).toBe(true);
+
+    const rows = new Set(drawing.slots.map((each) => each.row)).size;
+    expect(rows).toBe(DEEPEST_ROWS);
+
+    const card = drawing.slots[0].h * (floorCanvasHeight() / WIDE_CANVAS_H);
+    expect(card).toBeGreaterThanOrEqual(foldedBandHeight());
+    expect(card - foldedBandHeight()).toBeCloseTo(2.7, 1);
+
+    // And it was bought rather than found: the card is shorter than the
+    // unfolded one by exactly what the gap took, so the two halves of the trade
+    // are the same pixels.
+    const unfolded = wideLayout(ALGORITHM_66, [], NEVER_FOLDS).slots[0];
+    expect(drawing.slots[0].h).toBeLessThan(unfolded.h);
+    expect(unfolded.h - drawing.slots[0].h).toBeCloseTo(
+      rule.rowGapMin - wideRowPitch(rows).rowGap,
+      6,
+    );
+  });
+
+  it('keeps the gap floor under the cap, so the two never fight', () => {
+    // The floor is what the fold buys and the cap is what a shallow drawing does
+    // not spend: 17.5 units against 26. If a re-measurement ever put the floor
+    // over the cap, `wideRowPitch` would clamp it away and the fold would go on
+    // folding for a gap it was no longer getting — silently, which is the shape
+    // of failure this round is named after.
+    expect(rowGapFloor()).toBeLessThan(wideRowPitch(1).rowGap);
+    expect(wideRowPitch(DEEPEST_ROWS, rowGapFloor()).rowGap).toBeCloseTo(rowGapFloor(), 6);
   });
 
   it('draws the eight in operator order when no algorithm has been read', () => {
-    const { slots, routes, bus, busLine, feedback, stubs } = wideLayout(null, [1, 2]);
+    const { slots, routes, bus, busLine, feedback, stubs } = wideLayout(null, [1, 2], NEVER_FOLDS);
 
     expect(slots.map((each) => each.operator)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
     // They all stand on one row, in order, and nothing is parked: with no table

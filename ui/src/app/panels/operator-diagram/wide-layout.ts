@@ -1,5 +1,5 @@
 import { Topology } from '../../backend/backend-gateway';
-import { DiagramLayout, DrawnFeedback, DrawnStub, LevelAxis, Slot } from './layout';
+import { DiagramLayout, DrawnFeedback, DrawnStub, FoldRule, LevelAxis, Slot } from './layout';
 
 /**
  * The wide composition's own layout: role read from position, and the position
@@ -36,6 +36,13 @@ import { DiagramLayout, DrawnFeedback, DrawnStub, LevelAxis, Slot } from './layo
  * three rows the node stops growing: the extra room is air, not a bigger node,
  * or the drawing would change size every time the Performance did.
  *
+ * Below what a *gap* needs there is no room left to take, and that is where the
+ * drawing stops shrinking its facts and **folds** them instead ({@link FoldRule},
+ * `folding.ts`): the deepest operators keep their row, their order and their
+ * place above what they modulate, and give up three of their five facts so the
+ * gap can have the height they stop needing. Positions never fold, because depth
+ * is height and a folded position would be a folded topology.
+ *
  * The units are the `viewBox`'s, as in `layout.ts`: the panel stretches the box
  * to whatever room it has and the nodes ride it in percentages of the same box.
  */
@@ -45,13 +52,22 @@ export const WIDE_CANVAS_W = 1232;
 export const WIDE_CANVAS_H = 400;
 
 /**
- * The worst case the box has to hold, measured over the 88 rather than assumed
- * (#40): the **1** stands eight operators on one row (`MAX_ROW`) and the **66**
- * is eight rows deep (`MAX_DEPTH` + 1). Both are the same eight boxes, so eight
- * columns and eight rows is the whole surface — never nine of either.
+ * The worst case the box has to hold across its width, measured over the 88
+ * rather than assumed (#40): the **1** stands eight operators on one row
+ * (`MAX_ROW`), and eight boxes cannot be nine columns.
+ *
+ * **There is no `WIDE_ROWS` beside it any more.** It said 8, for the **66** at
+ * `MAX_DEPTH` + 1, and it was the same eight boxes read down instead of across —
+ * but the two are no longer the same kind of fact. The columns are what the
+ * drawing has; the rows are what it is asked for, and past a certain number of
+ * them the drawing folds its facts rather than drawing rows it cannot hold
+ * ({@link FoldRule}). A constant declaring the deepest row count therefore
+ * declares a case the fold now decides, and a reader who found it would take it
+ * for a bound. Eight is still the deepest of the 88, and it is a fact about the
+ * table, so it is asserted where the table is: `wide-layout.spec.ts` sweeps the
+ * row counts and `algorithms.rs` owns `MAX_DEPTH`.
  */
 export const WIDE_COLUMNS = 8;
-export const WIDE_ROWS = 8;
 
 /**
  * This composición carries Level in the node's **width**, in both of its boxes.
@@ -117,6 +133,17 @@ const MARGIN_Y = 6;
  * Exported, and part of the surface, for the reason written at {@link MARGIN_X}.
  */
 export const COL_GAP = 8;
+/**
+ * The most a gap ever takes of a row's pitch, and — since #82 — **the least**.
+ *
+ * The cap is the old half: a shallow drawing does not spend its room on air. The
+ * floor is the fold's: a gap has to hold its arrowhead plus a visible segment or
+ * the line in it is a stub under a point, and below that the drawing folds its
+ * facts and the card gives the gap the height it stops needing. The floor is not
+ * a constant here because it is earned in pixels at the body's floor — it is
+ * {@link FoldRule.rowGapMin}, and `folding.ts` is where it comes from. Never
+ * both at once in a real drawing: the floor is 17.5 units against this 26.
+ */
 const ROW_GAP_MAX = 26;
 /** How far under the last row the bus runs, and the room `OUT L/R` needs below it. */
 const BUS_OFFSET = 20;
@@ -159,14 +186,51 @@ const STUB_BAR = 34;
  * on screen is that share of the canvas's own rendered height, which is
  * `node-geometry.ts`'s half of the arithmetic and not this one's.
  */
-export function wideRowPitch(slotRows: number): {
+export function wideRowPitch(
+  slotRows: number,
+  rowGapMin = 0,
+): {
   readonly pitchY: number;
   readonly rowGap: number;
   readonly nodeH: number;
 } {
   const pitchY = (WIDE_CANVAS_H - MARGIN_Y - BUS_OFFSET - OUT_ROOM) / slotRows;
-  const rowGap = Math.min(ROW_GAP_MAX, pitchY / 4);
+  // The gap between the two, and the card takes what is left of the pitch. With
+  // no floor asked for this is the drawing that shipped before the fold — which
+  // is what `NEVER_FOLDS` gets, and what the anchor was measured on.
+  const rowGap = Math.min(ROW_GAP_MAX, Math.max(pitchY / 4, rowGapMin));
   return { pitchY, rowGap, nodeH: pitchY - rowGap };
+}
+
+/**
+ * Whether this drawing folds its facts: **one mechanism, and both of its
+ * triggers are this line.**
+ *
+ * - *Too deep for its rows*: the gap the pitch leaves has fallen under what a
+ *   gap has to hold — its arrowhead plus a visible segment.
+ * - *Too narrow for its five facts*: the card is under the width those five
+ *   facts are known to fit in.
+ *
+ * Either one folds, and what they fold is identical, which is the whole reason
+ * they are one mechanism and not two behaviours a pianist has to learn apart.
+ * Read `folding.ts` for where the two numbers come from and — the half that gets
+ * forgotten — for the floor that folding does **not** resolve: one Level point
+ * never smaller than a pixel is a hard floor on the window, because folding the
+ * facts does not widen the card by one pixel.
+ *
+ * Both are judged on the **unfolded** drawing, which is the drawing this one
+ * would otherwise have been. That keeps the decision from standing on its own
+ * consequence, and it is what makes the fold monotone: the card the fold hands
+ * back is never taller than the one it replaced, so a floor measured unfolded at
+ * the deepest algorithm is a floor at every depth (#81).
+ */
+function foldsFacts(unfolded: { rowGap: number }, card: number, rule: FoldRule): boolean {
+  return unfolded.rowGap < rule.rowGapMin || card < rule.cardMin;
+}
+
+/** The card the columns leave, capped by what the node class is allowed. */
+function cardWidth(pitchX: number, squat: boolean): number {
+  return Math.min(pitchX - COL_GAP, squat ? SQUAT_NODE_W_MAX : NODE_W_MAX);
 }
 
 interface Placement {
@@ -192,7 +256,11 @@ interface Shape {
  * stand in operator order on the bus row and not one line is drawn between them,
  * which is the same refusal the narrow composition makes.
  */
-export function wideLayout(topology: Topology | null, cut: readonly number[]): DiagramLayout {
+export function wideLayout(
+  topology: Topology | null,
+  cut: readonly number[],
+  fold: FoldRule,
+): DiagramLayout {
   const operators = [1, 2, 3, 4, 5, 6, 7, 8];
   const parked = topology === null ? [] : operators.filter((operator) => cut.includes(operator));
   const placed = operators.filter((operator) => !parked.includes(operator));
@@ -201,18 +269,25 @@ export function wideLayout(topology: Topology | null, cut: readonly number[]): D
   const rows = placed.length === 0 ? 1 : Math.max(...placed.map(depthOf)) + 1;
   const slotRows = Math.max(rows, MIN_ROWS);
 
-  const { pitchY, rowGap, nodeH } = wideRowPitch(slotRows);
-  const squat = nodeH < STACK_H;
-
   const grid = place(topology, placed, rows, depthOf);
   // The stub never takes the bus row: a dead end reaching down to the bus would
   // be touching the one line that means «you hear this».
   const stubRows = Math.max(1, slotRows - 1);
   const stubColumns = Math.ceil(parked.length / stubRows);
   const columns = Math.max(1, grid.columns + stubColumns);
-
+  // The columns are the fold's business and the fold is not theirs: parking
+  // moves a box from the branches onto a stub and neither one folds anything, so
+  // this width is the same in both drawings.
   const pitchX = (WIDE_CANVAS_W - 2 * MARGIN_X) / columns;
-  const nodeW = Math.min(pitchX - COL_GAP, squat ? SQUAT_NODE_W_MAX : NODE_W_MAX);
+
+  const unfolded = wideRowPitch(slotRows);
+  const folded = foldsFacts(unfolded, cardWidth(pitchX, unfolded.nodeH < STACK_H), fold);
+  const { pitchY, rowGap, nodeH } = folded ? wideRowPitch(slotRows, fold.rowGapMin) : unfolded;
+  // Still the card's own question and not the fold's: how many lines the facts
+  // it kept are laid in is decided by the height it ended with, which is why a
+  // node folded for its width keeps stacking and a folded batten does not.
+  const squat = nodeH < STACK_H;
+  const nodeW = cardWidth(pitchX, squat);
 
   // The grid hangs off the bus: with fewer rows than slots the air is at the
   // top, because depth is height and a shallow patch is a short drawing.
@@ -267,6 +342,7 @@ export function wideLayout(topology: Topology | null, cut: readonly number[]): D
       feedback: null,
       stubs: [],
       squat,
+      folded,
     };
   }
 
@@ -300,6 +376,7 @@ export function wideLayout(topology: Topology | null, cut: readonly number[]): D
         : null,
     stubs: parked.map((operator) => stub(slotOf(operator), shape)),
     squat,
+    folded,
   };
 }
 

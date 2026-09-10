@@ -12,7 +12,7 @@ import { RingFreshness } from '../../provenance/freshness';
 import { Composition } from '../../shell/composition';
 import { DEAD_MARK, PROVENANCE_LABEL } from '../../provenance/provenance';
 import { equalTemperamentHz } from '../../provenance/theory';
-import { FOLDING } from './folding';
+import { FOLDING, NEVER_FOLDS, foldRule } from './folding';
 import { LEGEND } from './legend';
 import { DrawnBus, DrawnRoute, DrawnStub, LevelAxis, Slot, layout } from './layout';
 import { levelTrackInset } from './node-geometry';
@@ -57,7 +57,11 @@ interface NodeView {
    * there is one, and `invalidated` — dash, no stamp — when there is not.
    */
   readonly hz: PolledValue<string>;
-  /** The node's one stamp, taken from the weakest figure in it. */
+  /**
+   * The node's one stamp, taken from the weakest figure in it — {@link FRESHNESS}
+   * is the rank, written down because a folded band leans on it: the band drops
+   * three of the figures this stamp answers for and keeps the stamp.
+   */
   readonly stamp: Provenance;
   /** Where the node sits in the canvas, as a share of it: see `layout.ts`. */
   readonly box: Box;
@@ -124,6 +128,13 @@ interface LineView {
  * word and becomes a **glyph** (`spectral-glyph.ts`), and nothing in the node is
  * allowed to trim a figure — a word that ellipsises is worse than no word.
  *
+ * When the drawing has no room for five, it keeps **two** and says so: identity
+ * and Level, at full length against the same ceiling datum, and the ratio, the
+ * glyph and the Hz are gone rather than shrunk ({@link folded}, `folding.ts`).
+ * That is the same rule one step on — a fact drawn too small to read is a word
+ * that ellipsised — and it is why nothing in the node ever gets a smaller share
+ * of a smaller card: the card gives up facts, never legibility.
+ *
  * Four things are deliberate here. The role is a **shape** before it is a colour
  * — total curve for a portadora, live corner for a modulador, dashed outline for
  * an operator at zero — so it reads without a legend and without colour vision.
@@ -187,10 +198,11 @@ export class OperatorDiagram {
   /**
    * Whether the drawing may fold its facts (`folding.ts`).
    *
-   * Nothing in this file folds anything yet — that is #82 — so all this does
-   * today is publish which way the switch is set, on the host. It is read here
-   * rather than in #82's commit so that the bench the floor is measured in
-   * (#79) can be built and asserted before there is a fold to switch off.
+   * It reaches the drawing as a **rule** and not as a flag: with the switch on
+   * the wide layout is handed what this composición has to keep, and with it off
+   * it is handed a rule that asks for nothing, so there is one path through
+   * `wideLayout()` and the bench cannot end up looking at a third drawing. The
+   * host still says which way the switch is set, which is what the bench reads.
    */
   protected readonly folding = inject(FOLDING);
 
@@ -252,11 +264,30 @@ export class OperatorDiagram {
    */
   private readonly drawing = computed(() => {
     const topology = this.backend.topology();
-    return this.composition.wide() ? wideLayout(topology, parked(this.cut())) : layout(topology);
+    if (!this.composition.wide()) {
+      return layout(topology);
+    }
+    // Per shape, because the lane is: the rail and the pinned composición put the
+    // same card at different pixels, so the same algorithm can fold in one and
+    // not in the other. The shape is a signal, so a press on `KEEP IT BIG` is a
+    // drawing that folds or unfolds under the hand that pressed it.
+    const rule = this.folding() ? foldRule(this.composition.shape()) : NEVER_FOLDS;
+    return wideLayout(topology, parked(this.cut()), rule);
   });
 
-  /** The node lays its five facts in a row: the depth left it no height to stack. */
+  /** The node lays the facts it has in a row: the depth left it no height to stack. */
   protected readonly squat = computed(() => this.drawing().squat);
+
+  /**
+   * The drawing could not hold its five facts, so it kept two of them.
+   *
+   * Identity and Level, at full length against the same rule and the same
+   * ceiling datum — so the loudest operator in the patch is still found by eye,
+   * which is the one reading the fold may not cost. What goes is the ratio, the
+   * glyph and the Hz. What never goes is a position: the rows, the order and the
+   * lines are the drawing the unfolded one would have made, box for box.
+   */
+  protected readonly folded = computed(() => this.drawing().folded);
 
   /**
    * Which of the node's two dimensions carries Level here, taken from the layout
@@ -555,12 +586,48 @@ function text<T>(value: PolledValue<T>, format: (held: T) => string): PolledValu
 }
 
 /**
+ * The three grades of **one source**, weakest first.
+ *
+ * The rank is written down because the folded band leans on it and a rank nobody
+ * can predict is a comparator, not a rule: the band keeps the Level and drops
+ * three figures, so the one stamp it wears has to be the weakest of everything
+ * behind it or the drawing has folded the provenance and kept the value.
+ *
+ * **It needs no cross-source order, and saying so is part of it.** `MEASURED`,
+ * `PREDICTED` and `DOCUMENTED` are grades of where a figure came from and cannot
+ * appear here: the four figures below are all the anillo's own readings of the
+ * same source, and the one calculated figure the node draws — the operator's Hz
+ * — wears its own stamp on its own line and is not in this list. So the order is
+ * total over what can actually arrive, which is what {@link weakest} throws
+ * about rather than guessing.
+ */
+const FRESHNESS: readonly Provenance[] = ['invalidated', 'stale', 'polled'];
+
+/**
  * The node wears one stamp, and it is the worst of what is in it: a node whose
  * Level is fresh and whose ratio is half a second old is not a fresh node.
+ *
+ * Over the figures that **answered**, and `INVALIDADO` when none of them did.
+ * That is the distinction the whole panel is built on and it survives the rank:
+ * a figure with no value is not a weak reading of this patch, it is no reading —
+ * and a node of eight dashes says so once, in the head, instead of stamping
+ * every hole it has.
  */
 function weakest(values: readonly PolledValue<unknown>[]): Provenance {
-  if (values.every((value) => value.value === null)) {
+  const answered = values.filter((value) => value.value !== null);
+  if (answered.length === 0) {
     return 'invalidated';
   }
-  return values.some((value) => value.provenance === 'stale') ? 'stale' : 'polled';
+  return answered.reduce<Provenance>((worst, value) => {
+    const rank = FRESHNESS.indexOf(value.provenance);
+    if (rank === -1) {
+      throw new Error(
+        `operator-diagram: ${JSON.stringify(value.provenance)} is not one of the ` +
+          `grades a node's stamp ranks (${FRESHNESS.join(' < ')}). It is a claim ` +
+          `about where the figure came from, and the node's stamp is about how ` +
+          `fresh the ring's reading is; give it its own line, as the Hz has.`,
+      );
+    }
+    return rank < FRESHNESS.indexOf(worst) ? value.provenance : worst;
+  }, 'polled');
 }

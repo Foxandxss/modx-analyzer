@@ -13,6 +13,7 @@ import {
 } from '../../backend/backend-gateway';
 import { FakeBackendGateway } from '../../backend/fake-backend-gateway';
 import { Clock } from '../../provenance/clock';
+import { ColumnShape } from '../glass-column/column-geometry';
 import { Composition } from '../../shell/composition';
 import { staleAfterMs } from '../../provenance/freshness';
 import { DEAD_MARK } from '../../provenance/provenance';
@@ -55,6 +56,10 @@ function composition(wide: boolean) {
     wide: big.asReadonly(),
     panels: computed(() => !big()),
     pinned: pin.asReadonly(),
+    // The three shapes, from the same two signals the real one derives them
+    // from: the fold's width trigger is per lane, and the rail and the pinned
+    // composición are 54 px apart (`folding.ts`).
+    shape: computed<ColumnShape>(() => (big() ? (pin() ? 'gone' : 'rail') : 'ranuras')),
     togglePin: () => pin.set(!pin()),
   };
 }
@@ -1207,8 +1212,8 @@ describe('OperatorDiagram', () => {
       expect(parked).toBeGreaterThan(parseFloat(nodes(host)[2].style.left));
     });
 
-    it('lays the five facts of the node in a row when the depth leaves no height', async () => {
-      const { backend, fixture, host } = await renderDiagram({ wide: true });
+    it('lays the facts of the node in a row when the depth leaves no height', async () => {
+      const { backend, fixture, host } = await renderDiagram({ wide: true, folding: false });
 
       // Algorithm 6 is two rows, and two rows leave the node the height it has
       // in the 700 px composition, so it stacks its facts exactly as it does
@@ -1219,13 +1224,119 @@ describe('OperatorDiagram', () => {
       expect(nodes(host)[0].classList.contains('node--squat')).toBe(false);
 
       // Eight rows in the same box: the node cannot stack its five facts in an
-      // eighth of it, so it lies them down and takes the width to do it.
+      // eighth of it, so it lies them down and takes the width to do it. With
+      // the switch off, which is the drawing #81 measured the floor on — with it
+      // on this algorithm folds, and the test below is that one.
       backend.topology.set(ALGORITHM_66);
       await fixture.whenStable();
       for (const node of nodes(host)) {
         expect(node.classList.contains('node--squat')).toBe(true);
       }
       expect(parseFloat(nodes(host)[0].style.height)).toBeLessThan(100 / 8);
+    });
+
+    /**
+     * What a folded node keeps and what it gives up, at the seam that draws it.
+     *
+     * The claim is not «three elements are missing» — it is that the two facts
+     * the fold promised to keep are **still measurements**: the identity is
+     * there, the Level's figure is there, and the fill still runs the whole
+     * track against the same ceiling datum, so the loudest operator in the patch
+     * is still found by eye. That is the one reading the fold may not cost, and
+     * it is the one a check that counted elements would not have noticed losing.
+     *
+     * Forced by algorithm number, both triggers: the 66 is eight rows and folds
+     * for its depth, the 1 is eight columns and folds for its width. And the
+     * same drawing with the switch off is the five-fact node, which is what
+     * makes this about the fold and not about the template.
+     */
+    it('keeps identity and Level in a folded node and gives up the other three', async () => {
+      for (const drawn of [ALGORITHM_66, ALGORITHM_1]) {
+        TestBed.resetTestingModule();
+        const { backend, fixture, host } = await renderDiagram({ wide: true });
+        backend.topology.set(drawn);
+        backend.operators.set(theBuildsOwnPatch(NOW));
+        backend.lowestLivePitch.set(60);
+        await fixture.whenStable();
+
+        for (const node of nodes(host)) {
+          const where = `algorithm ${drawn.number}, Op${node.dataset['operator']}`;
+          expect(node.classList.contains('node--folded'), where).toBe(true);
+          expect(node.querySelector('.node__id')?.textContent?.trim(), where).toBe(
+            `OP${node.dataset['operator']}`,
+          );
+          expect(node.querySelector('.node__level')?.textContent?.trim(), where).not.toBe('');
+          // The three that fold, and the fill and the datum that do not.
+          expect(node.querySelector('.node__line'), where).toBeNull();
+          expect(node.querySelector('.node__hz'), where).toBeNull();
+          expect(node.querySelector('.node__fill'), where).not.toBeNull();
+          expect(node.querySelector('.node__datum'), where).not.toBeNull();
+        }
+        // Level is still the length of the fill, on the whole track: 99 against a
+        // ceiling of 99 is the track's full width, and 71 is 71 % of the same one.
+        expect(fillOf(nodes(host)[7])).toEqual({ width: '99%', height: '100%' });
+        expect(fillOf(nodes(host)[2])).toEqual({ width: '71%', height: '100%' });
+      }
+    });
+
+    it('gives the five facts back the moment the drawing has room for them', async () => {
+      // The same algorithm, the same patch, the switch off: nothing folds, so
+      // the three facts are back. What this is really asserting is that the fold
+      // is a property of the drawing and not a state anything holds — there is
+      // no unfolded/folded flag anywhere to get stuck.
+      const { backend, fixture, host } = await renderDiagram({ wide: true, folding: false });
+      backend.topology.set(ALGORITHM_66);
+      backend.operators.set(theBuildsOwnPatch(NOW));
+      await fixture.whenStable();
+
+      for (const node of nodes(host)) {
+        expect(node.classList.contains('node--folded')).toBe(false);
+        expect(node.querySelector('.node__line')).not.toBeNull();
+        expect(node.querySelector('.node__hz')).not.toBeNull();
+      }
+    });
+
+    /**
+     * The band wears **one** stamp and it is the weakest of the ones behind it.
+     *
+     * This is what stops the fold from folding the provenance and keeping the
+     * value: three figures stopped being drawn, and the stamp that is left has
+     * to answer for them too. The rank is written down at `FRESHNESS` — void,
+     * then stale, then fresh, over the freshness of one source — because a rank
+     * nobody can predict is a comparator and not a rule.
+     *
+     * Read at the rendered node, over a patch where the two disagree: Op3's
+     * ratio is a whole threshold older than its Level, so a band that ranked its
+     * figures the other way, or took the head's alone, would say `POLLED` over a
+     * figure it is not currently backing.
+     */
+    it('stamps the folded band with the weakest of the figures behind it', async () => {
+      const { backend, fixture, clock, host } = await renderDiagram({ wide: true });
+      backend.topology.set(ALGORITHM_66);
+
+      const old = NOW - staleAfterMs(IDLE_PASS_MS) - 1;
+      backend.operators.set({
+        ...theBuildsOwnPatch(NOW),
+        operators: theBuildsOwnPatch(NOW).operators.map((node) =>
+          node.operator === 3 ? { ...node, ratio: polled(1, old) } : node,
+        ),
+      });
+      clock.now.set(NOW);
+      await fixture.whenStable();
+
+      const band = nodes(host)[2];
+      expect(band.classList.contains('node--folded')).toBe(true);
+      // One stamp, and it is the ratio's — a figure the band is no longer even
+      // drawing.
+      expect(band.querySelectorAll('.node__stamp')).toHaveLength(1);
+      expect(band.dataset['stamp']).toBe('stale');
+      // Stale keeps no word of its own (GLOSSARY §2): it is `POLLED` plus age,
+      // and the age is the band's broken outline.
+      expect(band.querySelector('.node__stamp')?.textContent?.trim()).toBe('POLLED');
+      expect(band.classList.contains('node--stale')).toBe(true);
+      // And a node whose figures all answered fresh is not dragged down with it:
+      // the rank is per node, over what is in that node.
+      expect(nodes(host)[3].dataset['stamp']).toBe('polled');
     });
 
     it('gives the 700 px grid back exactly as it was when a capture takes the room', async () => {

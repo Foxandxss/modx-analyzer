@@ -97,6 +97,7 @@
         [class.node--inert]="node.role === 'inert'"
         [class.node--stale]="node.stamp === 'stale'"
         [class.node--squat]="squat()"
+        [class.node--folded]="folded()"
         [class.node--level-width]="levelAxis() === 'width'"
         [style.left.%]="node.box.left"
         [style.top.%]="node.box.top"
@@ -164,38 +165,52 @@
 
           <div class="node__level"><app-figure [value]="node.level" /></div>
 
-          <!-- La ratio y la forma espectral, y la forma es un DIBUJO: el nombre
-               es lo que ellipsizaba el par a `×0.50 ...`, y una palabra cortada
-               es peor que ninguna palabra. -->
-          <div class="node__line">
-            <span class="node__ratio"><app-figure [value]="node.ratio" /></span>
-            @if (node.glyph; as glyph) {
-              <svg
-                class="node__glyph"
-                viewBox="0 0 18 14"
-                width="18"
-                height="14"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path [attr.d]="glyph" />
-              </svg>
-            } @else {
-              <span class="node__glyph node__glyph--dead" aria-hidden="true">{{ deadMark }}</span>
-            }
-          </div>
+          <!-- Lo que se PLIEGA, y nada más. El dibujo que no cabe se queda con la
+               identidad y el Level —el relleno sigue midiendo la pista entera
+               contra el mismo techo, así que el operador más alto del patch se
+               sigue encontrando de un vistazo— y suelta la ratio, el glifo y los
+               Hz. Lo que NO se pliega es una posición: la fila, el orden y las
+               líneas son las del dibujo sin plegar, caja por caja, porque la
+               vertical es la profundidad y una posición plegada sería una
+               topología plegada (`folding.ts`).
 
-          <!-- La frecuencia real de la nota viva. Es TEORÍA y lo dice: el
+               El sello se queda: la banda lleva UNO y es el más débil de los que
+               hay detrás, que es lo que impide plegar la procedencia y quedarse
+               con la cifra (`weakest()` en `operator-diagram.ts`). -->
+          @if (!folded()) {
+            <!-- La ratio y la forma espectral, y la forma es un DIBUJO: el nombre
+                 es lo que ellipsizaba el par a `×0.50 ...`, y una palabra cortada
+                 es peor que ninguna palabra. -->
+            <div class="node__line">
+              <span class="node__ratio"><app-figure [value]="node.ratio" /></span>
+              @if (node.glyph; as glyph) {
+                <svg
+                  class="node__glyph"
+                  viewBox="0 0 18 14"
+                  width="18"
+                  height="14"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path [attr.d]="glyph" />
+                </svg>
+              } @else {
+                <span class="node__glyph node__glyph--dead" aria-hidden="true">{{ deadMark }}</span>
+              }
+            </div>
+
+            <!-- La frecuencia real de la nota viva. Es TEORÍA y lo dice: el
                fundamental que mide el MODX no cae donde dice la fórmula.
 
                El sello sale del mapa, como el de la cabecera, y NUNCA de una
                clave fija: sin nota no hay cifra, e `invalidated` está mapeado a
                la cadena vacía precisamente porque una palabra al lado de un
                hueco rotula el hueco (`provenance.ts`). -->
-          <div class="node__hz">
-            <app-figure [value]="node.hz" [unit]="' Hz'" />
-            <span class="node__hz-stamp">{{ labels[node.hz.provenance] }}</span>
-          </div>
+            <div class="node__hz">
+              <app-figure [value]="node.hz" [unit]="' Hz'" />
+              <span class="node__hz-stamp">{{ labels[node.hz.provenance] }}</span>
+            </div>
+          }
         </div>
 
         <!-- La esquina abierta: la marca de «hay más detrás de esto», dibujada en

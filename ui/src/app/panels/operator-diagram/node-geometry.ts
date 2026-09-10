@@ -1,5 +1,11 @@
-import { BODY_FLOOR, DESIGN_BODY_W, diagramLane } from '../glass-column/column-geometry';
-import { CANVAS_H, LevelAxis, NODE_H } from './layout';
+import {
+  BODY_FLOOR,
+  ColumnShape,
+  DESIGN_BODY_W,
+  DIAGRAM_W,
+  diagramLane,
+} from '../glass-column/column-geometry';
+import { CANVAS_H, CANVAS_W, LevelAxis, NODE_H, NODE_W } from './layout';
 import { LEGEND_H, ZONE_PAD_X } from './legend';
 import { COL_GAP, MARGIN_X, WIDE_CANVAS_W, WIDE_COLUMNS } from './wide-layout';
 
@@ -222,8 +228,77 @@ export function floorCanvasHeight(): number {
  * shape's 1 070 — and it is the binding arm by 54 px.
  */
 export function floorCanvasWidth(): number {
-  return diagramLane('rail', DESIGN_BODY_W) - 2 * ZONE_PAD_X;
+  return canvasWidth('rail');
 }
+
+/**
+ * The canvas's rendered width in a given column shape, at the window the app
+ * ships in.
+ *
+ * **`DESIGN_BODY_W` and not a measured window, and that is a statement rather
+ * than a shortcut.** Nothing in this app measures its own boxes — jsdom computes
+ * none, so every claim here is arithmetic the sheets mirror — and `tauri.conf`
+ * gives the body the whole 1 280 px with no `minWidth` under it. So this is the
+ * lane the composición *claims*, per shape: **980 px in the rail and 1 034
+ * pinned**, the 54 px between them being the filete the pinned shape halves. The
+ * day the window has a floor (#86) it is this function that learns it, and the
+ * fold trigger reading it moves with it in one place.
+ */
+export function canvasWidth(shape: ColumnShape): number {
+  return diagramLane(shape, DESIGN_BODY_W) - 2 * ZONE_PAD_X;
+}
+
+/**
+ * The width at which five facts are known to fit, in CSS pixels: **131 px**.
+ *
+ * The fold's width trigger needs a fitted width, and the temptation is to author
+ * one — a number picked until algorithm 1 folds, which is a classification
+ * wearing a derivation. This is not that. It is the card the **narrow 3 × 3
+ * grid** draws, and that card holds these same five facts today, in the same
+ * template at the same type, in the composición that ships: `NODE_W` of
+ * `CANVAS_W`, of the lane the narrow composición is written to keep exactly
+ * ({@link DIAGRAM_W}) less the zone's padding.
+ *
+ * So the claim is a comparison and not a threshold — *this card is narrower than
+ * one that is known to hold what it is being asked to hold* — and the only way
+ * it goes stale is somebody changing what the grid node draws, which changes
+ * both sides of it at once.
+ *
+ * **It says nothing about the batten.** A node laying its five facts in a row
+ * needs the width its row needs, which is not this number and is more than any
+ * card the layout draws — at 302 px the batten wraps to two lines, which is the
+ * card's height and not its width, and it is not what this trigger is about
+ * (#81's table, and look 5 of #88).
+ */
+export function fittedCardWidth(): number {
+  return (NODE_W / CANVAS_W) * (DIAGRAM_W - 2 * ZONE_PAD_X);
+}
+
+/**
+ * The band a folded node needs, in CSS pixels: **16 px**, border to border.
+ *
+ * This is what the fold has to buy back, and it is the one number in the round
+ * that can say the fold *failed*: if a folded card comes out shorter than this,
+ * the drawing is folding facts and still not holding what it kept, and the
+ * fold's own floor is the thing that fails (#81). At the body's floor, at eight
+ * rows — the deepest of the 88 and the worst case there is — the folded card is
+ * 18.7 px, so the margin is **2.7 px**, derived and nobody has looked at it: look
+ * 5 of the verification list is *does the folded band read as depth, or as a
+ * footnote* (#88).
+ *
+ * Mirrored from `operator-diagram.scss`'s `.node--folded.node--squat` — one line
+ * at `--text-micro` with `line-height: 1`, a pixel of padding on each side, and
+ * `.node`'s own `--rule-min` border, which is in the box because `.node` is
+ * `border-box`. `legend.ts`'s trade, for its reason.
+ */
+export function foldedBandHeight(): number {
+  return 2 * NODE_BORDER + 2 * BAND_PAD_Y + BAND_LINE;
+}
+
+/** `.node--folded.node--squat .node__body`'s padding, top and bottom. */
+const BAND_PAD_Y = 1;
+/** Its one line: `--text-micro`, at `line-height: 1` so the box is the figure. */
+const BAND_LINE = 10;
 
 /**
  * The smallest card the narrow 3 × 3 grid puts on screen, along the axis that
