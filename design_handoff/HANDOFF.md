@@ -46,16 +46,18 @@ one. Same markup as its siblings, `#58c8f5` border, linking to `Round10-operator
 
 ## What is agreed and what is not
 
-**The repository's handoff is the agreed one. Build against that.** This proposal is not applied
-anywhere: `TRACK_INSET` and `DAYLIGHT_FLOOR` are live in the build today, and the proposal is what
-would retire them. If you are implementing this week, implement the handoff — the proposal tells you
-which parts are about to move and why.
+**The repository's handoff is the agreed one. Build against that.** When this note was written the
+proposal was not applied anywhere — `TRACK_INSET` and `DAYLIGHT_FLOOR` were live in the build. They
+are not any more: the geometry landed in #80–#83 and the decision is ADR-0008, which is what the build
+is now checked against. The proposal remains the argument; where it and the build disagree on a
+figure, the build wins and the ADR says which way it went.
 
-Five things in it are open on the owner or on the hardware rather than on the design: whether a route
-into a parked operator is drawn inert (a claim about the sound, §5); whether a horizontal bar reads as
-loudness at all — **narrowed on 2026-09-10 (#78)**: the sheet was read as a rejection test and did not
-reject, so what is still open is the confirmation in the app's own ink, on the wide stacked node at
-the column cap, in `docs/results/2026-09-10-la-barra-horizontal.md`; the two rotated daylight figures (6.9 px on the batten, 6.1 on the wide stacked node
-at the column cap), derived and unlooked-at on either box; **rule 20's 6 px of visible line, which is
-chosen rather than judged and decides the 5-row bin to within 0.15 px**; and #66's second arm, which
-is a measurement nobody has taken.
+What is still open on the owner or on the hardware rather than on the design is **the verification
+list, and it lives in one place: `docs/adr/0008-el-level-corre-por-el-eje-que-declara-su-composicion.md`
+§8.** This note does not repeat it, because a list kept in two places is the drift this round is named
+after — it grew from five items to nine between the proposal and the build. What this note can say
+is where the list stands: the horizontal bar was read on the sheet as a rejection test and did not
+reject (#78, `docs/results/2026-09-10-la-barra-horizontal.md`), so the confirmation in the app's own
+ink is look 1 there and is the ADR's kill condition; the two rotated daylights, rule 20's visible
+segment, the folded band, the drag and the scrolled origin are looks 2 to 7, derived and unlooked-at;
+and #66's second arm is no longer a measurement nobody has taken — it is a derived floor (#86).

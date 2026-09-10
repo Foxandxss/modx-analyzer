@@ -125,21 +125,11 @@ const LEVEL_SCALE = 100;
  *
  * **6 px, and the criterion is all that survives the rotation.** The number was
  * judged once, on the vertical axis, and that verdict is retired rather than
- * deleted — it is carried into ADR-0008 with its value, its card, its patch as
- * Levels and the sentence that the geometry it was judged in no longer exists
- * (#84). Recorded here until that document is in the tree, because a judgement
- * deleted silently is the same defect as one kept past its geometry:
- *
- * - **What was on screen.** The wide composición, both ranuras empty so the
- *   156 px strip is up, window restored and dragged down, on a 2× display.
- * - **Which patch, as Levels.** Algorithm 66 with `99 · 0 · 99 · 99 · 0 · 0 · 99
- *   · 99` — a ceiling of 99 with a **lit carrier at the ceiling**, which is the
- *   case worth judging: the datum then lies against `--carrier` at full strength.
- * - **What was measured**, off the PNG at 1:1 on OP8's card: 4 device px of
- *   border ink, 13 device px of clean `--surface-raised`, 4 device px of datum.
- *   About 6.5 CSS px.
- * - **How it read.** A rule at a common height, clearly clear of the border, and
- *   not as a rim on the fill.
+ * deleted — it is carried into ADR-0008 §7 with its value, its card, its patch
+ * as Levels and the sentence that the geometry it was judged in no longer
+ * exists (#84). That document is the record now, and this comment is not a
+ * second copy of it: a judgement kept in two places drifts exactly as a number
+ * declared in two places does.
  *
  * ### Why the criterion transfers and the verdict does not
  *
@@ -154,8 +144,9 @@ const LEVEL_SCALE = 100;
  * So the two rotated daylights are **derived and nobody has looked at them**:
  * about **6.0 px** on the narrowest card this build can draw and 7.9 px on the
  * batten at three columns. They are the same kind of number `bottom: 99%` was,
- * and they are looks 2 and 3 of the round's verification list (#88), to be taken
- * on the **wide stacked node at the column cap** and not only on the batten —
+ * and they are looks 2 and 3 of the round's verification list — which lives in
+ * ADR-0008 §8 and is taken in #88 — on the **wide stacked node at the column
+ * cap** and not only on the batten —
  * taking it on the roomy box is the same trap as judging the old datum on the
  * grid card.
  *
