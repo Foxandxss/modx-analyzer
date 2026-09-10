@@ -118,6 +118,13 @@ from a second accident riding underneath it: *the height*.
 **What I cannot settle on paper.** Whether a horizontal bar still reads as loudness. That needs the
 rotated node on the hardware beside the grid.
 
+> **The rejection test was taken, and it did not reject (#78, 2026-09-10).** `10b` and `10c` were
+> opened and read; the reading is `docs/results/2026-09-10-la-barra-horizontal.md`. The sentence
+> above stands — a sheet can reject but not bless, so the sheet still does not settle it. What
+> changed is that the round is no longer waiting on the possibility of a no: the confirmation in the
+> app's own ink is look 1 on the verification list, and it has to be taken on the **wide stacked node
+> at the column cap**, whose 108 px track this sheet does not draw.
+
 ## 2 · Three conditions on the rotation
 
 All three are about not rebuilding the same failure on the new axis. Drawn at `10f`.
@@ -729,4 +736,6 @@ thing a reader is asked to do.
 No app code, no SCSS, no test changes, no ticket. `#59`, `#60` and `#61` were not read. The three
 decisions are not separable: decision 1 needs the width decision 2 keeps, and decision 2 needs the
 height decision 3 releases. One question is still open on the owner's ear rather than mine — rule 19,
-§5 — and one thing is not decidable on paper at all: whether a horizontal bar reads as loudness.
+§5 — and one thing is not decidable on paper at all: whether a horizontal bar reads as loudness. That
+last one has since been put to the sheet as a rejection test and did not reject; see §1's note and
+`docs/results/2026-09-10-la-barra-horizontal.md`. It is still not decided on paper.

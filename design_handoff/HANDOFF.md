@@ -53,7 +53,9 @@ which parts are about to move and why.
 
 Five things in it are open on the owner or on the hardware rather than on the design: whether a route
 into a parked operator is drawn inert (a claim about the sound, §5); whether a horizontal bar reads as
-loudness at all; the two rotated daylight figures (6.9 px on the batten, 6.1 on the wide stacked node
+loudness at all — **narrowed on 2026-09-10 (#78)**: the sheet was read as a rejection test and did not
+reject, so what is still open is the confirmation in the app's own ink, on the wide stacked node at
+the column cap, in `docs/results/2026-09-10-la-barra-horizontal.md`; the two rotated daylight figures (6.9 px on the batten, 6.1 on the wide stacked node
 at the column cap), derived and unlooked-at on either box; **rule 20's 6 px of visible line, which is
 chosen rather than judged and decides the 5-row bin to within 0.15 px**; and #66's second arm, which
 is a measurement nobody has taken.
