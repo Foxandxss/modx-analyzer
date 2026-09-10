@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  html,body{margin:0;background:#0b0e0f}
+  a{color:#7df0b0}a:hover{color:#a9f7cd}
+</style>
+</helmet>
+
+<section style="padding:40px 40px 90px;display:flex;flex-direction:column;gap:16px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif">
+
+  <div style="display:flex;flex-direction:column;gap:8px;max-width:1180px">
+    <div style="font-size:32px;color:#d6e2dd">Round 10 — the wide drawing, decided as one thing</div>
+    <div style="font-size:15px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Three questions that compete for the same pixels: <a href="#10b">10b</a> what form the ceiling reference takes, <a href="#10c">10c</a> what a card's width is for, <a href="#10d">10d</a> whether eight rows get drawn in full — and <a href="#10f">10f</a>, the three conditions the answer carries. They are answered together, and the answer is one move: <span style="color:#d6e2dd">in the wide drawing Level lies along the axis its composition states — height in the grid, length in both of the wide boxes — the ceiling becomes a vertical rule, and the chain folds its facts instead of its positions.</span> Every figure here is either read out of the build at <span style="font-family:ui-monospace,Consolas,monospace">52eb91b</span> — #67's track, landed — or measured off the hardware screenshot — see <a href="#10a">10a</a>. The written-up version, with the proposed handoff diff, is <span style="font-family:ui-monospace,Consolas,monospace">ROUND10-PROPOSAL.md</span>.</div>
+    <div style="font-size:13px;color:#6f817c;line-height:1.6;max-width:1180px;text-wrap:pretty">Test case throughout: <span style="font-family:ui-monospace,Consolas,monospace;color:#8fa39d">algorithm 66</span>, the single eight-deep chain, at the boot composition and at <span style="font-family:ui-monospace,Consolas,monospace">BODY_FLOOR</span>. Nothing here is implemented and nothing is a ticket.</div>
+  </div>
+
+  <div id="10a" style="display:flex;flex-direction:column;gap:12px;margin-top:22px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">10a</span>
+      <span style="font-size:26px;color:#d6e2dd">What is on screen today, at 1:1</span>
+      <span style="font-size:15px;color:#8fa39d">algorithm 66 · pin down · lane 1 070 px as the sheet draws it, 1 068 by the arithmetic · measured off the hardware shot</span>
+    </div>
+
+    <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#8a5f4a">AS SHIPPED AT 52eb91b — CARD 320 × 34.5 PX, TRACK 22.5, ROW PITCH 46, GAP 11.5. THE DATUM HAS ITS DAYLIGHT; THE AXIS HAS 0.225 PX PER LEVEL POINT</div>
+
+    <div style="position:relative;width:1034px;height:418px;box-sizing:border-box;background:#0a0f10;border:1px solid rgba(255,255,255,.10)">
+      <span style="position:absolute;left:674px;top:16px;font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.08em;color:#f3b13f">FB 0</span>
+      <div style="position:absolute;left:358px;top:6px;width:320px;height:34.5px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:10px 10px 10px 2px;background:#0f1417;overflow:hidden">
+        <div style="position:absolute;inset:8px 0 0 0;overflow:visible">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:99%;background:linear-gradient(to top,rgba(88,200,245,.48),rgba(88,200,245,.04))"></div>
+          <div style="position:absolute;left:0;right:0;bottom:99%;height:0;border-top:2px dashed rgba(255,255,255,.3)"></div>
+        </div>
+        <div style="position:absolute;inset:0;padding:3px 44px 3px 10px;box-sizing:border-box;display:flex;flex-flow:row wrap;align-items:baseline;align-content:center;column-gap:8px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c">OP1</span>
+          <span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:18px;line-height:1;color:#58c8f5;margin-left:22px">99</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:26px">×1.00</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:18px">|</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;margin-left:auto">—</span>
+        </div>
+        <span style="position:absolute;right:6px;bottom:5px;width:11px;height:11px;border-right:2px solid #58c8f5;border-bottom:2px solid #58c8f5"></span>
+      </div>
+
+      <div style="position:absolute;left:358px;top:52px;width:320px;height:34.5px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:10px 10px 10px 2px;background:#0f1417;overflow:hidden">
+        <div style="position:absolute;inset:8px 0 0 0;overflow:visible">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:16%;background:linear-gradient(to top,rgba(88,200,245,.48),rgba(88,200,245,.04))"></div>
+          <div style="position:absolute;left:0;right:0;bottom:99%;height:0;border-top:2px dashed rgba(255,255,255,.3)"></div>
+        </div>
+        <div style="position:absolute;inset:0;padding:3px 44px 3px 10px;box-sizing:border-box;display:flex;flex-flow:row wrap;align-items:baseline;align-content:center;column-gap:8px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c">OP2</span>
+          <span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+          <span style="font-size:7px;letter-spacing:.06em;color:#5d6d69">POLLED</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:18px;line-height:1;color:#58c8f5;margin-left:8px">16</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:26px">×1.00</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:18px">|</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;margin-left:auto">—</span>
+        </div>
+        <span style="position:absolute;right:6px;bottom:5px;width:11px;height:11px;border-right:2px solid #58c8f5;border-bottom:2px solid #58c8f5"></span>
+      </div>
+
+      <div style="position:absolute;left:358px;top:98px;width:320px;height:34.5px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:10px 10px 10px 2px;background:#0f1417;overflow:hidden">
+        <div style="position:absolute;inset:8px 0 0 0;overflow:visible">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:96%;background:linear-gradient(to top,rgba(88,200,245,.48),rgba(88,200,245,.04))"></div>
+          <div style="position:absolute;left:0;right:0;bottom:99%;height:0;border-top:2px dashed rgba(255,255,255,.3)"></div>
+        </div>
+        <div style="position:absolute;inset:0;padding:3px 44px 3px 10px;box-sizing:border-box;display:flex;flex-flow:row wrap;align-items:baseline;align-content:center;column-gap:8px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c">OP3</span>
+          <span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+          <span style="font-size:7px;letter-spacing:.06em;color:#5d6d69">POLLED</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:18px;line-height:1;color:#58c8f5;margin-left:8px">96</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:26px">×1.00</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:18px">|</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;margin-left:auto">—</span>
+        </div>
+        <span style="position:absolute;right:6px;bottom:5px;width:11px;height:11px;border-right:2px solid #58c8f5;border-bottom:2px solid #58c8f5"></span>
+      </div>
+
+      <div style="position:absolute;left:358px;top:144px;width:320px;height:34.5px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:10px 10px 10px 2px;background:#0f1417;overflow:hidden">
+        <div style="position:absolute;inset:8px 0 0 0;overflow:visible">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:45%;background:linear-gradient(to top,rgba(88,200,245,.48),rgba(88,200,245,.04))"></div>
+          <div style="position:absolute;left:0;right:0;bottom:99%;height:0;border-top:2px dashed rgba(255,255,255,.3)"></div>
+        </div>
+        <div style="position:absolute;inset:0;padding:3px 44px 3px 10px;box-sizing:border-box;display:flex;flex-flow:row wrap;align-items:baseline;align-content:center;column-gap:8px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c">OP4</span>
+          <span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+          <span style="font-size:7px;letter-spacing:.06em;color:#5d6d69">POLLED</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:18px;line-height:1;color:#58c8f5;margin-left:8px">45</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:26px">×1.00</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:18px">|</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;margin-left:auto">—</span>
+        </div>
+        <span style="position:absolute;right:6px;bottom:5px;width:11px;height:11px;border-right:2px solid #58c8f5;border-bottom:2px solid #58c8f5"></span>
+      </div>
+
+      <div style="position:absolute;left:358px;top:190px;width:320px;height:34.5px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:10px 10px 10px 2px;background:#0f1417;overflow:hidden">
+        <div style="position:absolute;inset:8px 0 0 0;overflow:visible">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:15%;background:linear-gradient(to top,rgba(88,200,245,.48),rgba(88,200,245,.04))"></div>
+          <div style="position:absolute;left:0;right:0;bottom:99%;height:0;border-top:2px dashed rgba(255,255,255,.3)"></div>
+        </div>
+        <div style="position:absolute;inset:0;padding:3px 44px 3px 10px;box-sizing:border-box;display:flex;flex-flow:row wrap;align-items:baseline;align-content:center;column-gap:8px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c">OP5</span>
+          <span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+          <span style="font-size:7px;letter-spacing:.06em;color:#5d6d69">POLLED</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:18px;line-height:1;color:#58c8f5;margin-left:8px">15</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:26px">×1.00</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:18px">|</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;margin-left:auto">—</span>
+        </div>
+        <span style="position:absolute;right:6px;bottom:5px;width:11px;height:11px;border-right:2px solid #58c8f5;border-bottom:2px solid #58c8f5"></span>
+      </div>
+
+      <div style="position:absolute;left:358px;top:236px;width:320px;height:34.5px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:10px 10px 10px 2px;background:#0f1417;overflow:hidden">
+        <div style="position:absolute;inset:8px 0 0 0;overflow:visible">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:19%;background:linear-gradient(to top,rgba(88,200,245,.48),rgba(88,200,245,.04))"></div>
+          <div style="position:absolute;left:0;right:0;bottom:99%;height:0;border-top:2px dashed rgba(255,255,255,.3)"></div>
+        </div>
+        <div style="position:absolute;inset:0;padding:3px 44px 3px 10px;box-sizing:border-box;display:flex;flex-flow:row wrap;align-items:baseline;align-content:center;column-gap:8px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c">OP6</span>
+          <span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+          <span style="font-size:7px;letter-spacing:.06em;color:#5d6d69">POLLED</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:18px;line-height:1;color:#58c8f5;margin-left:8px">19</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:26px">×1.00</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:18px">|</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;margin-left:auto">—</span>
+        </div>
+        <span style="position:absolute;right:6px;bottom:5px;width:11px;height:11px;border-right:2px solid #58c8f5;border-bottom:2px solid #58c8f5"></span>
+      </div>
+
+      <div style="position:absolute;left:358px;top:282px;width:320px;height:34.5px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:10px 10px 10px 2px;background:#0f1417;overflow:hidden">
+        <div style="position:absolute;inset:8px 0 0 0;overflow:visible">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:99%;background:linear-gradient(to top,rgba(88,200,245,.48),rgba(88,200,245,.04))"></div>
+          <div style="position:absolute;left:0;right:0;bottom:99%;height:0;border-top:2px dashed rgba(255,255,255,.3)"></div>
+        </div>
+        <div style="position:absolute;inset:0;padding:3px 44px 3px 10px;box-sizing:border-box;display:flex;flex-flow:row wrap;align-items:baseline;align-content:center;column-gap:8px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c">OP7</span>
+          <span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+          <span style="font-size:7px;letter-spacing:.06em;color:#5d6d69">POLLED</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:18px;line-height:1;color:#58c8f5;margin-left:8px">99</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:26px">×1.00</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:18px">|</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;margin-left:auto">—</span>
+        </div>
+        <span style="position:absolute;right:6px;bottom:5px;width:11px;height:11px;border-right:2px solid #58c8f5;border-bottom:2px solid #58c8f5"></span>
+      </div>
+
+      <div style="position:absolute;left:358px;top:328px;width:320px;height:34.5px;box-sizing:border-box;border:2px solid #f3b13f;border-radius:999px;background:#0f1417;overflow:hidden">
+        <div style="position:absolute;inset:8px 0 0 0;overflow:visible">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:99%;background:linear-gradient(to top,rgba(243,177,63,.46),rgba(243,177,63,.04))"></div>
+          <div style="position:absolute;left:0;right:0;bottom:99%;height:0;border-top:2px dashed rgba(255,255,255,.3)"></div>
+        </div>
+        <div style="position:absolute;inset:0;padding:3px 44px 3px 14px;box-sizing:border-box;display:flex;flex-flow:row wrap;align-items:baseline;align-content:center;column-gap:8px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#6f817c">OP8</span>
+          <span style="font-size:8px;letter-spacing:.14em;color:#f3b13f">CARR</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:18px;line-height:1;color:#f3b13f;margin-left:22px">99</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#8fa39d;margin-left:26px">×1.00</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#f3b13f;margin-left:18px">|</span>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69;margin-left:auto">—</span>
+        </div>
+        <span style="position:absolute;right:8px;bottom:5px;width:11px;height:11px;border-right:2px solid #f3b13f;border-bottom:2px solid #f3b13f"></span>
+      </div>
+
+      <div style="position:absolute;left:517px;top:363px;width:2px;height:20px;background:#7df0b0"></div>
+      <div style="position:absolute;left:517px;top:382px;right:16px;height:2px;background:#7df0b0"></div>
+      <span style="position:absolute;right:16px;top:388px;font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.08em;color:#7df0b0">OUT L/R</span>
+
+      <div style="position:absolute;left:706px;top:6px;width:250px;display:flex;flex-direction:column;gap:16px">
+      <div style="width:250px;border-left:1px dashed rgba(255,255,255,.18);padding-left:12px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px">
+        <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.14em;color:#ff9d85">THE VERTICAL AXIS IS CARRYING TWO QUANTITIES</span>
+        <span style="font-size:11.5px;color:#8fa39d;line-height:1.5">Across nodes, down means <span style="color:#d6e2dd">depth in the chain</span>. Inside a node, up means <span style="color:#d6e2dd">Level</span>. Two different kinds of number in one direction, and every symptom of this week is that overload surfacing — the datum in the border, the batten, eight strokes the eye was asked to join.</span>
+      </div>
+      <div style="width:250px;border-left:1px dashed rgba(255,255,255,.18);padding-left:12px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px">
+        <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.14em;color:#ff9d85">FB 0 IS HALF-COVERED BY ITS OWN NODE</span>
+        <span style="font-size:11.5px;color:#8fa39d;line-height:1.5">The anchor sits <span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">8.4 px</span> past the card's right edge and is then centred back onto it, and the nodes paint <span style="color:#d6e2dd">after</span> the labels in the template. It reads <span style="font-family:ui-monospace,Consolas,monospace">B 0</span>.</span>
+      </div>
+      <div style="width:250px;border-left:1px dashed rgba(255,255,255,.18);padding-left:12px;box-sizing:border-box;display:flex;flex-direction:column;gap:4px">
+        <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.14em;color:#ff9d85">THE ROUTES ARE 11.5 PX OF VERTICAL, ARROWHEAD INCLUDED</span>
+        <span style="font-size:11.5px;color:#8fa39d;line-height:1.5">Row gap is <span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">min(26, pitchY/4)</span> = 11 units. There is no room to draw an elbow in, so a route is a stub — and at the floor the arrowhead is taller than the gap it lives in.</span>
+      </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;width:1034px;background:rgba(255,255,255,.08)">
+      <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#58c8f5">WHERE EVERY NUMBER HERE COMES FROM</div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Code: <span style="font-family:ui-monospace,Consolas,monospace">1232 × 400</span> viewBox, 8 rows, <span style="font-family:ui-monospace,Consolas,monospace">pitchY 44</span>, <span style="font-family:ui-monospace,Consolas,monospace">rowGap 11</span>, <span style="font-family:ui-monospace,Consolas,monospace">nodeH 33</span>, <span style="font-family:ui-monospace,Consolas,monospace">nodeW 380</span> — so the card is <span style="color:#d6e2dd">30.84 % × 8.25 %</span> of the box. Hardware: card <span style="color:#d6e2dd">320 px</span> wide, row pitch <span style="color:#d6e2dd">46 px</span>. <span style="color:#d6e2dd">This drawing is at the sheet's lane, not the arithmetic's</span> — canvas 1 034 × 418. The card is drawn at the <span style="color:#d6e2dd">320 px measured off the shot</span>; 30.84 % of the two lanes comes to 318.9 (sheet) and 318.3 (<span style="font-family:ui-monospace,Consolas,monospace">diagramLane()</span>), and the gap between those two is <a href="#10f">10f</a>'s finding rather than a measurement error. The drawing says which side it is on instead of splitting them.</div>
+      </div>
+      <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#f3b13f">ONE LEVEL POINT IS 0.225 PX TALL — AND 2.92 PX WIDE</div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">#67's track is the right fix and it <span style="color:#d6e2dd">costs the fill a third of its range</span>: 22.5 px of track on a 34.5 px card, 11.6 at <span style="font-family:ui-monospace,Consolas,monospace">BODY_FLOOR</span> (canvas 286, not the 300 I first estimated). So the datum's daylight and the fill's scale now bid for the same 23.6 px. <span style="color:#d6e2dd">99 against 96 is 0.68 px of height and 8.8 px of length</span>; at the floor, 0.35 px against 8.8. And 71-against-99, quoted at one size: <span style="color:#d6e2dd">15.7 px on the grid node, 3.3 px on the batten</span> — the 30 px in §9 is 108 <span style="color:#d6e2dd">units</span> wearing a px sign.</div>
+      </div>
+      <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#ff9d85">#67 LANDED AS 52eb91b, AND THIS ROUND RETIRES WHAT IT BUILT</div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty"><span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">TRACK_INSET 8</span> and <span style="font-family:ui-monospace,Consolas,monospace;color:#d6e2dd">DAYLIGHT_FLOOR 6</span> are in <span style="font-family:ui-monospace,Consolas,monospace">node-geometry.ts</span>, judged on screen against algorithm 66 at <span style="font-family:ui-monospace,Consolas,monospace">99 · 0 · 99 · 99 · 0 · 0 · 99 · 99</span> — a lit carrier at the ceiling, on a ~31 px card. <span style="color:#d6e2dd">The 6 px criterion survives the rotation; the 8 px that implemented it on the vertical axis does not.</span> §7 of the proposal retires it by name rather than quietly.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="10b" style="display:flex;flex-direction:column;gap:12px;margin-top:44px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">10b</span>
+      <span style="font-size:26px;color:#d6e2dd">Question 1 — what form the ceiling reference takes</span>
+      <span style="font-size:15px;color:#8fa39d">three candidates, all at the worst card: <span style="font-family:ui-monospace,Consolas,monospace">BODY_FLOOR</span>, 302 × 23.6</span>
+    </div>
+
+    <div style="font-size:13.5px;color:#8fa39d;line-height:1.6;max-width:1034px;text-wrap:pretty">First, a correction that changes the question. <span style="color:#d6e2dd">The datum has never been one line across the eight.</span> It is one <span style="font-family:ui-monospace,Consolas,monospace">.node__datum</span> per node at the same <span style="color:#d6e2dd">relative</span> height — the suite asserts eight of them — so in the 3 × 3 grid it appears at three different heights and in the wide drawing at eight. It works, where it works, as a repeated mark on identical boxes. That defuses the objection that eight edge ticks would not align into a common rule: <span style="color:#d6e2dd">nothing ever aligned into one.</span> What is left of question 1 is therefore narrow and answerable: which axis of the card carries Level.</div>
+
+    <div style="display:flex;gap:2px;flex-wrap:wrap;background:rgba(255,255,255,.08);width:1034px">
+      <div style="flex:1 1 300px;background:#0a0f10;padding:16px 18px 20px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#8a5f4a">A · INSIDE, AS SHIPPED WITH THE TRACK — REJECTED</div>
+        <div style="position:relative;height:112px">
+          <div style="position:absolute;left:0;top:0;width:302px;height:23.6px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:8px 0 0 0;overflow:visible">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:99%;background:linear-gradient(to top,rgba(88,200,245,.48),rgba(88,200,245,.04))"></div>
+              <div style="position:absolute;left:0;right:0;bottom:99%;height:0;border-top:2px dashed rgba(255,255,255,.3)"></div>
+            </div>
+            <div style="position:absolute;inset:0;padding:1px 40px 1px 8px;box-sizing:border-box;display:flex;align-items:center;column-gap:7px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">OP1</span>
+              <span style="font-size:7px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;color:#58c8f5;margin-left:14px">99</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#8fa39d;margin-left:18px">×1.00</span>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;top:33px;width:302px;height:23.6px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:8px 0 0 0;overflow:visible">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:96%;background:linear-gradient(to top,rgba(88,200,245,.48),rgba(88,200,245,.04))"></div>
+              <div style="position:absolute;left:0;right:0;bottom:99%;height:0;border-top:2px dashed rgba(255,255,255,.3)"></div>
+            </div>
+            <div style="position:absolute;inset:0;padding:1px 40px 1px 8px;box-sizing:border-box;display:flex;align-items:center;column-gap:7px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">OP3</span>
+              <span style="font-size:7px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;color:#58c8f5;margin-left:14px">96</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#8fa39d;margin-left:18px">×1.00</span>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;top:66px;width:302px;height:23.6px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:8px 0 0 0;overflow:visible">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:45%;background:linear-gradient(to top,rgba(88,200,245,.48),rgba(88,200,245,.04))"></div>
+              <div style="position:absolute;left:0;right:0;bottom:99%;height:0;border-top:2px dashed rgba(255,255,255,.3)"></div>
+            </div>
+            <div style="position:absolute;inset:0;padding:1px 40px 1px 8px;box-sizing:border-box;display:flex;align-items:center;column-gap:7px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">OP4</span>
+              <span style="font-size:7px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;color:#58c8f5;margin-left:14px">45</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#8fa39d;margin-left:18px">×1.00</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Three cards, Levels 99 · 96 · 45, drawn with #67's track. The datum is <span style="color:#d6e2dd">visible now</span> — 6.1 px of daylight, judged and kept — and the comparison it exists for still is not: 99 and 96 differ by <span style="color:#d6e2dd">0.35 px</span> of fill, because the track that gave the datum its room took it off the scale. <span style="color:#d6e2dd">Both rules are right and they are bidding for the same 24 px.</span></div>
+      </div>
+
+      <div style="flex:1 1 300px;background:#0a0f10;padding:16px 18px 20px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#8a5f4a">B · A TICK OUTSIDE THE CARD — REJECTED</div>
+        <div style="position:relative;height:112px">
+          <div style="position:absolute;left:0;top:0;width:270px;height:23.6px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;left:0;right:0;bottom:0;height:99%;background:linear-gradient(to top,rgba(88,200,245,.48),rgba(88,200,245,.04))"></div>
+            <div style="position:absolute;inset:0;padding:1px 8px;box-sizing:border-box;display:flex;align-items:center;column-gap:7px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">OP1</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;color:#58c8f5;margin-left:12px">99</span>
+            </div>
+          </div>
+          <div style="position:absolute;left:272px;top:0.2px;width:14px;height:0;border-top:2px dashed rgba(255,255,255,.45)"></div>
+          <div style="position:absolute;left:0;top:33px;width:270px;height:23.6px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;left:0;right:0;bottom:0;height:96%;background:linear-gradient(to top,rgba(88,200,245,.48),rgba(88,200,245,.04))"></div>
+            <div style="position:absolute;inset:0;padding:1px 8px;box-sizing:border-box;display:flex;align-items:center;column-gap:7px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">OP3</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;color:#58c8f5;margin-left:12px">96</span>
+            </div>
+          </div>
+          <div style="position:absolute;left:272px;top:33.9px;width:14px;height:0;border-top:2px dashed rgba(255,255,255,.45)"></div>
+          <div style="position:absolute;left:0;top:66px;width:270px;height:23.6px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;left:0;right:0;bottom:0;height:45%;background:linear-gradient(to top,rgba(88,200,245,.48),rgba(88,200,245,.04))"></div>
+            <div style="position:absolute;inset:0;padding:1px 8px;box-sizing:border-box;display:flex;align-items:center;column-gap:7px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#6f817c">OP4</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;color:#58c8f5;margin-left:12px">45</span>
+            </div>
+          </div>
+          <div style="position:absolute;left:272px;top:66.9px;width:14px;height:0;border-top:2px dashed rgba(255,255,255,.45)"></div>
+          <div style="position:absolute;left:290px;top:0;bottom:14px;width:0;border-left:2px dashed rgba(255,157,133,.5)"></div>
+          <span style="position:absolute;left:296px;top:36px;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#ff9d85">THE GUTTER</span>
+        </div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">It removes the collision with the border and buys nothing else: the ticks still sit <span style="color:#d6e2dd">0.6 px</span> apart, because the axis did not change. And it spends the gutter — which is where the routes have to go the moment they get any room at all. <span style="color:#d6e2dd">Paying the routes’ gutter for a mark that is still illegible is the worst of the three.</span></div>
+      </div>
+
+      <div style="flex:1 1 300px;background:#0a0f10;padding:16px 18px 20px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#7df0b0">C · ALONG THE STATED AXIS — PROPOSED</div>
+        <div style="position:relative;height:112px">
+          <div style="position:absolute;left:0;top:0;width:302px;height:23.6px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:0 6px 0 0;overflow:visible">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:99%;background:linear-gradient(to right,rgba(88,200,245,.40),rgba(88,200,245,.10))"></div>
+              <div style="position:absolute;left:99%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.55)"></div>
+            </div>
+            <div style="position:absolute;inset:0;padding:1px 8px;box-sizing:border-box;display:flex;align-items:center;column-gap:7px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">OP1</span>
+              <span style="font-size:7px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;color:#eaf7fd;margin-left:12px">99</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#cfe3ea;margin-left:16px">×1.00</span>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;top:33px;width:302px;height:23.6px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:0 6px 0 0;overflow:visible">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:96%;background:linear-gradient(to right,rgba(88,200,245,.40),rgba(88,200,245,.10))"></div>
+              <div style="position:absolute;left:99%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.55)"></div>
+            </div>
+            <div style="position:absolute;inset:0;padding:1px 8px;box-sizing:border-box;display:flex;align-items:center;column-gap:7px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">OP3</span>
+              <span style="font-size:7px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;color:#eaf7fd;margin-left:12px">96</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#cfe3ea;margin-left:16px">×1.00</span>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;top:66px;width:302px;height:23.6px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:0 6px 0 0;overflow:visible">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:45%;background:linear-gradient(to right,rgba(88,200,245,.40),rgba(88,200,245,.10))"></div>
+              <div style="position:absolute;left:99%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.55)"></div>
+            </div>
+            <div style="position:absolute;inset:0;padding:1px 8px;box-sizing:border-box;display:flex;align-items:center;column-gap:7px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">OP4</span>
+              <span style="font-size:7px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:14px;color:#eaf7fd;margin-left:12px">45</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#cfe3ea;margin-left:16px">×1.00</span>
+            </div>
+          </div>
+          <span style="position:absolute;left:0;top:95px;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;white-space:nowrap;color:#7df0b0">99−96 = 8.8 PX · 99−45 = 158 PX · ONE ORIGIN, ONE SCALE</span>
+        </div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">The card is a batten, so Level runs along it and the ceiling is a <span style="color:#d6e2dd">vertical rule</span> — the ruler mark, on the axis that has 292 px instead of 11.6. <span style="color:#d6e2dd">The axis is stated by the composition, not read off the box</span> (see the three classes below): wide carries Level horizontally in both of its boxes. The same derivation turns with it: <span style="font-family:ui-monospace,Consolas,monospace">I = d + 2 − 0.01·T</span> gives a trailing inset of <span style="color:#d6e2dd">6 px</span> and daylight of 6.9 — #67's criterion met with a smaller inset, because the last percent of a 292 px track gives back 2.9 px instead of 0.13. Where the cards share a column they also share a left edge, so the eight rules line up into <span style="color:#d6e2dd">one</span> mark.</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:2px;width:1034px;background:rgba(255,255,255,.08)">
+      <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#f3b13f">WHAT C COSTS, SAID PLAINLY</div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">ADR-0007 §3 says the node travels entire between the two drawings, and §20.2 says Level <span style="color:#d6e2dd">is the height</span> of the fill. C keeps the first and edits the second: the fill's <span style="color:#d6e2dd">axis</span> becomes part of the fold, alongside the facts' arrangement, which already differs by composition (<span style="font-family:ui-monospace,Consolas,monospace">squat</span>). One template, one set of five facts, one legend — and a fill whose axis the composition states, not the box. The legend's datum swatch is a dash, so it does not have to say which orientation it stands for.</div>
+      </div>
+      <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#ff9d85">WHAT I CANNOT SETTLE ON PAPER</div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Whether a horizontal bar still reads as <span style="color:#d6e2dd">loudness</span>. Height-as-loudness is the convention the narrow grid uses and the one a mixer teaches; a batten filling rightwards may read as progress or as time. Nothing on this page decides that — it needs the rotated node on the hardware beside the grid, which is a build and a look, not an argument. <span style="color:#d6e2dd">I am not going to guess a number for it.</span></div>
+      </div>
+    </div>
+
+    <div style="background:#0a0f10;border:1px solid rgba(255,255,255,.08);padding:18px 20px;width:1034px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px">
+      <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#7df0b0">THREE BOXES, THREE STATED AXES — AND THE AXIS IS NEVER READ OFF THE BOX</div>
+      <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;max-width:1000px;text-wrap:pretty">My first draft named two boxes and left out the one that is <span style="color:#d6e2dd">64 of the 88</span>. It is a real third box — <span style="font-family:ui-monospace,Consolas,monospace">NODE_W_MAX 190</span> against <span style="font-family:ui-monospace,Consolas,monospace">nodeH</span> up to 91.33 — and “the long axis” cannot be the rule that decides it, because <span style="font-family:ui-monospace,Consolas,monospace">preserveAspectRatio="none"</span> means the on-screen ratio belongs to the panel: 1.7 : 1 here against the batten's 8 : 1. A rule read off the ratio lets a resize flip the measurement with nothing failing. <span style="color:#d6e2dd">One composition, one axis, stated.</span></div>
+      <div style="display:flex;gap:34px;align-items:flex-end;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.12em;color:#6f817c">GRID NODE · 131 × 86 PX · ALWAYS</span>
+          <div style="position:relative;width:131px;height:86px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:20px 20px 20px 3px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:8px 0 0 0;overflow:visible">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:96%;background:linear-gradient(to top,rgba(88,200,245,.44),rgba(88,200,245,.04))"></div>
+              <div style="position:absolute;left:0;right:0;bottom:99%;height:0;border-top:2px dashed rgba(255,255,255,.5)"></div>
+            </div>
+            <span style="position:absolute;left:8px;top:6px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">OP3</span>
+            <span style="position:absolute;left:8px;bottom:8px;font-family:ui-monospace,Consolas,monospace;font-size:19px;color:#eaf7fd">96</span>
+          </div>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#58c8f5">LEVEL = HEIGHT · 0.74 PX / POINT</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.12em;color:#6f817c">WIDE STACKED NODE · 159 × 95 PX · 64 OF THE 88</span>
+          <div style="position:relative;width:159px;height:95px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:20px 20px 20px 3px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:0 7px 0 0;overflow:visible">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:96%;background:linear-gradient(to right,rgba(88,200,245,.38),rgba(88,200,245,.08))"></div>
+              <div style="position:absolute;left:99%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.55)"></div>
+            </div>
+            <span style="position:absolute;left:9px;top:7px;font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">OP3</span>
+            <span style="position:absolute;left:9px;bottom:9px;font-family:ui-monospace,Consolas,monospace;font-size:19px;color:#eaf7fd">96</span>
+          </div>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#ff9d85">LEVEL = LENGTH · 1.5 PX / POINT AT ITS 190 CAP · 1.08 AT THE COLUMN CAP</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.12em;color:#6f817c">WIDE BATTEN · 320 × 34.5 PX · 24 OF THE 88</span>
+          <div style="position:relative;width:320px;height:34.5px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:10px 10px 10px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:0 6px 0 0;overflow:visible">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:96%;background:linear-gradient(to right,rgba(88,200,245,.38),rgba(88,200,245,.08))"></div>
+              <div style="position:absolute;left:99%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.55)"></div>
+            </div>
+            <div style="position:absolute;inset:0;padding:1px 10px;box-sizing:border-box;display:flex;align-items:center;column-gap:9px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">OP3</span><span style="font-size:7px;letter-spacing:.14em;color:#58c8f5">MOD</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:16px;color:#eaf7fd;margin-left:10px">96</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#cfe3ea;margin-left:14px">×1.00</span></div>
+          </div>
+          <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#7df0b0">LEVEL = LENGTH · 3.1 PX / POINT</span>
+        </div>
+      </div>
+      <div style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.12em;color:#6f817c">BOTH WIDE WIDTHS ABOVE ARE CAPS, NOT WIDTHS · AT THE COLUMN CAP THE STACKED NODE IS 119 PX WIDE — 108 PX OF TRACK, 1.08 PX / POINT, AND 12 PX NARROWER THAN THE 131 PX THE FIVE FACTS ARE FITTED IN · SEE <span style="color:#8fa39d">10f</span></div>
+    </div>
+  </div>
+
+  <div id="10c" style="display:flex;flex-direction:column;gap:12px;margin-top:44px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">10c</span>
+      <span style="font-size:26px;color:#d6e2dd">Question 2 — the width stays, and the route’s room comes out of the height</span>
+    </div>
+
+    <div style="display:flex;gap:2px;flex-wrap:wrap;background:rgba(255,255,255,.08);width:1034px">
+      <div style="flex:1 1 340px;background:#0a0f10;padding:16px 18px 20px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#8a5f4a">GIVE HALF THE WIDTH BACK — REJECTED, AND IT WAS MY FIRST INSTINCT TOO</div>
+        <div style="position:relative;height:96px">
+          <div style="position:absolute;left:0;top:0;width:151px;height:23.6px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:99%;background:linear-gradient(to right,rgba(88,200,245,.40),rgba(88,200,245,.10))"></div>
+            <div style="position:absolute;inset:0;padding:1px 7px;box-sizing:border-box;display:flex;align-items:center;column-gap:6px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">OP1</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#eaf7fd;margin-left:8px">99</span>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;top:38px;width:151px;height:23.6px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:96%;background:linear-gradient(to right,rgba(88,200,245,.40),rgba(88,200,245,.10))"></div>
+            <div style="position:absolute;inset:0;padding:1px 7px;box-sizing:border-box;display:flex;align-items:center;column-gap:6px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">OP3</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#eaf7fd;margin-left:8px">96</span>
+            </div>
+          </div>
+          <div style="position:absolute;left:160px;top:8px;width:2px;height:38px;background:#58c8f5"></div>
+          <div style="position:absolute;left:155px;top:44px;width:12px;height:8px;background:#58c8f5;clip-path:polygon(50% 100%,0 0,100% 0)"></div>
+          <span style="position:absolute;left:176px;top:20px;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#8fa39d">A REAL ELBOW —<br>IN A GUTTER THAT<br>COST 151 PX</span>
+        </div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">After <a href="#10b">10b</a> the width <span style="color:#d6e2dd">is the measurement</span>: halving it takes the Level axis from 2.92 px per point to 1.4, and the 99-against-96 gap back down to 4.2 px. It buys a horizontal gutter the drawing does not need — algorithm 66 is one branch, so every route is already a straight drop; the elbow is only needed <span style="color:#d6e2dd">across</span> bands, and no line ever crosses between bands by construction.</div>
+      </div>
+      <div style="flex:1 1 340px;background:#0a0f10;padding:16px 18px 20px;display:flex;flex-direction:column;gap:10px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#7df0b0">KEEP THE WIDTH · TAKE THE ROUTE’S ROOM OUT OF THE CARD — PROPOSED</div>
+        <div style="position:relative;height:96px">
+          <div style="position:absolute;left:0;top:0;width:302px;height:22px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:0 6px 0 0;overflow:visible">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:99%;background:linear-gradient(to right,rgba(88,200,245,.40),rgba(88,200,245,.10))"></div>
+              <div style="position:absolute;left:99%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.55)"></div>
+            </div>
+            <div style="position:absolute;inset:0;padding:1px 8px;box-sizing:border-box;display:flex;align-items:center;column-gap:7px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">OP1</span>
+              <span style="font-size:7px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#eaf7fd;margin-left:10px">99</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#cfe3ea;margin-left:14px">×1.00</span>
+            </div>
+          </div>
+          <div style="position:absolute;left:150px;top:22px;width:2px;height:12px;background:#58c8f5"></div>
+          <div style="position:absolute;left:145px;top:32px;width:12px;height:8px;background:#58c8f5;clip-path:polygon(50% 100%,0 0,100% 0)"></div>
+          <div style="position:absolute;left:0;top:41px;width:302px;height:22px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:0 6px 0 0;overflow:visible">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:96%;background:linear-gradient(to right,rgba(88,200,245,.40),rgba(88,200,245,.10))"></div>
+              <div style="position:absolute;left:99%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.55)"></div>
+            </div>
+            <div style="position:absolute;inset:0;padding:1px 8px;box-sizing:border-box;display:flex;align-items:center;column-gap:7px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">OP3</span>
+              <span style="font-size:7px;letter-spacing:.14em;color:#58c8f5">MOD</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#eaf7fd;margin-left:10px">96</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#cfe3ea;margin-left:14px">×1.00</span>
+            </div>
+          </div>
+          <span style="position:absolute;left:312px;top:24px;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#7df0b0">19 PX OF GAP ·<br>ARROWHEAD FITS<br>WITH ROOM OVER</span>
+        </div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">The route's problem was never horizontal room — it was that <span style="font-family:ui-monospace,Consolas,monospace">rowGap = min(26, pitchY/4)</span> leaves 7.9 px at the floor and the arrowhead is 6.4 of them. Give the gap a floor of its own and the card gives up 2.75 px of a height it is no longer measuring with. <span style="color:#d6e2dd">That much is affordable at eight rows; the rest comes from 10d.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="10d" style="display:flex;flex-direction:column;gap:12px;margin-top:44px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">10d</span>
+      <span style="font-size:26px;color:#d6e2dd">Question 3 — fold the facts, never the positions</span>
+      <span style="font-size:15px;color:#8fa39d">algorithm 66 at the boot composition, lane 1 016 px</span>
+    </div>
+
+    <div style="font-size:13.5px;color:#8fa39d;line-height:1.6;max-width:1034px;text-wrap:pretty">The objection to folding is right as stated: height on the page <span style="color:#d6e2dd">is</span> depth, so spending rows spends the only axis that carries meaning without text. So do not spend rows — <span style="color:#d6e2dd">spend facts</span>. The deepest operators keep their row, their order and their place above what they modulate, and give up the ratio, the glyph, the Hz and the stamp. Level and identity stay, against the same vertical ceiling rule, at full resolution. A press unfolds them, and what a press gives you is exactly today's drawing.</div>
+
+    <div style="display:flex;gap:20px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#7df0b0">FOLDED — FOUR FULL BATTENS, ONE FOLD BAND, FIVE ROWS · CARD 55 PX, GAP 18.4</div>
+        <div style="position:relative;width:500px;height:418px;box-sizing:border-box;background:#0a0f10;border:1px solid rgba(255,255,255,.10);padding:6px 16px">
+          <div style="position:relative;height:55px;box-sizing:border-box;border:2px dashed rgba(255,255,255,.16);border-radius:8px;background:rgba(255,255,255,.015);padding:5px 8px;display:flex;flex-direction:column;gap:3px">
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.14em;color:#6f817c">4 DEEPER · OP1 · OP2 · OP3 · OP4</span>
+              <span style="font-size:7px;letter-spacing:.06em;color:#5d6d69">POLLED</span>
+              <span style="font-family:ui-monospace,Consolas,monospace;font-size:8px;letter-spacing:.1em;color:#5d6d69;margin-left:auto">TOUCH TO UNFOLD</span>
+            </div>
+            <div style="position:relative;display:flex;flex-direction:column;gap:2px">
+              <div style="position:absolute;left:98%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.5);z-index:2"></div>
+              <div style="position:relative;height:7px;background:rgba(88,200,245,.10)"><div style="position:absolute;left:0;top:0;bottom:0;width:99%;background:rgba(88,200,245,.45)"></div><span style="position:absolute;left:3px;top:-1px;font-family:ui-monospace,Consolas,monospace;font-size:6px;color:#0b0e0f">OP1 99</span></div>
+              <div style="position:relative;height:7px;background:rgba(88,200,245,.10)"><div style="position:absolute;left:0;top:0;bottom:0;width:16%;background:rgba(88,200,245,.45)"></div><span style="position:absolute;left:3px;top:-1px;font-family:ui-monospace,Consolas,monospace;font-size:6px;color:#8fa39d">OP2 16</span></div>
+              <div style="position:relative;height:7px;background:rgba(88,200,245,.10)"><div style="position:absolute;left:0;top:0;bottom:0;width:96%;background:rgba(88,200,245,.45)"></div><span style="position:absolute;left:3px;top:-1px;font-family:ui-monospace,Consolas,monospace;font-size:6px;color:#0b0e0f">OP3 96</span></div>
+              <div style="position:relative;height:7px;background:rgba(88,200,245,.10)"><div style="position:absolute;left:0;top:0;bottom:0;width:45%;background:rgba(88,200,245,.45)"></div><span style="position:absolute;left:3px;top:-1px;font-family:ui-monospace,Consolas,monospace;font-size:6px;color:#0b0e0f">OP4 45</span></div>
+            </div>
+          </div>
+          <div style="height:18.4px;position:relative"><div style="position:absolute;left:50%;top:0;width:2px;height:11px;background:#58c8f5"></div><div style="position:absolute;left:calc(50% - 5px);top:9px;width:12px;height:8px;background:#58c8f5;clip-path:polygon(50% 100%,0 0,100% 0)"></div></div>
+          <div style="position:relative;height:55px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:10px 10px 10px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:0 6px 0 0;overflow:visible">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:15%;background:linear-gradient(to right,rgba(88,200,245,.40),rgba(88,200,245,.10))"></div>
+              <div style="position:absolute;left:99%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.55)"></div>
+            </div>
+            <div style="position:absolute;inset:0;padding:6px 40px 6px 10px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;align-items:baseline;gap:7px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#d6e2dd">OP5</span><span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span><span style="font-size:7px;color:#5d6d69;margin-left:auto">POLLED</span></div>
+              <div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:17px;line-height:1;color:#eaf7fd">15</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#cfe3ea">×1.00</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#cfe3ea">|</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;margin-left:auto">—</span></div>
+            </div>
+            <span style="position:absolute;right:7px;bottom:6px;width:12px;height:12px;border-right:2px solid #58c8f5;border-bottom:2px solid #58c8f5"></span>
+          </div>
+          <div style="height:18.4px;position:relative"><div style="position:absolute;left:50%;top:0;width:2px;height:11px;background:#58c8f5"></div><div style="position:absolute;left:calc(50% - 5px);top:9px;width:12px;height:8px;background:#58c8f5;clip-path:polygon(50% 100%,0 0,100% 0)"></div></div>
+          <div style="position:relative;height:55px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:10px 10px 10px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:0 6px 0 0;overflow:visible">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:19%;background:linear-gradient(to right,rgba(88,200,245,.40),rgba(88,200,245,.10))"></div>
+              <div style="position:absolute;left:99%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.55)"></div>
+            </div>
+            <div style="position:absolute;inset:0;padding:6px 40px 6px 10px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;align-items:baseline;gap:7px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#d6e2dd">OP6</span><span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span><span style="font-size:7px;color:#5d6d69;margin-left:auto">POLLED</span></div>
+              <div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:17px;line-height:1;color:#eaf7fd">19</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#cfe3ea">×1.00</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#cfe3ea">|</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;margin-left:auto">—</span></div>
+            </div>
+            <span style="position:absolute;right:7px;bottom:6px;width:12px;height:12px;border-right:2px solid #58c8f5;border-bottom:2px solid #58c8f5"></span>
+          </div>
+          <div style="height:18.4px;position:relative"><div style="position:absolute;left:50%;top:0;width:2px;height:11px;background:#58c8f5"></div><div style="position:absolute;left:calc(50% - 5px);top:9px;width:12px;height:8px;background:#58c8f5;clip-path:polygon(50% 100%,0 0,100% 0)"></div></div>
+          <div style="position:relative;height:55px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:10px 10px 10px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:0 6px 0 0;overflow:visible">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:99%;background:linear-gradient(to right,rgba(88,200,245,.40),rgba(88,200,245,.10))"></div>
+              <div style="position:absolute;left:99%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.55)"></div>
+            </div>
+            <div style="position:absolute;inset:0;padding:6px 40px 6px 10px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;align-items:baseline;gap:7px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#d6e2dd">OP7</span><span style="font-size:8px;letter-spacing:.14em;color:#58c8f5">MOD</span><span style="font-size:7px;color:#5d6d69;margin-left:auto">POLLED</span></div>
+              <div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:17px;line-height:1;color:#eaf7fd">99</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#cfe3ea">×1.00</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#cfe3ea">|</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;margin-left:auto">—</span></div>
+            </div>
+            <span style="position:absolute;right:7px;bottom:6px;width:12px;height:12px;border-right:2px solid #58c8f5;border-bottom:2px solid #58c8f5"></span>
+          </div>
+          <div style="height:18.4px;position:relative"><div style="position:absolute;left:50%;top:0;width:2px;height:11px;background:#58c8f5"></div><div style="position:absolute;left:calc(50% - 5px);top:9px;width:12px;height:8px;background:#58c8f5;clip-path:polygon(50% 100%,0 0,100% 0)"></div></div>
+          <div style="position:relative;height:55px;box-sizing:border-box;border:2px solid #f3b13f;border-radius:999px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:0 6px 0 0;overflow:visible">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:99%;background:linear-gradient(to right,rgba(243,177,63,.38),rgba(243,177,63,.08))"></div>
+              <div style="position:absolute;left:99%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.55)"></div>
+            </div>
+            <div style="position:absolute;inset:0;padding:6px 40px 6px 16px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="display:flex;align-items:baseline;gap:7px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#d6e2dd">OP8</span><span style="font-size:8px;letter-spacing:.14em;color:#f3b13f">CARR</span></div>
+              <div style="display:flex;align-items:baseline;gap:10px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:17px;line-height:1;color:#ffd08a">99</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#e8c894">×1.00</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#f3b13f">|</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69;margin-left:auto">—</span></div>
+            </div>
+            <span style="position:absolute;right:9px;bottom:6px;width:12px;height:12px;border-right:2px solid #f3b13f;border-bottom:2px solid #f3b13f"></span>
+          </div>
+          <div style="position:relative;height:14px"><div style="position:absolute;left:50%;top:0;width:2px;height:9px;background:#7df0b0"></div><div style="position:absolute;left:50%;top:8px;right:0;height:2px;background:#7df0b0"></div><span style="position:absolute;right:0;top:12px;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.08em;color:#7df0b0">OUT L/R</span></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;max-width:500px">
+        <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px;border:1px solid rgba(255,255,255,.08)">
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#7df0b0">WHAT THE FOLD KEEPS</div>
+          <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Carrier on the bus at the bottom; every arrow down; one row per depth for the four nearest the output; the folded four still <span style="color:#d6e2dd">above</span> what they modulate and still in depth order. Their Levels are still measured against the same rule at the same offset, so <span style="color:#d6e2dd">the loudest operator in the patch is still found by eye</span> — 99 at OP1 is visible inside the band. What you lose is its ratio, its glyph, its Hz and its stamp, and one press gets them back. The band wears <span style="color:#d6e2dd">one stamp, the weakest of the four</span> — not a new rule, just <span style="font-family:ui-monospace,Consolas,monospace">weakest()</span> applied one level up, because a value whose provenance is behind a press is a claim nothing is backing.</div>
+        </div>
+        <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px;border:1px solid rgba(255,255,255,.08)">
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#ff9d85">AND THE NEXT ONE IS 1.33 UNITS AWAY</div>
+          <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Three rows gives <span style="font-family:ui-monospace,Consolas,monospace">nodeH 91.33</span> against <span style="font-family:ui-monospace,Consolas,monospace">STACK_H 90</span>, so <span style="color:#d6e2dd">37 algorithms sit 1.33 units from becoming battens</span> — and five constants move that line, none of them obviously about representation: <span style="font-family:ui-monospace,Consolas,monospace">WIDE_CANVAS_H</span>, <span style="font-family:ui-monospace,Consolas,monospace">MARGIN_Y</span>, <span style="font-family:ui-monospace,Consolas,monospace">BUS_OFFSET</span>, <span style="font-family:ui-monospace,Consolas,monospace">OUT_ROOM</span>, <span style="font-family:ui-monospace,Consolas,monospace">ROW_GAP_MAX</span>. So <span style="color:#d6e2dd">assert the margin, not the classification</span>: “three rows produces a stack” passes at 90.01 and says nothing; “three rows clears STACK_H by N units” fails while there is still room to think.</div>
+        </div>
+        <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px;border:1px solid rgba(255,255,255,.08)">
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#f3b13f">THE ARITHMETIC, AT FIVE ROWS</div>
+          <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty"><span style="font-family:ui-monospace,Consolas,monospace">pitchY = 352/5 = 70.4</span> · <span style="font-family:ui-monospace,Consolas,monospace">rowGap 17.6</span> · <span style="font-family:ui-monospace,Consolas,monospace">nodeH 52.8</span> units → card <span style="color:#d6e2dd">55 px</span> tall with an <span style="color:#d6e2dd">18.4 px</span> gap at the measured scale, and 37.8 / 12.6 at <span style="font-family:ui-monospace,Consolas,monospace">BODY_FLOOR</span>. The card is still <span style="font-family:ui-monospace,Consolas,monospace">squat</span> by the current threshold, which is now a statement about the fold and not about the depth.</div>
+        </div>
+        <div style="background:#0a0f10;padding:16px 18px;display:flex;flex-direction:column;gap:7px;border:1px solid rgba(255,255,255,.08)">
+          <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#7df0b0">THE THRESHOLD IS DERIVED, AND IT IS FIVE</div>
+          <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">I had this open for want of the depth distribution. <span style="color:#d6e2dd">It exists</span> — §31 is resolved, the histogram came out of the 88 transcribed topologies in session 2. The criterion is the gap: a 6.44 px arrowhead plus 6 px of visible line is 17.39 units, <span style="font-family:ui-monospace,Consolas,monospace">min(26, pitchY/4)</span> reaches that at <span style="font-family:ui-monospace,Consolas,monospace">pitchY ≥ 69.57</span>, and <span style="font-family:ui-monospace,Consolas,monospace">352/rows</span> makes that <span style="color:#d6e2dd">rows ≤ 5</span>. It clears by <span style="color:#d6e2dd">0.15 px of visible line</span> — tighter than the 1.33-unit margin, and it runs through <span style="font-family:ui-monospace,Consolas,monospace">BODY_FLOOR</span>, which §7 says must be re-measured: 7 px lower and the threshold is rows ≤ 4. Against the histogram it folds <span style="color:#d6e2dd">two of the 88</span>: algorithm <span style="color:#d6e2dd">37</span> at six rows and <span style="color:#d6e2dd">66</span> at eight. 24 are battens already — <span style="color:#d6e2dd">run, not quoted</span>: reproducing <span style="font-family:ui-monospace,Consolas,monospace">chain_depth()</span> over <span style="font-family:ui-monospace,Consolas,monospace">ALGORITHMS</span> gives rows <span style="font-family:ui-monospace,Consolas,monospace">1×1, 2×26, 3×37, 4×17, 5×5, 6×1, 8×1</span>, identical to §31. Firing twice in 88 also means the fold will rot, so the suite forces <span style="color:#d6e2dd">37 and 66 by number</span>, never by a predicate that drifts.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="10e" style="display:flex;flex-direction:column;gap:12px;margin-top:44px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">10e</span>
+      <span style="font-size:26px;color:#d6e2dd">The two defects, as constraints on the gap and the gutter</span>
+    </div>
+
+    <div style="display:flex;gap:2px;flex-wrap:wrap;background:rgba(255,255,255,.08);width:1034px">
+      <div style="flex:1 1 340px;background:#0a0f10;padding:16px 18px 20px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#58c8f5">FB GOES IN THE GUTTER, AND LABELS PAINT OVER NODES</div>
+        <div style="position:relative;height:70px">
+          <div style="position:absolute;left:0;top:8px;width:250px;height:34px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:10px 10px 10px 2px;background:#0f1417"></div>
+          <div style="position:absolute;left:252px;top:14px;width:26px;height:22px;border:2px solid #f3b13f;border-left:none;border-radius:0 14px 14px 0"></div>
+          <span style="position:absolute;left:284px;top:18px;font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.08em;color:#f3b13f;background:#0a0f10;padding:0 3px">FB 0</span>
+          <span style="position:absolute;left:0;top:50px;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#6f817c">THE EAR IS 20 UNITS; THE LABEL CLEARS THE ARC RATHER THAN CENTRING ON IT</span>
+        </div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Two rules, and the second is the one that was missing: the anchor sits <span style="color:#d6e2dd">past the arc's bulge</span> and is left-aligned from there rather than centred back onto the node, and <span style="color:#d6e2dd">no label is ever painted over by a node</span> — which today is a consequence of template order, not a decision. Both belong to §20 rather than to a ticket, because <span style="font-family:ui-monospace,Consolas,monospace">FB</span> is a figure the ring went and read.</div>
+      </div>
+      <div style="flex:1 1 340px;background:#0a0f10;padding:16px 18px 20px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#58c8f5">A ROUTE INTO A PARKED OPERATOR IS DRAWN, AND IT IS INERT</div>
+        <div style="position:relative;height:70px">
+          <div style="position:absolute;left:0;top:0;width:190px;height:24px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:99%;background:linear-gradient(to right,rgba(88,200,245,.40),rgba(88,200,245,.10))"></div>
+            <div style="position:absolute;inset:0;padding:1px 8px;box-sizing:border-box;display:flex;align-items:center;column-gap:8px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#d6e2dd">OP2</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#eaf7fd">99</span></div>
+          </div>
+          <div style="position:absolute;left:94px;top:24px;width:0;height:12px;border-left:2px dashed #3d4a48"></div>
+          <div style="position:absolute;left:89px;top:34px;width:12px;height:8px;background:#3d4a48;clip-path:polygon(50% 100%,0 0,100% 0)"></div>
+          <div style="position:absolute;left:0;top:42px;width:190px;height:24px;box-sizing:border-box;border:2px dashed #3d4a48;border-radius:8px 8px 8px 2px;background:#0f1417">
+            <div style="position:absolute;inset:0;padding:1px 8px;box-sizing:border-box;display:flex;align-items:center;column-gap:8px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:10px;color:#5d6d69">OP5</span><span style="font-size:7px;letter-spacing:.14em;color:#5d6d69">ZERO</span><span style="font-family:ui-monospace,Consolas,monospace;font-size:13px;color:#5d6d69">0</span></div>
+          </div>
+          <div style="position:absolute;left:200px;top:44px;width:52px;height:0;border-top:2px dashed #3d4a48"></div>
+          <div style="position:absolute;left:250px;top:38px;width:0;height:14px;border-left:2px solid #3d4a48"></div>
+        </div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Today <span style="font-family:ui-monospace,Consolas,monospace">routes.filter(drawn(from) &amp;&amp; drawn(into))</span> drops it, so a live modulator at 99 into a silent destination reads as <span style="color:#d6e2dd">less connected than a silent operator</span>, which at least keeps a dashed drop. The vocabulary already exists — the inert dash of <span style="font-family:ui-monospace,Consolas,monospace">FB 0</span> — and it says exactly the right thing: <span style="color:#d6e2dd">real route, nothing at the end of it.</span> Out of a parked operator stays undrawn; into one is drawn inert, landing on the stub bar.</div>
+      </div>
+    </div>
+
+    <div style="background:#0a0f10;border:1px solid rgba(255,255,255,.08);padding:18px 20px;width:1034px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px">
+      <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#7df0b0">WHAT WOULD BE BUILT TO SETTLE THE REST</div>
+      <div style="font-size:13px;color:#8fa39d;line-height:1.65;text-wrap:pretty">One build, five things on it, on the hardware with a real Performance. <span style="color:#d6e2dd">The daylight first</span>: the rotated figures are <span style="color:#d6e2dd">derived and unlooked-at</span>, and there are two of them — 6.9 px on the batten's 292 px track, <span style="color:#d6e2dd">6.1 px on the stacked node's 108 px track at eight columns</span> (the binding instance; the 190 cap's 148.5 px track is the easier question). #67's six was a judgement about 30 % white against a specific neighbour, an amber border with the fill fading to <span style="font-family:ui-monospace,Consolas,monospace">.04</span> under it; the criterion transfers, the verdict does not. So: <span style="color:#d6e2dd">both boxes</span>, lit carrier at the ceiling — looking only at the squat batten is the same trap as judging the old datum on the grid card. Then the <span style="color:#d6e2dd">rotated node beside the 3 × 3 grid</span> (does a horizontal bar still read as loudness); the <span style="color:#d6e2dd">fold at five with the band unfolding</span> (does the band read as depth or as a footnote); and <span style="color:#d6e2dd">algorithm 66 with the window dragged down</span> — where the folded drawing actually loses its figures, which is #19's measurement re-taken and the second arm <span style="font-family:ui-monospace,Consolas,monospace">max()</span> needs. And <span style="color:#d6e2dd">rule 20’s 6 px of visible line</span>, which is chosen rather than judged: at five rows the line is 6.15 px, so the 5-row bin turns on it to within 0.15 px, and 7 px would fold five more algorithms exactly as a 7 px <span style="font-family:ui-monospace,Consolas,monospace">BODY_FLOOR</span> re-measurement would. Everything else in this round is arithmetic and is on the page.</div>
+    </div>
+  </div>
+
+  <div id="10f" style="display:flex;flex-direction:column;gap:12px;margin-top:44px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">10f</span>
+      <span style="font-size:26px;color:#d6e2dd">Three conditions on the rotation</span>
+      <span style="font-size:15px;color:#8fa39d">all three are about not rebuilding the same failure on the new axis</span>
+    </div>
+
+    <div style="display:flex;gap:2px;flex-wrap:wrap;background:rgba(255,255,255,.08);width:1034px">
+      <div style="flex:1 1 300px;background:#0a0f10;padding:16px 18px 20px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#58c8f5">1 · ONE ORIGIN, ONE SCALE — OR THE RULE IS A COINCIDENCE AGAIN</div>
+        <div style="position:relative;height:74px">
+          <div style="position:absolute;left:0;top:0;width:240px;height:22px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:0 5px 0 0;overflow:visible">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:99%;background:linear-gradient(to right,rgba(88,200,245,.40),rgba(88,200,245,.10))"></div>
+              <div style="position:absolute;left:99%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,255,255,.55)"></div>
+            </div>
+          </div>
+          <div style="position:absolute;left:18px;top:30px;width:222px;height:22px;box-sizing:border-box;border:2px dashed #ff9d85;border-radius:8px 8px 8px 2px;background:#0f1417;overflow:hidden">
+            <div style="position:absolute;inset:0 5px 0 0;overflow:visible">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:99%;background:linear-gradient(to right,rgba(255,157,133,.34),rgba(255,157,133,.08))"></div>
+              <div style="position:absolute;left:99%;top:0;bottom:0;width:0;border-left:2px dashed rgba(255,157,133,.7)"></div>
+            </div>
+          </div>
+          <span style="position:absolute;left:0;top:58px;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;white-space:nowrap;color:#ff9d85">ONE INDENTED BATTEN AND TWO 99s STOP SHARING A LINE</span>
+        </div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">The rule is only a rule if every batten measures from <span style="color:#d6e2dd">the same left edge at the same px per point</span>. That is an invariant, and it has to be asserted as geometry — the rule's box crosses all eight battens at the same fraction of each — never as <span style="font-family:ui-monospace,Consolas,monospace">element-exists</span>, which is the check that passed for the whole life of the old defect.</div>
+      </div>
+
+      <div style="flex:1 1 300px;background:#0a0f10;padding:16px 18px 20px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#58c8f5">2 · PX-PER-POINT IS NOW A VARIABLE, SO IT NEEDS A FLOOR — AND THAT FLOOR IS #66</div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-family:ui-monospace,Consolas,monospace;font-size:10px;line-height:1.7;color:#8fa39d">
+          <div>CRITERION <span style="color:#d6e2dd">DAYLIGHT 6 AT INSET 7</span> → TRACK ≥ 100 · CARD ≥ 111 PX</div>
+          <div>BATTEN AT ITS 380 CAP · 30.84 % → <span style="color:#7df0b0">LANE ≥ 393</span></div>
+          <div>STACKED AT ITS 190 CAP · 15.42 % → LANE ≥ 750</div>
+          <div>EITHER CLASS AT THE COLUMN CAP · 142 UNITS · 11.53 % → <span style="color:#ff9d85">LANE ≥ 999</span> · BODY <span style="color:#ff9d85">1 263 / 1 211</span></div>
+          <div style="color:#6f817c">TODAY'S LANES: 1 016 AND 1 068 · SLACK 17 AND 69 · NO minWidth</div>
+        </div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">So the Level axis stops being a number that is true at one composition width and becomes <span style="color:#d6e2dd">a computation</span> — and the floor is <span style="color:#d6e2dd">not a property of the class</span>: <span style="font-family:ui-monospace,Consolas,monospace">nodeW = min(pitchX − COL_GAP, cap)</span> at eight columns is <span style="font-family:ui-monospace,Consolas,monospace">1200/8 − 8 = 142</span> units, and neither cap is in that expression. Its inputs are <span style="font-family:ui-monospace,Consolas,monospace">WIDE_CANVAS_W</span>, <span style="font-family:ui-monospace,Consolas,monospace">MARGIN_X</span>, <span style="font-family:ui-monospace,Consolas,monospace">COL_GAP</span>, <span style="font-family:ui-monospace,Consolas,monospace">WIDE_COLUMNS</span> — recompute 142 from those, never assert 999. And on that box <span style="color:#d6e2dd">the daylight asks for a longer track than px-per-point does</span> (100 against 99), so the floor is a <span style="font-family:ui-monospace,Consolas,monospace">max()</span> of two criteria on one box. <span style="color:#d6e2dd">17 px of slack at the shipped window</span>, and any drag breaks it.</div>
+      </div>
+
+      <div style="flex:1 1 300px;background:#0a0f10;padding:16px 18px 20px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#f3b13f">3 · PARKED AT ZERO CANNOT STAY AT THE FAR END OF THE LEVEL AXIS</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#8a5f4a">TODAY: RIGHT = OFF THE BRANCHES · AND NOW ALSO = LOUD</span>
+            <div style="position:relative;height:32px">
+              <div style="position:absolute;left:0;top:0;width:130px;height:20px;box-sizing:border-box;border:2px solid #58c8f5;border-radius:8px 8px 8px 2px;background:#0f1417"></div>
+              <div style="position:absolute;left:150px;top:0;width:100px;height:20px;box-sizing:border-box;border:2px dashed #3d4a48;border-radius:8px 8px 8px 2px;background:#0f1417;display:flex;align-items:center;padding:0 6px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69">OP5 ZERO</span></div>
+              <div style="position:absolute;left:196px;top:20px;width:0;height:8px;border-left:2px dashed #3d4a48"></div>
+              <div style="position:absolute;left:188px;top:27px;width:18px;height:2px;background:#3d4a48"></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;color:#7df0b0">PROPOSED: OUT OF THE STACK, AT THE ORIGIN, STUB KEPT</span>
+            <div style="position:relative;height:42px">
+              <div style="position:absolute;left:0;top:0;width:130px;height:20px;box-sizing:border-box;border:2px dashed #3d4a48;border-radius:8px 8px 8px 2px;background:#0f1417;display:flex;align-items:center;padding:0 6px"><span style="font-family:ui-monospace,Consolas,monospace;font-size:9px;color:#5d6d69">OP5 ZERO</span></div>
+              <div style="position:absolute;left:64px;top:20px;width:0;height:8px;border-left:2px dashed #3d4a48"></div>
+              <div style="position:absolute;left:56px;top:27px;width:18px;height:2px;background:#3d4a48"></div>
+              <span style="position:absolute;left:140px;top:0;font-family:ui-monospace,Consolas,monospace;font-size:9px;letter-spacing:.1em;line-height:1.5;color:#6f817c">A BAND ABOVE THE<br>DEEPEST ROW: NO DEPTH,<br>SO NOT IN THE STACK</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">Right is now the loud end of the Level axis, so parking a Level-0 operator there puts <span style="color:#d6e2dd">position in contradiction with measurement</span> — on the one composition whose stated principle is that position says it without a caption. So parking stops being a horizontal displacement: the parked operators leave the <span style="color:#d6e2dd">stack</span>, not the left margin, into a band above the deepest row, at the shared origin, keeping the dashed stub that ends nowhere. What is retired is the direction, not the principle.</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</x-dc>
+</body>
+</html>
