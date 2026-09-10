@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { AudioService } from './audio/audio-service';
 import { BottomStrip } from './panels/bottom-strip/bottom-strip';
 import { FiguresColumn } from './panels/figures-column/figures-column';
+import { bodyGap } from './panels/glass-column/column-geometry';
 import { ColumnRail } from './panels/glass-column/column-rail';
 import { GlassColumn } from './panels/glass-column/glass-column';
 import { OperatorDiagram } from './panels/operator-diagram/operator-diagram';
@@ -48,7 +49,16 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
          haya movido el pianista. La columna no se encoge: o está entera, o se
          queda en el asa, o no está —un panel de 0 px sigue pintando 33 veces por
          segundo algo que nadie mira. -->
-    <div class="body" [class.body--wide]="wide()" [class.body--rail]="rail()">
+    <!-- El filete del cuerpo se ata desde el modelo y no desde la hoja: es el
+         único hueco de la app cuyo ancho depende de la forma que tenga el
+         cuerpo, y declararlo en los dos sitios es lo que hizo que el modelo
+         devolviera 1 068 mientras la pantalla dibujaba 1 070 (#76). -->
+    <div
+      class="body"
+      [class.body--wide]="wide()"
+      [class.body--rail]="rail()"
+      [style.column-gap.px]="gap()"
+    >
       <app-operator-diagram />
       @if (panels()) {
         <app-glass-column />
@@ -140,7 +150,9 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
          que scrollea es esta caja y sólo ella. */
       grid-template-rows: minmax(378px, 1fr);
       overflow-y: auto;
-      gap: var(--rule-min);
+      /* column-gap NO está aquí: lo ata bodyGap() en column-geometry.ts, que es
+         el único sitio donde se decide cuánto mide este filete. Hay una sola
+         fila, así que el cuerpo no tiene hueco entre filas que declarar. */
       background: var(--rule-color);
     }
 
@@ -162,22 +174,23 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
        lleva su holgura entera —los 368 px de la columna de cristal, 1 070 px a
        1280 de ventana—. La columna de cifras se queda: es la que dice qué
        llenaría la medida que no hay (#33).
-       El filete se parte por la mitad porque aquí hay dos huecos pegados con un
-       carril de 0 px entre ellos, y dos filetes juntos se leen como una regla
-       del doble de gruesa. */
+       El filete se parte por la mitad —dos huecos pegados con un carril de 0 px
+       entre ellos se leen como una regla del doble de gruesa—, pero quien lo
+       dice es bodyGap() y no esta regla: la condición es la ADYACENCIA y no el
+       nombre de la clase, así que una cuarta forma que cierre el carril de en
+       medio la hereda en vez de tener que añadirse a una lista. */
     .body--wide {
       grid-template-columns: minmax(0, 1fr) 0px var(--composition-column);
-      column-gap: calc(var(--rule-min) / 2);
     }
 
     /* Con las dos ranuras vacías el carril no se cierra del todo: se queda en el
        asa. Va DESPUÉS de .body--wide a propósito —las dos reglas tienen la
        misma especificidad, así que el orden es todo el mecanismo (#57)— y el
        cuerpo lleva las dos clases, porque el algoritmo se lleva la holgura
-       igual. El filete vuelve a ser entero: aquí no hay dos huecos pegados. */
+       igual. El filete vuelve a ser entero —aquí no hay dos huecos pegados—, y
+       de eso ya se encarga bodyGap(): el carril mide 52 px y no cero. */
     .body--rail {
       grid-template-columns: minmax(0, 1fr) var(--composition-rail) var(--composition-column);
-      column-gap: var(--rule-min);
     }
   `,
 })
@@ -193,6 +206,18 @@ export class App {
 
   /** The waterfall is down here, or it is up in a ranura and there is no strip. */
   protected readonly strip = this.composition.strip;
+
+  /**
+   * The filete between two of the body's lanes, from the module that models the
+   * lanes.
+   *
+   * It is bound and not declared in the sheet because the sheet cannot ask the
+   * question it depends on — whether the lane between the two gaps has closed —
+   * without naming a shape, and a name goes stale silently the day a fourth
+   * shape has the same adjacency. Half a filete declared here as well as there
+   * is how the model came to return 1 068 px while the screen drew 1 070 (#76).
+   */
+  protected readonly gap = computed(() => bodyGap(this.composition.shape()));
 
   constructor() {
     // The audio bridge is opened from the screen that draws it, once. Nothing

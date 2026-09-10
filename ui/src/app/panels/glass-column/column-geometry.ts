@@ -91,8 +91,16 @@ export interface Geometry {
 export const DIAGRAM_W = 700;
 /** `--composition-column`: the figures column, which never closes. */
 export const FIGURES_W = 208;
-/** `--rule-min`, the filete between two lanes. */
+/**
+ * `--rule-min`, one filete: the gap the body leaves between two of its lanes.
+ *
+ * How many of it a boundary is worth is {@link bodyGap}'s, and the body reads
+ * that rather than declaring a width of its own — see the note there.
+ */
 export const RULE = 2;
+
+/** The body's three lanes, so two boundaries: one on each side of the column. */
+const BODY_BOUNDARIES = 2;
 /** `--drawer-grab`: the rail is the closed drawer's handle, stood on its end. */
 export const RAIL_W = 52;
 /** The bottom strip's band, with the waterfall in it. */
@@ -221,9 +229,11 @@ export function cycleAspect(frame: Box, cycles: number = SCOPE_CYCLES): number {
  * The diagram's own lane, which is the first track and takes what the other two
  * leave. In `ranuras` that comes to exactly {@link DIAGRAM_W}, because the
  * column is the one written as a remainder; in `rail` and `gone` the diagram is
- * the remainder instead and the number moves with the window.
+ * the remainder instead and the number moves with the window. At
+ * {@link DESIGN_BODY_W} that is **1 016 px in the rail shape and 1 070 pinned**,
+ * which is what {@link bodyGap} makes the model say as well as the screen.
  *
- * **It is not floored.** Under about 912 px of body it drops below
+ * **It is not floored.** Under about 910 px of body it drops below
  * {@link DIAGRAM_W} in every shape, and down there {@link FIGURES_W} is still
  * hard-coded and the grid's percentage-positioned nodes are long past what #19
  * measured. The height has a floor with a measurement behind it; the width has
@@ -232,20 +242,58 @@ export function cycleAspect(frame: Box, cycles: number = SCOPE_CYCLES): number {
  * they are claiming for, and the floor is #66.
  */
 export function diagramLane(shape: ColumnShape, bodyWidth: number): number {
-  return bodyWidth - laneWidth(shape, bodyWidth) - FIGURES_W - 2 * RULE;
+  return bodyWidth - laneWidth(shape, bodyWidth) - FIGURES_W - BODY_BOUNDARIES * bodyGap(shape);
 }
 
-function laneWidth(shape: ColumnShape, bodyWidth: number): number {
+/**
+ * What one boundary between two of the body's lanes measures, in CSS pixels.
+ *
+ * A whole filete, except where the lane between the two boundaries has closed
+ * to nothing: there the two gaps abut with no track between them, and two
+ * filetes with 0 px in the middle read as a rule of double thickness. So each of
+ * them is half, and the pinned composición's diagram is 1 070 px wide at the
+ * design window rather than the 1 068 an unconditional `2 · RULE` returns.
+ *
+ * **This is the source the sheet reads too**, bound into `.body`'s `column-gap`
+ * from `app.ts`, because the width of this one gap is the only filete in the app
+ * that depends on which shape the body is in. Declared in the sheet as well it
+ * would be two derivations of one truth, identical until somebody edited one —
+ * which is exactly how the model came to return a width the screen was not
+ * drawing (#76).
+ *
+ * **Keyed to the adjacency and not to a shape's name.** What halves the gap is
+ * that there is no track between the two of them, which is {@link fixedLane}
+ * returning zero. A fourth shape that closes the middle lane inherits this by
+ * having the adjacency; keyed to `gone` it would go stale the day that shape
+ * arrived, and silently.
+ */
+export function bodyGap(shape: ColumnShape): number {
+  return fixedLane(shape) === 0 ? RULE / BODY_BOUNDARIES : RULE;
+}
+
+/**
+ * The middle lane where it is a declared width, and `null` where it is the
+ * remainder — the ranuras composición is the one shape whose column is what the
+ * other two lanes leave, which is what keeps the diagram at exactly
+ * {@link DIAGRAM_W} at the design width.
+ */
+function fixedLane(shape: ColumnShape): number | null {
   switch (shape) {
     case 'ranuras':
-      // The remainder, so the diagram gets exactly its 700 px and the exchange
-      // cannot contradict the resting state.
-      return bodyWidth - DIAGRAM_W - FIGURES_W - 2 * RULE;
+      return null;
     case 'rail':
       return RAIL_W;
     case 'gone':
       return 0;
   }
+}
+
+function laneWidth(shape: ColumnShape, bodyWidth: number): number {
+  return (
+    // The remainder, so the diagram gets exactly its 700 px and the exchange
+    // cannot contradict the resting state.
+    fixedLane(shape) ?? bodyWidth - DIAGRAM_W - FIGURES_W - BODY_BOUNDARIES * bodyGap(shape)
+  );
 }
 
 function glass(ranura: Box): Box {

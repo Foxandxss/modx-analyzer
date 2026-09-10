@@ -165,6 +165,34 @@ describe('App (4a)', () => {
   });
 
   /**
+   * The one number the sheet and the model used to hold two copies of.
+   *
+   * The half filete is a judged visual decision — two gaps with a 0 px track
+   * between them read as a rule of double thickness — and it now lives in
+   * `bodyGap()` alone, which is what makes `diagramLane()` return the 1 070 px
+   * the screen draws rather than 1 068 (#76). Asserted on the body itself, in
+   * the three shapes, because a check on the module alone cannot tell whether
+   * the sheet is still keeping a copy.
+   */
+  it('takes the body’s filete from the module, halved only where the lane closes', async () => {
+    const { host, fixture } = await renderApp();
+    const body = host.querySelector<HTMLElement>('.body')!;
+    const composition = TestBed.inject(Composition);
+
+    expect(body.style.columnGap).toBe('2px');
+
+    // Both ranuras emptied: a 52 px handle still stands between the two gaps.
+    composition.choose(0, null);
+    await fixture.whenStable();
+    expect(body.style.columnGap).toBe('2px');
+
+    // The pin down closes the middle lane to nothing, and only then it halves.
+    composition.togglePin();
+    await fixture.whenStable();
+    expect(body.style.columnGap).toBe('1px');
+  });
+
+  /**
    * The pin has its own handle — itself, lit, in the header of the panel it is
    * about — so there is no rail beside it. A second control for the same one
    * press is a second thing to learn.

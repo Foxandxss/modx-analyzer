@@ -27,7 +27,7 @@
     <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
       <span style="padding:5px 11px;border:2px solid rgba(125,240,176,.5);border-radius:999px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:.14em;color:#7df0b0">10a</span>
       <span style="font-size:26px;color:#d6e2dd">What is on screen today, at 1:1</span>
-      <span style="font-size:15px;color:#8fa39d">algorithm 66 · pin down · lane 1 070 px as the sheet draws it, 1 068 by the arithmetic · measured off the hardware shot</span>
+      <span style="font-size:15px;color:#8fa39d">algorithm 66 · pin down · lane 1 070 px, which is now what the sheet draws AND what the arithmetic returns (#76) · measured off the hardware shot</span>
     </div>
 
     <div style="font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.18em;color:#8a5f4a">AS SHIPPED AT 52eb91b — CARD 320 × 34.5 PX, TRACK 22.5, ROW PITCH 46, GAP 11.5. THE DATUM HAS ITS DAYLIGHT; THE AXIS HAS 0.225 PX PER LEVEL POINT</div>
@@ -633,7 +633,7 @@
           <div>BATTEN AT ITS 380 CAP · 30.84 % → <span style="color:#7df0b0">LANE ≥ 393</span></div>
           <div>STACKED AT ITS 190 CAP · 15.42 % → LANE ≥ 750</div>
           <div>EITHER CLASS AT THE COLUMN CAP · 142 UNITS · 11.53 % → <span style="color:#ff9d85">LANE ≥ 999</span> · BODY <span style="color:#ff9d85">1 263 / 1 211</span></div>
-          <div style="color:#6f817c">TODAY'S LANES: 1 016 AND 1 068 · SLACK 17 AND 69 · NO minWidth</div>
+          <div style="color:#6f817c">TODAY'S LANES: 1 016 AND 1 070 · SLACK 17 AND 71 · NO minWidth</div>
         </div>
         <div style="font-size:12.5px;color:#8fa39d;line-height:1.6;text-wrap:pretty">So the Level axis stops being a number that is true at one composition width and becomes <span style="color:#d6e2dd">a computation</span> — and the floor is <span style="color:#d6e2dd">not a property of the class</span>: <span style="font-family:ui-monospace,Consolas,monospace">nodeW = min(pitchX − COL_GAP, cap)</span> at eight columns is <span style="font-family:ui-monospace,Consolas,monospace">1200/8 − 8 = 142</span> units, and neither cap is in that expression. Its inputs are <span style="font-family:ui-monospace,Consolas,monospace">WIDE_CANVAS_W</span>, <span style="font-family:ui-monospace,Consolas,monospace">MARGIN_X</span>, <span style="font-family:ui-monospace,Consolas,monospace">COL_GAP</span>, <span style="font-family:ui-monospace,Consolas,monospace">WIDE_COLUMNS</span> — recompute 142 from those, never assert 999. And on that box <span style="color:#d6e2dd">the daylight asks for a longer track than px-per-point does</span> (100 against 99), so the floor is a <span style="font-family:ui-monospace,Consolas,monospace">max()</span> of two criteria on one box. <span style="color:#d6e2dd">17 px of slack at the shipped window</span>, and any drag breaks it.</div>
       </div>

@@ -8,7 +8,9 @@ import {
   FIGURES_W,
   FLAT,
   RAIL_W,
+  RULE,
   STRIP_H,
+  bodyGap,
   columnGeometry,
   columnShape,
   cycleAspect,
@@ -153,6 +155,65 @@ describe('columnGeometry', () => {
     // binds the legend. Neither is floored — see diagramLane.
     expect(diagramLane('rail', DESIGN_BODY_W)).toBeGreaterThan(DIAGRAM_W);
     expect(diagramLane('gone', DESIGN_BODY_W)).toBeGreaterThan(DIAGRAM_W);
+  });
+});
+
+/**
+ * The filete, which is the one number this module and the sheet used to hold two
+ * copies of.
+ *
+ * `diagramLane()` subtracted a whole filete on both boundaries in every shape,
+ * while the sheet halved them with the pin down. So the model returned 1 068 px
+ * for a lane the screen was drawing at 1 070, inside the one module whose stated
+ * contract is that the two mirror each other (#76). The sheet was right: 1 070
+ * is what a user actually has, and the half-gap is a judged visual decision with
+ * its reason written at its site.
+ */
+describe('the filete between two lanes', () => {
+  it('is whole where a lane stands between the two gaps', () => {
+    expect(bodyGap('ranuras')).toBe(RULE);
+    expect(bodyGap('rail')).toBe(RULE);
+  });
+
+  /**
+   * Two gaps with a 0 px track between them read as a rule of double thickness,
+   * so each is half. Asserted through the shape whose middle lane is zero rather
+   * than through the class name the sheet used to key it to.
+   */
+  it('is half where the lane between them has closed to nothing', () => {
+    const { column } = columnGeometry(state({ pinned: true }), ROOM);
+
+    expect(column).toBe(0);
+    expect(bodyGap('gone')).toBe(RULE / 2);
+  });
+
+  it('is the lane arithmetic’s only source for the gap, in every shape', () => {
+    // Recomputed from the gap this module hands the sheet, never from a literal:
+    // an edit to either has to move both or fail here.
+    for (const shape of ['ranuras', 'rail', 'gone'] as const) {
+      const { column } = columnGeometry(
+        state({
+          filled: shape === 'ranuras' ? [true, false] : [false, false],
+          pinned: shape === 'gone',
+        }),
+        ROOM,
+      );
+
+      expect(diagramLane(shape, DESIGN_BODY_W)).toBe(
+        DESIGN_BODY_W - column - FIGURES_W - 2 * bodyGap(shape),
+      );
+    }
+  });
+
+  /**
+   * Which arm moved, so the direction does not read as good news. Against the
+   * 999 px the Level axis will be earned against, the pinned slack is 71 px and
+   * not the 69 the model used to imply — and the **binding** arm is the rail at
+   * 17 px, which this change does not touch at all.
+   */
+  it('leaves the rail arm alone and puts the pinned lane where the screen draws it', () => {
+    expect(diagramLane('rail', DESIGN_BODY_W)).toBe(1016);
+    expect(diagramLane('gone', DESIGN_BODY_W)).toBe(1070);
   });
 });
 

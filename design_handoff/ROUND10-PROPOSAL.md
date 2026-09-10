@@ -196,14 +196,19 @@ arm carried with one `RULE` twice** — and it is a disagreement between the mod
 the one module whose stated contract is that they mirror each other, so it wants reconciling in the
 same commit.
 
-Against **999** the slack is therefore **17 px (rail) and 69 px (pinned)**, at the design width, and
-`tauri.conf.json` has no `minWidth`. The pinned figure depends on which way that 2 px is reconciled:
-**69 is the model's answer and 71 is what is on screen today**, and it is the on-screen one that
-describes what a user has — so 69 is quoted as the conservative number, and it becomes the true one
-only if the sheet is fixed down to a full filete rather than the module up to a half. Naming that
-keeps the figure from silently presuming a resolution nobody has chosen. **The binding arm is 17 px
-either way.** So the Level axis does not merely bind: **it very nearly fails at the shipped window,
-and any drag breaks it immediately.** That is the finding, not the footnote.
+> **Reconciled (#76, landed).** The module went **up to a half**: `bodyGap()` now owns the filete's
+> width, keyed to the adjacency — the two gaps abut because the lane between them has closed — and
+> `.body`'s `column-gap` is bound from it rather than declared a second time in the sheet. So the
+> pinned lane is **1 070 px in the model as well as on screen**, and the figures below read **17 px
+> (rail) and 71 px (pinned)**. The finding above stands as written; only its resolution is settled.
+
+Against **999** the slack is therefore **17 px (rail) and 71 px (pinned)**, at the design width, and
+`tauri.conf.json` has no `minWidth`. The pinned figure was the one that depended on which way that
+2 px was reconciled: 69 was the model's answer and 71 is what is on screen, and it is the on-screen
+one that describes what a user has — so 71 is the figure now that the module has been brought up to
+the sheet rather than the sheet down to the module. **The binding arm is 17 px either way.** So the
+Level axis does not merely bind: **it very nearly fails at the shipped window, and any drag breaks it
+immediately.** That is the finding, not the footnote.
 
 So `max()` gets a computed arm that is right: **#66's floor is body ≥ 1 263 px (rail) / 1 211 px
 (pinned)**, derived from the four constants above and never from a cap — and the code
@@ -564,7 +569,7 @@ vocabulary, and no user-visible string says them.
 | **the batten** | The wide composition's node at four rows or deeper — 302 × 23.6 at the body's floor, far wider than it is tall. Not a different node: the same five facts, folded the other way, with Level along the card and the ceiling standing across it. | the wide drawing, 24 of the 88 |
 | **the wide stacked node** | The wide composition's node at three rows or fewer — 142 to 190 units wide, up to 91.33 tall. It carries Level along its length like the batten, because the axis is the composition's and not the box's, and at eight columns it is the box every width floor is earned against. | the wide drawing, 64 of the 88 |
 | **the fold** | What the wide drawing does with a chain deeper than five rows: the deepest operators keep their row, their order and their place above what they modulate, and give up the ratio, the glyph, the Hz and the stamp to one band that wears the weakest of their stamps. **Facts fold; positions never do**, because depth is height. A touch unfolds it into the drawing that ships today. | the wide drawing, algorithms 37 and 66 |
-| **the lane** | **The diagram's own column of the body** — `diagramLane()`, 1 016 px in the rail shape and 1 068 by the arithmetic in the pinned one. This entry exists to settle a collision rather than to name something new, and the collision is **three senses, not two**: this one in `column-geometry.ts` and `legend.ts`; the **row gap** at `crossY()`'s comment in `layout.ts:219` and at `laneY()` in `wide-layout.ts:287`; and the **gutter** at `laneX()` in `layout.ts:229–234`. `layout.ts` carries two of the three on its own. So: the row gap is **the gap**, which is the word rule 20 already gives it; the vertical run beside a card is **the gutter**, which is what `wide-layout.ts` already calls it (`gutterX()`); and the lane is the column. The code points the same way — *the lane in the gap under a row* is a lane qualified by a gap, not a gap named lane. | document and code vocabulary |
+| **the lane** | **The diagram's own column of the body** — `diagramLane()`, 1 016 px in the rail shape and 1 070 in the pinned one — the two agreed on the second figure once `bodyGap()` landed (#76). This entry exists to settle a collision rather than to name something new, and the collision is **three senses, not two**: this one in `column-geometry.ts` and `legend.ts`; the **row gap** at `crossY()`'s comment in `layout.ts:219` and at `laneY()` in `wide-layout.ts:287`; and the **gutter** at `laneX()` in `layout.ts:229–234`. `layout.ts` carries two of the three on its own. So: the row gap is **the gap**, which is the word rule 20 already gives it; the vertical run beside a card is **the gutter**, which is what `wide-layout.ts` already calls it (`gutterX()`); and the lane is the column. The code points the same way — *the lane in the gap under a row* is a lane qualified by a gap, not a gap named lane. | document and code vocabulary |
 
 **And two renames, because the collision is in the identifiers too.** `GLOSSARY.md` §6 is
 *Renames — the list running code follows*, the same place round 9's applied file renames live, so both
