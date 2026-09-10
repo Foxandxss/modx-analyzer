@@ -76,8 +76,16 @@
         <path class="stub" [attr.d]="dead.path"></path>
       }
 
+      <!-- El arco existe porque lo dice la topología, no porque lleve señal: con
+           FB 0 se dibuja inerte, en la misma discontinua que el cabo del operador
+           a cero. El porqué está en `wide-layout.ts`. -->
       @if (feedback(); as arc) {
-        <path class="feedback" [attr.d]="arc.path" marker-end="url(#diagram-arrow)"></path>
+        <path
+          class="feedback"
+          [class.feedback--inert]="arc.inert"
+          [attr.d]="arc.path"
+          marker-end="url(#diagram-arrow)"
+        ></path>
       }
     </svg>
 

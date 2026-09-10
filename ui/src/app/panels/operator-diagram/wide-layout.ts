@@ -329,6 +329,21 @@ function stub(slot: Slot, shape: Shape): DrawnStub {
  * composition already draws. One vocabulary for one thing: the feedback is the
  * only line in either drawing that runs backwards, and it looks the same in
  * both.
+ *
+ * ## Why `FB 0` is dashed and inert rather than deleted
+ *
+ * The arc comes from the documented topology and not from the amount, so it is
+ * drawn at every amount there is — including none. A solid route beside a `FB 0`
+ * is the drawing making a claim about the sound that the figure under it does
+ * not make, which is precisely the sentence the third rule above refuses for an
+ * operator at Level 0. So it is answered the same way: the arc keeps its place
+ * and loses its ink, in `--inert` on `--dash-inactive`, the pair the stub just
+ * above already uses. Deleting it would say the loop is not in this algorithm,
+ * which is a different and false statement — and it would take the `FB` label
+ * with it, hiding a figure the anillo went and read.
+ *
+ * The decision is made where the amount is: `OperatorDiagram.feedback`, over the
+ * polled figure. Both compositions read it, so both drawings say the same thing.
  */
 function feedbackArc(from: Slot, into: Slot, shape: Shape): DrawnFeedback {
   const out = { x: from.x + shape.nodeW, y: from.y + shape.nodeH * 0.68 };

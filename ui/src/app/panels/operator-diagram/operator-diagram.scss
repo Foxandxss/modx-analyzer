@@ -96,11 +96,11 @@
   overflow: visible;
 }
 
-// El trazo no engorda al estirar el viewBox: es para lo que existe esa propiedad.
-.route,
-.bus,
-.stub,
-.feedback {
+// Toda línea del dibujo se traza igual, y son las que cuelgan del SVG: el hijo
+// directo deja fuera la punta de flecha del <marker>, que vive en <defs> y sí se
+// rellena. El trazo no engorda al estirar el viewBox: es para lo que existe esa
+// propiedad.
+.routes > path {
   fill: none;
   vector-effect: non-scaling-stroke;
   stroke-linejoin: round;
@@ -116,21 +116,27 @@
   stroke-width: 2;
 }
 
+.feedback {
+  stroke: var(--carrier);
+  stroke-width: 2;
+}
+
 // Una línea que no lleva nada se dibuja igual, sea lo que sea: la ruta que sale
-// de un operador a cero, su bajada al bus, y el cabo del que está aparcado
-// fuera de las ramas. Se ve, y se ve cortada. El cabo además va sin flecha y
-// termina en una barra, porque no es una ruta cortada: es un final.
+// de un operador a cero, su bajada al bus, el arco de realimentación con FB 0, y
+// el cabo del que está aparcado fuera de las ramas. Se ve, y se ve cortada. El
+// cabo además va sin flecha y termina en una barra, porque no es una ruta
+// cortada: es un final.
+//
+// El modificador va DESPUÉS de las tres reglas base a propósito: tiene la misma
+// especificidad que ellas, así que lo único que le da el trazo inerte es el
+// orden.
 .route--inert,
 .bus--inert,
+.feedback--inert,
 .stub {
   stroke: var(--inert);
   stroke-width: 1.5;
   stroke-dasharray: var(--dash-inactive);
-}
-
-.feedback {
-  stroke: var(--carrier);
-  stroke-width: 2;
 }
 
 .arrow {

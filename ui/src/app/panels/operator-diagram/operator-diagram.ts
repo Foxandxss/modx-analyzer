@@ -257,7 +257,15 @@ export class OperatorDiagram {
     })),
   );
 
-  /** The loop, with `FB n` beside it — the value the ring read, or the dash. */
+  /**
+   * The loop, with `FB n` beside it — the value the ring read, or the dash.
+   *
+   * At `FB 0` the arc joins the vocabulary the operators at zero already speak:
+   * dashed and inert, drawn and never deleted (`wide-layout.ts`). Only a **read**
+   * zero does it — a feedback nobody has polled has no amount, which is not the
+   * same statement as an amount of none, exactly as an operator that has not
+   * answered is not one that answered 0.
+   */
   protected readonly feedback = computed(() => {
     const arc = this.drawing().feedback;
     if (arc === null) {
@@ -267,6 +275,7 @@ export class OperatorDiagram {
     return {
       ...arc,
       label: `FB ${value.value ?? DEAD_MARK}`,
+      inert: value.value === 0,
       labelLeft: this.share(arc.labelX, this.drawing().width),
       labelTop: this.share(arc.labelY, this.drawing().height),
     };

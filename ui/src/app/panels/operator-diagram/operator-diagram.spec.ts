@@ -306,6 +306,58 @@ describe('OperatorDiagram', () => {
     expect(host.querySelector('.label--feedback')?.textContent?.trim()).toBe('FB 3');
   });
 
+  it('draws the loop inert when the feedback amount is zero, and keeps the figure', async () => {
+    const { backend, fixture, host } = await renderDiagram();
+
+    backend.topology.set(ALGORITHM_2);
+    await fixture.whenStable();
+    // Nobody has polled the amount yet. That is not an amount of none, so the
+    // arc is not cut: a dash beside a solid loop says «unread», which is true.
+    expect(host.querySelector('.feedback')?.classList.contains('feedback--inert')).toBe(false);
+
+    backend.patch.set({ ...backend.patch(), feedback: polled(0, NOW) });
+    await fixture.whenStable();
+    // The route is in the table whatever the amount is, so it stays drawn — and
+    // says it carries nothing in the same discontinua an operator at zero uses.
+    expect(host.querySelector('.feedback')?.classList.contains('feedback--inert')).toBe(true);
+    // And the figure the anillo went and read is still on screen: hiding it is
+    // the empty-column rule run backwards.
+    expect(host.querySelector('.label--feedback')?.textContent?.trim()).toBe('FB 0');
+
+    backend.patch.set({ ...backend.patch(), feedback: polled(3, NOW) });
+    await fixture.whenStable();
+    expect(host.querySelector('.feedback')?.classList.contains('feedback--inert')).toBe(false);
+  });
+
+  it('inks the inert loop with the very pair the parked stub uses', async () => {
+    const { backend, fixture } = await renderDiagram();
+
+    backend.topology.set(ALGORITHM_2);
+    backend.patch.set({ ...backend.patch(), feedback: polled(0, NOW) });
+    await fixture.whenStable();
+
+    // «The same discontinua as the stub» is a fact about the compiled rule and
+    // not about a class name — jsdom lays nothing out and computes no stroke. So
+    // what is asserted is that the four selectors share one declaration block,
+    // which is what makes them the same line by construction.
+    const inert = componentCss().match(/\.route--inert[^{]*\{[^}]*\}/)?.[0] ?? '';
+    expect(inert).toContain('.feedback--inert');
+    expect(inert).toContain('.stub');
+    expect(inert).toContain('var(--inert)');
+    expect(inert).toContain('var(--dash-inactive)');
+    // And it is the modifier that wins: the base `.feedback` rule has the same
+    // specificity, so only the order in the sheet decides.
+    expect(componentCss().indexOf('.feedback--inert')).toBeGreaterThan(
+      componentCss().search(/\.feedback\[[^\]]*\]\s*\{/),
+    );
+    // The base stroke rule that made room for the fourth selector is the direct
+    // child of the SVG, which is what keeps the arrowhead out of it: the marker
+    // lives in <defs> and is the one path in the drawing that is filled.
+    const base = componentCss().match(/\.routes[^{]*>[^{]*path[^{]*\{[^}]*\}/)?.[0] ?? '';
+    expect(base).toMatch(/fill:\s*none/);
+    expect(base).not.toContain('.arrow');
+  });
+
   it('draws the role by shape from what the ring read', async () => {
     const { backend, fixture, host } = await renderDiagram();
 
@@ -679,6 +731,26 @@ describe('OperatorDiagram', () => {
       expect(routes(host)).toHaveLength(3);
       expect(host.querySelectorAll('.stub')).toHaveLength(0);
       expect(host.querySelectorAll('.bus')).toHaveLength(6);
+    });
+
+    it('cuts the loop at zero here too, so the two drawings say the same thing', async () => {
+      const { backend, fixture, host } = await renderDiagram({ wide: true });
+
+      // Op1 carries the loop and is at 90, so nothing is parked and the arc is
+      // drawn: what is at zero is the feedback amount, which is a reading of its
+      // own and not the operator's Level.
+      backend.operators.set(theBuildsOwnPatch(NOW));
+      backend.topology.set(ALGORITHM_2);
+      backend.patch.set({ ...backend.patch(), feedback: polled(0, NOW) });
+      await fixture.whenStable();
+
+      expect(host.querySelectorAll('.stub')).toHaveLength(0);
+      expect(host.querySelector('.feedback')?.classList.contains('feedback--inert')).toBe(true);
+      expect(host.querySelector('.label--feedback')?.textContent?.trim()).toBe('FB 0');
+
+      backend.patch.set({ ...backend.patch(), feedback: polled(7, NOW) });
+      await fixture.whenStable();
+      expect(host.querySelector('.feedback')?.classList.contains('feedback--inert')).toBe(false);
     });
   });
 });
