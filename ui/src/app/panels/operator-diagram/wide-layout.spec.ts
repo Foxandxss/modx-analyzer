@@ -7,6 +7,7 @@ import {
   COL_GAP,
   MARGIN_X,
   PARKED_BAND_ROW,
+  STACK_H,
   WIDE_CANVAS_H,
   WIDE_CANVAS_W,
   WIDE_COLUMNS,
@@ -772,6 +773,63 @@ describe('the wide diagram layout', () => {
     // The 66's card, which is the one the floor was measured on: 33 of the 400
     // units the box is authored in, which the harness drew at 22.9 px.
     expect(wideRowPitch(DEEPEST_ROWS).nodeH).toBeCloseTo(33, 6);
+  });
+
+  /**
+   * The margin between three rows and the batten class, **asserted as a margin
+   * and never as a class** (ADR-0008 §4, §6).
+   *
+   * Three rows is where the node stops growing, and it is the row count of 37 of
+   * the 88 — the ordinary drawing. At that count the card is `91.33` units against
+   * the `STACK_H = 90` the five facts need to stack, so the ordinary drawing is a
+   * stacked node by **1.33 units**, and a point and a half moves those 37 into
+   * battens with nothing failing. It is the next `bottom: 99%`: a check that said
+   * «three rows stacks» stays green at 90.01 and says nothing.
+   *
+   * **Its five inputs, named**, because none of them is obviously about
+   * representation and any of them can be edited for a reason that has nothing
+   * to do with this boundary: `WIDE_CANVAS_H`, `MARGIN_Y`, `BUS_OFFSET`,
+   * `OUT_ROOM` and `ROW_GAP_MAX`. At three rows the pitch is
+   * `(WIDE_CANVAS_H − MARGIN_Y − BUS_OFFSET − OUT_ROOM) / 3 = 117.33`, the gap is
+   * the cap — `min(ROW_GAP_MAX, pitch / 4) = 26` — and the card is what is left.
+   * Read through `wideRowPitch()` rather than recomputed from copies of the
+   * five, for the reason at `narrowestCardWidth()`: the layout is what draws, and
+   * a copy goes green while the screen says something else.
+   *
+   * The number is the assertion, so the edit that closes the margin goes red
+   * here while there is still room to think, rather than turning up as a
+   * different drawing for the ordinary algorithm.
+   */
+  it('keeps the ordinary three-row drawing a stacked node by 1.33 units, and no more', () => {
+    /** Where the node stops growing — the module's own `MIN_ROWS`. */
+    const STOPS_GROWING_AT = 3;
+    const margin = wideRowPitch(STOPS_GROWING_AT).nodeH - STACK_H;
+
+    // Positive, so three rows stacks; and this small, so the boundary is known
+    // to be a fraction of the card and not assumed to be comfortable.
+    expect(margin).toBeGreaterThan(0);
+    expect(margin).toBeCloseTo(1.33, 2);
+
+    // The gap at three rows is the cap and not the quarter, which is why
+    // `ROW_GAP_MAX` is one of the five and `pitch / 4` is not.
+    expect(wideRowPitch(STOPS_GROWING_AT).rowGap).toBeLessThan(
+      wideRowPitch(STOPS_GROWING_AT).pitchY / 4,
+    );
+
+    // And the drawing reads the same number: a three-row algorithm — 1 · 2 · 3
+    // in a chain, five portadoras beside it — is given exactly that card, so the
+    // margin is a fact about what is drawn and not about the pitch alone.
+    const threeRows = topology(
+      5,
+      [
+        [1, 2],
+        [2, 3],
+      ],
+      [3, 4, 5, 6, 7, 8],
+    );
+    const { slots } = wideLayout(threeRows, [], NEVER_FOLDS);
+    expect(new Set(slots.map((each) => each.row)).size).toBe(STOPS_GROWING_AT);
+    expect(slots[0].h - STACK_H).toBeCloseTo(margin, 6);
   });
 
   /**

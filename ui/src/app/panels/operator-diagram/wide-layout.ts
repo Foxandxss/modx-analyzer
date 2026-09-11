@@ -222,8 +222,20 @@ const OUT_ROOM = 22;
  */
 const MIN_ROWS = 3;
 
-/** What the five facts need to stack, head to `PREDICTED`, in `viewBox` units. */
-const STACK_H = 90;
+/**
+ * What the five facts need to stack, head to `PREDICTED`, in `viewBox` units.
+ *
+ * Exported for one reader. The margin between three rows and this number is
+ * **1.33 units**, and it is the boundary between the wide stacked node and the
+ * batten for the 37 of the 88 that are three rows deep. Five inputs decide it —
+ * {@link WIDE_CANVAS_H}, {@link MARGIN_Y}, {@link BUS_OFFSET}, {@link OUT_ROOM}
+ * and {@link ROW_GAP_MAX} — none of them obviously about representation, and a
+ * point and a half on any one of them moves those 37 into a different kind of
+ * drawing with nothing failing. So `wide-layout.spec.ts` asserts the margin as a
+ * number and never as a class (ADR-0008 §6): a check that said «three rows
+ * stacks» would stay green at 90.01.
+ */
+export const STACK_H = 90;
 
 const NODE_W_MAX = 190;
 /** A node that had to lay its facts in a row gets the width to do it. */
