@@ -110,8 +110,10 @@ export const DRAWER_GRAB = 52;
 /**
  * `tauri.conf.json`'s window `width`. The body gets all of it: the three lanes
  * divide the window, so this is what the design widths below are taken at.
- * There is no `minWidth` beside it, and no floor here for the width either —
- * see {@link diagramLane}.
+ * There is no `minWidth` beside it, on purpose: the width's floor is per shape
+ * and 54 px apart between the two wide shapes, so a single number on the OS
+ * window would over-constrain one of them. It is on the body's grid instead —
+ * see {@link bodyWidthFor}, and `node-geometry.ts` for the lane it derives from.
  */
 export const DESIGN_BODY_W = 1280;
 
@@ -276,17 +278,46 @@ export function cycleAspect(frame: Box, cycles: number = SCOPE_CYCLES): number {
  * {@link DESIGN_BODY_W} that is **1 016 px in the rail shape and 1 070 pinned**,
  * which is what {@link bodyGap} makes the model say as well as the screen.
  *
- * **It is not floored.** Under about 910 px of body it drops below
- * {@link DIAGRAM_W} in every shape, and down there {@link FIGURES_W} is still
- * hard-coded and the grid's percentage-positioned nodes are long past anything
- * anyone has looked at. The height has a floor with a measurement behind it — it
- * has had one since #81 — and the width has
- * none, and one picked to make an arithmetic test pass would be a constant
- * earned by the test instead of by a measurement. So callers state which widths
- * they are claiming for, and the floor is #66.
+ * **This is the lane at a given body, and it is not clamped here.** The two
+ * wide shapes do have a floor since #86 — the lane the Level axis stays readable
+ * in, derived in `node-geometry.ts` from the criterion and bound onto the grid
+ * as the first track's minimum — but it is the *body* that stops there and
+ * scrolls, not the lane that lies about the body: a function that returned the
+ * floor for a body narrower than it would be a model of a lane the screen is
+ * not drawing at that width, since under the floor the body's box is not the
+ * lane's box any more. {@link bodyWidthFor} is that floor's arithmetic, the
+ * other way round. The ranuras shape has no floor from this: under about 910 px
+ * of body its lane drops below {@link DIAGRAM_W}, and down there {@link FIGURES_W}
+ * is still hard-coded and the grid's percentage-positioned nodes are long past
+ * anything anyone has looked at. Its width is not a readability question —
+ * that composición carries Level along its height — and it is #66's.
  */
 export function diagramLane(shape: ColumnShape, bodyWidth: number): number {
   return bodyWidth - laneWidth(shape, bodyWidth) - FIGURES_W - BODY_BOUNDARIES * bodyGap(shape);
+}
+
+/**
+ * The body width that leaves the diagram exactly `lane`, per shape: the inverse
+ * of {@link diagramLane}, in the two shapes where it has one.
+ *
+ * It is what the body's grid computes on its own when the diagram's track is
+ * `minmax(lane, 1fr)` — the first track at its minimum, the middle lane at its
+ * declared width, {@link FIGURES_W}, and a {@link bodyGap} on each side. The
+ * body's minimum is therefore **per shape without a per-shape constant**: the
+ * lane is one number and the shapes differ by what stands beside it, 52 px of
+ * rail against 0 and a whole filete against half of one. `node-geometry.ts`
+ * hands this the lane the Level axis needs and reads back the floors the ADR
+ * quotes, so a test can hold the grid's sum and the model's to one arithmetic.
+ *
+ * `null` for the ranuras, and not a number: there the diagram's lane is
+ * {@link DIAGRAM_W} by construction and the *column* is the remainder, so no
+ * body width puts the lane anywhere else and the question has no answer. A
+ * `0` would read as «no floor», which is true, but it would also read as a
+ * width, which is not.
+ */
+export function bodyWidthFor(shape: ColumnShape, lane: number): number | null {
+  const fixed = fixedLane(shape);
+  return fixed === null ? null : lane + fixed + FIGURES_W + BODY_BOUNDARIES * bodyGap(shape);
 }
 
 /**

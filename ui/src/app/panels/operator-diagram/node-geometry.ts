@@ -3,6 +3,7 @@ import {
   ColumnShape,
   DESIGN_BODY_W,
   DIAGRAM_W,
+  bodyWidthFor,
   diagramLane,
 } from '../glass-column/column-geometry';
 import { CANVAS_H, CANVAS_W, LevelAxis, NODE_H, NODE_W } from './layout';
@@ -210,19 +211,193 @@ export function floorCanvasHeight(): number {
 }
 
 /**
- * The canvas's rendered width in the narrowest lane the wide composición claims,
- * which is the **rail** shape at the shipped window.
+ * One Level point is never drawn smaller than this on the axis that carries it,
+ * in CSS pixels.
  *
- * There is no floor under this the way `BODY_FLOOR` is a floor under the height:
- * `tauri.conf.json` has no `minWidth` and `diagramLane()` is not floored, so any
- * drag makes the drawing narrower than anything here. That is #86's ticket and
- * not this module's, and until it lands the honest thing is to earn the inset
- * against **the narrowest lane the app ships with** rather than against a floor
- * that does not exist yet. The rail is that lane — 1 016 px against the pinned
- * shape's 1 070 — and it is the binding arm by 54 px.
+ * **The criterion under the width floor, and the one thing in it that is
+ * chosen.** A pixel is the smallest thing a screen can draw, so a point under it
+ * is a point two operators can differ by without the drawing showing it — which
+ * is the 0.35 px between 99 and 96 that the whole rotation was about, one axis
+ * along. Folding does not touch it: folding the facts does not widen the card by
+ * one pixel (`folding.ts`), so this is a floor on the **window** and not a fold
+ * condition, and it is enforced the way the height already is — a minimum, and
+ * the body scrolling under it (#86).
+ */
+export const PIXELS_PER_POINT = 1;
+
+/**
+ * The shortest track the wide composición ever draws, in CSS pixels: **100**.
+ *
+ * {@link LEVEL_SCALE} points at {@link PIXELS_PER_POINT} each. It is the
+ * *track* and not the card because the criterion is about the scale: the card
+ * is what the track costs once the inset and the border are added to it, which
+ * is {@link readableCard}.
+ */
+export function readableTrack(): number {
+  return LEVEL_SCALE * PIXELS_PER_POINT;
+}
+
+/**
+ * The narrowest card the wide composición is allowed to draw, in CSS pixels:
+ * **111** — the readable track, the inset that track earns, and the border on
+ * both sides.
+ *
+ * The inset is taken in the **track** form of #67's derivation, `I = d +
+ * DATUM_STROKE − T / LEVEL_SCALE`, because here the track is the given and the
+ * card is the unknown: 6 + 2 − 1 is 7, exactly. {@link trackInset} is the same
+ * derivation solved the other way round — a card given, the inset unknown — and
+ * the two agree on this card, 111 → 7 → 111, which is what makes it a fixed
+ * point and not a coincidence; `operator-diagram.spec.ts` asserts the agreement
+ * rather than either number.
+ */
+export function readableCard(): number {
+  const track = readableTrack();
+  const inset = DAYLIGHT_CRITERION + DATUM_STROKE - track / LEVEL_SCALE;
+  return track + inset + 2 * NODE_BORDER;
+}
+
+/**
+ * The narrowest card's share of the wide canvas, at eight columns: **142 of
+ * 1 232**.
+ *
+ * Recomputed from the four constants that decide it — `WIDE_CANVAS_W`, the two
+ * margins, the gutter and the eight columns — and from no cap. `NODE_W_MAX` and
+ * `SQUAT_NODE_W_MAX` are ceilings that at eight columns both sit above this
+ * number and never decide it, so a card derived from one of them would be a card
+ * about a drawing the layout never makes; and it would make this a property of
+ * the node class, which it is not — at the column cap a batten and a stacked
+ * node are exactly as wide as each other. `wide-layout.spec.ts` re-derives the
+ * same width independently and asserts the layout's own `Math.min` agrees with
+ * it, which is what keeps the claim that no cap binds from being an assumption
+ * (#75).
+ *
+ * Eight columns is the whole surface (#40), including the any-parking case:
+ * since #83 a parked operator takes a place in the band above the deepest row and
+ * not a stub column of its own, and it leaves the branches to do it, so the
+ * drawing's columns are the wider of the two counts and never their sum.
+ */
+function narrowestCardShare(): number {
+  const pitchX = (WIDE_CANVAS_W - 2 * MARGIN_X) / WIDE_COLUMNS;
+  return (pitchX - COL_GAP) / WIDE_CANVAS_W;
+}
+
+/**
+ * The canvas's rendered width at the floor the window stops at, in CSS pixels:
+ * **963.04**, the canvas at which the eight-column card is exactly
+ * {@link readableCard}.
+ *
+ * This is the width the height's floor already has: `BODY_FLOOR` is the body at
+ * which the drawing stops giving way and the scroll starts, and this is the
+ * canvas at the same point on the other axis. Until #86 it was the lane the rail
+ * shape left at the *shipped* window — 980 px, and an honest number, because
+ * `tauri.conf.json` has no `minWidth` and any drag made the drawing narrower
+ * than anything here. It is derived now and not measured, and derived from the
+ * criterion rather than from a window: {@link PIXELS_PER_POINT} is the one
+ * chosen figure in it.
+ *
+ * It is a **fraction of a pixel** and stays one. Rounding it up to 964 would be
+ * a second declaration of the same floor, one pixel apart from the first, and
+ * the grid the body is laid out by takes a fractional minimum without complaint.
  */
 export function floorCanvasWidth(): number {
-  return canvasWidth('rail');
+  return readableCard() / narrowestCardShare();
+}
+
+/**
+ * The lane the wide composición needs, in CSS pixels: **999.04**, the floor's
+ * canvas plus the zone's padding on both sides.
+ *
+ * **This is the number the sheet reads**, bound onto `.body` from `app.ts` as
+ * the minimum of the diagram's track in the two shapes that draw the wide
+ * composición — and bound rather than declared there, for the reason the filete
+ * is (#76): a literal in the sheet is a second copy of a derived number, and the
+ * two agree until somebody edits one. The narrow grid's lane has no minimum from
+ * here: its Level runs along the height, whose floor is `BODY_FLOOR`, and the
+ * width that composición can be dragged to is #66's question and not a
+ * readability one.
+ *
+ * One number and not one per shape, on purpose: what differs between the rail
+ * and the pinned composición is not what the drawing needs but what the *other*
+ * two lanes cost beside it, and the grid adds those up itself — which is what
+ * makes the body's minimum per shape without anybody typing a second constant.
+ * {@link bodyWidthFloor} is the model's account of that sum.
+ */
+export function laneFloor(): number {
+  return floorCanvasWidth() + 2 * ZONE_PAD_X;
+}
+
+/**
+ * The body width under which the composición scrolls sideways, per shape, in CSS
+ * pixels: **1 263.04 in the rail and 1 209.04 pinned**, and `null` for the
+ * ranuras, whose lane is `DIAGRAM_W` by construction and has no readability floor
+ * to derive one from.
+ *
+ * This is what the grid computes on its own once {@link laneFloor} is the first
+ * track's minimum — the lane, the middle lane's declared width, `FIGURES_W` and
+ * the two filetes — and the model says it through `column-geometry.ts`'s inverse
+ * of `diagramLane()` so that a test can hold the two to the same arithmetic. The
+ * proposal's 1 211 predates `bodyGap()` halving the filete with the pin down
+ * (#76); the build wins. Against the 1 280 px window the app ships in the slack
+ * is **17 px in the rail**, which is the arm that binds, and 71 with the pin.
+ * A single constant would over-constrain the pinned shape by exactly the
+ * difference, which is why there is not one.
+ */
+export function bodyWidthFloor(shape: ColumnShape): number | null {
+  return bodyWidthFor(shape, laneFloor());
+}
+
+/**
+ * Where a card's Level origin sits from the body's left edge, in CSS pixels,
+ * for a card at `x` in the wide canvas's own units — and only while the body is
+ * scrolled, which is the one time this number is exact.
+ *
+ * ## The decision under it (ADR-0008 §5)
+ *
+ * Rotated, the bars measure from a **shared, remote origin**: a column's cards
+ * fill from one left edge, and the ceiling datum is a rule referenced to it.
+ * Horizontal scroll can put that origin off the screen while the bars stay on
+ * it, and bars with no visible zero are the misleading chart everybody has seen.
+ * The vertical axis never had the problem — the old fill's zero was its own
+ * card's bottom edge, adjacent by construction.
+ *
+ * Two answers were on the table: pin the origin column and scroll only the
+ * track, or **stop claiming the axis once the origin leaves**. The second is what
+ * is built. The first has no column to pin — the cards are percentages of one
+ * `viewBox` the panel stretches, so the «origin column» is a fraction of an SVG
+ * and not a box the body could hold still — and pinning the whole drawing
+ * instead would slide the figures column over the loud ends of the bars, which
+ * trades one lie for the other. So a card whose zero has left the screen drops
+ * its fill and its datum and keeps its figure: the number is still true, and the
+ * length it confirmed is no longer on screen to confirm. **Per card and not per
+ * drawing**, because the origin is per column: the leftmost column loses its
+ * zero first and the ink leaves with it, so what the pianist sees is the bar
+ * going where its edge went.
+ *
+ * ## Why this is arithmetic and not a measurement
+ *
+ * Nothing in this app measures its own boxes. What makes the offset knowable is
+ * that the body only scrolls sideways when it is narrower than its floor — and
+ * then the diagram's track is at its minimum, which is {@link laneFloor}
+ * exactly, so the canvas is {@link floorCanvasWidth} wide and a card's `x` is a
+ * known share of a known width. Above the floor the body does not scroll and
+ * the question does not arise. The zone's padding puts the canvas in from the
+ * lane's edge, and the card's border puts the track in from the card's.
+ *
+ * This is look 7 of ADR-0008 §8, and it is still owed: *does a scrolled bar
+ * read against an origin it cannot see* has an answer here — it is not asked to
+ * — and whether the ink leaving reads as the reason it left is what the look
+ * decides.
+ */
+export function originOffset(x: number): number {
+  return ZONE_PAD_X + x * (floorCanvasWidth() / WIDE_CANVAS_W) + NODE_BORDER;
+}
+
+/**
+ * Whether a card at `x` in the wide canvas has had its origin scrolled off the
+ * body's left edge: the body has gone further right than the card's zero.
+ */
+export function originGone(x: number, scrollLeft: number): boolean {
+  return scrollLeft > originOffset(x);
 }
 
 /**
@@ -234,9 +409,11 @@ export function floorCanvasWidth(): number {
  * none, so every claim here is arithmetic the sheets mirror — and `tauri.conf`
  * gives the body the whole 1 280 px with no `minWidth` under it. So this is the
  * lane the composición *claims*, per shape: **980 px in the rail and 1 034
- * pinned**, the 54 px between them being the filete the pinned shape halves. The
- * day the window has a floor (#86) it is this function that learns it, and the
- * fold trigger reading it moves with it in one place.
+ * pinned**, the 54 px between them being the filete the pinned shape halves.
+ * Both are above {@link floorCanvasWidth} — by 17 and 71 px of lane — which is
+ * what lets the app ship without scrolling at rest; the fold's width trigger
+ * reads this and not the floor, because the card it judges is the one on screen
+ * and not the narrowest one the window allows.
  */
 export function canvasWidth(shape: ColumnShape): number {
   return diagramLane(shape, DESIGN_BODY_W) - 2 * ZONE_PAD_X;
@@ -311,27 +488,19 @@ export function narrowestGridCard(): number {
 
 /**
  * The smallest card the wide composición puts on screen, along the axis that
- * carries Level there: its **width**, in CSS pixels.
+ * carries Level there: its **width**, in CSS pixels — and since #86 it is
+ * {@link readableCard}, because the window stops where that card would get
+ * narrower.
  *
- * Recomputed from the four constants that decide it — `WIDE_CANVAS_W`, the two
- * margins, the gutter and the eight columns — and from no cap. `NODE_W_MAX` and
- * `SQUAT_NODE_W_MAX` are ceilings that at eight columns both sit above this
- * number and never decide it, so a card derived from one of them would be a card
- * about a drawing the layout never makes; and it would make this a property of
- * the node class, which it is not — at the column cap a batten and a stacked
- * node are exactly as wide as each other. `wide-layout.spec.ts` re-derives the
- * same width independently and asserts the layout's own `Math.min` agrees with
- * it, which is what keeps the claim that no cap binds from being an assumption
- * (#75).
- *
- * Eight columns is the whole surface (#40), including the any-parking case:
- * since #83 a parked operator takes a place in the band above the deepest row and
- * not a stub column of its own, and it leaves the branches to do it, so the
- * drawing's columns are the wider of the two counts and never their sum.
+ * Written as the floor's card and not as the share of the floor's canvas, though
+ * the two are one number: `share · (card / share)` is 111 in arithmetic and a
+ * hair under it in floating point, and {@link trackInset} rounds up, so the
+ * hair would be a whole pixel of inset earned against a card the drawing never
+ * draws. `operator-diagram.spec.ts` recomputes it the other way and holds the
+ * two together.
  */
 export function narrowestWideCard(): number {
-  const pitchX = (WIDE_CANVAS_W - 2 * MARGIN_X) / WIDE_COLUMNS;
-  return ((pitchX - COL_GAP) / WIDE_CANVAS_W) * floorCanvasWidth();
+  return readableCard();
 }
 
 /**
@@ -353,7 +522,9 @@ export function narrowestWideCard(): number {
  * cannot be a second criterion**: it clears `d` by construction at every card,
  * so quoting it as a floor alongside the track's is one criterion wearing two
  * hats. And when `d` moves, what moves is the **inset** — never the track floor,
- * which is #86's and is about readability rather than about a border.
+ * which is {@link readableTrack} and is about readability rather than about a
+ * border; what a larger `d` moves is the card that track costs, and the window's
+ * floor with it.
  */
 export function trackInset(card: number): number {
   const given = (card - 2 * NODE_BORDER) / LEVEL_SCALE;

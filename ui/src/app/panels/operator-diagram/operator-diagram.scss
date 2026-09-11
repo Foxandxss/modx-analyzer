@@ -323,6 +323,18 @@
   background: none;
 }
 
+// El origen se ha ido de la pantalla: la tarjeta deja de afirmar el eje. Sin
+// relleno y sin techo —los dos miden desde un cero que ya no se ve— y con la
+// cifra, que sigue siendo verdad. Sólo pasa en la composición ancha y sólo por
+// debajo del suelo del ancho, que es cuando el cuerpo puede desplazarse de
+// lado; lo decide `originGone()` en node-geometry.ts, tarjeta a tarjeta, y
+// ADR-0008 §5 dice por qué es esto y no fijar la columna del origen. `display`
+// y no `background`: el techo es un borde, y un borde sin fondo sigue pintado.
+.node--unanchored .node__fill,
+.node--unanchored .node__datum {
+  display: none;
+}
+
 // El pie del nodo se lo queda la marca de la esquina: ninguna cifra comparte
 // línea con ella, así que ninguna tiene que cederle ancho ni pasarle por debajo.
 .node__body {

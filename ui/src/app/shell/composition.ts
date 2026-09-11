@@ -149,6 +149,27 @@ export class Composition {
    */
   readonly handles = this.held.asReadonly();
 
+  private readonly scrolled = signal(0);
+
+  /**
+   * How far the body has been scrolled to the right, in CSS pixels: `0` at rest
+   * and at every width above the floor, because above it there is nothing to
+   * scroll.
+   *
+   * It is here and not in the drawing because the box that scrolls is the body's
+   * — `app.ts` owns the scroll container and reports it — and what reads it is
+   * the one composición whose bars measure from an origin the scroll can take
+   * off screen (`node-geometry.ts`, `originGone()`). Not persisted, and not a
+   * preference: it is where a hand left a scrollbar, and the browser puts it back
+   * to zero itself the moment the body is wide enough again.
+   */
+  readonly scrollLeft = this.scrolled.asReadonly();
+
+  /** The body reports where its horizontal scroll is; nothing else sets it. */
+  scrollBody(left: number): void {
+    this.scrolled.set(left);
+  }
+
   /** Press `KEEP IT BIG`, or let it up. Written through to the next launch. */
   togglePin(): void {
     const next = !this.pin();

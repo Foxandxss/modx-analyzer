@@ -7,6 +7,7 @@ import { FakeAudioWorker } from './audio/fake-audio-worker';
 import { anchorAnswers, anchorWatching } from './backend/anchor-driver';
 import { BACKEND_GATEWAY, noOperators } from './backend/backend-gateway';
 import { FakeBackendGateway } from './backend/fake-backend-gateway';
+import { laneFloor } from './panels/operator-diagram/node-geometry';
 import { DEAD_MARK } from './provenance/provenance';
 import { Composition } from './shell/composition';
 
@@ -190,6 +191,68 @@ describe('App (4a)', () => {
     composition.togglePin();
     await fixture.whenStable();
     expect(body.style.columnGap).toBe('1px');
+  });
+
+  /**
+   * The width floor reaches the sheet the way the filete does: bound from the
+   * model, never declared. `laneFloor()` is the lane the Level axis stays
+   * readable in, and the sheet reads it as the diagram track's minimum in the
+   * two wide shapes — so the body's minimum is per shape without a per-shape
+   * literal, and a literal `min-width` anywhere in the sheet would be the second
+   * copy #76 removed (#86).
+   */
+  it('binds the width floor onto the body from the model, and declares none in the sheet', async () => {
+    const { host } = await renderApp();
+    const body = host.querySelector<HTMLElement>('.body')!;
+
+    expect(body.style.getPropertyValue('--lane-floor')).toBe(`${laneFloor()}px`);
+
+    const sheet = Array.from(document.querySelectorAll('style'))
+      .map((style) => style.textContent ?? '')
+      .join('\n');
+    const bodyRules = sheet.match(/\.body[^{]*\{[^}]*\}/g) ?? [];
+    expect(bodyRules.length).toBeGreaterThan(0);
+    for (const rule of bodyRules) {
+      expect(rule).not.toMatch(/min-width/);
+      // No track of the body's grid has a literal, non-zero minimum: the height's
+      // 382 is the row's and has its own derivation in column-geometry.ts.
+      const columns = /grid-template-columns:[^;]*/.exec(rule)?.[0] ?? '';
+      expect(columns).not.toMatch(/minmax\(\s*[1-9]/);
+    }
+    // The two wide shapes read the bound floor as the first track's minimum,
+    // and the ranuras keep their unfloored track: that composición's Level runs
+    // along the height, and its width is #66's question.
+    const wide = bodyRules.find((rule) => rule.includes('.body--wide'));
+    const rail = bodyRules.find((rule) => rule.includes('.body--rail'));
+    expect(wide).toContain('minmax(var(--lane-floor), 1fr)');
+    expect(rail).toContain('minmax(var(--lane-floor), 1fr)');
+    // Both axes scroll under their floors, in the same box.
+    const base = bodyRules.find((rule) => rule.includes('grid-template-rows'));
+    expect(base).toContain('overflow: auto');
+  });
+
+  /**
+   * The body reports where its horizontal scroll is, so the drawing can know
+   * whether a bar's zero is still on screen. The body is the only thing that
+   * scrolls sideways and it only does so under the floor; the decision about
+   * what a bar does when its origin leaves is the drawing's (`node-geometry.ts`).
+   */
+  it('reports the body’s horizontal scroll to the composición', async () => {
+    const { host, fixture } = await renderApp();
+    const body = host.querySelector<HTMLElement>('.body')!;
+    const composition = TestBed.inject(Composition);
+
+    expect(composition.scrollLeft()).toBe(0);
+
+    body.scrollLeft = 40;
+    body.dispatchEvent(new Event('scroll'));
+    await fixture.whenStable();
+    expect(composition.scrollLeft()).toBe(40);
+
+    body.scrollLeft = 0;
+    body.dispatchEvent(new Event('scroll'));
+    await fixture.whenStable();
+    expect(composition.scrollLeft()).toBe(0);
   });
 
   /**

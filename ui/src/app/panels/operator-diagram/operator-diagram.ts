@@ -15,7 +15,7 @@ import { equalTemperamentHz } from '../../provenance/theory';
 import { FOLDING, NEVER_FOLDS, foldRule } from './folding';
 import { LEGEND } from './legend';
 import { DrawnBus, DrawnRoute, DrawnStub, LevelAxis, Slot, layout } from './layout';
-import { levelTrackInset } from './node-geometry';
+import { levelTrackInset, originGone } from './node-geometry';
 import { spectralGlyph } from './spectral-glyph';
 import { wideLayout } from './wide-layout';
 
@@ -65,6 +65,16 @@ interface NodeView {
   readonly stamp: Provenance;
   /** Where the node sits in the canvas, as a share of it: see `layout.ts`. */
   readonly box: Box;
+  /**
+   * The card's Level origin has been scrolled off the screen, so the card stops
+   * claiming the axis: no fill and no datum, the figure kept.
+   *
+   * Only the wide composición can answer `true` — its bars measure from a
+   * shared left edge the body's horizontal scroll can take away, and the body
+   * only scrolls sideways under the width floor. The grid's zero is its own
+   * card's bottom edge and never leaves it (`node-geometry.ts`, `originGone()`).
+   */
+  readonly unanchored: boolean;
 }
 
 /** A box in percentages of the canvas, so the whole drawing stretches together. */
@@ -534,6 +544,10 @@ export class OperatorDiagram {
         width: this.share(slot.w, drawn.width),
         height: this.share(slot.h, drawn.height),
       },
+      // Per card and not per drawing: the origin is a column's left edge, and
+      // the leftmost column loses its zero first. Keyed to the axis and not to
+      // the scroll alone, so a grid card can never be told its zero left.
+      unanchored: this.levelAxis() === 'width' && originGone(slot.x, this.composition.scrollLeft()),
     };
   }
 

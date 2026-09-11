@@ -13,25 +13,42 @@ import {
 } from '../../backend/backend-gateway';
 import { FakeBackendGateway } from '../../backend/fake-backend-gateway';
 import { Clock } from '../../provenance/clock';
-import { ColumnShape } from '../glass-column/column-geometry';
+import { ColumnShape, DESIGN_BODY_W, diagramLane } from '../glass-column/column-geometry';
 import { Composition } from '../../shell/composition';
 import { staleAfterMs } from '../../provenance/freshness';
 import { DEAD_MARK } from '../../provenance/provenance';
-import { FOLDING } from './folding';
+import { FOLDING, NEVER_FOLDS } from './folding';
 import { CANVAS_H, CANVAS_W } from './layout';
-import { LEGEND } from './legend';
+import { LEGEND, ZONE_PAD_X } from './legend';
 import {
   DAYLIGHT_CRITERION,
   LEVEL_MAX,
+  PIXELS_PER_POINT,
+  bodyWidthFloor,
+  canvasWidth,
   datumDaylight,
+  floorCanvasWidth,
+  laneFloor,
   levelTrackInset,
   narrowestGridCard,
   narrowestWideCard,
+  originGone,
+  originOffset,
+  readableCard,
+  readableTrack,
+  trackInset,
   trackLength,
 } from './node-geometry';
 import { OperatorDiagram } from './operator-diagram';
 import { SPECTRAL_GLYPH } from './spectral-glyph';
-import { WIDE_CANVAS_H, WIDE_CANVAS_W } from './wide-layout';
+import {
+  COL_GAP,
+  MARGIN_X,
+  WIDE_CANVAS_H,
+  WIDE_CANVAS_W,
+  WIDE_COLUMNS,
+  wideLayout,
+} from './wide-layout';
 
 /** The two cadences that were measured: 42 addresses in silence, and under notes. */
 const IDLE_PASS_MS = 84;
@@ -51,6 +68,7 @@ const NOW = 10_000;
 function composition(wide: boolean) {
   const big = signal(wide);
   const pin = signal(false);
+  const scrolled = signal(0);
   return {
     big,
     wide: big.asReadonly(),
@@ -61,6 +79,10 @@ function composition(wide: boolean) {
     // composición are 54 px apart (`folding.ts`).
     shape: computed<ColumnShape>(() => (big() ? (pin() ? 'gone' : 'rail') : 'ranuras')),
     togglePin: () => pin.set(!pin()),
+    // Where the body's horizontal scroll is, handed over: the body is `app.ts`'s
+    // box and this panel only reads where it was left (#86).
+    scrollLeft: scrolled.asReadonly(),
+    scrollBody: (left: number) => scrolled.set(left),
   };
 }
 
@@ -1011,8 +1033,8 @@ describe('OperatorDiagram', () => {
     // Two numbers now, because the two compositions measure along different
     // axes and their narrowest cards are different boxes. Both recomputed,
     // never written down: the grid's from `BODY_FLOOR`, the legend's rows and
-    // the zone's chrome; the wide one from the lane the rail shape leaves at the
-    // shipped window and the four constants that decide a card at eight columns.
+    // the zone's chrome; the wide one from the card the width floor stops at,
+    // which is the readable track plus what that track's own inset costs (#86).
     expect(levelTrackInset('height')).toBe(8);
     expect(levelTrackInset('width')).toBe(7);
 
@@ -1026,7 +1048,9 @@ describe('OperatorDiagram', () => {
     // earns is 8 either way, and the pixel-at-a-time check below is what says so
     // rather than the number itself.
     expect(narrowestGridCard()).toBeCloseTo(67.1, 1);
-    expect(narrowestWideCard()).toBeCloseTo(113.0, 1);
+    // 111 and not the 113.0 the rail left at the shipped window: the narrowest
+    // card is the floor's now, and the window stops before the card gets there.
+    expect(narrowestWideCard()).toBe(readableCard());
     expect(narrowestWideCard()).toBeGreaterThan(narrowestGridCard());
 
     for (const [card, axis] of [
@@ -1042,14 +1066,72 @@ describe('OperatorDiagram', () => {
     }
   });
 
-  it('draws one Level point at more than a pixel on the axis that carries it', () => {
+  it('never draws one Level point under a pixel on the axis that carries it', () => {
     // The number the whole rotation is about, and the reason it is not a taste
     // argument: on the vertical axis at the body's floor the deepest algorithm
     // drew a Level point at about a tenth of a pixel, so 99 and 96 were three
-    // points and a third of a pixel apart. The floor itself is #86's; what is
-    // asserted here is that the axis the drawing now measures along clears a
-    // pixel per point at the narrowest card this build can draw.
-    expect(trackLength(narrowestWideCard(), 'width') / 100).toBeGreaterThan(1);
+    // points and a third of a pixel apart. Since #86 the window stops where the
+    // narrowest card would take a point under `PIXELS_PER_POINT`, so at that
+    // card the track is exactly one pixel a point — not more, which would mean
+    // the floor was set somewhere other than the criterion.
+    expect(trackLength(narrowestWideCard(), 'width') / 100).toBe(PIXELS_PER_POINT);
+    expect(readableTrack()).toBe(100);
+    expect(readableCard()).toBe(111);
+  });
+
+  /**
+   * The width floor, derived and never typed, and the two arithmetics that have
+   * to agree on it.
+   *
+   * The floor's card is written in the *track* form of #67's derivation (the
+   * track given, 100 px; the inset it earns, 7) and the inset the drawing binds
+   * is earned in the *card* form (the card given, the inset solved for). They
+   * are one derivation read from both ends, and 111 → 7 → 111 is the fixed point
+   * both land on. Asserted as the round trip and not as either number: an inset
+   * of 8 earned against a card of 110.999… would pass a check on «7» written
+   * somewhere else and quietly put a pixel of the track into the headroom.
+   */
+  it('earns the floor’s inset from both ends of the same derivation', () => {
+    expect(trackInset(readableCard())).toBe(levelTrackInset('width'));
+    expect(readableCard() - 2 * 2 - trackInset(readableCard())).toBe(readableTrack());
+    // And recomputed the other way — the floor's canvas, of which the eight-column
+    // card is the share the four constants decide — the card is the same one.
+    const pitchX = (WIDE_CANVAS_W - 2 * MARGIN_X) / WIDE_COLUMNS;
+    expect(((pitchX - COL_GAP) / WIDE_CANVAS_W) * floorCanvasWidth()).toBeCloseTo(
+      readableCard(),
+      6,
+    );
+    expect(floorCanvasWidth()).toBeCloseTo(963.04, 2);
+  });
+
+  /**
+   * The body's minimum is per shape and there is no per-shape constant: the lane
+   * is one number, and what differs is what stands beside it. Both arms are
+   * asserted with the slack the shipped window leaves, so the direction cannot
+   * read as good news — the rail is the arm that binds, by 17 px.
+   */
+  it('puts the width floor on the body per shape, from one lane and no literal', () => {
+    expect(laneFloor()).toBeCloseTo(999.04, 2);
+    expect(laneFloor()).toBe(floorCanvasWidth() + 2 * ZONE_PAD_X);
+
+    // 1 263 in the rail and 1 209 pinned — not the proposal's 1 211, which
+    // predates the filete halving with the pin down (#76). The build wins.
+    expect(bodyWidthFloor('rail')).toBeCloseTo(1263.04, 2);
+    expect(bodyWidthFloor('gone')).toBeCloseTo(1209.04, 2);
+    expect(DESIGN_BODY_W - bodyWidthFloor('rail')!).toBeCloseTo(17, 0);
+    expect(DESIGN_BODY_W - bodyWidthFloor('gone')!).toBeCloseTo(71, 0);
+    // The ranuras have no floor from here: their Level runs along the height.
+    expect(bodyWidthFloor('ranuras')).toBeNull();
+
+    // The floor is the body at which the lane is exactly the floor's lane, in
+    // both shapes — the grid's sum and the model's are one arithmetic.
+    for (const shape of ['rail', 'gone'] as const) {
+      expect(diagramLane(shape, bodyWidthFloor(shape)!)).toBeCloseTo(laneFloor(), 9);
+    }
+    // And the shipped window is above it in both, which is why the app does not
+    // scroll at rest.
+    expect(canvasWidth('rail')).toBeGreaterThan(floorCanvasWidth());
+    expect(canvasWidth('gone')).toBeGreaterThan(floorCanvasWidth());
   });
 
   it('does not clip the track, which is the one revert that hides the line again', async () => {
@@ -1230,6 +1312,126 @@ describe('OperatorDiagram', () => {
   });
 
   describe('with the room of the wide composition', () => {
+    /**
+     * The origin under horizontal scroll, which is the decision #86 had to take
+     * and ADR-0008 §5 records: a card whose zero has scrolled off the body's
+     * left edge **stops claiming the axis** — its fill and its datum go, the
+     * figure stays — and it does so per card, because the origin is a column's
+     * and the leftmost column loses it first.
+     *
+     * Algorithm 1 is the drawing with eight columns, so eight distinct origins.
+     * The thresholds come from the same arithmetic the drawing reads, on the
+     * slots the layout actually places, and every step is asserted in both
+     * directions: the card just past its origin is unanchored, the next column
+     * over is not.
+     */
+    it('stops claiming the axis, card by card, as the scroll takes each origin away', async () => {
+      const { backend, fixture, host, room } = await renderDiagram({ wide: true });
+
+      backend.topology.set(ALGORITHM_1);
+      backend.operators.set(theBuildsOwnPatch(NOW));
+      await fixture.whenStable();
+
+      const unanchored = () =>
+        nodes(host)
+          .filter((node) => node.classList.contains('node--unanchored'))
+          .map((node) => Number(node.dataset['operator']));
+
+      // At rest nothing has left: the body is at or above its floor and there is
+      // nothing to scroll.
+      expect(room.scrollLeft()).toBe(0);
+      expect(unanchored()).toEqual([]);
+
+      // Eight columns, eight origins, left to right — one per operator here.
+      const origins = wideLayout(ALGORITHM_1, [], NEVER_FOLDS)
+        .slots.map((slot) => ({ operator: slot.operator, at: originOffset(slot.x) }))
+        .sort((a, b) => a.at - b.at);
+      expect(new Set(origins.map((origin) => origin.at)).size).toBe(8);
+
+      // Half a pixel short of the first origin, it is still on screen.
+      room.scrollBody(origins[0].at - 0.5);
+      await fixture.whenStable();
+      expect(unanchored()).toEqual([]);
+
+      // Half a pixel past it, that card and only that card has lost its zero.
+      room.scrollBody(origins[0].at + 0.5);
+      await fixture.whenStable();
+      expect(unanchored()).toEqual([origins[0].operator]);
+      // The figure is still on the card; what is gone is what measured from the
+      // edge that left. The elements stay in the DOM and the sheet hides them,
+      // which is what the rule below is checked for.
+      const gone = nodes(host)[origins[0].operator - 1];
+      expect(gone.querySelector('.node__level')?.textContent?.trim()).not.toBe('');
+      expect(gone.querySelector('.node__fill')).not.toBeNull();
+
+      // Past the fourth origin: four cards gone, four still measuring.
+      room.scrollBody(origins[3].at + 0.5);
+      await fixture.whenStable();
+      expect(unanchored().sort()).toEqual(
+        origins
+          .slice(0, 4)
+          .map((origin) => origin.operator)
+          .sort(),
+      );
+
+      // Past the last, every card has stopped claiming the axis.
+      room.scrollBody(origins[7].at + 0.5);
+      await fixture.whenStable();
+      expect(unanchored()).toHaveLength(8);
+
+      // And back: the body widened or was scrolled home, and the bars return.
+      room.scrollBody(0);
+      await fixture.whenStable();
+      expect(unanchored()).toEqual([]);
+    });
+
+    it('hides the fill and the datum of an unanchored card in the sheet, and nothing else', async () => {
+      await renderDiagram({ wide: true });
+
+      // `display: none` on both, because the datum is a border and a border with
+      // no background stays painted. The figure is not in the rule: it stays.
+      const rule =
+        /\.node--unanchored[^{]*\.node__fill[^{]*,\s*\.node--unanchored[^{]*\.node__datum[^{]*\{[^}]*\}/.exec(
+          componentCss(),
+        )?.[0] ?? '';
+      expect(rule).toContain('display: none');
+      expect(rule).not.toContain('node__level');
+    });
+
+    it('never tells a grid card its origin left, whatever the body scrolled', async () => {
+      // The narrow grid measures up from its own card's bottom edge, which no
+      // horizontal scroll can take away — and its lane has no width floor for
+      // the body to scroll under in the first place. Keyed to the axis, so a
+      // scroll value that reaches this panel in the narrow composición is
+      // ignored rather than misread.
+      const { backend, fixture, host, room } = await renderDiagram({ wide: false });
+
+      backend.topology.set(ALGORITHM_1);
+      backend.operators.set(theBuildsOwnPatch(NOW));
+      room.scrollBody(10_000);
+      await fixture.whenStable();
+
+      expect(host.querySelectorAll('.node--unanchored')).toHaveLength(0);
+      expect(originGone(0, 10_000)).toBe(true);
+    });
+
+    it('puts every origin past the zone’s padding and the card’s border, at the floor', () => {
+      // The offset is exact only at the floor, and that is the only time the
+      // body scrolls sideways: the lane is then `laneFloor()` and the canvas
+      // `floorCanvasWidth()`, so a card's `x` is a known share of a known width.
+      const first = wideLayout(ALGORITHM_1, [], NEVER_FOLDS).slots.reduce((min, slot) =>
+        slot.x < min.x ? slot : min,
+      );
+      expect(originOffset(first.x)).toBeCloseTo(
+        ZONE_PAD_X + (first.x / WIDE_CANVAS_W) * floorCanvasWidth() + 2,
+        9,
+      );
+      // About 34 px: the drawing is the first lane, so a body scrolled less than
+      // that still shows every zero.
+      expect(originOffset(first.x)).toBeGreaterThan(ZONE_PAD_X);
+      expect(originOffset(first.x)).toBeLessThan(40);
+    });
+
     it('draws in the box the algorithm surface was sized to', async () => {
       const { backend, fixture, host } = await renderDiagram({ wide: true });
 

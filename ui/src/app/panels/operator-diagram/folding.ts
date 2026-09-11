@@ -84,10 +84,11 @@ export const VISIBLE_SEGMENT = 6;
  * folding resolves it by construction: fold, and there are three fewer facts to
  * fit. The readability arm — one Level point never drawn smaller than a pixel on
  * the axis that carries it — is **not resolved by folding at all**, because
- * folding the facts does not widen the card by one pixel. It stays a hard floor
- * on the window, it is enforced by a minimum and the body scrolling under it,
- * and it is #86's and not this module's. A reader who folds the facts and
- * assumes the floor went away has traded a measurement for a picture of one.
+ * folding the facts does not widen the card by one pixel. It is a hard floor on
+ * the window, enforced by a minimum and the body scrolling under it — `laneFloor()`
+ * in `node-geometry.ts`, bound onto the body's grid by `app.ts` (#86) — and not
+ * this module's. A reader who folds the facts and assumes the floor went away
+ * has traded a measurement for a picture of one.
  */
 
 /**

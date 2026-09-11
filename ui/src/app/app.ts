@@ -5,6 +5,7 @@ import { FiguresColumn } from './panels/figures-column/figures-column';
 import { bodyGap } from './panels/glass-column/column-geometry';
 import { ColumnRail } from './panels/glass-column/column-rail';
 import { GlassColumn } from './panels/glass-column/glass-column';
+import { laneFloor } from './panels/operator-diagram/node-geometry';
 import { OperatorDiagram } from './panels/operator-diagram/operator-diagram';
 import { AlertStrip } from './shell/alert-strip/alert-strip';
 import { BenchDrawer } from './shell/bench-drawer/bench-drawer';
@@ -52,12 +53,20 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
     <!-- El filete del cuerpo se ata desde el modelo y no desde la hoja: es el
          único hueco de la app cuyo ancho depende de la forma que tenga el
          cuerpo, y declararlo en los dos sitios es lo que hizo que el modelo
-         devolviera 1 068 mientras la pantalla dibujaba 1 070 (#76). -->
+         devolviera 1 068 mientras la pantalla dibujaba 1 070 (#76).
+         El suelo del ancho se ata igual y por la misma razón: es el carril que
+         necesita el eje del Level para que un punto no baje de un píxel, y lo
+         deriva node-geometry.ts; la hoja lo lee como mínimo de la primera pista
+         en las dos formas anchas (#86). Y el cuerpo cuenta hasta dónde se ha
+         desplazado, porque es el dibujo quien tiene que saber si su origen
+         sigue en pantalla. -->
     <div
       class="body"
       [class.body--wide]="wide()"
       [class.body--rail]="rail()"
       [style.column-gap.px]="gap()"
+      [style.--lane-floor.px]="laneFloor"
+      (scroll)="scrolled($event)"
     >
       <app-operator-diagram />
       @if (panels()) {
@@ -154,7 +163,14 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
          382 se cambia allí en el mismo commit. Cuando una tarjeta se lleva el
          alto, lo que scrollea es esta caja y sólo ella. */
       grid-template-rows: minmax(382px, 1fr);
-      overflow-y: auto;
+      /* Los dos ejes, y es UN comportamiento: un mínimo y el cuerpo
+         desplazándose por debajo. El del ancho está en la primera pista de las
+         dos formas anchas, más abajo, y no se declara aquí: lo ata --lane-floor
+         desde el modelo. Lo que el eje horizontal tiene y el vertical nunca tuvo
+         es un ORIGEN que el desplazamiento puede sacar de pantalla con las
+         barras a la vista; de eso responde el dibujo, no esta caja
+         (node-geometry.ts, originGone()). */
+      overflow: auto;
       /* column-gap NO está aquí: lo ata bodyGap() en column-geometry.ts, que es
          el único sitio donde se decide cuánto mide este filete. Hay una sola
          fila, así que el cuerpo no tiene hueco entre filas que declarar. */
@@ -183,9 +199,21 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
        entre ellos se leen como una regla del doble de gruesa—, pero quien lo
        dice es bodyGap() y no esta regla: la condición es la ADYACENCIA y no el
        nombre de la clase, así que una cuarta forma que cierre el carril de en
-       medio la hereda en vez de tener que añadirse a una lista. */
+       medio la hereda en vez de tener que añadirse a una lista.
+       El mínimo de la primera pista es el suelo del ancho: el carril en el que
+       un punto de Level sigue midiendo un píxel, que es lo único que el pliegue
+       no resuelve —plegar los hechos no ensancha la tarjeta ni un píxel—. Va en
+       la PISTA y no en el cuerpo, como el suelo del alto va en la fila: el
+       cuerpo se encoge con la ventana y, por debajo, lo que cede es el
+       desplazamiento y no el dibujo. Es UN número para las dos formas anchas y
+       el mínimo del cuerpo sale distinto en cada una —1 263 px aquí con el
+       riel, 1 209 con el pin— porque lo que cambia no es lo que el dibujo
+       necesita sino lo que hay al lado: la rejilla lo suma sola. El número no
+       está aquí: lo ata --lane-floor desde node-geometry.ts (#86). La forma
+       estrecha no lo lleva: su Level corre por el alto y ese suelo ya lo tiene
+       la fila; su ancho es la pregunta de #66. */
     .body--wide {
-      grid-template-columns: minmax(0, 1fr) 0px var(--composition-column);
+      grid-template-columns: minmax(var(--lane-floor), 1fr) 0px var(--composition-column);
     }
 
     /* Con las dos ranuras vacías el carril no se cierra del todo: se queda en el
@@ -195,7 +223,10 @@ import { UnhappyCards } from './shell/unhappy-cards/unhappy-cards';
        igual. El filete vuelve a ser entero —aquí no hay dos huecos pegados—, y
        de eso ya se encarga bodyGap(): el carril mide 52 px y no cero. */
     .body--rail {
-      grid-template-columns: minmax(0, 1fr) var(--composition-rail) var(--composition-column);
+      grid-template-columns:
+        minmax(var(--lane-floor), 1fr)
+        var(--composition-rail)
+        var(--composition-column);
     }
   `,
 })
@@ -223,6 +254,29 @@ export class App {
    * is how the model came to return 1 068 px while the screen drew 1 070 (#76).
    */
   protected readonly gap = computed(() => bodyGap(this.composition.shape()));
+
+  /**
+   * The lane the wide composición's Level axis stays readable in, from the
+   * module that derives it, bound onto the body as the diagram track's minimum.
+   *
+   * One number and not a per-shape lookup: the sheet applies it in the two shapes
+   * that draw the wide composición, and the grid turns it into a body minimum per
+   * shape by adding what stands beside the lane in each — which is the same sum
+   * `bodyWidthFloor()` writes down. A `min-width` literal in the sheet would be
+   * the second copy the filete used to have (#76), and one on the OS window would
+   * over-constrain the pinned shape by the width of the rail.
+   */
+  protected readonly laneFloor = laneFloor();
+
+  /**
+   * The body's horizontal scroll, reported to the composición. It only ever
+   * moves under the width floor, and the drawing is what has to know: a bar
+   * whose zero has scrolled off the screen stops being drawn as a bar
+   * (`node-geometry.ts`).
+   */
+  protected scrolled(event: Event): void {
+    this.composition.scrollBody((event.target as HTMLElement).scrollLeft);
+  }
 
   constructor() {
     // The audio bridge is opened from the screen that draws it, once. Nothing

@@ -11,6 +11,7 @@ import {
   RULE,
   STRIP_H,
   bodyGap,
+  bodyWidthFor,
   columnGeometry,
   columnShape,
   cycleAspect,
@@ -242,6 +243,50 @@ describe('the filete between two lanes', () => {
   it('leaves the rail arm alone and puts the pinned lane where the screen draws it', () => {
     expect(diagramLane('rail', DESIGN_BODY_W)).toBe(1016);
     expect(diagramLane('gone', DESIGN_BODY_W)).toBe(1070);
+  });
+});
+
+/**
+ * The width floor's arithmetic, the other way round: the body that leaves the
+ * diagram a given lane. It is what the grid computes on its own once the lane
+ * is the first track's minimum — `minmax(var(--lane-floor), 1fr)` in `app.ts` —
+ * and the model has to say the same sum, or a test of the floor would be a test
+ * of a number the screen is not drawing (#86). The lane itself is
+ * `node-geometry.ts`'s; what is asserted here is the inverse and nothing about
+ * where the lane comes from.
+ */
+describe('the body a lane costs', () => {
+  it('is the inverse of the lane, in the two shapes that have one', () => {
+    for (const shape of ['rail', 'gone'] as const) {
+      for (const lane of [700, 999, 1016, 1070]) {
+        const body = bodyWidthFor(shape, lane);
+        expect(body).not.toBeNull();
+        expect(diagramLane(shape, body!)).toBeCloseTo(lane, 9);
+      }
+    }
+  });
+
+  /**
+   * One lane, two floors: the shapes differ by what stands beside the lane, 52 px
+   * of rail against none and a whole filete against half of one. That is the
+   * whole reason the floor is not a constant — one number would over-constrain
+   * the pinned shape by exactly this difference.
+   */
+  it('differs between the rail and the pin by the rail and the halved filete', () => {
+    const lane = 999;
+    expect(bodyWidthFor('rail', lane)! - bodyWidthFor('gone', lane)!).toBe(
+      RAIL_W + 2 * (bodyGap('rail') - bodyGap('gone')),
+    );
+    expect(bodyWidthFor('rail', lane)).toBe(lane + RAIL_W + FIGURES_W + 2 * RULE);
+    expect(bodyWidthFor('gone', lane)).toBe(lane + FIGURES_W + RULE);
+  });
+
+  it('has no answer for the ranuras, whose lane is DIAGRAM_W by construction', () => {
+    // `null` and not 0: there the column is the remainder and the lane never
+    // moves, so no body width «puts the lane at» anything — and a zero would
+    // read as a width.
+    expect(bodyWidthFor('ranuras', 999)).toBeNull();
+    expect(bodyWidthFor('ranuras', DIAGRAM_W)).toBeNull();
   });
 });
 

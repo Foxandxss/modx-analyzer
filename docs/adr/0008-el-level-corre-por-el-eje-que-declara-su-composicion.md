@@ -5,7 +5,9 @@ Fecha: 2026-09-11 · Estado: aceptada · Contexto: #73 (la especificación de la
 aparcado a la derecha) y ningún principio · No es un refinamiento: cambia qué eje lleva el Level, y
 eso es vocabulario del dibujo, no un ajuste de una cifra · **Enmendada el 2026-09-11 por #93**: la
 tinta del relleno no había girado con el eje; añade §2.6, corrige §3 y §7, reescribe las miradas 2
-y 3 de §8 y les añade la parada tenue como la comparación que llevan, y amplía §9 y §10
+y 3 de §8 y les añade la parada tenue como la comparación que llevan, y amplía §9 y §10 ·
+**Enmendada el 2026-09-11 por #86**: el suelo del ancho existe y la decisión del origen está tomada;
+reescribe los dos párrafos del ancho y del desplazamiento de §5 y añade tres descartes a §10
 
 Esta ADR es la **dueña de la lista de verificación** de la ronda (§8). `design_handoff/HANDOFF.md`
 y la hoja de sondas `Round10-operator-diagram.dc.html` apuntan aquí y no la repiten; #88 toma las
@@ -383,28 +385,57 @@ en el suelo no puede entrar en espiral. **El 360 sigue sin testigo**: #19, el ti
 «*Text collides at full size*» y no contiene ninguna medida de altura; #81 es una primera medida que
 no sustituye nada, y volver a tomar la mitad de las vistas es de nadie todavía.
 
-**El ancho.** No hay suelo: `tauri.conf.json` no tiene `minWidth` y `diagramLane()` no está
-acotado, así que cualquier arrastre rompe el eje de inmediato. El suelo es el brazo de legibilidad —
-un punto de Level nunca menor que un píxel— y se **deriva por forma, de la misma fuente que el suelo
-del alto, y nunca como literal en una hoja** (#86): 100 px de pista, 7 de hueco fijo y 4 de borde
-son una tarjeta de **111 px**; a 142 unidades de 1 232 eso es un lienzo de 963 y un carril de 999;
-más `FIGURES_W` 208, más el riel de 52 y los dos filetes, **1 263 px de cuerpo en el riel** y
-**1 209 con el pin** (la propuesta dijo 1 211 antes de que `bodyGap()` bajara el filete a la mitad en
-#76; la build gana). Holgura a 1 280: **17 px en el riel**, que es el brazo que ata, y 71 con el pin.
-Una sola constante sobre-restringiría la forma del pin en 54 px.
+**El ancho.** *(Enmendado el 2026-09-11 por #86, que es el que lo pone.)* Tiene suelo desde #86, y
+`tauri.conf.json` sigue sin `minWidth` **a propósito**: el suelo es por forma y una sola constante en
+la ventana del sistema sobre-restringiría la forma del pin en 54 px. El suelo es el brazo de
+legibilidad —un punto de Level nunca menor que un píxel, `PIXELS_PER_POINT = 1` en
+`node-geometry.ts`, la única cifra elegida de toda la cadena— y se **deriva, de la misma fuente que
+el suelo del alto, y nunca como literal en una hoja**: 100 px de pista, 7 de hueco —en la forma *de
+pista* de la derivación de #67, `6 + 2 − 1`, exacto— y 4 de borde son una tarjeta de **111 px**
+(`readableCard()`); a 142 unidades de 1 232 eso es un lienzo de **963,04** (`floorCanvasWidth()`) y
+un carril de **999,04** (`laneFloor()`), y se quedan con su fracción: redondear sería declarar el
+mismo suelo dos veces a un píxel de distancia. Ese carril es **un número** y no uno por forma: lo que
+cambia entre el riel y el pin no es lo que el dibujo necesita sino lo que hay al lado, y eso lo suma
+la rejilla sola. `app.ts` lo ata a `.body` como `--lane-floor` y la hoja lo lee como mínimo de la
+primera pista en las dos formas anchas —`minmax(var(--lane-floor), 1fr)`, donde antes había un
+`0`—, igual que el filete se ata desde `bodyGap()` (#76); la forma de las ranuras conserva su pista
+sin suelo porque su Level corre por el alto y ese suelo ya lo tiene la fila, y su ancho es la
+pregunta de #66. El mínimo del cuerpo sale entonces por forma sin constante por forma: más
+`FIGURES_W` 208, más el riel de 52 y los dos filetes, **1 263,04 px de cuerpo en el riel** y
+**1 209,04 con el pin** (`bodyWidthFloor()`, que es la inversa de `diagramLane()` —
+`bodyWidthFor()` en `column-geometry.ts`— aplicada al carril; la propuesta dijo 1 211 antes de que
+`bodyGap()` bajara el filete a la mitad en #76; la build gana). Holgura a 1 280: **17 px en el
+riel**, que es el brazo que ata, y 71 con el pin. Y la tarjeta más estrecha de la composición ancha
+es ahora la del suelo, 111 y no los 113,0 que dejaba el riel en la ventana de fábrica: el hueco de
+7 px se gana contra ella, y `operator-diagram.spec.ts` afirma que las dos formas de la derivación
+—la de pista, que da la tarjeta, y la de tarjeta, que da el hueco— coinciden en 111 → 7 → 111,
+porque en coma flotante `111/share·share` queda un pelo por debajo de 111 y `⌈ ⌉` habría hecho de
+ese pelo un píxel entero de hueco.
 
-**El desplazamiento es un comportamiento, con una diferencia que hay que nombrar.** En los dos ejes
-es lo mismo: un mínimo, el cuerpo desplazándose por debajo, y el dibujo sin dibujar nunca una medida
-que no puede respaldar. Ni mecanismo nuevo, ni vocabulario nuevo, ni estado nuevo. **La diferencia
-es el origen.** Girado, las barras miden desde un origen **común y remoto** —el borde izquierdo de
-la tarjeta, compartido por toda una columna—, y el desplazamiento horizontal puede sacar ese origen
-de la pantalla con las barras todavía a la vista, que es la gráfica engañosa clásica. El eje vertical
-nunca tuvo ese problema: el cero del relleno era el borde de abajo de su propia tarjeta, siempre
-pegado a él. Así que hay una decisión que #86 toma y **escribe aquí cuando aterrice**: o la columna
-del origen se fija y sólo la pista se desplaza, o el dibujo deja de afirmar el eje en cuanto el
-origen sale. Es la mirada 7. Si el desplazamiento horizontal acaba moviendo o fijando algo distinto
-del vertical, «una frase cubre los dos» es una exageración de las que leen correctas durante un año,
-y esta sección dirá en qué difieren.
+**El desplazamiento es un comportamiento, con una diferencia que hay que nombrar, y ya está
+nombrada.** En los dos ejes es lo mismo: un mínimo en la pista de la rejilla —`minmax(382px, 1fr)`
+en la fila, `minmax(var(--lane-floor), 1fr)` en la primera columna—, el cuerpo desplazándose por
+debajo (`overflow: auto` en la misma caja, que ya era `overflow-y: auto`), y el dibujo sin dibujar
+nunca una medida que no puede respaldar. Ni mecanismo nuevo ni vocabulario nuevo. **La diferencia es
+el origen, y cuesta un estado.** Girado, las barras miden desde un origen **común y remoto** —el
+borde izquierdo de la tarjeta, compartido por toda una columna—, y el desplazamiento horizontal
+puede sacar ese origen de la pantalla con las barras todavía a la vista, que es la gráfica engañosa
+clásica. El eje vertical nunca tuvo ese problema: el cero del relleno era el borde de abajo de su
+propia tarjeta, siempre pegado a él. La decisión, tomada en #86: **el dibujo deja de afirmar el eje
+en cuanto el origen sale, tarjeta a tarjeta.** El cuerpo cuenta a `Composition` hasta dónde se ha
+desplazado (`scrollLeft`, el único estado nuevo de la ronda, y no es una preferencia: el navegador
+lo devuelve a cero solo cuando el cuerpo vuelve a caber), y una tarjeta cuyo cero ha quedado a la
+izquierda del borde —`originGone()` en `node-geometry.ts`— pierde el relleno y el techo y conserva
+la cifra: el número sigue siendo verdad y el largo que lo confirmaba ya no está en pantalla para
+confirmarlo. Por tarjeta y no por dibujo, porque el origen es de una columna y la columna de más a
+la izquierda lo pierde primero, así que lo que el pianista ve es la barra yéndose por donde se ha
+ido su borde. La otra respuesta —fijar la columna del origen y desplazar sólo la pista— se descarta
+en §10. El sitio del origen es aritmética y no medida: el cuerpo sólo se desplaza de lado por debajo
+del suelo, y entonces la primera pista está exactamente en su mínimo, así que el lienzo mide
+`floorCanvasWidth()` y la `x` de una tarjeta es una parte conocida de un ancho conocido —a 18 px
+de acolchado de la zona más 2 de borde, el primer origen del 1 está a unos 34 px del borde del
+cuerpo. Sigue siendo la mirada 7: lo que aquí hay es una respuesta, y si el relleno que se va lee
+como *la razón por la que se fue* es lo que la mirada decide.
 
 ## 6 · Lo que se retira, por su nombre
 
@@ -600,3 +631,16 @@ ruta debería dibujarse llena. Se debe, no se ha hecho.
 - **Estado «propuesta» hasta que se tomen las miradas.** El código ya la implementa; una propuesta
   implementada no es una cosa. Lo que la mirada 1 puede hacer no es enmendarla sino sustituirla, y eso
   está escrito en §3.
+- **Fijar la columna del origen y desplazar sólo la pista** (#86, §5). No hay columna que fijar: las
+  tarjetas son porcentajes de un solo `viewBox` que el panel estira, así que «la columna del origen»
+  es una fracción de un SVG y no una caja que el cuerpo pueda sujetar. Fijar el dibujo entero con
+  `position: sticky` sí se puede, y es peor: la columna de cifras se desliza *por encima* del
+  extremo alto de las barras al ir a buscarla, que es cambiar una mentira por otra. Y repartir el
+  dibujo en columnas del DOM para poder fijar una sería rehacer la composición ancha por un caso
+  que sólo existe por debajo de un suelo que la ventana de fábrica no cruza.
+- **Un `minWidth` en la ventana de Tauri** (#86, §5). Una constante, y el suelo es dos: 1 263 con
+  el riel y 1 209 con el pin. Puesta al riel sobre-restringe el pin en 54 px; puesta al pin deja al
+  riel 54 px por debajo de lo legible. El mínimo va en la pista de la rejilla, que lo suma por forma.
+- **Dejar de afirmar el eje para el dibujo entero en cuanto sale el primer origen** (#86, §5). Más
+  simple y menos honesto: siete tarjetas con su cero en pantalla perderían la barra por el cero de
+  una octava. El origen es de la columna; la tinta se va con el borde que se ha ido, y no antes.
