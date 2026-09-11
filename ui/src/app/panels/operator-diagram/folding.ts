@@ -43,11 +43,13 @@ export const ARROWHEAD = 9;
 /**
  * How much of a route has to be *line* rather than arrowhead, in CSS pixels.
  *
- * **Chosen, not derived and not judged** — it is the round's own figure for what
- * makes a gap a line rather than a stub under a point, and it is look 4 of the
- * verification list (#88). It is the one input to the depth threshold that
- * nobody has earned, and it is written here alone so that the look, when it is
- * taken, moves one number.
+ * **Chosen, not derived — and looked at** — it is the round's own figure for
+ * what makes a gap a line rather than a stub under a point, and it is look 4 of
+ * the verification list (ADR-0008 §8, taken in #88): at the body's floor on
+ * algorithm 55 the 12.4 px gap is a 6.35 px arrowhead over 6.06 px of shaft,
+ * and it reads as a short arrow and not as a point resting on a card. It is the
+ * least that reads, with nothing to give: the number stays, and it is written
+ * here alone so that a second look, if one is taken, moves one number.
  */
 export const VISIBLE_SEGMENT = 6;
 

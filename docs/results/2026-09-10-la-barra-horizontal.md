@@ -107,6 +107,12 @@ are what decide it, at a mid Level rather than at the ceiling.
 > it turns out truer of the app than of the sheet it was written about. The build at the time did not
 > draw the rotated ramp at all; #93 turns it, keeps the app's stops as provisional, and puts the faint
 > stop on the verification list as a comparison looks 2 and 3 carry (ADR-0008 §2.6, §8).
+>
+> **And the comparison was taken, 2026-09-11 (#88).** The app's faint stop is `.10` since then —
+> the same digit as this sheet's, arrived at from the app's own ink and not adopted from here: on
+> the 100 px track of the eight-column card the `.04` tip left the 99 / 96 notch invisible and a
+> mid-Level bar's end a ten-pixel guess, and `.10` reads on both cards without turning the grid's
+> ceiling into a rim. ADR-0008 §8 · 10 is the record.
 
 **Progress or loudness.** §10c names the fear honestly: *a batten filling rightwards may read as
 progress or as time.* On a single nearly-full bar in isolation that ambiguity is real. It is not what

@@ -50,15 +50,21 @@
      degradado. Un degradado lleva una dirección, y la dirección es de la
      composición (ADR-0008 §2.6): la hoja compone `linear-gradient(<eje>,
      densa, tenue)` donde el eje se declara, y así ningún token puede volver a
-     meter un eje. Los mismos valores que los tres degradados `to top` a los
-     que sustituyen (#93). La parada tenue es la punta que mide en la
-     composición ancha y ahí es provisional: ADR-0008 §8, miradas 2 y 3.
-     `--signal-fill-*` sigue sin consumidor, como lo estaba `--signal-fill`:
-     nada en `ui/src` lo lee, y no existe ningún `.node--signal`. */
+     meter un eje. Las paradas densas son las de los tres degradados `to top`
+     a los que sustituyen (#93). La parada tenue es la punta que mide en la
+     composición ancha, y está JUZGADA a .10 y no a los .04 / .05 que
+     llegaron con #93: a .04 el final de la barra era un escalón de ~10 de
+     RGB sobre la superficie y 99 contra 96 no se distinguían en la tarjeta
+     de ocho columnas; a .10 el escalón es ~23 y el hueco de 3 px se ve
+     (ADR-0008 §8, mirada 10, #88). Una cifra para las dos composiciones: en
+     la rejilla el .10 no convirtió el techo en un reborde. `--signal-fill-*`
+     sigue sin consumidor, como lo estaba `--signal-fill`: nada en `ui/src`
+     lo lee, no existe ningún `.node--signal`, y su parada tenue no se mueve
+     porque ninguna mirada la ha visto. */
   --carrier-fill-dense:   oklch(0.80 0.150  75 / .50);
-  --carrier-fill-faint:   oklch(0.80 0.150  75 / .04);
+  --carrier-fill-faint:   oklch(0.80 0.150  75 / .10);
   --modulator-fill-dense: oklch(0.79 0.140 235 / .46);
-  --modulator-fill-faint: oklch(0.79 0.140 235 / .05);
+  --modulator-fill-faint: oklch(0.79 0.140 235 / .10);
   --signal-fill-dense:    oklch(0.87 0.155 155 / .42);
   --signal-fill-faint:    oklch(0.87 0.155 155 / .04);
 

@@ -145,14 +145,16 @@ const LEVEL_SCALE = 100;
  * along the bar, so its faint stop is now the tip the daylight is measured
  * from (ADR-0008 §2.6).
  *
- * So the two rotated daylights are **derived and nobody has looked at them**:
+ * So the two rotated daylights were derived first and **looked at in #88**:
  * about **6.0 px** on the narrowest card this build can draw and 7.9 px on the
- * batten at three columns. They are the same kind of number `bottom: 99%` was,
- * and they are looks 2 and 3 of the round's verification list — which lives in
- * ADR-0008 §8 and is taken in #88 — on the **wide stacked node at the column
- * cap** and not only on the batten —
- * taking it on the roomy box is the same trap as judging the old datum on the
- * grid card.
+ * batten at the cap. Both read as a rule clear of the border with the carrier
+ * at full strength touching it from one side — #67's judgement, turned — and
+ * the record is ADR-0008 §8, looks 2 and 3, taken on the **wide stacked node
+ * at the column cap** and not only on the batten, since taking it on the roomy
+ * box is the same trap as judging the old datum on the grid card. What those
+ * looks moved was not this number but the faint stop the tip is drawn in
+ * (`--carrier-fill-faint`, `.04` → `.10`): at `.04` the far edge of a mid-Level
+ * bar on the 100 px track was not a place anyone could point at.
  *
  * ### Why not 5
  *
@@ -383,10 +385,12 @@ export function bodyWidthFloor(shape: ColumnShape): number | null {
  * the question does not arise. The zone's padding puts the canvas in from the
  * lane's edge, and the card's border puts the track in from the card's.
  *
- * This is look 7 of ADR-0008 §8, and it is still owed: *does a scrolled bar
- * read against an origin it cannot see* has an answer here — it is not asked to
- * — and whether the ink leaving reads as the reason it left is what the look
- * decides.
+ * This is look 7 of ADR-0008 §8, taken in #88: at 1150 px with the pin down
+ * the leftmost column loses its zero at 40 px of scroll and its four cards
+ * drop their ink; they read as *cut cards*, which they are, and not as parked
+ * or stale. What the look could not give is the reason — nothing on screen
+ * says why the ink left, and a reader could take them for cards without a bar.
+ * Accepted as the lesser lie against the sticky drawing §10 rejects.
  */
 export function originOffset(x: number): number {
   return ZONE_PAD_X + x * (floorCanvasWidth() / WIDE_CANVAS_W) + NODE_BORDER;
@@ -413,7 +417,15 @@ export function originGone(x: number, scrollLeft: number): boolean {
  * Both are above {@link floorCanvasWidth} — by 17 and 71 px of lane — which is
  * what lets the app ship without scrolling at rest; the fold's width trigger
  * reads this and not the floor, because the card it judges is the one on screen
- * and not the narrowest one the window allows.
+ * **at that window** and not the narrowest one the window allows.
+ *
+ * Which is also its limit, seen in #88 (ADR-0008 §8, look 6): above 1 280 px
+ * the card on screen is wider than this and the trigger does not know — the 1
+ * at 1 400 px pinned draws a 133 px card, over the 131 that hold five facts,
+ * and stays folded. The fold is a function of the algorithm and the shape and
+ * never of a drag, which under the floor is what §5 wants and above the design
+ * window is a card folding facts it has room for. Recorded there and ticketed (#100);
+ * not decided here.
  */
 export function canvasWidth(shape: ColumnShape): number {
   return diagramLane(shape, DESIGN_BODY_W) - 2 * ZONE_PAD_X;
@@ -453,9 +465,12 @@ export function fittedCardWidth(): number {
  * the drawing is folding facts and still not holding what it kept, and the
  * fold's own floor is the thing that fails (#81). At the body's floor, at eight
  * rows — the deepest of the 88 and the worst case there is — the folded card is
- * 18.7 px, so the margin is **2.7 px**, derived and nobody has looked at it: look
- * 5 of the verification list is *does the folded band read as depth, or as a
- * footnote* (#88).
+ * 18.7 px, so the margin is **2.7 px**, derived — and looked at: look 5 of the
+ * verification list, *does the folded band read as depth, or as a footnote*,
+ * came back **depth** (ADR-0008 §8, #88): eight bands with seven arrows between
+ * them read as a chain of eight, and identity, role and Level read on each at
+ * 18.7 px. The corner mark does not survive the band (#94), and the stamp at
+ * `--ink-inert` all but vanishes there; neither is this number's.
  *
  * Mirrored from `operator-diagram.scss`'s `.node--folded.node--squat` — one line
  * at `--text-micro` with `line-height: 1`, a pixel of padding on each side, and

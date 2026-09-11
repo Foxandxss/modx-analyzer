@@ -7,7 +7,11 @@ eso es vocabulario del dibujo, no un ajuste de una cifra · **Enmendada el 2026-
 tinta del relleno no había girado con el eje; añade §2.6, corrige §3 y §7, reescribe las miradas 2
 y 3 de §8 y les añade la parada tenue como la comparación que llevan, y amplía §9 y §10 ·
 **Enmendada el 2026-09-11 por #86**: el suelo del ancho existe y la decisión del origen está tomada;
-reescribe los dos párrafos del ancho y del desplazamiento de §5 y añade tres descartes a §10
+reescribe los dos párrafos del ancho y del desplazamiento de §5 y añade tres descartes a §10 ·
+**Enmendada el 2026-09-11 por #88**: las diez miradas de §8 están tomadas y cada una lleva su
+veredicto; la mirada 1 confirma (§3); la parada tenue del relleno pasa de `.04` / `.05` a **`.10`**
+en las dos composiciones por la comparación de la 10, y §2.6 deja de llamarla provisional; §9 gana
+dos hallazgos y §10 dos descartes; la comprobación de instrumento sigue debida
 
 Esta ADR es la **dueña de la lista de verificación** de la ronda (§8). `design_handoff/HANDOFF.md`
 y la hoja de sondas `Round10-operator-diagram.dc.html` apuntan aquí y no la repiten; #88 toma las
@@ -163,9 +167,11 @@ enmienda —no había *una* luz que mirar—. Es lo que hace a #93 bloqueante y 
   de la solución a mayor escala. `.node--inert` y `.node--stale` conservan `background: none`.
   `--signal-fill-*` queda sin consumidor, como lo estaba `--signal-fill`: un par de paradas sin regla
   que lo ponga, que es su estado desde siempre, y no una invitación a inventar un `.node--signal`.
-- **Las mismas paradas en las dos composiciones, giradas, y provisionales.** La ancha dibuja
-  `.50 → .04` (portadora) y `.46 → .05` (modulador) hacia la derecha, que es lo que la rejilla dibuja
-  hacia arriba. No se adopta ninguna cifra de la hoja, y la hoja misma es la prueba de por qué: para
+- **Las mismas paradas en las dos composiciones, giradas, y —hasta #88— provisionales.** La ancha
+  dibujaba `.50 → .04` (portadora) y `.46 → .05` (modulador) hacia la derecha, que es lo que la
+  rejilla dibujaba hacia arriba; **desde #88 la parada tenue es `.10` en los dos roles y en las dos
+  composiciones**, juzgada por la comparación de la mirada 10 de §8, y las densas no se tocan. No se
+  adopta ninguna cifra de la hoja, y la hoja misma es la prueba de por qué: para
   una sola convención dibuja **seis rampas** —`.40 → .10` en el panel juzgado (10b · C, líneas
   298–322) y en casi todos los horizontales, `.38 → .08` en el de tres cajas (370, 382) y en el ámbar
   (526), `.34 → .08` en el aparcado (621); en vertical `.48 → .04` casi siempre, `.44 → .04` en la
@@ -189,7 +195,11 @@ a alguien eligiendo un número a ciegas. Por qué podrían separarse después, y
 tenue hace un trabajo distinto en cada composición. En vertical evita que un relleno al 99 % lea
 como un reborde de la tarjeta; girada, **es la punta que mide**. Es la misma lógica «por
 composición» del eje, aplicada a la tinta. No se separan ahora porque no hay ninguna cifra juzgada a
-la que separarlas.
+la que separarlas. **Tomada la comparación (#88, §8 · 10):** a `.04` el final de la barra era un
+escalón de ~10 de RGB en la tarjeta de ocho columnas y el par 99 / 96 no se distinguía; a `.10`
+es ~23 y la muesca de 3 px se ve; en la rejilla `.10` no hizo del techo un reborde. Una cifra,
+`.10`, para las dos composiciones, y la razón hipotética de separarlas no se convirtió en una
+juzgada.
 
 **Cómo se afirma.** Cuatro afirmaciones positivas en una prueba: portadora y modulador, rejilla
 (`to top`) y ancha (`to right`), leídas de `background-image` y nunca del atajo `background`, que
@@ -238,6 +248,11 @@ la regla del techo en una pista de 292 px, cuyo borde cercano es esa punta, y la
 desde un origen común leen como tres magnitudes y no como tres barras de progreso. La
 instancia que decide no es esa: es la pista de **102 px** del nodo apilado a ocho columnas, donde el
 mismo par son 3,1 px y que la hoja no dibuja. Ahí es donde se confirma o se mata.
+
+**Confirmada el 2026-09-11 (#88, §8 · 1).** Sobre esa pista, en la tinta de la app, las ocho
+longitudes desde un mismo origen leyeron como ocho magnitudes en una escala común; y el par del
+techo —3,07 px medidos— leyó con la parada tenue a `.10` y no con la de #93, que enterraba la muesca
+en la cola de la rampa. La ADR se mantiene; lo que la confirmación movió es la parada (§2.6).
 
 Por eso el estado es **aceptada** y no propuesta: la decisión la asienta la puja, que no necesita
 pantalla, y las cifras sin juzgar son consecuencias y no fundamentos. Una ADR propuesta que el
@@ -499,13 +514,55 @@ listón a tres columnas— son cifras derivadas que nadie ha mirado, del mismo t
 Vive aquí y en ningún otro sitio. Cada mirada se toma en el banco (#79) y se anota **en esta
 sección**, en el formato del veredicto de arriba: qué había en pantalla, el patch como Levels, qué se
 midió, cómo leyó. Una cifra que se mueva como resultado aterriza con su razón. Las miradas son de
-#88 salvo donde se dice otra cosa; hoy todas están **pendientes**.
+#88 salvo donde se dice otra cosa; **las diez se tomaron el 2026-09-11 (#88)** y cada una lleva su
+veredicto debajo de su pregunta. La comprobación de instrumento sigue debida.
+
+**Lo que había en pantalla, común a las diez.** El banco (#79) sobre `17ea802` —el árbol de #86,
+con la parada tenue de la mirada 10 sobrescrita en la raíz para la comparación, y después el árbol
+de este commit para confirmar la cifra que aterriza—, en Chrome 152.0.7977.76 sin cabeza sobre el
+portátil objetivo (14", 1920 × 1200 físicos, 150 %, Windows 11 Pro 26200), a **1280 × 800 px CSS
+y DPR 1,5**, que es la ventana de la app, salvo donde una mirada dice otra cosa. La tira del banco
+oculta en todas. Las cajas son `getBoundingClientRect`; las tintas se leen del PNG a DPR 1,5 en una
+línea de exploración al 35 % del alto de la tarjeta, que no cruza ninguna cifra, y se dan como
+`rgb` de Chrome (la superficie `--surface-raised` sale `rgb(21,28,28)`, no el `#0f1417` del
+comentario del token; es la conversión de `oklch` del navegador y da igual, porque todas las cifras
+son diferencias sobre la misma lectura). El patch de las miradas 1, 2, 3 y 10 es **`99 · 96 · 85 ·
+70 · 45 · 90 · 20 · 99`**: el par del techo, los dos Levels medios que la lista pide, y tres más
+para que la fila tenga longitudes que comparar. Las demás miradas van con el patch del banco,
+`90 · 90 · 71 · 90 · 90 · 85 · 90 · 99`, con lo que cada una aparca a cero. Nada de esto es la
+pantalla del dueño: es la misma máquina y la misma escala de #78 y #81, y las lecturas son de una
+sola persona en una sentada.
 
 1. **La barra horizontal, en la tinta de la app.** Confirmación de #78, que sólo pudo no rechazar
    sobre la hoja. Se toma sobre el **nodo apilado ancho al tope de ocho columnas** —pista de 102 px en
    el riel, 108 con el pin; 99 contra 96 son 3,1 px— y no sobre el listón, que es la pregunta fácil.
    **Es la condición que mata** (§3): negativa, esta ADR se sustituye y el resto de la lista no se
    toma.
+
+   > **Veredicto: confirmada. La ADR se mantiene.**
+   > - **Tarjeta.** Algoritmo 1 —una fila de ocho portadoras, la única de las 88 a ocho columnas—,
+   >   plegado por anchura en las tres formas: **119,2 px de tarjeta y 108,2 de pista con el pin;
+   >   112,9 y 101,9 en el riel; 111,1 y 100,1 en el suelo del ancho** (ventana a 1264, cuerpo a
+   >   1264, un píxel por encima del suelo de 1263,04). Luz 6,08 · 6,02 · 6,01 px, derivada y
+   >   comprobada caja a caja: la tarjeta menos sus dos bordes, menos el techo al 99 % de la pista,
+   >   menos los 2 px del trazo.
+   > - **Medido.** En el riel, el relleno de 99 termina a 100,93 px del origen y el de 96 a 97,86:
+   >   **3,07 px** de superficie oscura antes de la regla, que es la cifra de la puja de §1 en la
+   >   instancia que ata (0,35 px en el eje viejo). El de 45 termina a 45,9 y el de 20 a 20,4.
+   > - **Cómo leyó.** Las ocho longitudes desde un mismo borde izquierdo leen como **ocho magnitudes
+   >   en una escala común**, y no como ocho barras de progreso: el 20 y el 45 son barras cortas sin
+   >   discusión, el 70 acaba a dos tercios, y el 90 se ve más corto que el 99. Lo que **no** leyó a
+   >   la tinta con la que se envió #93 fue el par del techo: a `.04` el último píxel del relleno es
+   >   `rgb(35,36,30)` sobre una superficie `rgb(27,31,28)` —un escalón de **~8** en el canal
+   >   rojo—, y 99 contra 96 son la misma tarjeta a ojo, con los 3,07 px de muesca enterrados en la
+   >   cola de la rampa. Es exactamente la lectura que #78 dejó abierta (*el borde que mide la regla
+   >   es la tinta más tenue de la tarjeta*), trasladada del listón a la tarjeta donde importa. La
+   >   mirada 10 es la que la resuelve, y con la parada tenue a `.10` —la que aterriza con este
+   >   commit— la misma tarjeta enseña la muesca: el relleno del 96 acaba en `rgb(47,45,32)`,
+   >   escalón de **~23** contra el techo a 3 px, y el 99 toca la regla. **La barra horizontal lee
+   >   como sonoridad en la tinta de la app, y el par del techo lee con la parada juzgada y no con
+   >   la provisional.** No rechaza; confirma.
+
 2. **La luz del listón en su pista larga.** 7,91 px derivados a tres columnas, en el riel. Dos
    lecturas en la misma mirada: la **luz**, con una portadora encendida en el techo, que es el caso
    que #67 juzgó; y el **borde**, a un Level medio —`70 · 85` en dos operadores— y no en el techo,
@@ -515,24 +572,163 @@ midió, cómo leyó. Una cifra que se mueva como resultado aterriza con su razó
    hizo ambiguo dónde acaba el relleno, preguntado tal cual: *¿se podía decir dónde terminaba?* Es lo
    que decide #71 (#89). Se toma **dos veces en la misma sentada**, a las dos paradas de la 10, y se
    anota una vez.
+
+   > **Veredicto: la luz lee como regla; el borde se podía decir a las dos paradas, y mejor a `.10`.**
+   > - **Tarjeta.** Algoritmo 79 en el riel —cuatro filas, cuatro columnas, listón al tope de
+   >   `SQUAT_NODE_W_MAX`—: **302,3 × 71,6 px**, pista de 291,3, cinco datos en una línea. No hay
+   >   ningún listón a tres columnas sin plegar (el 37 es a tres y pliega; el 69 y el 79 son el
+   >   mismo tope a dos y a cuatro), así que se tomó a cuatro, que es la misma caja.
+   > - **Patch.** `99 · 96 · 85 · 70 · 45 · 90 · 20 · 99`: OP8 es portadora a 99 (la luz con una
+   >   portadora encendida en el techo), OP4 portadora a 70, OP3 modulador a 85.
+   > - **Medido.** Luz 7,91 px derivada, comprobada por caja. En OP8 el relleno toca la regla y la
+   >   regla —`rgb(91,97,97)`, gris, 2 px— está a 8 px de superficie del borde ámbar. En el borde
+   >   lejano a `.04`/`.05`: el último píxel del 70 (ámbar) es `rgb(30,34,29)` contra `rgb(21,28,28)`,
+   >   y el del 85 (azul) `rgb(24,37,40)`: escalones de **~9 y ~13**. A `.10`: `rgb(44,43,31)` y
+   >   `rgb(27,46,52)`, **~23 y ~24**. El 96 deja **8,8 px** de superficie antes de la regla.
+   > - **Cómo leyó.** La luz como una regla gris a una distancia común del borde en los ocho, no como
+   >   un reborde del relleno, con el ámbar a plena fuerza tocándola por un lado: el juicio de #67
+   >   sobrevive girado. El borde lejano a la parada de #93: *sí se podía decir* dónde acababa el 70
+   >   y el 85 en una pista de 291 px, a un par de píxeles, porque la cola de la rampa se estira
+   >   sobre 200 px y el escalón final, aunque flojo, es un escalón; y el 96 contra el 99 es una
+   >   muesca visible de 9 px, la misma que #78 midió sobre la hoja. A `.10` lo mismo con menos duda
+   >   y sin que la barra pierda su carácter de tinta que se disuelve hacia la punta. **En el listón
+   >   la parada provisional no fallaba**; falla en la 3.
+
 3. **La luz del nodo apilado ancho a ocho columnas.** 6,02 px derivados en la tarjeta más estrecha:
    la instancia que ata y el caso mayoritario. Mirarla sólo en el listón es la misma trampa que juzgar
    el techo viejo en la tarjeta de la rejilla. Las mismas dos lecturas, la misma pregunta y las dos
    mismas paradas que la 2.
+
+   > **Veredicto: la luz lee; el borde a un Level medio no se podía decir a `.04`/`.05` y sí a `.10`.**
+   > - **Tarjeta y patch.** Los de la mirada 1, en el riel (112,9 px, pista 101,9) y en el suelo
+   >   (111,1, pista 100,1): las dos son la instancia que ata, y las dos leyeron igual.
+   > - **Medido.** Luz 6,02 y 6,01 px, por caja. En el borde lejano, a `.04`: el 70 acaba en
+   >   `rgb(31,35,29)` y el 85 en `rgb(32,34,29)` sobre `rgb(21,28,28)`, escalones de **~10**; toda la
+   >   rampa —de `rgb(132,100,42)` en el origen a eso— cabe en 71 y 87 px. A `.10`: `rgb(44,43,31)` y
+   >   `rgb(45,43,31)`, **~23**.
+   > - **Cómo leyó.** La luz como en el listón: una regla clara del borde, con el 99 tocándola. El
+   >   borde, a la parada de #93, **no**: en 100 px la rampa entera se gasta antes de la punta, y el
+   >   último cuarto de la barra está por debajo de lo que el ojo separa de la superficie; dónde
+   >   acababa el 85 era una pregunta con **unos 10 px** de respuesta, y el 70 poco mejor. Lo que
+   >   #67 anotó del desvanecido —que entrando como degradado evitaba que la marca leyera como
+   >   reborde— era verdad en el techo, donde el hueco es degenerado; a un Level medio en esta
+   >   tarjeta el desvanecido no evita nada y sí borra el final. A `.10` el final del 70 y del 85 se
+   >   dice a ~2 px, la muesca del 96 se ve, y el 99 sigue tocando la regla sin leer como reborde.
+   >   **Es la lectura que decide #71 (#89): el borde era ambiguo a un Level medio en la tarjeta
+   >   mayoritaria, y deja de serlo con la parada a `.10`.** Esta mirada, y no la 2, es la que mueve
+   >   la cifra.
+
 4. **El tramo visible.** `VISIBLE_SEGMENT = 6` px es elegido, ni derivado ni juzgado, y decide el
    cajón de cinco filas a 0,06 px: si 6 px de línea leen como línea. A 7 plegarían cinco algoritmos
    más.
+
+   > **Veredicto: 6 px leen como línea, sin margen que regalar. La cifra no se mueve.**
+   > - **Tarjeta.** Algoritmo 55 —cinco filas, cuatro columnas, el cajón que la cifra decide— con el
+   >   pin, en el suelo del cuerpo: ventana a **1280 × 648**, cuerpo a **382 px** y sin
+   >   desplazamiento, lienzo de 282. Listón de 245,1 × 37,2 px sin plegar, cinco datos en dos
+   >   líneas; paso de fila 49,62 y **hueco de 12,40 px**, que es 9 unidades de punta a escala
+   >   0,705 (6,35 px) más **6,06 px** de línea, la cifra de §4 vista.
+   > - **Cómo leyó.** A 3× sobre el hueco entre OP4 y OP5: un asta y una punta, y el asta es
+   >   aproximadamente tan larga como la punta. Lee como **una flecha corta**, y no como una punta
+   >   apoyada en una tarjeta: hay línea. Pero es el mínimo que lee, no una cifra cómoda: un píxel
+   >   menos y la punta se come el asta. Se queda en 6, elegido y ahora **mirado**, con esta nota
+   >   como lo único que lo separa de un número al azar. Los cinco datos del listón a 37 px, sin
+   >   cortar, con `PREDICTED` y `POLLED` legibles.
+
 5. **La banda plegada: ¿profundidad o nota al pie?** 16 px de banda en 18,7 de tarjeta en el suelo a
    ocho filas.
+
+   > **Veredicto: profundidad.**
+   > - **Tarjeta.** Algoritmo 66 con el pin en el suelo del cuerpo (382 px): ocho bandas de
+   >   **318,9 × 18,7 px**, todas `node--folded node--squat`, una columna, paso 31,02, hueco 12,35.
+   >   Y el 37 a seis filas en el mismo suelo: 318,9 × 29,0.
+   > - **Cómo leyó.** Ocho bandas apiladas con siete flechas bajando entre ellas leen como **una
+   >   cadena de ocho**, que es lo que el 66 es; la identidad, el rol y el Level se leen en cada
+   >   banda a `--text-micro`, y el 71 de OP3 es la única muesca visible en una regla de ocho marcas
+   >   que se puede mirar de canto. No es una nota al pie: **es el dibujo**, y lo que perdió —ratio,
+   >   glifo, Hz— no se echa de menos para leer la topología. Dos cosas que se vieron y no son de
+   >   esta mirada: el sello `POLLED` a `--ink-inert` en 18,7 px es casi invisible (es la tinta que
+   >   el sello tiene por diseño, y una banda no es donde se juzga); y la marca de la esquina, de
+   >   22 px, en una banda de 18,7 queda recortada a un trazo horizontal con un cabo, pegada al
+   >   techo —#94, visto aquí también—. En el 37 la banda es una línea a la cabeza de una tarjeta de
+   >   29 px con aire debajo: la mitad de la mirada que #92 tiene.
+
 6. **El dibujo cambiando de forma a mitad de un arrastre**, ahora que el disparador de anchura hace
    al pliegue común: el 1 pliega en la ventana de fábrica, y `KEEP IT BIG` puede cambiarlo.
+
+   > **Veredicto: la pulsación del pin lee; el arrastre no cambia nada, y eso es un hallazgo.**
+   > - **Tarjeta.** Algoritmo 7 —dos filas, siete columnas—: en el riel la tarjeta es de **130,0 px**
+   >   y pliega (131 es el umbral, `fittedCardWidth()`); con el pin es de **137,2** y no pliega. La
+   >   misma pantalla antes y después de `KEEP IT BIG`.
+   > - **Cómo leyó.** Ninguna posición se mueve: las siete portadoras y OP1 quedan donde estaban, la
+   >   columna se ensancha 7 px, y las tarjetas pasan de cuatro datos a cinco. Se lee como *el pin
+   >   ha hecho sitio y el sitio se ha gastado en los datos*, y no sobresalta. Lo que sí se vio: la
+   >   tarjeta plegada por estrecha —99 px de alto con dos datos apilados y la mitad de abajo vacía—
+   >   no dice que ha plegado; lo único que lo delata es el aire. No es de esta mirada y se anota.
+   > - **El hallazgo.** Se arrastró la ventana de 1280 a 1450 px en las dos formas, y el 1 **no se
+   >   despliega nunca**: a 1400 con el pin la tarjeta mide 133,0 px, por encima de los 131 que
+   >   tienen los cinco datos, y sigue `node--folded`. El disparador de anchura lee
+   >   `canvasWidth(shape)`, que es el carril en la ventana de diseño (`DESIGN_BODY_W`) y no el
+   >   carril en pantalla, así que el pliegue es una función de *(algoritmo, forma)* y no de la
+   >   ventana. Por debajo de 1280 el cuerpo se desplaza y la tarjeta no cambia; por encima, la
+   >   tarjeta crece y el pliegue no la sigue. Consecuencia: *a mitad de un arrastre* el dibujo no
+   >   cambia de forma jamás, sólo en una pulsación del pin o al vaciar o llenar una ranura. Por
+   >   debajo de la ventana de fábrica eso es lo que §5 quería; por encima es una tarjeta que pliega
+   >   datos que le caben, y el comentario de `canvasWidth()` —«la tarjeta que juzga es la que hay en
+   >   pantalla»— sólo es verdad a 1280. Anotado en §9 y abierto como ticket (#100); no es una cifra que
+   >   mover.
+
 7. **Una barra desplazada contra un origen que no se ve.** La decisión de #86 (§5), mirada y no
    argumentada.
+
+   > **Veredicto: no miente; tampoco explica. Se acepta.**
+   > - **Tarjeta.** Ventana a **1150 × 800** con el pin: cuerpo a 1150 contra un suelo de 1209,04,
+   >   rejilla `999,04 · 0 · 208`, **59 px** de desplazamiento posible. Algoritmo 2 (una columna de
+   >   cuatro apilados y cuatro portadoras) y el 1. A 30 px de desplazamiento el primer origen está a
+   >   5,6 px del borde y nada está desanclado; a 40 la primera columna lo pierde (pista a −4,4 px)
+   >   y las cuatro tarjetas del 2 en esa columna pasan a `node--unanchored`; a 59, el tope, siguen
+   >   siendo sólo esas.
+   > - **Cómo leyó.** Las cuatro tarjetas de la primera columna, cortadas por el borde izquierdo,
+   >   están sin relleno y sin techo y con su cifra; las de las otras columnas siguen midiendo. Lee
+   >   como *tarjetas cortadas*, que es lo que son: la cifra sigue siendo verdad y nada en pantalla
+   >   afirma una longitud contra un cero que no está. No leen como a cero —el contorno sigue
+   >   continuo y del color del rol— ni como caducas. Lo que no leen es *por qué* se fue la tinta:
+   >   nada lo dice, y un lector podría tomarlas por tarjetas sin barra. Contra el sticky que §10
+   >   descarta, esto es la mentira menor. Se acepta como está. Y el cuerpo entero se desplaza —el
+   >   título `ALGORITHM` queda `RITHM`, la leyenda se corre—, que es el comportamiento del eje
+   >   vertical en el otro eje, como §5 dice.
+
 8. **La banda del aparcado: ¿lee como fuera de la cadena o como otra fila?** Añadida por #83, que la
    dejó sin mirar; la banda está encima de la fila más honda y en el extremo del origen.
+
+   > **Veredicto: por posición lee como otra fila; lo que la saca de la cadena es la tinta.**
+   > - **Tarjeta.** Algoritmo 2 con OP2 a cero (`90 · 0 · 71 · 90 · 90 · 85 · 90 · 99`), con el pin:
+   >   la banda en `y = 99`, OP1 en 194, OP3 en 289, OP4 en 385 — el **mismo paso de 95 px** entre
+   >   la banda y OP1 que entre OP1 y OP3, en la misma columna, a la misma anchura. También con OP2 y
+   >   OP6 a cero (dos en la banda) y el 7 con OP1 a cero (la banda sola sobre siete portadoras).
+   > - **Cómo leyó.** Con un solo aparcado en la columna de la cadena, la banda es *la fila de
+   >   arriba*: la columna se lee OP2 → OP1 → OP3 → OP4 a primera vista, y hay que ver el contorno
+   >   discontinuo, el `ZERO`, el `0`, el cabo con su barra y la flecha discontinua que **sube** para
+   >   corregirlo. Todo eso está y corrige; pero la posición, que es lo que esta composición dice
+   >   sin rótulo, dice *fila*. Con dos aparcados de ramas distintas, o con la banda sola sobre una
+   >   fila, lee mejor —dos tarjetas muertas en lo alto, apartadas— porque ya no está encima de su
+   >   propia cadena. §4 dice que la banda es una fila y que eso es lo que cuesta; esta mirada dice
+   >   que también es lo que se ve. No hay cifra que mover: la banda no tiene un hueco propio que
+   >   ajustar. Abierto como ticket para el dueño (#101), con esta lectura.
+
 9. **La única línea que sube: ¿lee como una ruta hacia un callejón sin salida?** Añadida por #83. La
    ruta inerte hacia un aparcado cruza por debajo de todas las barras a 0,75 del hueco y aterriza en
    la barra a 0,4.
+
+   > **Veredicto: sí.**
+   > - **Tarjeta.** La de la 8: OP1 → OP2 con OP2 a cero, `M 136 94 V 88.5 H 136 V 80.8` inerte y el
+   >   cabo `M 136 72 V 80.8 M 119 80.8 H 153`, en un hueco de 23,6 px.
+   > - **Cómo leyó.** Una línea discontinua con punta que sube hasta una barra horizontal y se para
+   >   ahí: lee como **una flecha contra un muro**, que es lo que un callejón sin salida es. La barra
+   >   y la punta no se pisan —8 px entre el 0,4 y el 0,75— y la barra se lee como terminal y no como
+   >   parte de la flecha. Es la única línea del dibujo que sube y se nota que sube, y eso es lo que
+   >   la marca como excepción antes de leer el `0`.
+
 10. **La parada tenue del relleno girado: `.05` contra `.10`.** Añadida por #93 y **no es una mirada
    aparte: es la 2 y la 3 tomadas dos veces.** Está en la lista para que la constante pendiente se
    vea —ese es el trabajo de esta sección—, y se escribe así para que nadie tome la 2 a `.05`,
@@ -545,12 +741,36 @@ midió, cómo leyó. Una cifra que se mueva como resultado aterriza con su razó
    lo que mantiene honesta la comparación. Lo que decide: si las paradas se separan por composición
    (§2.6 dice por qué podrían), y a qué cifra.
 
+   > **Veredicto: `.10`, en las dos composiciones, y aterriza con #88.**
+   > - **Cómo se tomó.** Cuatro rampas sobre la misma tarjeta y el mismo patch, por sobrescritura de
+   >   `--carrier-fill-faint` / `--modulator-fill-faint` en `:root` con la hoja de la app componiendo:
+   >   `.04`/`.05` (la de #93), `.10`, y las dos **normalizadas a la pista** en vez de a la barra
+   >   —la tercera candidata que #88 anotó, hecha con `background-size` sobre `.node__fill` para la
+   >   mirada y no con un segundo degradado—. Sobre el nodo apilado del 1 en el riel y el listón del
+   >   79, y la rejilla del 2 a las dos paradas.
+   > - **Medido**, último píxel del relleno sobre `rgb(21,28,28)`, canal más alto: por barra a `.04`,
+   >   **~8–13** a todo Level; por barra a `.10`, **~23**; por pista a `.04`, de 16 (99) a 91 (20);
+   >   por pista a `.10`, de 24 a 94.
+   > - **Cómo leyó.** Por barra a `.10` lee en las dos tarjetas: el final de cada barra se puede
+   >   decir, el 96 enseña su muesca en la tarjeta de 100 px, y la barra sigue siendo tinta que se
+   >   disuelve hacia la punta y no un bloque. Por pista invierte la pregunta: la barra corta acaba
+   >   en tinta densa y lee como un **bloque de progreso** —el 20 y el 45 son rectángulos—, y las
+   >   largas, que son las que el techo compara, acaban igual de tenues que antes; hace fácil lo que
+   >   ya leía y deja igual lo que no. En la rejilla, `.10` no convierte el techo en reborde: el 99
+   >   toca la regla y la regla sigue siendo la regla. Así que **una cifra y no dos**: no hay motivo
+   >   juzgado para separarlas por composición, y §2.6 sólo tenía uno hipotético. Coincide con el
+   >   dígito tenue de la hoja (`.10`), y no se adopta *de* la hoja: sale de la comparación, y la
+   >   parada densa no se toca (§10). `--signal-fill-faint` se queda en `.04`: sin consumidor y sin
+   >   mirada.
+
 **Más una comprobación de instrumento, con el MODX conectado:** que un operador a Level 0 no emite
 nada, de modo que modularlo es inaudible. Es la única regla de la ronda cuyas condiciones de verdad
 viven enteras fuera del código. Nota sostenida, aparcar el operador modulado, capturar, no ver nada.
 Lo que falsaría: la decisión 5 de §2 dice que la ruta *entrante* lleva tinta inerte porque lo que
 modula no tiene salida; si un operador a cero sí saliera, la tinta estaría diciendo algo falso y la
-ruta debería dibujarse llena. Se debe, no se ha hecho.
+ruta debería dibujarse llena. **Se debe, y sigue debida el 2026-09-11 (#88): las diez miradas se
+tomaron en el banco sin instrumento, y esta no se puede tomar ahí.** Queda para la próxima sesión
+con el MODX conectado; #90 la lista como debida.
 
 ## 9 · Consecuencias
 
@@ -568,8 +788,23 @@ ruta debería dibujarse llena. Se debe, no se ha hecho.
   es lo que las hace contestables, y no sólo lo que pone la tinta a lo largo del eje; por eso #88 las
   toma sólo después de que aterrice, y #89 con ellas.
 - El dibujo pliega en la ventana de fábrica (el 1), así que el pliegue es algo que el pianista ve
-  ocurrir en un arrastre y en una pulsación del pin, no un caso de dos entre ochenta y ocho. La
-  mirada 6 existe por esto, y #92 es su otra mitad.
+  ocurrir en una pulsación del pin, no un caso de dos entre ochenta y ocho. La mirada 6 existe por
+  esto, y #92 es su otra mitad. **Y no en un arrastre** (#88, §8 · 6): el disparador de anchura
+  lee `canvasWidth(shape)`, que es el carril de la ventana de diseño y no el de la pantalla, así que
+  el pliegue es función de *(algoritmo, forma)* y la ventana no lo mueve en ningún sentido. Por
+  debajo de 1280 eso es lo que §5 quiere —el cuerpo se desplaza y la tarjeta no cambia—; por encima
+  es una tarjeta plegando datos que ya le caben (el 1 a 1400 px con el pin mide 133 y sigue plegado
+  contra un umbral de 131), y el comentario de `canvasWidth()` sólo es verdad en la ventana de
+  fábrica. Es un hallazgo y no una cifra: abierto como ticket (#100), sin decidir aquí si el disparador
+  debe medir.
+- La banda del aparcado **lee como una fila** cuando está sola encima de su propia cadena (#88,
+  §8 · 8): mismo paso, misma columna, misma anchura, y lo que la saca de la cadena es la tinta —el
+  contorno discontinuo, el `0`, el cabo y la flecha que sube— y no la posición. §4 ya decía que la
+  banda es una fila y que eso es lo que cuesta; la mirada dice que también es lo que se ve. Sin
+  cifra que mover; abierto como ticket para el dueño (#101).
+- La parada tenue del relleno es **`.10`** en los dos roles y las dos composiciones (#88, §8 · 10),
+  y #89 decide #71 a partir de la lectura de la mirada 3: el borde lejano era ambiguo a un Level
+  medio en la tarjeta mayoritaria con la parada de #93, y deja de serlo con esta.
 - La leyenda **no gana entrada** para el pliegue ni para la banda del aparcado: sus dos filas
   emparejan por tipo de afirmación —los dos roles que confiere el algoritmo; los dos hechos que no son
   roles— y el pliegue es un hecho sobre el **dibujo**. `FB 0` ya se envía inerte sin entrada. Se
@@ -627,7 +862,19 @@ ruta debería dibujarse llena. Se debe, no se ha hecho.
 - **Adoptar la rampa de la hoja (`.40 → .10`) en la ancha.** La hoja dibuja seis rampas para una
   convención y todas son `rgba` tecleado a mano; la tinta de la app sería distinta por composición
   sin que ninguna mirada lo hubiera pedido. Lo que se lleva es la convención, provisional, y la
-  cifra se decide por comparación (§8, 10).
+  cifra se decide por comparación (§8, 10). Que la comparación diera `.10` —el dígito tenue de la
+  hoja— no reabre esto: la parada densa sigue siendo la de la app (`.50` / `.46`, no `.40`), la
+  cifra es la misma en las dos composiciones, y sale de una lectura en la tinta de la app y no de la
+  hoja.
+- **Normalizar la rampa a la pista y no a la barra** (la tercera candidata de #88, §8 · 10). Hace que
+  una barra corta acabe en tinta densa y lea como un bloque de progreso —el miedo de §10c de la hoja,
+  materializado—, y deja a las largas, que son las que el techo compara, exactamente igual de tenues
+  que antes: hace fácil lo que ya leía y no toca lo que no. Mirada sobre la misma tarjeta y el mismo
+  patch que la ganadora.
+- **Separar la parada tenue por composición.** §2.6 tenía una razón hipotética —en vertical evita el
+  reborde, girada es la punta que mide—; la rejilla a `.10` no enseñó el reborde, así que la razón
+  no se convirtió en una juzgada, y dos cifras para una tinta sin una mirada que las separe es una
+  cifra de más.
 - **Estado «propuesta» hasta que se tomen las miradas.** El código ya la implementa; una propuesta
   implementada no es una cosa. Lo que la mirada 1 puede hacer no es enmendarla sino sustituirla, y eso
   está escrito en §3.

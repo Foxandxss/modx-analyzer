@@ -54,15 +54,21 @@
   /* The Level fill's ink, as stop pairs and never as a gradient. A gradient
      carries a direction, and the direction is the composición's (ADR-0008
      §2.6): the stylesheet composes `linear-gradient(<axis>, dense, faint)`
-     where the axis is declared, so no token can put an axis back. Same values
-     as the three `to top` gradients these replace (#93). The faint stop is the
-     measuring tip in the wide composición and is provisional there — ADR-0008
-     §8, looks 2 and 3. `--signal-fill-*` stays unconsumed, as `--signal-fill`
-     was: nothing in `ui/src` reads it, and no `.node--signal` exists. */
+     where the axis is declared, so no token can put an axis back. The dense
+     stops are those of the three `to top` gradients these replace (#93). The
+     faint stop is the measuring tip in the wide composición, and it is JUDGED
+     at .10 rather than the .04 / .05 that arrived with #93: at .04 the bar's
+     end was a ~10 RGB step over the surface and 99 against 96 could not be
+     told apart on the eight-column card; at .10 the step is ~23 and the 3 px
+     gap reads (ADR-0008 §8, look 10, #88). One figure for both
+     composiciones: in the grid .10 did not turn the ceiling into a rim.
+     `--signal-fill-*` stays unconsumed, as `--signal-fill` was: nothing in
+     `ui/src` reads it, no `.node--signal` exists, and its faint stop does not
+     move because no look has seen it. */
   --carrier-fill-dense:   oklch(0.80 0.150  75 / .50);
-  --carrier-fill-faint:   oklch(0.80 0.150  75 / .04);
+  --carrier-fill-faint:   oklch(0.80 0.150  75 / .10);
   --modulator-fill-dense: oklch(0.79 0.140 235 / .46);
-  --modulator-fill-faint: oklch(0.79 0.140 235 / .05);
+  --modulator-fill-faint: oklch(0.79 0.140 235 / .10);
   --signal-fill-dense:    oklch(0.87 0.155 155 / .42);
   --signal-fill-faint:    oklch(0.87 0.155 155 / .04);
 
