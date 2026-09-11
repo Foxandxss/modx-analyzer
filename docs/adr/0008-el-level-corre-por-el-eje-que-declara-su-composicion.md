@@ -3,7 +3,9 @@
 Fecha: 2026-09-11 · Estado: aceptada · Contexto: #73 (la especificación de la ronda 10), #78, #80,
 #81, #82, #83 · Se apoya en ADR-0007 y no la sustituye: de ella retira **una dirección** (§4, el
 aparcado a la derecha) y ningún principio · No es un refinamiento: cambia qué eje lleva el Level, y
-eso es vocabulario del dibujo, no un ajuste de una cifra
+eso es vocabulario del dibujo, no un ajuste de una cifra · **Enmendada el 2026-09-11 por #93**: la
+tinta del relleno no había girado con el eje; añade §2.6, corrige §3 y §7, reescribe las miradas 2
+y 3 de §8 y les añade la parada tenue como la comparación que llevan, y amplía §9 y §10
 
 Esta ADR es la **dueña de la lista de verificación** de la ronda (§8). `design_handoff/HANDOFF.md`
 y la hoja de sondas `Round10-operator-diagram.dc.html` apuntan aquí y no la repiten; #88 toma las
@@ -125,6 +127,81 @@ el algoritmo y no lleva nada*, la misma frase en un segundo sitio. Es también *
 dibujo que sube**, y ese es el precio de que la banda esté encima de la fila más honda: dibujada
 hacia abajo habría aparcado al operador de vuelta en el eje del que se le sacó.
 
+### 6 · La tinta corre con el eje: el rol pone las paradas y la composición la dirección
+
+Añadida por #93. El relleno no es sólo un largo: es una rampa, densa en el origen del eje y
+desvanecida hacia el extremo lejano, y una rampa tiene dirección. #80 giró el largo y dejó la
+dirección donde estaba: `--carrier-fill` y `--modulator-fill` seguían siendo
+`linear-gradient(to top, …)` y `.node--level-width .node__fill` cambiaba sólo el `inset`. En la
+composición ancha la rampa corría a través del **grosor** de la barra —densa en el borde de abajo,
+`.05` en el de arriba, e idéntica en el origen y en la punta—. Medido en la build de `bccdf1a` sobre
+OP8 a 71: cruzar el extremo del relleno en `x = 595 → 596` era un escalón de ~20 en la cabeza de la
+barra y de ~89 en su pie. **La luz del techo no era una cantidad**: era distinta en cada punto del
+largo de la propia regla, y por eso las miradas 2 y 3 de §8 no estaban bien planteadas hasta esta
+enmienda —no había *una* luz que mirar—. Es lo que hace a #93 bloqueante y no un arreglo de aseo.
+
+**La decisión**, en tres partes y en este orden:
+
+- **Ningún token lleva un eje.** Los tres degradados `to top` se sustituyen por pares de paradas
+  —`--carrier-fill-dense` / `-faint`, `--modulator-fill-dense` / `-faint`, `--signal-fill-dense` /
+  `-faint`—, los mismos valores, sin dirección. La razón que decide no es la limpieza: es que **un
+  eje metido en un token es un eje que ninguna prueba puede afirmar.** El banco de pruebas es jsdom
+  y jsdom no sustituye `var()`: con la dirección en un token, el `background-image` calculado del
+  relleno leería `linear-gradient(var(--carrier-fill-along), …)` y el literal `to right` no estaría
+  en ningún sitio que la prueba vea. El defecto que se envió fue exactamente un eje que nadie podía
+  afirmar; lo que se elige es la única forma de las tres consideradas (§10) que pone el eje donde una
+  prueba lo lee, y eso vale más que el argumento del cambio pequeño.
+- **El rol pone las paradas; la composición pone la dirección; nunca el producto.** `.node--carrier`
+  y `.node--modulator` declaran `--fill-dense` / `--fill-faint` y ninguna dirección; un
+  `background-image` compone la rampa para la rejilla (`to top`) y uno bajo `.node--level-width` la
+  gira (`to right`). Tres roles más dos composiciones, y no tres por dos: componerla por rol —
+  `.node--carrier .node__fill`, `.node--carrier.node--level-width .node__fill`, …— son cuatro
+  declaraciones para dos roles, seis con `--signal-fill`, el doble el día que exista una tercera
+  composición, y es el mismo par de declaraciones «que hay que mantener a mano» reapareciendo dentro
+  de la solución a mayor escala. `.node--inert` y `.node--stale` conservan `background: none`.
+  `--signal-fill-*` queda sin consumidor, como lo estaba `--signal-fill`: un par de paradas sin regla
+  que lo ponga, que es su estado desde siempre, y no una invitación a inventar un `.node--signal`.
+- **Las mismas paradas en las dos composiciones, giradas, y provisionales.** La ancha dibuja
+  `.50 → .04` (portadora) y `.46 → .05` (modulador) hacia la derecha, que es lo que la rejilla dibuja
+  hacia arriba. No se adopta ninguna cifra de la hoja, y la hoja misma es la prueba de por qué: para
+  una sola convención dibuja **seis rampas** —`.40 → .10` en el panel juzgado (10b · C, líneas
+  298–322) y en casi todos los horizontales, `.38 → .08` en el de tres cajas (370, 382) y en el ámbar
+  (526), `.34 → .08` en el aparcado (621); en vertical `.48 → .04` casi siempre, `.44 → .04` en la
+  358 y `.46 → .04` en el ámbar de la 157—. Son aproximaciones `rgba` tecleadas a mano de una tinta
+  que en la app es `oklch`; adoptar cualquiera de ellas es adoptar la aproximación. Lo que la hoja
+  transfirió es la convención —**el extremo denso es el cero, en los dos ejes**— y no los dígitos.
+  La frase de la nota de veredicto de #78 que decía «coincide con el relleno vertical» significa
+  ahora eso: dirección y extremo denso, no dos cifras (y la nota lleva su fe de erratas: comparaba la
+  hoja con la hoja).
+
+**Y no es la opción gratis.** Cambia la única cantidad sobre la que descansa la no-negativa de #78.
+El extremo lejano —el que miden las miradas 2 y 3, el de #71— se dibuja en la parada tenue. La hoja
+lo enseñó a `.10` y la nota anota la lectura: en la barra de 45, el último píxel encendido es
+`rgb(23,39,47)` contra `rgb(15,20,23)`, un escalón real y el más suave del dibujo. Es la única
+observación que existe de ese borde, y se tomó a más o menos **el doble** de la tinta de la app.
+Llevar `.05` / `.04` a la ancha es por tanto un cambio de la cantidad, hacia menos, y no se toma en
+silencio: se toma **como provisional**, la parada tenue entra en §8 como la siguiente constante sin
+juzgar de la ronda, y se decide **por comparación** y no por veredicto contra una sola rampa —`.05`
+y `.10` a la vez en pantalla—, porque un sí/no contra una rampa sin alternativa que salga *no* deja
+a alguien eligiendo un número a ciegas. Por qué podrían separarse después, y sólo después: la parada
+tenue hace un trabajo distinto en cada composición. En vertical evita que un relleno al 99 % lea
+como un reborde de la tarjeta; girada, **es la punta que mide**. Es la misma lógica «por
+composición» del eje, aplicada a la tinta. No se separan ahora porque no hay ninguna cifra juzgada a
+la que separarlas.
+
+**Cómo se afirma.** Cuatro afirmaciones positivas en una prueba: portadora y modulador, rejilla
+(`to top`) y ancha (`to right`), leídas de `background-image` y nunca del atajo `background`, que
+jsdom reserializa perdiendo el degradado. Cuatro y no dos porque las dos declaraciones de dirección
+son ciegas al rol por construcción, y dos afirmaciones no distinguen esa estructura del producto;
+cuatro fallan el día que alguien «arregle» un rol escribiendo un `background` con dirección en
+`.node--carrier`. Es la prueba de regresión de la decisión y no del valor. Lo que afirma es que
+**la hoja de estilos deletrea el eje**, no que el dibujo lea: la única evidencia de eso es la mirada
+1, y una suite verde citada como esa evidencia sería el fallo del fósil con una prueba como fósil.
+El retroceso está nombrado por adelantado, para que no lo improvise al final de un PR quien esté
+cansado: si jsdom devolviera vacío, se afirma contra la fuente de la hoja (`componentCss()`) o se
+retira la prueba y se anota aquí que el eje de la tinta no está afirmado. Lo que no se hace es la
+negativa —«ya no contiene `to top`»—, que pasa cuando el banco no ve nada en absoluto.
+
 ### Las cifras de la resolución, al final y como consecuencia
 
 Todas en el suelo del cuerpo (#81: `BODY_FLOOR = 382`, lienzo de 282 px de alto) y en el carril
@@ -152,9 +229,11 @@ es lo que siempre han hecho. Se afirma **como geometría** —el desplazamiento 
 **Si la mirada 1 de §8 —la barra horizontal, en la tinta de la app, sobre el nodo apilado ancho al
 tope de ocho columnas— vuelve negativa, esta ADR queda *sustituida*, no enmendada, y las demás
 miradas de la lista no se toman.** Una hoja de diseño puede rechazar y no bendecir; lo que ya se
-tiene es que no rechazó (#78): sobre la hoja, con los tokens reales, 99 contra 96 es una muesca de
-**9 px** de superficie oscura antes de la regla del techo en una pista de 292 px, y las tres
-longitudes desde un origen común leen como tres magnitudes y no como tres barras de progreso. La
+tiene es que no rechazó (#78): sobre la hoja, con la geometría a escala real y **la punta del relleno
+a más o menos el doble de la densidad de la app** —la hoja dibuja `.40 → .10` en `rgba` y la app
+`.46 → .05` en `oklch`; §2.6—, 99 contra 96 es una muesca de **9 px** de superficie oscura antes de
+la regla del techo en una pista de 292 px, cuyo borde cercano es esa punta, y las tres longitudes
+desde un origen común leen como tres magnitudes y no como tres barras de progreso. La
 instancia que decide no es esa: es la pista de **102 px** del nodo apilado a ocho columnas, donde el
 mismo par son 3,1 px y que la hoja no dibuja. Ahí es donde se confirma o se mata.
 
@@ -375,10 +454,14 @@ geometría. Lo que anotó:
 fijados por el hueco fijo, explícitamente independiente de la dimensión que se mide: por eso pasó de
 la tarjeta de 31 px a la de 24, y por eso pasa ahora noventa grados. Lo que no pasa es qué aspecto
 tenían seis píxeles de *aquella* superficie: fue un juicio sobre una regla horizontal tendida sobre
-un borde ámbar con `--carrier-fill` desvaneciéndose a `.04` debajo; en el dibujo girado el techo es
-una regla vertical con otra tinta al lado. **La geometría en la que se juzgó ya no existe.** Las dos
-luces giradas —6,02 px en la tarjeta más estrecha y 7,91 en el listón a tres columnas— son cifras
-derivadas que nadie ha mirado, del mismo tipo que fue `bottom: 99%`, y son las miradas 2 y 3.
+un borde ámbar con `--carrier-fill` (hoy `--carrier-fill-dense` → `-faint`) desvaneciéndose a
+`.04` debajo; en el dibujo girado el techo es una regla vertical con la misma rampa girada al lado,
+de modo que la tinta que toca la luz es ahora la **parada tenue**, la punta que mide. Y hasta #93 ni
+siquiera eso: con la rampa a través del grosor, la luz medía ~20 en la cabeza de la barra y ~89 en
+su pie a lo largo de una misma regla, y «la luz» no era una cantidad (§2.6). **La geometría en la
+que se juzgó ya no existe.** Las dos luces giradas —6,02 px en la tarjeta más estrecha y 7,91 en el
+listón a tres columnas— son cifras derivadas que nadie ha mirado, del mismo tipo que fue
+`bottom: 99%`, y son las miradas 2 y 3.
 
 ## 8 · La lista de verificación
 
@@ -395,13 +478,16 @@ midió, cómo leyó. Una cifra que se mueva como resultado aterriza con su razó
 2. **La luz del listón en su pista larga.** 7,91 px derivados a tres columnas, en el riel. Dos
    lecturas en la misma mirada: la **luz**, con una portadora encendida en el techo, que es el caso
    que #67 juzgó; y el **borde**, a un Level medio —`70 · 85` en dos operadores— y no en el techo,
-   donde el hueco es degenerado y el desvanecido no tiene nada que emborronar. Del borde se anota
-   **desde cuál** se midió —duro o suave— y si el extremo suave hizo ambiguo dónde acaba el relleno,
-   preguntado tal cual: *¿se podía decir dónde terminaba?* Es lo que decide #71 (#89).
+   donde el hueco es degenerado y el desvanecido no tiene nada que emborronar. Girada la rampa (§2.6)
+   el extremo lejano entero es tenue —ya no hay un borde duro y uno suave entre los que elegir, y
+   «desde cuál se midió» dejó de ser la pregunta—: lo que se anota es **cuán tenue**, y si esa punta
+   hizo ambiguo dónde acaba el relleno, preguntado tal cual: *¿se podía decir dónde terminaba?* Es lo
+   que decide #71 (#89). Se toma **dos veces en la misma sentada**, a las dos paradas de la 10, y se
+   anota una vez.
 3. **La luz del nodo apilado ancho a ocho columnas.** 6,02 px derivados en la tarjeta más estrecha:
    la instancia que ata y el caso mayoritario. Mirarla sólo en el listón es la misma trampa que juzgar
-   el techo viejo en la tarjeta de la rejilla. Las mismas dos lecturas y las mismas anotaciones que
-   la 2.
+   el techo viejo en la tarjeta de la rejilla. Las mismas dos lecturas, la misma pregunta y las dos
+   mismas paradas que la 2.
 4. **El tramo visible.** `VISIBLE_SEGMENT = 6` px es elegido, ni derivado ni juzgado, y decide el
    cajón de cinco filas a 0,06 px: si 6 px de línea leen como línea. A 7 plegarían cinco algoritmos
    más.
@@ -416,6 +502,17 @@ midió, cómo leyó. Una cifra que se mueva como resultado aterriza con su razó
 9. **La única línea que sube: ¿lee como una ruta hacia un callejón sin salida?** Añadida por #83. La
    ruta inerte hacia un aparcado cruza por debajo de todas las barras a 0,75 del hueco y aterriza en
    la barra a 0,4.
+10. **La parada tenue del relleno girado: `.05` contra `.10`.** Añadida por #93 y **no es una mirada
+   aparte: es la 2 y la 3 tomadas dos veces.** Está en la lista para que la constante pendiente se
+   vea —ese es el trabajo de esta sección—, y se escribe así para que nadie tome la 2 a `.05`,
+   escriba un veredicto, y llegue aquí con el veredicto ya en el archivo. Las dos rampas en pantalla
+   a la vez, una nota. El instrumento **no tiene la forma de `FOLDING`**: `FOLDING` es un token de
+   inyección que alimenta una entrada real de la app, y la parada tenue es una propiedad CSS. El
+   banco (#79) sobrescribe `--carrier-fill-faint` / `--modulator-fill-faint` en la raíz y la hoja de
+   la app compone las dos rampas ella sola; un banco que dibujara su propio segundo degradado sería
+   este mismo defecto reproducido dentro de la herramienta para mirarlo, y sobrescribir el token es
+   lo que mantiene honesta la comparación. Lo que decide: si las paradas se separan por composición
+   (§2.6 dice por qué podrían), y a qué cifra.
 
 **Más una comprobación de instrumento, con el MODX conectado:** que un operador a Level 0 no emite
 nada, de modo que modularlo es inaudible. Es la única regla de la ronda cuyas condiciones de verdad
@@ -430,7 +527,15 @@ ruta debería dibujarse llena. Se debe, no se ha hecho.
   qué composición**, y ninguna puede leerlo de la forma de la caja. Las entradas *Techo del patch* y
   *Pista del relleno* de `CONTEXT.md` están hoy mal en los dos sentidos —una línea a través de los
   ocho; un hueco fijo *arriba*— y #87 las corrige sin ninguna palabra de dirección en ninguna de las
-  dos.
+  dos. #93 le añade a #87 una **tercera**, la tinta del relleno —densa en el origen del eje que su
+  composición declara, desvanecida hacia el extremo lejano; ni *abajo* ni *a la izquierda*—, con el
+  sustantivo por elegir, y **bloqueada en #93**: en el árbol anterior a #93 la frase era falsa en la
+  ancha, y #93 no hace a las dos entradas viejas más falsas de lo que ya eran, que es por lo que la
+  deja a #87 en vez de tocar `CONTEXT.md` con el código.
+- Hasta #93 la luz del techo en la ancha no era una cantidad —~20 en la cabeza de la barra y ~89 en
+  su pie a lo largo de una misma regla— y las miradas 2 y 3 no eran preguntas bien planteadas. #93
+  es lo que las hace contestables, y no sólo lo que pone la tinta a lo largo del eje; por eso #88 las
+  toma sólo después de que aterrice, y #89 con ellas.
 - El dibujo pliega en la ventana de fábrica (el 1), así que el pliegue es algo que el pianista ve
   ocurrir en un arrastre y en una pulsación del pin, no un caso de dos entre ochenta y ocho. La
   mirada 6 existe por esto, y #92 es su otra mitad.
@@ -480,6 +585,18 @@ ruta debería dibujarse llena. Se debe, no se ha hecho.
 - **Mantener el aparcado a la derecha y explicarlo en la leyenda.** Una posición que contradice su
   propia cifra, y una entrada de leyenda para taparlo, en la composición cuyo principio es que la
   posición lo dice sin rótulo.
+- **Un segundo token por rol con la dirección dentro** (`--carrier-fill-along`). El cambio más
+  pequeño y dos declaraciones por rol que hay que mantener a mano; pero lo que lo descarta es que el
+  literal `to right` viviría en un token, y el banco no sustituye `var()`: un eje que ninguna prueba
+  puede afirmar, que es el defecto de #93 con otro nombre. §2.6.
+- **Componer la rampa por rol y por composición.** Cuatro `background` para dos roles, seis con el
+  fósforo, el doble con una tercera composición: las dos declaraciones «a mano» del anterior
+  reapareciendo dentro de la solución a mayor escala. El rol pone las paradas y la composición la
+  dirección; nunca el producto. §2.6.
+- **Adoptar la rampa de la hoja (`.40 → .10`) en la ancha.** La hoja dibuja seis rampas para una
+  convención y todas son `rgba` tecleado a mano; la tinta de la app sería distinta por composición
+  sin que ninguna mirada lo hubiera pedido. Lo que se lleva es la convención, provisional, y la
+  cifra se decide por comparación (§8, 10).
 - **Estado «propuesta» hasta que se tomen las miradas.** El código ya la implementa; una propuesta
   implementada no es una cosa. Lo que la mirada 1 puede hacer no es enmendarla sino sustituirla, y eso
   está escrito en §3.

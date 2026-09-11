@@ -203,8 +203,16 @@
 
   // El rol se lee por FORMA antes que por color: curva total = portadora,
   // esquina viva = modulador, contorno discontinuo = cortado a cero.
+  //
+  // El rol pone las PARADAS de la tinta del relleno y ninguna dirección: la
+  // dirección es de la composición y la compone `.node__fill` más abajo
+  // (ADR-0008 §2.6). Rol × composición como producto —un `background` con
+  // dirección por cada rol y por cada composición— es el defecto de #93 con
+  // más declaraciones, no menos.
   &--carrier {
     --node-ink: var(--carrier);
+    --fill-dense: var(--carrier-fill-dense);
+    --fill-faint: var(--carrier-fill-faint);
     border-color: var(--carrier);
     border-radius: var(--radius-carrier);
     box-shadow: var(--glow-carrier);
@@ -212,6 +220,8 @@
 
   &--modulator {
     --node-ink: var(--modulator);
+    --fill-dense: var(--modulator-fill-dense);
+    --fill-faint: var(--modulator-fill-faint);
     border-color: var(--modulator);
     border-radius: var(--radius-modulator);
     box-shadow: var(--glow-modulator);
@@ -262,15 +272,24 @@
 // por ese eje ES el Level. La rejilla mide hacia arriba desde el suelo de la
 // tarjeta; la composición ancha mide hacia la derecha desde su borde izquierdo,
 // que es el origen COMPARTIDO de los ocho.
+//
+// La tinta corre CON el eje: densa en el origen y desvanecida hacia el extremo
+// lejano, en la dirección que la composición declara y no en otra (ADR-0008
+// §2.6). La dirección es un literal aquí, en `background-image` y no en el
+// atajo, porque es lo que el banco de pruebas puede leer: jsdom no sustituye
+// `var()`, así que un eje metido en un token sería un eje que ninguna prueba
+// puede afirmar —que es exactamente cómo se envió #93—. Las paradas las pone el
+// rol (`.node--carrier`, `.node--modulator`); esta regla es ciega al rol.
 .node__fill {
   position: absolute;
   inset: auto 0 0 0;
-  background: var(--modulator-fill);
+  background-image: linear-gradient(to top, var(--fill-dense), var(--fill-faint));
   pointer-events: none;
 }
 
 .node--level-width .node__fill {
   inset: 0 auto 0 0;
+  background-image: linear-gradient(to right, var(--fill-dense), var(--fill-faint));
 }
 
 // El techo del patch. Cruza el nodo de lado a lado, perpendicular al eje que
@@ -297,10 +316,6 @@
   height: auto;
   border-top: none;
   border-left: var(--datum-ceiling-stroke) dashed var(--datum-ceiling-color);
-}
-
-.node--carrier .node__fill {
-  background: var(--carrier-fill);
 }
 
 .node--inert .node__fill,

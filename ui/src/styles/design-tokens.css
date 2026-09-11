@@ -46,9 +46,21 @@
   --alert:               oklch(0.72 0.160  35);   /* #ff7a5c  artefacto, fallo, aviso   */
   --theory:              var(--carrier);          /* PREDICTED: amber + always dashed   */
 
-  --carrier-fill:        linear-gradient(to top, oklch(0.80 0.150 75 / .50), oklch(0.80 0.150 75 / .04));
-  --modulator-fill:      linear-gradient(to top, oklch(0.79 0.140 235 / .46), oklch(0.79 0.140 235 / .05));
-  --signal-fill:         linear-gradient(to top, oklch(0.87 0.155 155 / .42), oklch(0.87 0.155 155 / .04));
+  /* La tinta del relleno del Level, como pares de paradas y nunca como
+     degradado. Un degradado lleva una dirección, y la dirección es de la
+     composición (ADR-0008 §2.6): la hoja compone `linear-gradient(<eje>,
+     densa, tenue)` donde el eje se declara, y así ningún token puede volver a
+     meter un eje. Los mismos valores que los tres degradados `to top` a los
+     que sustituyen (#93). La parada tenue es la punta que mide en la
+     composición ancha y ahí es provisional: ADR-0008 §8, miradas 2 y 3.
+     `--signal-fill-*` sigue sin consumidor, como lo estaba `--signal-fill`:
+     nada en `ui/src` lo lee, y no existe ningún `.node--signal`. */
+  --carrier-fill-dense:   oklch(0.80 0.150  75 / .50);
+  --carrier-fill-faint:   oklch(0.80 0.150  75 / .04);
+  --modulator-fill-dense: oklch(0.79 0.140 235 / .46);
+  --modulator-fill-faint: oklch(0.79 0.140 235 / .05);
+  --signal-fill-dense:    oklch(0.87 0.155 155 / .42);
+  --signal-fill-faint:    oklch(0.87 0.155 155 / .04);
 
   /* --- Tipografía ------------------------------------------------------- */
   --font-ui:   'Helvetica Neue', Helvetica, Arial, sans-serif;

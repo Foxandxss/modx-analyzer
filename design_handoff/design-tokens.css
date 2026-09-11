@@ -51,9 +51,20 @@
   --alert:               oklch(0.72 0.160  35);   /* #ff7a5c  not-a-harmonic, failure   */
   --theory:              var(--carrier);          /* PREDICTED: amber + always dashed   */
 
-  --carrier-fill:        linear-gradient(to top, oklch(0.80 0.150 75 / .50), oklch(0.80 0.150 75 / .04));
-  --modulator-fill:      linear-gradient(to top, oklch(0.79 0.140 235 / .46), oklch(0.79 0.140 235 / .05));
-  --signal-fill:         linear-gradient(to top, oklch(0.87 0.155 155 / .42), oklch(0.87 0.155 155 / .04));
+  /* The Level fill's ink, as stop pairs and never as a gradient. A gradient
+     carries a direction, and the direction is the composición's (ADR-0008
+     §2.6): the stylesheet composes `linear-gradient(<axis>, dense, faint)`
+     where the axis is declared, so no token can put an axis back. Same values
+     as the three `to top` gradients these replace (#93). The faint stop is the
+     measuring tip in the wide composición and is provisional there — ADR-0008
+     §8, looks 2 and 3. `--signal-fill-*` stays unconsumed, as `--signal-fill`
+     was: nothing in `ui/src` reads it, and no `.node--signal` exists. */
+  --carrier-fill-dense:   oklch(0.80 0.150  75 / .50);
+  --carrier-fill-faint:   oklch(0.80 0.150  75 / .04);
+  --modulator-fill-dense: oklch(0.79 0.140 235 / .46);
+  --modulator-fill-faint: oklch(0.79 0.140 235 / .05);
+  --signal-fill-dense:    oklch(0.87 0.155 155 / .42);
+  --signal-fill-faint:    oklch(0.87 0.155 155 / .04);
 
   /* --- Typography --------------------------------------------------------- */
   --font-ui:   'Helvetica Neue', Helvetica, Arial, sans-serif;

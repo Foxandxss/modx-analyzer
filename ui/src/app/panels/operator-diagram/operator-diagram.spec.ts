@@ -599,6 +599,59 @@ describe('OperatorDiagram', () => {
   });
 
   /**
+   * The fill's ink runs WITH the axis: dense at the origin, fading toward the
+   * far end, in the direction the composición declares (#93, ADR-0008 §2.6).
+   *
+   * What this asserts is that the **stylesheet spells the axis** — a literal
+   * `to top` on the grid's fill and a literal `to right` under
+   * `.node--level-width` — and not that the drawing reads. The only evidence
+   * that the rotated bar reads is look 1 of ADR-0008 §8, taken on a screen; a
+   * green run here is not that evidence, and citing it as such is the fossil
+   * failure with a test as the fossil.
+   *
+   * Four positive assertions and not two, on purpose. Role sets the stops and
+   * composición sets the direction — never the product of the two — so the two
+   * direction declarations are role-blind by construction. Two assertions
+   * cannot tell that structure from the product version; carrier and modulator
+   * in each composición can, and they are what fails the day a role is "fixed"
+   * by writing a `background` with a direction on `.node--carrier`.
+   *
+   * Read from `background-image` and never the `background` shorthand: jsdom
+   * reserialises the shorthand and drops the gradient, while the longhand comes
+   * back with `var()` unsubstituted and its whitespace reflowed — hence a
+   * pattern and not a string. This is the suite's first
+   * `getComputedStyle`. If a jsdom upgrade ever returns empty here, the two
+   * honest moves are to assert the two rules against `componentCss()`, or to
+   * drop the test and record in ADR-0008 §8 that the ink's axis is unasserted.
+   * The move that is not honest is the negative — «no longer contains
+   * `to top`» — which goes green when the bed sees no stylesheet at all.
+   */
+  it('runs the fill’s ink along the axis the composición declares, whatever the role', async () => {
+    const direction = (node: HTMLElement): string => {
+      const fill = node.querySelector<HTMLElement>('.node__fill');
+      return fill ? getComputedStyle(fill).backgroundImage : '';
+    };
+    // `eight()` reads OP3 as a modulator and OP4 as a carrier, both lit.
+    const { backend, fixture, host, room } = await renderDiagram();
+    backend.operators.set(eight(NOW, IDLE_PASS_MS));
+    await fixture.whenStable();
+    const [, , gridModulator, gridCarrier] = nodes(host);
+    expect(gridModulator.dataset['role']).toBe('modulator');
+    expect(gridCarrier.dataset['role']).toBe('carrier');
+    expect(direction(gridModulator)).toMatch(/linear-gradient\(\s*to top,/);
+    expect(direction(gridCarrier)).toMatch(/linear-gradient\(\s*to top,/);
+
+    room.big.set(true);
+    await fixture.whenStable();
+    const [, , wideModulator, wideCarrier] = nodes(host);
+    expect(wideModulator.classList.contains('node--level-width')).toBe(true);
+    expect(wideModulator.dataset['role']).toBe('modulator');
+    expect(wideCarrier.dataset['role']).toBe('carrier');
+    expect(direction(wideModulator)).toMatch(/linear-gradient\(\s*to right,/);
+    expect(direction(wideCarrier)).toMatch(/linear-gradient\(\s*to right,/);
+  });
+
+  /**
    * The claim the body's floor is anchored on: **folding can only ever buy
    * margin** (#81).
    *

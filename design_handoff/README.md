@@ -965,7 +965,10 @@ What the real app will have to hold, by zone:
 ## Design Tokens
 
 Source of truth: **`design-tokens.css`** (semantic names, not literals). Its comments are English and
-**no token name has ever changed**. The five values round 9 had to leave marked stale were applied in
+**no token name has ever changed** — with one dated exception: #93 (2026-09-11) reshaped the three
+`--*-fill` gradients into `--*-fill-dense` / `--*-fill-faint` stop pairs, same values, because a
+gradient token carries an axis and the axis is the composición's (ADR-0008 §2.6). The five values
+round 9 had to leave marked stale were applied in
 session 2, together with the two ceiling-datum tokens — see `CONCERNS.md` §29, resolved. **Nothing in
 the file is stale and the two copies are identical in values.** Summary:
 
@@ -981,7 +984,9 @@ the file is stale and the two copies are identical in values.** Summary:
 `--carrier oklch(.80 .150 75)` ≈ `#f3b13f` (carrier: you hear it);
 `--modulator oklch(.79 .140 235)` ≈ `#58c8f5` (modulator: it colours);
 `--inert #3d4a48` (Level 0); `--alert oklch(.72 .160 35)` ≈ `#ff7a5c`; `--theory: var(--carrier)`
-(**PREDICTED**). Plus the level fill gradients `--carrier-fill` / `--modulator-fill` / `--signal-fill`.
+(**PREDICTED**). Plus the level fill's ink as stop pairs, `--carrier-fill-dense` / `-faint`,
+`--modulator-fill-dense` / `-faint`, `--signal-fill-dense` / `-faint` — never a gradient, because a
+gradient carries a direction and the direction is the composición's (ADR-0008 §2.6, #93).
 **`DOCUMENTED` uses neutral ink** — paper has no colour — and needs no accent of its own.
 
 **Typography** — `--font-ui: 'Helvetica Neue', Helvetica, Arial, sans-serif`;

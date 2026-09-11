@@ -138,8 +138,11 @@ const LEVEL_SCALE = 100;
  * carried from a 31 px card to a 24 px one in the first place, and why it
  * carries across ninety degrees now. What does not carry is what six pixels of
  * *that* surface looked like: it was a judgement about a horizontal rule lying
- * on an amber border with `--carrier-fill` fading underneath it, and in the
- * rotated drawing the datum is a **vertical** rule with different ink beside it.
+ * on an amber border with the carrier fill (then `--carrier-fill`, since #93
+ * the `--carrier-fill-dense` → `-faint` ramp) fading underneath it, and in the
+ * rotated drawing the datum is a **vertical** rule with the same ramp turned
+ * along the bar, so its faint stop is now the tip the daylight is measured
+ * from (ADR-0008 §2.6).
  *
  * So the two rotated daylights are **derived and nobody has looked at them**:
  * about **6.0 px** on the narrowest card this build can draw and 7.9 px on the

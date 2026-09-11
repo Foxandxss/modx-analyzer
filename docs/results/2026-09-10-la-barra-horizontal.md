@@ -98,6 +98,16 @@ bar the last lit pixel is `rgb(23,39,47)` against a card surface of `rgb(15,20,2
 the softest one in the drawing. Recorded, not decided; that is #71's question, and #88's looks 2 and 3
 are what decide it, at a mid Level rather than at the ceiling.
 
+> **Erratum, 2026-09-11 (#93).** The comparison in the paragraph above is sheet against sheet, not
+> sheet against app: `.44` down to `.04` is this sheet's own vertical panel (line 358), while the
+> app's tokens were `.50 → .04` (carrier), `.46 → .05` (modulator), `.42 → .04` (signal). The
+> `rgb(23,39,47)` against `rgb(15,20,23)` step remains a valid reading of the sheet at `.10`; it is
+> not a reading of the app, whose faint stop is roughly half that. The finding — *the edge the
+> ceiling rule measures against is the faintest ink on the card* — survives and is sharpened, since
+> it turns out truer of the app than of the sheet it was written about. The build at the time did not
+> draw the rotated ramp at all; #93 turns it, keeps the app's stops as provisional, and puts the faint
+> stop on the verification list as a comparison looks 2 and 3 carry (ADR-0008 §2.6, §8).
+
 **Progress or loudness.** §10c names the fear honestly: *a batten filling rightwards may read as
 progress or as time.* On a single nearly-full bar in isolation that ambiguity is real. It is not what
 the sheet actually shows: three bars of visibly different length, sharing a left edge, against a
