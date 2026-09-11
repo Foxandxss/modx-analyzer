@@ -2,7 +2,8 @@
 
 Fecha: 2026-09-11 · Estado: aceptada · Contexto: #73 (la especificación de la ronda 10), #78, #80,
 #81, #82, #83 · Se apoya en ADR-0007 y no la sustituye: de ella retira **una dirección** (§4, el
-aparcado a la derecha) y ningún principio · No es un refinamiento: cambia qué eje lleva el Level, y
+aparcado a la derecha) y **una lectura literal** (§3, primer punto: los cinco hechos como los mismos
+en los dos dibujos), y ningún principio · No es un refinamiento: cambia qué eje lleva el Level, y
 eso es vocabulario del dibujo, no un ajuste de una cifra · **Enmendada el 2026-09-11 por #93**: la
 tinta del relleno no había girado con el eje; añade §2.6, corrige §3 y §7, reescribe las miradas 2
 y 3 de §8 y les añade la parada tenue como la comparación que llevan, y amplía §9 y §10 ·
@@ -13,7 +14,10 @@ veredicto; la mirada 1 confirma (§3); la parada tenue del relleno pasa de `.04`
 en las dos composiciones por la comparación de la 10, y §2.6 deja de llamarla provisional; §9 gana
 dos hallazgos y §10 dos descartes; la comprobación de instrumento sigue debida · **Enmendada el
 2026-09-11 por #89**: #71 queda cerrado como arreglado por la parada de #88, a partir de la lectura
-de la mirada 3 de §8 y no de un argumento; §9 lo anota con lo que no se tomó y §10 gana un descarte
+de la mirada 3 de §8 y no de un argumento; §9 lo anota con lo que no se tomó y §10 gana un descarte ·
+**Enmendada el 2026-09-11 por #96**: la cabecera contaba una retirada de ADR-0007 y §6 registraba
+una; son dos, y la segunda es la lectura literal del primer punto de su §3, que el pliegue (§4)
+retira; la cabecera nombra las dos y §6 gana la entrada que faltaba
 
 Esta ADR es la **dueña de la lista de verificación** de la ronda (§8). `design_handoff/HANDOFF.md`
 y la hoja de sondas `Round10-operator-diagram.dc.html` apuntan aquí y no la repiten; #88 toma las
@@ -474,6 +478,10 @@ como *la razón por la que se fue* es lo que la mirada decide.
   sino lo que se le pide; una constante que declarase el más hondo se leería como una cota que la
   disposición impone. Ocho sigue siendo el más hondo de los 88 y se afirma donde está la tabla.
 - **La dirección del aparcado de ADR-0007 §4** (a la derecha). Su principio no.
+- **La lectura literal del primer punto de §3 de ADR-0007** —que los cinco hechos son los mismos en
+  los dos dibujos—. El componente y la plantilla, no: un hecho que se dibuja se dibuja igual en los
+  dos, y es de esa cláusula de donde sale `fittedCardWidth()`; lo que el pliegue (§4) retira es que
+  la ancha los dibuje todos. Enmendado en 0007 por #96.
 
 Y tres que cambian de razón sin cambiar de valor: `ROW_GAP_MAX` gana un suelo y deja de ser un
 máximo solo; `STACK_H = 90` se re-gana por el margen de 1,33; `SQUAT_NODE_W_MAX = 380` sobrevive

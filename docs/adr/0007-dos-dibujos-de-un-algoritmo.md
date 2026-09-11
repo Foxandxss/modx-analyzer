@@ -1,7 +1,8 @@
 # ADR-0007: Dos dibujos de un algoritmo, y cuál es el de por defecto
 
 Fecha: 2026-09-10 · Estado: aceptada · Contexto: #54, #42, #29 · Revisada en #63 contra lo que 3a
-(#58) y 3b (#62) dejaron efectivamente en la build · §3 ampliada con la leyenda en #65
+(#58) y 3b (#62) dejaron efectivamente en la build · §3 ampliada con la leyenda en #65 · §3 enmendada
+en #96: el nodo, el pliegue y el eje del Level
 
 ## El problema
 
@@ -45,13 +46,23 @@ estrecha en esta sesión.
    la segunda estaba mal escrita en la primera redacción de esta ADR y la tercera faltaba entera
    (añadida en #65):
 
-   - **El nodo entero.** Hay un componente y una plantilla para los dos dibujos, así que los cinco
-     hechos del nodo son literalmente los mismos: la identidad (`OP1`…`OP8`) con el rol escrito al
-     lado, el Level como altura del relleno contra el techo común del patch, la ratio, la forma
-     espectral como glifo y la Hz de la nota viva — más el sello que califica lo sondeado, el guion
-     de lo invalidado (#56) y la esquina inerte. Lo único que cambia es cómo se reparten dentro de
-     la caja: en la ancha, cuando la profundidad deja menos alto del que necesitan para apilarse, el
-     nodo los pone en fila (`squat`).
+   - **El nodo.** Hay un componente y una plantilla para los dos dibujos, así que un hecho que se
+     dibuja se dibuja igual en los dos: la identidad (`OP1`…`OP8`) con el rol escrito al lado, el
+     Level como longitud del relleno por el eje que su composición declara contra el techo común
+     del patch (ADR-0008 §2.1), la ratio, la forma espectral como glifo y la Hz de la nota viva —
+     más el sello que califica lo sondeado, el guion de lo invalidado (#56) y la esquina inerte.
+     **Cuáles** de esos hechos se dibujan lo decide la composición, y sólo la ancha deja alguno: un
+     dibujo que no puede sostener sus hechos los pliega y nunca sus posiciones (ADR-0008 §4), y el
+     nodo plegado conserva la identidad, el rol, el Level y su sello y entrega la ratio, el glifo y
+     la Hz. La rejilla no es que no pliegue: no tiene pliegue (`layout.ts` escribe `folded: false`
+     y la regla sólo llega al dibujo ancho), y esa asimetría es la decisión y no un estado. El sello
+     es lo que hace seguro el pliegue: es el mismo cálculo en los dos dibujos, el más débil de todo
+     lo que tiene detrás, y en la banda plegada sigue calificando la ratio y la forma que la banda
+     ya no dibuja — es el único asidero que le queda al lector sobre las cifras que se fueron. Y
+     cómo se reparten dentro de la caja es otra pregunta: `squat` pone en fila o apila los hechos
+     que se dibujan, el pliegue decide cuáles; ninguno dispara al otro, y ADR-0008 §8 tiene las dos
+     direcciones tomadas —plegado y `squat` a la vez en la mirada 5, plegado y aún apilado en la
+     mirada 6— y las dos son de la ancha.
    - **Las líneas.** Las rutas, las caídas al bus, el bus con su `OUT L/R` y el arco de
      realimentación con su `FB n` se dibujan en las **dos**, y la discontinua del `FB 0` (#57)
      también. **«Quién modula a quién» no es exclusivo de la ancha**: está en las dos, y decir lo
