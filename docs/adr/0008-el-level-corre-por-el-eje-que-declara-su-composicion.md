@@ -11,7 +11,9 @@ reescribe los dos párrafos del ancho y del desplazamiento de §5 y añade tres 
 **Enmendada el 2026-09-11 por #88**: las diez miradas de §8 están tomadas y cada una lleva su
 veredicto; la mirada 1 confirma (§3); la parada tenue del relleno pasa de `.04` / `.05` a **`.10`**
 en las dos composiciones por la comparación de la 10, y §2.6 deja de llamarla provisional; §9 gana
-dos hallazgos y §10 dos descartes; la comprobación de instrumento sigue debida
+dos hallazgos y §10 dos descartes; la comprobación de instrumento sigue debida · **Enmendada el
+2026-09-11 por #89**: #71 queda cerrado como arreglado por la parada de #88, a partir de la lectura
+de la mirada 3 de §8 y no de un argumento; §9 lo anota con lo que no se tomó y §10 gana un descarte
 
 Esta ADR es la **dueña de la lista de verificación** de la ronda (§8). `design_handoff/HANDOFF.md`
 y la hoja de sondas `Round10-operator-diagram.dc.html` apuntan aquí y no la repiten; #88 toma las
@@ -616,7 +618,8 @@ sola persona en una sentada.
    >   dice a ~2 px, la muesca del 96 se ve, y el 99 sigue tocando la regla sin leer como reborde.
    >   **Es la lectura que decide #71 (#89): el borde era ambiguo a un Level medio en la tarjeta
    >   mayoritaria, y deja de serlo con la parada a `.10`.** Esta mirada, y no la 2, es la que mueve
-   >   la cifra.
+   >   la cifra. **Decidido el 2026-09-11 (#89):** #71 se cierra como arreglado por esa parada, sobre
+   >   esta lectura y ninguna predicción; §9 dice cuál de las cuatro respuestas de #71 es y cuáles no.
 
 4. **El tramo visible.** `VISIBLE_SEGMENT = 6` px es elegido, ni derivado ni juzgado, y decide el
    cajón de cinco filas a 0,06 px: si 6 px de línea leen como línea. A 7 plegarían cinco algoritmos
@@ -803,8 +806,19 @@ con el MODX conectado; #90 la lista como debida.
   banda es una fila y que eso es lo que cuesta; la mirada dice que también es lo que se ve. Sin
   cifra que mover; abierto como ticket para el dueño (#101).
 - La parada tenue del relleno es **`.10`** en los dos roles y las dos composiciones (#88, §8 · 10),
-  y #89 decide #71 a partir de la lectura de la mirada 3: el borde lejano era ambiguo a un Level
-  medio en la tarjeta mayoritaria con la parada de #93, y deja de serlo con esta.
+  **y #71 está cerrado sobre ella (#89, 2026-09-11)**, a partir de la lectura de la mirada 3 y no de
+  un argumento: el borde lejano era ambiguo a un Level medio —`70 · 85`, unos 10 px de respuesta en
+  la pista de 100 px de la tarjeta mayoritaria— con la parada de #93, y se dice a ~2 px con esta. De
+  las cuatro respuestas que #71 dejaba abiertas, la tomada es **el suelo al alfa de la rampa**, y la
+  tomó #88 con su lectura adjunta; el filete en la punta y la parada dura no se tocan (§10); y la
+  cuarta —que el desvanecido es el dibujo honesto de una cantidad sin final nítido— sobrevive en la
+  tinta, porque a `.10` la barra sigue disolviéndose hacia la punta y no es un bloque (§8 · 10). El
+  caso que daba nombre al ticket —la tarjeta chata de 24 px con 14 px de relleno— no existe en
+  ningún árbol desde la rotación: el listón mide por su largo de 291 px y la banda plegada de
+  18,7 px lleva ese mismo largo, así que la pregunta se contestó donde ahora ata, en la pista de
+  100 px. Lo que no se miró y se dice: el borde de un Level medio en la rejilla a `.10`. #71 decía
+  que en la rejilla leía a `.04`, y lo único que `.10` podía romper ahí era el reborde del techo,
+  que la 10 midió y no apareció.
 - La leyenda **no gana entrada** para el pliegue ni para la banda del aparcado: sus dos filas
   emparejan por tipo de afirmación —los dos roles que confiere el algoritmo; los dos hechos que no son
   roles— y el pliegue es un hecho sobre el **dibujo**. `FB 0` ya se envía inerte sin entrada. Se
@@ -875,6 +889,11 @@ con el MODX conectado; #90 la lista como debida.
   reborde, girada es la punta que mide—; la rejilla a `.10` no enseñó el reborde, así que la razón
   no se convirtió en una juzgada, y dos cifras para una tinta sin una mirada que las separe es una
   cifra de más.
+- **Un filete en la punta del relleno, o una parada dura en la rampa** (las dos primeras respuestas
+  de #71; #89). No se miraron, y no se descartan por una mirada sino por no hacer falta: a `.10` la
+  mirada 3 sitúa el final del 70 y del 85 a ~2 px sin ningún borde duro, y un filete sería tinta
+  cambiada que ninguna lectura pidió, que es el trato con el que #89 se escribió. Si una mirada
+  futura dijera que ~2 px no bastan, la candidata es esta y entra con esa lectura, no desde aquí.
 - **Estado «propuesta» hasta que se tomen las miradas.** El código ya la implementa; una propuesta
   implementada no es una cosa. Lo que la mirada 1 puede hacer no es enmendarla sino sustituirla, y eso
   está escrito en §3.

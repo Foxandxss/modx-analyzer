@@ -113,6 +113,11 @@ are what decide it, at a mid Level rather than at the ceiling.
 > the 100 px track of the eight-column card the `.04` tip left the 99 / 96 notch invisible and a
 > mid-Level bar's end a ten-pixel guess, and `.10` reads on both cards without turning the grid's
 > ceiling into a rim. ADR-0008 §8 · 10 is the record.
+>
+> **And #71 is closed on that reading, 2026-09-11 (#89).** Fixed by #88's stop — a floor on the
+> ramp's alpha, one of the four answers #71 listed — and not by a hairline or a hard stop: at `.10`
+> the end of a mid-Level bar (`70 · 85`) on the 100 px track is placeable to ~2 px, and the bar
+> still dissolves toward its tip. Item 4 below is therefore decided. ADR-0008 §8 · 3 and §9.
 
 **Progress or loudness.** §10c names the fear honestly: *a batten filling rightwards may read as
 progress or as time.* On a single nearly-full bar in isolation that ambiguity is real. It is not what
