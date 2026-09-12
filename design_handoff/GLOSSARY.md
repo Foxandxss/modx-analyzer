@@ -132,17 +132,38 @@ the two that lost their word are the two that were already unmistakable by shape
 
 | term | what it means | where |
 |---|---|---|
-| **the ceiling datum** | One dashed 2 px line drawn across all eight operator nodes at the patch's highest Level. Real patches cluster their operators between 71 and 99, so eight independent fills look identical; against one shared line the eye reads the **gaps**, which is the comparison that matters. The fill stays linear 0–99 — see `DESIGN.md` · **The operator node**. | operator nodes on the main screen; the eight |
+| **the ceiling datum** | The patch's highest Level, drawn in **every** operator node at the same fraction of the track as a dashed 2 px mark — a repeated mark on identical boxes, **not one continuous line**. It aligns into a common rule where the boxes are stacked and share an origin; it reads per node in the 3 × 3 grid and wherever the wide drawing puts cards side by side; and it is never a constant (ADR-0008 §2). Real patches cluster their operators between 71 and 99, so eight independent fills look identical; against one shared mark the eye reads the **gaps**, which is the comparison that matters. The fill stays linear 0–99 — see `DESIGN.md` · **The operator node**. | operator nodes in both drawings; the legend's fourth entry |
 | **the corner** | A 44 × 44 open corner mark (two 2 px strokes) at the bottom-right of every operator node. It is the visible path from the node to the operator editor. Not an icon, not a menu, not a chevron: the same mark on all eight, and the words appear **once** in the diagram legend. **The running build draws the corner and holds the legend line back**, because the operator editor does not exist yet and a caption promising a path nobody can walk is a caption lying; the line joins in the same commit as the editor. | operator nodes |
 | **the bench drawer** | One bottom drawer holding every temporary instrument (bridge, startup, audio and port readouts #16 / #5, sweep readout #8 — five today, N tomorrow), each as a chip on the 52 px handle **with its ticket number showing**. Closed by default. Same vocabulary as the SysEx console drawer. A temporary instrument that shows its ticket is visibly on its way out. | every screen, bottom edge |
 | **the scope contract** | The three things the scope guarantees in writing: which period it locked to, how many cycles it shows, and what it draws when it cannot lock. See `DESIGN.md` · **The scope contract**. | scope panel caption |
 
 ---
 
+## 3b · Terms that are new in round 10
+
+**The cut, stated once.** `CONTEXT.md` carries what a user can name; this file carries how the
+drawing is built. Of the terms below only the ceiling datum (§3) reaches the screen, through the
+legend's fourth entry; the rest are document and code vocabulary, and no user-visible string says
+them. Each row says which side of §4's line it is on.
+
+| term | what it means | where · which side of the line |
+|---|---|---|
+| **the track** | #67's missing row: the card's interior less a constant inset at the far end of the carrying axis, which is the fill's scale — `trackInset()` / `levelTrackInset()` in `node-geometry.ts`, **8 px in the grid and 7 in the wide composición**, each earned against the narrowest card of its composición (ADR-0008 §2). | both drawings · `CONTEXT.md` names it (*Pista del relleno*); nothing on screen says it |
+| **the wide stacked node** | The wide composición's node at three rows or fewer, 64 of the 88; Level along its **length**. At eight columns it is the box every width floor is earned against, and the instance the kill condition was confirmed on (ADR-0008 §2.1, §3). | the wide composición · document vocabulary |
+| **the batten** | The wide composición's node at four rows or more, 24 of the 88: the same five facts laid in a row, Level along its **length** (ADR-0008 §2.1). | the wide composición · document vocabulary |
+| **the fold** | One mechanism, two triggers, a `\|\|` at `foldsFacts()` judged on the unfolded drawing: *too deep for its rows* (the gap under `rowGapFloor()`, at the body's floor) or *too narrow for its five facts* (the card narrower than `fittedCardWidth()`, the grid card the same five facts are known to fit). What folds is ratio, glyph, Hz and per-figure detail; what never folds is position, order and row. The band keeps identity, Level at full length against the same rule, and **one** stamp, the weakest (ADR-0008 §4). No press unfolds it (#92). | {37, 66} by depth; the 1 by width at the factory window; any algorithm whose parked band makes the row count · `CONTEXT.md` names it (*Pliegue*) |
+| **the lane** | The diagram's own column of the body, `diagramLane()` in `column-geometry.ts`: 1 016 px in the rail shape and 1 070 pinned, with a floor since #86 (`laneFloor()`, 999.04 px). This entry settles the word's three senses: the space between rows is **the gap**, the vertical run beside a card is **the gutter**, and *the lane a line crosses in under the band* (`STUB_LANE`, `wide-layout.ts`) is a lane qualified by a gap, not a gap named lane. | the wide composición · code vocabulary |
+| **the gap** | The space between two rows a route runs sideways in, `gapY()` in both layout modules; floored by rule 20 (`DESIGN.md` §20). | both drawings · code vocabulary |
+| **the gutter** | The vertical run beside a column where a long route climbs without crossing a card, `gutterX()` in both layout modules. | both drawings · code vocabulary |
+| **the parking band** | The row above the deepest row where operators at zero go — out of the depth stack, at the origin end of the Level axis, on their stub. It counts as a row (ADR-0008 §2.4). Look 8 found it reads as a row when it sits alone over its own chain; that is #101's. | the wide composición · document vocabulary |
+| **the unanchored card** | A card whose Level origin has scrolled off the body's left edge under the width floor: it drops its fill and its datum and keeps its figure, `originGone()` in `node-geometry.ts` (ADR-0008 §5). | the wide composición under the width floor · document and code vocabulary |
+
+---
+
 ## 4 · Terms deliberately *not* introduced
 
 - **No word for "the algorithm surface expanded".** It is not a mode and gets no name; it is the
-  main screen with nothing measured on it. Naming it would invite a switch.
+  wide composición, which the ranuras choose (#54/#58, ADR-0007). Naming it would invite a switch.
 - **No word for a disabled mode.** An unbuilt mode is absent from the switch, not greyed in it.
 - **No "artefact" as user-facing copy.** It stays as the term in these documents; the screen says
   `NOT A HARMONIC` with the frequency.
@@ -292,3 +313,19 @@ than applying it unilaterally: `--stale-*` already existed but there was no toke
 datum** stroke, because the datum was new in that round. **Session 2 applied it** —
 `--datum-ceiling-stroke` and `--datum-ceiling-color` are in both copies of the file, along with the
 five values §29 raised. No token name changed, then or since.
+
+**Identifiers** (`ui/src/app/panels/operator-diagram/`) — **applied in round 10** (#74, `d646903`],
+the comment sweep in the same commit:
+
+```
+laneY()   (wide-layout.ts)              → gapY()
+crossY()  (layout.ts)                   → gapY()      (the same object under two names — both took
+                                                       the glossary's word)
+laneX()   (layout.ts)                   → gutterX()
+diagramLane()                           → (unchanged — the surviving sense of "lane")
+```
+
+The sweep was **deliberate and complete**: ten sites in #74; `hopY()` untouched in both modules,
+because it does not collide; the `gapY()` comment in `layout.ts` kept on purpose as the pointer from
+the old names to the new; and `STUB_LANE` with its four lines in `wide-layout.ts` (#83) is the
+qualified sense — the lane a line crosses in under the band, §3b — and stays.

@@ -7,7 +7,8 @@ código; cuando el papel y la medida discrepen, manda la medida.
 
 El vocabulario es castellano y la pantalla habla inglés: la palabra que un término lleva en
 pantalla es una propiedad del término, no su sustituto, y se anota como _Pantalla_. La lista de
-esas palabras la fija `design_handoff/GLOSSARY.md` §6.
+esas palabras la fija `design_handoff/GLOSSARY.md` §6. Este archivo lleva lo que un usuario puede
+nombrar; cómo se construye el dibujo es de `design_handoff/GLOSSARY.md` §3b.
 
 ## Language
 
@@ -46,28 +47,29 @@ inactivo es un operador con Level 0, sea cual sea su posición.
 _Pantalla_: `CARR` / `MOD` / `ZERO` en el nodo; `CARRIERS · YOU HEAR THESE` / `MODULATORS · THEY COLOUR IT` / `AT ZERO · SILENT` en la leyenda.
 
 **Techo del patch**:
-El Level más alto que hay entre los ocho operadores, dibujado como una línea a la misma altura en
-los ocho nodos. No es del rol de ningún operador: es del patch, y por eso es lo único de la leyenda
-que no nombra un rol. Existe porque los patches reales agrupan sus operadores entre 71 y 99, donde
-ocho alturas absolutas se ven iguales; contra una línea compartida lo que se lee son los **huecos**,
-que son siete y son la comparación que importa. Es siempre el Level más alto leído, nunca una cifra
-fija.
+El Level más alto que hay entre los ocho operadores, dibujado como una marca en cada uno de los ocho
+nodos a la misma fracción de su pista, que se alinean en una regla donde las tarjetas comparten
+origen (ADR-0008 §2). No es del rol de ningún operador: es del patch, y por eso es lo único de la
+leyenda que no nombra un rol; lo que se lee contra él son los siete **huecos**. Es siempre el Level
+más alto leído, nunca una cifra fija.
 El techo es una **medida** y se calcula siempre; lo que se suprime es la línea, y se suprime por dos
 razones distintas que no hay que confundir. Sin nada leído no hay techo, porque no hay Level del que
 ser el más alto. Con los ocho leídos a cero sí hay techo y vale 0, y la línea tampoco se dibuja: no
 por falta de cifra, sino porque contra un suelo plano no hay huecos que hacer, y `THE LOUDEST
 OPERATOR IN THIS PATCH` estaría nombrando a uno callado.
-_Avoid_: techo fijo, máximo, 99
+_Avoid_: techo fijo, máximo, 99, línea única a través de los ocho
 _Pantalla_: sin palabra en el nodo —es una línea—; en la leyenda, `THE LOUDEST OPERATOR IN THIS PATCH`.
 
+**Relleno**:
+La capa luminosa cuya longitud por el eje que su composición declara es el Level: densa en el origen
+de ese eje y desvanecida hacia el extremo lejano (ADR-0008 §2.6).
+_Avoid_: degradado, gradiente con dirección, sombreado
+_Pantalla_: nada —es el relleno del nodo, no una palabra—.
+
 **Pista del relleno**:
-La escala contra la que se dibuja el Level: el interior del nodo menos un hueco constante arriba. El
-relleno **era** la tarjeta, así que un Level de 99 sobre 99 dejaba un uno por ciento por encima y el
-techo caía dentro del propio borde, donde no había nada que ver —que es el patch de arranque, y es
-lo primero que abre cualquiera (#67)—. El Level sigue siendo la altura del relleno, lineal y anclado
-en cero: lo que se ha separado de la cifra es el borde que hacía de tope. El hueco se mide en píxeles
-y nunca en porcentaje, porque un hueco proporcional cambia con la forma de la columna y vuelve a
-cerrarse en la composición donde la tarjeta es más pequeña.
+La escala contra la que se dibuja el Level: el interior del nodo menos un hueco constante en el
+extremo lejano del eje que lleva el Level en esa composición, en píxeles y nunca en porcentaje, para
+que un Level en lo alto de su rango deje todavía sitio donde dibujar el techo (ADR-0008 §2, #67).
 _Avoid_: margen, padding del relleno, hueco relativo
 _Pantalla_: nada —es donde la escala deja de estar, no algo que se dibuje—.
 
@@ -324,6 +326,14 @@ de causa y no de mecanismo: con las dos ranuras vacías, o con el pin echado, la
 La composición decide además cuál de los dos dibujos del algoritmo se ve, y por tanto cuál es el que
 enseña la topología por la posición (ADR-0007).
 _Avoid_: modo, vista, layout
+
+**Pliegue**:
+Lo que hace la composición ancha cuando no puede sostener sus hechos —*demasiado hondo para sus
+filas* o *demasiado estrecho para sus cinco hechos*—: pliega los hechos y nunca las posiciones. El
+operador conserva su fila, su orden y su sitio, y entrega la ratio, el glifo y la Hz a una banda que
+conserva la identidad, el Level y un sello, el más débil (ADR-0008 §4). Nada lo despliega hoy (#92).
+_Avoid_: colapso, compactar, ocultar
+_Pantalla_: nada.
 
 **Ranura**:
 Una de las **dos** posiciones fijas de la columna de cristal. Cada una tiene dentro una Vista viva —

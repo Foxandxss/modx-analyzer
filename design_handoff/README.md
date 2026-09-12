@@ -240,11 +240,13 @@ for.
   - *Modulator*: `border: 1.5px solid var(--modulator)`, `border-radius: 5px` (live corner), background
     `#0a1013`, glow `0 0 26px -7px rgba(88,200,245,.75)`.
   - *Level 0*: `border: 1.5px dashed var(--inert)`, no fill, background `#070a0b`, figures at `#3f4d4a`.
-  - *Level fill*: an absolute layer anchored to the bottom, `height: Level%`,
-    `background: linear-gradient(to top, <role> .46–.50, <role> .04)`, **linear 0–99**. **Level IS the
-    fill height**; the figure only confirms.
-  - *The ceiling datum*: one 2 px dashed line across all eight nodes at the patch's highest Level. Real
-    patches cluster between 71 and 99, so the eye reads **the gaps**, not the heights.
+  - *Level fill*: the axis is the composición's — height in the grid, length in both wide boxes —
+    **linear 0–99**, dense at the origin and faint at the far end (`DESIGN.md` §9; ADR-0008 §2.1,
+    §2.6). **Level IS the fill's length**; the figure only confirms. The stop pairs and their reason
+    are under *Design Tokens* below.
+  - *The ceiling datum*: a repeated mark on identical boxes at the patch's highest Level, at the same
+    fraction of the track, aligned into a rule where cards share an origin (ADR-0008 §2). Real
+    patches cluster between 71 and 99, so the eye reads **the gaps**, not the lengths.
   - Content: `OP1` label (mono 11 px) + role (`CARR` / `MOD` / `ZERO`, 8 px, tracking .14em) on top;
     below, the Level figure (mono 25 px), the ratio and the **spectral form as a glyph** (≤5 strokes at
     18×14 — never a name, because a name ellipsises), and the operator's Hz stamped `PREDICTED`.

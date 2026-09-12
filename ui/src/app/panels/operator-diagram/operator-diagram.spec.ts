@@ -1283,7 +1283,7 @@ describe('OperatorDiagram', () => {
     // of an operator at zero, its drop to the bus, the FB 0 arc (#57), the stub
     // and the inert contour — and `AT ZERO · SILENT` names it. The patch's
     // ceiling has its own, `--datum-ceiling-*`, and without the fourth entry it
-    // is a line crossing all eight nodes that does not say what it is of.
+    // is a mark on every node that does not say what it is of.
     const legend = host.querySelector('.legend');
     expect(legend?.querySelectorAll('.legend__swatch--inert')).toHaveLength(1);
     expect(legend?.querySelectorAll('.legend__swatch--datum')).toHaveLength(1);

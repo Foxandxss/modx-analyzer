@@ -339,7 +339,7 @@ comb from mains hum from aliasing.
 | fact | how it is drawn |
 |---|---|
 | label + role | the node's own shape — `--radius-carrier` fully curved, `--radius-modulator` live corner, dashed outline at zero |
-| Level | fill height + the figure in mono |
+| Level | fill length along the axis its composición declares + the figure in mono |
 | ratio | figure |
 | spectral form | a glyph, never a name |
 | the operator's Hz | figure, stamped `PREDICTED` |
@@ -349,9 +349,11 @@ that comes out: it has room on the 128 px card of ALL EIGHT, where comparing env
 point of the screen, and a full panel in the operator editor. On the main screen it was the fact that
 pushed the other five into ellipsis.
 
-**Level → fill height is linear 0–99.** Any expanded or non-linear mapping makes the fill height stop
-meaning the figure, which is the spreadsheet trap in a new costume: a shape that lies is worse than a
-number on its own.
+_(Retired by #80 and #93; the live rule is ADR-0008 §2's.)_ **Level → fill length is linear 0–99,
+along the axis its composición declares**: the node's height in the narrow grid, its length in both
+wide boxes — the stacked node and the batten alike (ADR-0008 §2.1). Any expanded or non-linear
+mapping makes the fill stop meaning the figure, which is the spreadsheet trap in a new costume: a
+shape that lies is worse than a number on its own.
 
 **The fill is measured against a track, not against the card.** _(Corrected by the build, #67.)_ This
 rule was doing two jobs at once and only one of them was load-bearing. "Level is the height of the
@@ -362,13 +364,15 @@ the fill left one percent of the card above it, so the ceiling datum landed insi
 2 px border. On `Init Normal (FM-X)` — `99 · 14 · 16 · 99 · 99 · 99 · 9 · 53`, the patch the app
 boots into and the first thing anyone opens — there was nothing on screen to see.
 
-So the fill's scale is the card's interior less a constant inset at the top, and nowhere else. The
-inset is in pixels and never a share: headroom that scaled with card height would give the datum
+So the fill's scale is the card's interior less a constant inset **at the far end of the carrying
+axis**, and nowhere else: under the ceiling in the grid, past the tip in the wide composición. The
+inset is in pixels and never a share: headroom that scaled with the card would give the datum
 different clearance in every column shape, and close back up at the composition where the card is
-smallest. It is earned against the smallest card the layout can produce — the wide drawing at
-algorithm 66's depth, at the body's floor — and recomputed from those constants rather than written
-down, so that folding the deepest algorithms (#69) or moving the floor again re-derives it instead of
-leaving a number about a card that no longer exists.
+smallest. It is **8 px in the grid and 7 px in the wide composición**, each earned against the
+narrowest card of its composición — `levelTrackInset()` over `narrowestGridCard()` and
+`narrowestWideCard()`, the wide card being the 111 px card at the width floor (ADR-0008 §5) — and
+recomputed from those constants rather than written down, so that moving a floor again re-derives it
+instead of leaving a number about a card that no longer exists.
 
 **This is a correction, not a precedent.** The handoff is edited here for the same reason as in
 `46a041c`: the build proved a sentence wrong. What is being separated is a claim from an accident
@@ -377,11 +381,30 @@ narrower and harder to misread. A change that reversed §20.2 rather than sharpe
 ADR, and this one deliberately does not.
 
 **The ceiling datum.** Real patches cluster their operators between 71 and 99 — the running build's
-patch reads `90 · 90 · 71 · 90 · 90 · 85 · 90 · 99`, six of the eight identical to the eye — so eight
-fills each with their own private baseline are unreadable. One shared **ceiling datum**, a 2 px dashed
-line drawn across all eight nodes at the patch's highest Level, turns eight absolute heights into
-seven readable **gaps**. 71 against 99 is 28 % of 108 px: 30 px of daylight, which is plenty once
-there is a line to measure it from.
+patch reads `90 · 90 · 71 · 90 · 90 · 85 · 90 · 99`, six of the eight identical to the eye — so
+eight fills each with their own private baseline are unreadable. One shared **ceiling datum** — the
+patch's highest Level, drawn in every node at the same fraction of an identical track — turns eight
+absolute lengths into seven readable **gaps**. It is **a repeated mark on identical boxes**, one
+origin and one scale, and a common rule only where the cards are stacked and share an origin: it
+reads per node in the grid and wherever the wide drawing puts cards side by side, and where the wide
+drawing stacks them in a column the marks line up into a rule the eye can sight along (ADR-0008 §2).
+At real pixels on the wide composición's narrowest card — a 113 px card, a 102 px track, 1.02 px per
+Level point — 99 against 96 is 3.1 px of surface before the rule, which is a notch once there is a
+rule to measure it from.
+
+Three boxes, and each is **told** its axis — declared as `DiagramLayout.levelAxis` by its layout
+module (ADR-0008 §2.1) and never read off the box's proportions, because the wide boxes are
+`viewBox` units the panel stretches and a window resize would otherwise turn a measurement round
+with nothing failing:
+
+| box | when | Level runs along |
+|---|---|---|
+| the grid node | narrow composición, always | its **height** |
+| the wide stacked node | wide, 3 rows or fewer — 64 of the 88 | its **length** |
+| the batten | wide, 4 rows or more — 24 of the 88 | its **length** |
+
+No unit figure for either wide box is written here: the narrowest card is recomputed from the
+layout's own constants (ADR-0008 §9), and a copy would be a second declaration of a derived number.
 
 **The spectral form is a glyph and never a name.** At 18 × 14 what survives is at most five strokes,
 which is the seven-way selector's drawing with its detail decimated: one stroke = Sine, evenly spaced
@@ -411,9 +434,9 @@ is not built, so the node body opens nothing either; a caption naming a path no 
 same lie as a disabled mode button (§3.1), one register quieter. The 44 px zone is what becomes the
 control when the editor lands — not the 22 px mark — and the line ships in that same commit.
 
-**The legend has four entries, not three.** The ceiling datum is a 2 px dashed line crossing all eight
-nodes with nothing on it to say what it is of, so it gets its own swatch and its own words beside the
-carrier, modulator and level-0 samples: `THE LOUDEST OPERATOR IN THIS PATCH`.
+**The legend has four entries, not three.** The ceiling datum is a mark on every node with nothing
+on it to say what it is of, so it gets its own swatch and its own words beside the carrier,
+modulator and level-0 samples: `THE LOUDEST OPERATOR IN THIS PATCH`.
 
 ---
 
@@ -455,36 +478,59 @@ plays no part: a capture landing moves nothing, and there is a test that says so
   one row** (algorithm **1**, eight carriers on the bus), 7 operators of one branch on one row
   (algorithm **68**) and 8 branches side by side (again the **1**).
 
-  **The width survives; the height does not.** Eight columns at 142 units of the 1232 is about 119 px
-  of real panel, which clears the 118 px the node's five facts are fitted to. But eight rows of a
-  120 px node is 960 px of the 400 there are, so either the rows or the node has to give — and it is
-  the node. **The row pitch is what the algorithm's own depth leaves, and the node takes it**; below
-  the height the five facts need in order to stack, the node **lays them in a row** and is given the
-  width to do it. Under three rows it stops growing, three being the narrow composition's own row
-  count, and the room a shallow algorithm does not use is air rather than eight nodes as tall as the
-  panel. **The layout decides this and not a CSS container query**: the layout is the only thing that
-  knows how many rows had to share the height, and one rule in units beats a rule in units plus a
-  second one in pixels that can disagree about the same node.
+  _(Retired by #82; the live rule is ADR-0008 §4's.)_ **The card keeps its width, because the width
+  is the measurement; the gap between rows comes out of the height and gains a floor** (ADR-0008
+  §2.2). Eight rows of a 120 px node is 960 px of the 400 there are, and what gives is neither a row
+  nor the card's length: a drawing that cannot hold its facts **folds its facts and never its
+  positions**. One mechanism, two triggers, a `||` at `foldsFacts()` judged on the unfolded drawing
+  so the decision never rests on its own consequence (ADR-0008 §4):
+
+  - *too deep for its rows* — the gap between rows has fallen under what a gap has to hold, its
+    arrowhead plus a visible segment (rule 20). The threshold is derived, `rowGapFloor()`, and
+    evaluated at the body's floor, so the floor and the threshold cannot chase each other.
+  - *too narrow for its five facts* — the card is narrower than the grid card the same five facts
+    are known to fit, `fittedCardWidth()`: a comparison and not a threshold, so both sides move
+    together and neither can be tuned until an algorithm folds.
+
+  Who folds, forced by number in `wide-layout.spec.ts`: `rows ≥ 6` is exactly {37, 66}; the **1**
+  folds at the factory window in both lanes; and since #83 a parked operator counts as a row, so the
+  55 folds with one. The band keeps identity, the Level at full length against the same rule, and
+  **one** stamp, the weakest of the ones behind it. The fold does not remove the legibility floor:
+  folding the facts does not widen the card by a pixel (ADR-0008 §5). Under three rows the card
+  stops growing, three being the narrow composition's own row count. **The layout decides this and
+  not a CSS container query**: the layout is the only thing that knows how many rows had to share
+  the height, and one rule in units beats a rule in units plus a second one in pixels that can
+  disagree about the same node. No press unfolds the band today — that is #92 — and nothing here
+  promises one.
 
   **`1232` is the drawing's coordinate space, not its width on screen.** The figures column stays in
   this composition — it is the one thing that says what a capture would fill (§10.1), and `before any
   capture` is exactly the state that produces it — so 1232 + 208 does not fit the 1280 the viewport is
-  fixed at. What the algorithm takes is the two live views' room and no more, which is 1 070 px; the
-  1232 × 400 viewBox stretches into it.
-- **Role reads from position, and shape confirms it.** At 700 px the node had to carry its own role;
-  with room the layout carries it. **Who is a carrier: it touches the output bus** — that is the
-  definition, drawn, and it has **no exception**: a test over the transcribed table asserts that in
-  all 88 the operators at chain depth 0 are exactly the carrier list. **Who feeds whom: one downward
-  read** — every arrow points down, depth is height. **Who is at zero: parked to the right on a dashed
-  stub**, off the branches, drawn and never deleted.
-  The round-3 vocabulary survives underneath, so there is nothing new to learn.
-- **The stub ends nowhere, and a parked operator's routes are not drawn at all.** The narrow grid
-  draws them cut; here the node is off the branches, so a line from the stub back into the grid would
-  cross the whole drawing to claim a path that carries nothing. What it gets is `8f`'s own drawing: a
-  dashed drop closed by a short bar. **It never reaches the bus and never takes the bus row**, because
-  touching the bus is the entire definition of a carrier in this composition and a dead end touching
-  it would put a hole in the one thing the drawing says. The stub takes as many columns as it needs to
-  keep the row pitch, and the total never passes eight.
+  fixed at. What the algorithm takes is the two live views' room and no more — 1 016 px in the rail
+  shape, 1 070 pinned, the shapes listed above — and the 1232 × 400 viewBox stretches into it.
+- _(Retired by #83; the live rule is ADR-0008 §2.4–2.5's.)_ **Role reads from position, and shape
+  confirms it.** At 700 px the node had to carry its own role; with room the layout carries it.
+  **Who is a carrier: it touches the output bus** — that is the definition, drawn, and it has **no
+  exception**: a test over the transcribed table asserts that in all 88 the operators at chain depth
+  0 are exactly the carrier list. **Who feeds whom: one downward read** — every arrow points down,
+  depth is height. **Who is at zero: out of the depth stack** — it has no depth in the chain, so it
+  is not on that axis — into a band above the deepest row at the origin end of the Level axis, on
+  its dashed stub, drawn and never deleted (ADR-0008 §2.4). The round-3 vocabulary survives
+  underneath, so there is nothing new to learn.
+- **The stub ends nowhere, and a parked operator's routes are drawn one way and not the other.** A
+  route **into** a parked operator is drawn, inert — `--inert` on `--dash-inactive`, the ink `FB 0`
+  has used since #57 — onto the bar that closes its stub, and it is the only line in the drawing
+  that climbs; a route **out of** one is not drawn, in the wide composición only — the narrow grid
+  draws them cut (ADR-0008 §2.5). Two facts, two predicates, `sends()` and `deadEnds()`. The reason
+  is geometric and not audibility: parking has moved the operator onto its bar, so an inbound edge
+  lands where it now lives and an outbound edge would run back into the chain it was removed from.
+  The cost is stated: an outbound route is a documented route the drawing does not show, acceptable
+  because the drawing is of the algorithm as configured. What the stub gets is `8f`'s own drawing: a
+  dashed drop closed by a short bar. **It never reaches the bus and never takes the bus row**,
+  because touching the bus is the entire definition of a carrier in this composition and a dead end
+  touching it would put a hole in the one thing the drawing says. Parking costs **a row, not
+  columns**: the stack closes behind the operator that leaves and the band takes the row it left,
+  one for any number of parked, so eight rows stay the deepest drawing there is (ADR-0008 §2.4).
 - **`8f`'s annotations are the sheet teaching its own reader, and none of them is app copy.**
   `ABOVE THE BUS — THESE FEED SOMEBODY`, `DOWN ON THE BUS — THESE ARE THE CARRIERS`, `STUB ENDS
   NOWHERE — AT ZERO, ON NO BRANCH` and `THE OUTPUT BUS — TOUCHING IT IS WHAT MAKES AN OPERATOR A
@@ -898,12 +944,16 @@ mode" and no "desktop mode" to maintain separately. The left hand is on the MODX
 
 1. Carrier and modulator are told apart **by shape before colour**: `--radius-carrier` (fully curved) vs
    `--radius-modulator` (live corner). Never two nodes with the same radius and different colours.
-2. **Level is the height of the luminous fill** inside the node, linear 0-99, against the shared ceiling
-   datum (§9). The mono figure is confirmation. Level 0 is not painted grey: dashed outline, no fill,
-   and the route leaving it dashed too. The fill's scale is the node's **track** — its interior less a
-   constant inset at the top — and not the card itself, so that a Level at the top of the range still
-   leaves the ceiling datum somewhere to be drawn (§9, #67). The claim is unchanged by that; what
-   moved is that a border had been doubling as the top of a measurement.
+2. **Level is the length of the luminous fill along the axis its composición declares** — its height
+   in the narrow grid, its length in both wide boxes, the stacked node and the batten alike — linear
+   0-99, against the shared ceiling datum (§9, ADR-0008 §2.1). The axis is never inferred from the
+   box's proportions. The mono figure is confirmation. The fill's scale is the node's **track** —
+   its interior less a constant inset at the far end of the carrying axis, `levelTrackInset()` — and
+   not the card itself, so that a Level at the top of the range still leaves the ceiling datum
+   somewhere to be drawn (§9, #67); and **one Level point is never drawn smaller than 1 px on the
+   axis that carries it** (`PIXELS_PER_POINT = 1`, `node-geometry.ts`; ADR-0008 §5). Level 0 is not
+   painted grey: dashed outline, no fill, and in the grid the route leaving it dashed too — the wide
+   composición is rule 19's.
 3. A continuous parameter **has no `input type=number`**. A circular knob (vertical drag), a bipolar
    control with a visible centre (`--track-bipolar`), or a draggable point on the curve. The number is
    shown next to the control, never in its place.
@@ -974,6 +1024,28 @@ mode" and no "desktop mode" to maintain separately. The left hand is on the MODX
     which is the test. The token's comment used to call 10 px an absolute floor with nothing below it,
     and that comment was the thing that was wrong: it is corrected in `design-tokens.css` rather than
     the design being bent to match it.
+
+**The drawing's own labels and lines**
+
+18. **A label is never painted over by a node.** It is anchored at its near edge one bulge past the
+    box and aligned away from it, never centred over an edge; where a neighbour stands to the right
+    in the same row it is lifted into the gap above (`.label` in `operator-diagram.scss`;
+    `feedbackArc()` in `wide-layout.ts`). A figure the ring went and read may not be half-covered by
+    the drawing it belongs to (#68).
+19. **A documented route is always drawn where it can be, and the ink says whether it carries** —
+    solid when signal passes, inert dash when not, the vocabulary `FB 0` already uses (#57). A route
+    *into* an operator parked at zero is drawn inert onto its stub bar; a route *out of* one is not
+    drawn in the wide composición. **Two facts, two predicates** (`sends()`, `deadEnds()`). The
+    asymmetry is **geometric**: parking has moved the operator onto its bar, so inbound edges land
+    where it lives and outbound edges would run back into the chain it was removed from. The cost is
+    stated: an outbound route is a documented route the drawing does not show, acceptable because
+    the drawing is of the algorithm as configured (ADR-0008 §2.5). A live modulator into a silent
+    destination must never read as less connected than a silent operator (#70).
+20. **Every gap a line lives in holds its arrowhead plus a visible segment.** The threshold is
+    derived, not chosen: `rowGapFloor() = ARROWHEAD + VISIBLE_SEGMENT / yScale`, evaluated at the
+    body's floor, and the depth at which the gap can no longer be floored is where the drawing folds
+    (§10). **The visible segment is 6 px, chosen and looked at** — look 4, ADR-0008 §8 — with 0.06
+    px of margin at five rows (ADR-0008 §4).
 
 ## 21 · What I decided **not** to do
 

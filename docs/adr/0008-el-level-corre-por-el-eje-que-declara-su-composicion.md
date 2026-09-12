@@ -19,7 +19,9 @@ de la mirada 3 de §8 y no de un argumento; §9 lo anota con lo que no se tomó 
 una; son dos, y la segunda es la lectura literal del primer punto de su §3, que el pliegue (§4)
 retira; la cabecera nombra las dos y §6 gana la entrada que faltaba · **Enmendada el 2026-09-11 por
 #102**: la cola de §6 nombraba una copia viva de la dirección retirada y hay cinco; las lista con lo
-que cubre a cada una, y las tres que no tiene ningún ticket son #103
+que cubre a cada una, y las tres que no tiene ningún ticket son #103 · **Enmendada el 2026-09-12 por
+#87**: los documentos están a la par del dibujo —`DESIGN.md` §9, §10 y §20, `GLOSSARY.md` §3, §3b,
+§4 y §6, `CONTEXT.md`—; §1, §4, §6 y §9 dejan de nombrar a #87 en futuro
 
 Esta ADR es la **dueña de la lista de verificación** de la ronda (§8). `design_handoff/HANDOFF.md`
 y la hoja de sondas `Round10-operator-diagram.dc.html` apuntan aquí y no la repiten; #88 toma las
@@ -59,10 +61,10 @@ correcto de uno de ellos que se lleva un tercio del rango del otro—.
 sido una línea a través de los ocho nodos**, en ninguno de los dos dibujos. Es una marca por nodo
 (`.node__datum`) al mismo desplazamiento relativo: en la rejilla 3 × 3 eso son tres alturas
 distintas, en el dibujo ancho eran ocho. `DESIGN.md` §9 prometía *una línea de 2 px a través de los
-ocho*, `GLOSSARY.md` lo repetía, y `CONTEXT.md` lo repite hoy («una línea a la misma altura en los
-ocho nodos»). El test que lo cubría era `element-exists`: ocho marcas en el DOM, verdes durante toda
-la vida del defecto. *Ocho marcas en el canto no se alinearían en una regla* no era una objeción a
-girar el eje; era una descripción, sin nombre, de lo que ya se enviaba.
+ocho*, `GLOSSARY.md` lo repetía, y `CONTEXT.md` lo repitió hasta que #87 lo corrigió («una línea a
+la misma altura en los ocho nodos»). El test que lo cubría era `element-exists`: ocho marcas en el
+DOM, verdes durante toda la vida del defecto. *Ocho marcas en el canto no se alinearían en una
+regla* no era una objeción a girar el eje; era una descripción, sin nombre, de lo que ya se enviaba.
 
 ## 2 · La decisión
 
@@ -281,8 +283,8 @@ Los dos son un `||` en el sitio que dibuja (`foldsFacts()`, `wide-layout.ts`), j
 dibujo **sin plegar** para que la decisión no se apoye en su propia consecuencia:
 
 - **Demasiado hondo para sus filas.** El hueco entre filas ha caído por debajo de lo que un hueco
-  tiene que sostener: su punta de flecha más un tramo visible (regla 20 del `DESIGN.md` que #87
-  escribe). El umbral se **deriva** y no se elige: `rowGapFloor() = ARROWHEAD + VISIBLE_SEGMENT /
+  tiene que sostener: su punta de flecha más un tramo visible (regla 20 del `DESIGN.md`, escrita en
+  #87). El umbral se **deriva** y no se elige: `rowGapFloor() = ARROWHEAD + VISIBLE_SEGMENT /
   yScale`, evaluado **en el suelo del cuerpo**, que es lo que impide que el suelo y el umbral se
   persigan: el suelo es el lienzo más pequeño que la app dibuja, así que un hueco que lo cumple ahí lo
   cumple en cualquier ventana. Evaluado a la altura real, una ventana más alta desplegaría el 37 y un
@@ -493,7 +495,7 @@ medida.
 Y **cinco copias vivas de la dirección retirada**, que la afirman como si fuera la de hoy. En todas,
 la build y el papel discrepan y la build gana:
 
-- **`DESIGN.md` §10** (`:474`), «aparcado a la derecha sobre un cabo punteado» — hasta #87.
+- **`DESIGN.md` §10** (`:474`), «aparcado a la derecha sobre un cabo punteado» — corregida en #87.
 - **`ADR-0007:88`**, el cuarto punto de su §4. Texto de decisión, retirado por nombre: §2.4 lo abre
   citándolo y la lista de arriba lo registra. Quien lea cualquiera de las dos ADR se encuentra la
   retirada; quien lea sólo el 0007 se lo encuentra sin marcar.
@@ -805,13 +807,16 @@ con el MODX conectado; #90 la lista como debida.
 
 - Toda frase de la app o de los documentos que diga hacia dónde corre el Level tiene que decir **en
   qué composición**, y ninguna puede leerlo de la forma de la caja. Las entradas *Techo del patch* y
-  *Pista del relleno* de `CONTEXT.md` están hoy mal en los dos sentidos —una línea a través de los
-  ocho; un hueco fijo *arriba*— y #87 las corrige sin ninguna palabra de dirección en ninguna de las
-  dos. #93 le añade a #87 una **tercera**, la tinta del relleno —densa en el origen del eje que su
-  composición declara, desvanecida hacia el extremo lejano; ni *abajo* ni *a la izquierda*—, con el
-  sustantivo por elegir, y **bloqueada en #93**: en el árbol anterior a #93 la frase era falsa en la
-  ancha, y #93 no hace a las dos entradas viejas más falsas de lo que ya eran, que es por lo que la
-  deja a #87 en vez de tocar `CONTEXT.md` con el código.
+  *Pista del relleno* de `CONTEXT.md` estaban mal en los dos sentidos —una línea a través de los
+  ocho; un hueco fijo *arriba*— y **#87 las corrigió (2026-09-12)** sin ninguna palabra de dirección
+  en ninguna de las dos. La **tercera** que #93 le añadió —la tinta del relleno, densa en el origen
+  del eje que su composición declara y desvanecida hacia el extremo lejano; ni *abajo* ni *a la
+  izquierda*— aterrizó como *Relleno*, y el pliegue como *Pliegue*, con sus dos disparadores bajo un
+  solo nombre. Lo que un usuario no nombra —el listón, el nodo apilado ancho, el carril, el hueco,
+  la banda del aparcado, la tarjeta desanclada— es de `GLOSSARY.md` §3b y no de `CONTEXT.md`. #93
+  se la dejó a #87 en vez de tocar `CONTEXT.md` con el código porque en el árbol anterior a #93 la
+  frase era falsa en la ancha, y #93 no hacía a las dos entradas viejas más falsas de lo que ya
+  eran.
 - Hasta #93 la luz del techo en la ancha no era una cantidad —~20 en la cabeza de la barra y ~89 en
   su pie a lo largo de una misma regla— y las miradas 2 y 3 no eran preguntas bien planteadas. #93
   es lo que las hace contestables, y no sólo lo que pone la tinta a lo largo del eje; por eso #88 las

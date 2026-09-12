@@ -473,7 +473,10 @@ export interface OperatorView {
   /** 1-8. */
   readonly operator: number;
   readonly role: PolledValue<OperatorRole>;
-  /** 0-99. It is drawn as the height of the fill; the number only confirms it. */
+  /**
+   * 0-99. Drawn as the fill's length along the axis its composición declares
+   * (ADR-0008 §2.1); the number only confirms it.
+   */
   readonly level: PolledValue<number>;
   /** The nominal ratio. Absent in `fixed` mode, where the pair is not a ratio. */
   readonly ratio: PolledValue<number>;
