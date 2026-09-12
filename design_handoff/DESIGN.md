@@ -419,29 +419,33 @@ carrier, modulator and level-0 samples: `THE LOUDEST OPERATOR IN THIS PATCH`.
 
 ## 10 · The main screen when there is no capture on it
 
-The spectrum and harmonics panels say nothing until a capture exists, while the algorithm is legible
-the moment a patch loads. The two panels that are empty most of the time were holding the space of the
-one that is always full. The answer is not to delete the spectrum and not to add a mode:
-**the main screen is two compositions of the same elements, and which one you get is decided by
-whether a capture exists.**
+_(Retired by #54 and #58; the live rule is ADR-0007's.)_ The spectrum and harmonics panels say
+nothing until a capture exists, while the algorithm is legible the moment a patch loads. The answer
+is not to delete the spectrum and not to add a mode: **the main screen is two compositions of the
+same elements, and the two ranuras decide which one you get.** The glass column holds two ranuras,
+each of which holds one of the four live views or nothing (`composition.ts`); the composition is
+wide when both are empty or when the pin is down, and narrow otherwise. Whether a capture exists
+plays no part: a capture landing moves nothing, and there is a test that says so.
 
 - **A panel that expands, not a surface of its own.** A separate screen would mean navigating away
-  from the signal views to see the topology, and the main screen's whole justification is watching the
-  waterfall while you turn a knob. So the algorithm stays in place and takes the slack: **1232 × 400
-  when nothing is measured, back to 700 px when there is a capture.** Same panel, same component, two
-  sizes.
-- **Automatic, with one pin.** Automatic because the argument for the trade *is* the empty-panel
-  argument, and a manual switch would make the user do bookkeeping the app can do from state it
-  already holds. A capture brings the panels back over `--dur-settle` (420 ms), slow enough to read as
-  a consequence of the press. **`KEEP IT BIG`** in the algorithm's own header pins the big composition
-  and persists — in `localStorage`, behind a `try`, because it is a UI preference and not data; a
-  webview that refuses storage costs the pin and nothing else. Risk noted in `CONCERNS.md` §30.
-- **Shrinking is immediate; regrowth waits.** The panels come back the instant a capture lands,
-  because that is the consequence of the press and should read as one. Growing back after a
-  Performance change **waits for the change flash and the reread strip to finish** rather than racing
-  them — §30's conditional, now decided. Two things are already on screen at that moment and a panel
-  resizing under them would be a third, with nothing to say which of the three was about which. Both
-  ends terminate on their own, so the wait cannot hang.
+  from the signal views to see the topology, and the main screen's whole justification is watching
+  the waterfall while you turn a knob. So the algorithm stays in place and takes what the column
+  leaves. The column has **three shapes** (`column-geometry.ts`): `ranuras` — the narrow
+  composition, the diagram at 700 px as the 3 × 3 grid; `rail` — both ranuras empty, the column
+  collapsed to a 52 px handle and the diagram at 1 016 px; `gone` — the pin down, no column at all
+  and the diagram at 1 070 px of the 1 280. `wide()` is `shape() !== 'ranuras'`, never "no capture".
+  Same panel, same component, two drawings — the grid is ADR-0007's.
+- **The ranuras decide, with one pin.** The factory pair is `SCOPE` and empty, so the app opens
+  **narrow**; the wide composition is the one you ask for, by emptying both ranuras or by pressing
+  **`KEEP IT BIG`** in the algorithm's own header. The pin is a pin and not a mode: it forces the
+  wide composition without touching the stored pair, and letting it up restores the pair exactly. It
+  persists — in `localStorage`, behind a `try`, because it is a UI preference and not data; a
+  webview that refuses storage costs the pin and nothing else — and the pair persists on the same
+  path. The risk the retired rule carried is `CONCERNS.md` §30, marked retired there.
+- **Nothing moves that the pianist did not move.** The column's move runs over `--dur-settle`
+  (420 ms), and it is always a press — on a ranura's chooser, a rail handle or the pin — that causes
+  it. A capture landing and a Performance change move nothing; the retired rule's *regrowth waits*
+  has no successor, because there is no regrowth.
 - **Sized by the worst case, which is now measured rather than assumed.** Drawability was never in
   question — the MODX draws all 88 algorithms on a smaller screen. What varies is room, and the bound
   this section used to assume (**up to 6 depth levels with up to 4 parallel branches at one level**,
@@ -1063,8 +1067,8 @@ for them is gone: the token file and the prose agree. See `CONCERNS.md` §29, re
 ## 23 · Viewport
 
 **1280 × 800 CSS px at 150 %**, ~1280 × 740 usable. Unchanged, and every screen in this folder is
-authored to it — including the algorithm surface of §10, which fits 1280 and takes the full body width
-when nothing is measured.
+authored to it — including the algorithm surface of §10, which fits 1280 and takes what the ranuras
+leave it (ADR-0007).
 
 The question of moving the target to 125 % (1536 × 960, roughly 40 % more area) is **deferred by the
 owner**. Nothing in the current design assumes extra room, so nothing has to be redrawn when that comes

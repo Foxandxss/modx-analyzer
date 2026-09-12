@@ -172,8 +172,8 @@ interface LineView {
  *
  * At 700 px the node carries its own role, because there is no room for the
  * layout to carry it: the eight stand in a depth-sorted 3 × 3 grid (`layout.ts`)
- * and the shape is what says who is a portadora. With the width the algorithm
- * takes when nothing is measured, **position says it instead** — the bottom row
+ * and the shape is what says who is a portadora. With the width the ranuras
+ * give it (ADR-0007), **position says it instead** — the bottom row
  * is the output bus, every arrow points down, and an operator at zero leaves the
  * depth stack for a band above it, keeping the stub that ends nowhere and keeping
  * the routes that arrive at it (`wide-layout.ts`). The shape survives

@@ -229,7 +229,14 @@ height stop meaning the figure, which is the spreadsheet trap wearing a new cost
 baseline. One shared **ceiling datum** turns eight absolute heights into seven readable gaps. Drawn in
 `8c`, written up as `DESIGN.md` §9.
 
-### 30 · The algorithm swap is automatic — and here is the risk I am taking
+### 30 · The algorithm swap is automatic — and here is the risk I am taking — **retired by #54/#58**: the swap is not automatic; the ranuras decide, ADR-0007
+
+**The decision below was retired by #54 and #58, and the risk it names no longer exists.** The
+composición is chosen by the two ranuras — wide when both are empty or the pin is down, narrow
+otherwise — and a capture landing moves nothing, so the layout never moves under a press of
+`CAPTURE` and there is no regrowth on a Performance change to wait on. `KEEP IT BIG` survives as a
+pin, not a mode. The live rule is ADR-0007's; what follows is the record of what was decided then,
+unedited.
 
 Decided: **automatic on "nothing measured yet", with one pin.** Not a mode (a mode needs a switch, a
 switch needs a home, and the whole argument for the trade is that the empty panels should not need
@@ -461,8 +468,8 @@ algorithm exceeds. There are no ~80 px for the eight AEGs; there were −560 px 
 ### 32 · Viewport · **deferred by the owner**
 
 Left open at the owner's request, and not revisited in round 9. The target stays **1280 × 800** and every
-piece is authored to it, including the algorithm surface, which fits 1280 and takes the full body width
-when nothing is measured. **Nothing assumes extra room, so nothing has to be redrawn when this is
+piece is authored to it, including the algorithm surface, which fits 1280 and takes what the ranuras
+leave it (ADR-0007). **Nothing assumes extra room, so nothing has to be redrawn when this is
 decided** — which is why it was safe to leave open rather than settle by default.
 
 The argument, kept on file for when it comes back: every request in round 8 was a request for room, and

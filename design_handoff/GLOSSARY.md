@@ -65,6 +65,7 @@ came from.
 | current (es) | new (en) | what it means | where |
 |---|---|---|---|
 | `NOTA SOST.` | **NEEDS A HELD NOTE** | The capture window is 1.486 s of continuous audio, so the note has to still be sounding for all of it. Written as the condition, not the noun — it tells you what to do. | under the CAPTURE button; player state 3 |
+| — | **n HELD** | The build's own word (#55), with no Spanish precursor: the count of distinct pitches down, counted as the Nota viva counts them (one key once in Multi), shown once `NEEDS A HELD NOTE` is satisfied. `n` is the count. | under the CAPTURE button while ≥ 1 note is held; player state 3 |
 | `BARRIDO` | **SWEEP** | Write a parameter at N values, capture at each one, and plot each harmonic's amplitude against the parameter. The plot **is** the Bessel functions, measured. | `5b`; the `SWEEP 0→99 IN 8 STEPS` button in A/B |
 | `ARTEFACTO` | **NOT A HARMONIC** | A partial that is not at `\|fc ± k·fm\|` — so it is not the FM the app is explaining. It is marked, never hidden, and never counted as a harmonic. The chip is useless without its frequency: the Hz is what tells a generator comb from mains hum from aliasing. | spectrum panel, top right: `NOT A HARMONIC · 2756 Hz` |
 | `PÁNICO` | **HUSH** | All Sound Off + All Notes Off + 2 048 explicit Note Offs. Touches no parameter. **Not `PANIC`** — the running build already renamed it `CALLA`, and that was the right instinct: *panic* names the user's emotion, while every other failure in this app names what happens. `HUSH` is imperative, fits 56 px, and says the outcome. (`SILENCE` is the alternate if `HUSH` reads too soft.) | the one octagon, far right of every header |
@@ -203,6 +204,7 @@ INVALIDADO                              → (dropped: dash in kept outline)
 MIRAR · 30 fps                          → LIVE · 30 fps
 MEDIR · 65536                           → CAPTURE · 65536
 NOTA SOST.                              → NEEDS A HELD NOTE
+— (the build's own word, #55)           → n HELD
 ÚLTIMA MEDIDA                           → LAST CAPTURE
 ANCLA                                   → ANCHOR
 ANCLA · 1 Hz · 31 00 00                  → (removed from header; lives in the check screen)

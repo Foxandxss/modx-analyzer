@@ -78,7 +78,7 @@ meant, in every document and in the pieces.
 | `8c` | the operator node gets its bars back, keeps a **linear 0–99** fill against one shared **ceiling datum**, draws the spectral form as a glyph instead of a name, drops the miniature AEG (six facts in a five-fact box), and grows **the corner** — the visible path to the operator editor |
 | `8d` | the measured column before the first capture: a **contract**, not a hole |
 | `8e` | the **scope contract** in writing (which period, how many cycles, what it draws when it cannot lock) and the waterfall's hardcoded prose caption **removed** |
-| `8f` | the algorithm becomes the primary surface — 1232×400 — **automatically** whenever nothing is measured, with `KEEP IT BIG` to pin it |
+| `8f` | the algorithm became the primary surface — 1232×400 — **automatically** whenever nothing was measured, with `KEEP IT BIG` to pin it — **retired** by #54/#58: the ranuras choose the composición (ADR-0007) |
 | `8g` | the **bench drawer**: one 52 px handle for every temporary instrument, each wearing its ticket number |
 | `8h` | **every answer checked against the running build** — four figures and a count corrected, one answer changed |
 
@@ -250,10 +250,16 @@ for.
     18×14 — never a name, because a name ellipsises), and the operator's Hz stamped `PREDICTED`.
   - *The corner*: a 44 × 44 open corner mark at the bottom right — two 2 px strokes, the visible path to
     the operator editor. Same mark on all eight; the words appear once, in the legend.
-- **Diagram routes** — SVG. Active modulation: `--modulator`, 2–2.6 px, with an arrow marker. A route
-  from an operator at 0: `--inert`, 1.5 px, `stroke-dasharray: 4 5`. Output bus: `--signal-primary`,
-  2 px, to `OUT L/R`. Feedback: an arc labelled `FB 3`. **The routes are `DOCUMENTED`, not polled**: the
-  app polls which algorithm is loaded and reads who-feeds-whom out of the FM-X table.
+- **Diagram routes** — SVG. Active modulation: `--modulator`, 2 px (not 2–2.6: `vector-effect:
+  non-scaling-stroke`, so the stroke does not grow with the viewBox), with an arrow marker. Output
+  bus: `--signal-primary`, 2 px, to `OUT L/R`. Feedback: `--carrier`, 2 px, an arc labelled `FB 3`.
+  **Inert is either end of a route**, one rule for five cases: a route out of an operator at 0, its
+  drop to the bus, the feedback arc at `FB 0` (#57), a route *into* a parked operator (#83, ADR-0008
+  §2.5) and the parked operator's stub — all `--inert`, 1.5 px, on `--dash-inactive` (`4 5`); the
+  stub has no arrow and ends in a bar. In the wide composition only, a route *out of* a parked
+  operator is not drawn at all; the grid draws it cut (ADR-0008 §2.5). **The routes are
+  `DOCUMENTED`, not polled**: the app polls which algorithm is loaded and reads who-feeds-whom out
+  of the FM-X table.
 - **Transport — `LIVE` and `CAPTURE` are two different acts, and that has to be visible.**
   - *LIVE (a state)*: pill `padding: 12px 16px`, `border: 1px solid rgba(125,240,176,.28)`, background
     `rgba(125,240,176,.06)`, a 7 px dot with `animation: livePulse 1.4s ease-in-out infinite` (opacity
@@ -509,22 +515,31 @@ Section `3d`. The level that was missing above the steps: "step 3 of 5 of lesson
 
 ### 10. The main screen when there is no capture on it
 
-Not a separate screen: **the main screen has two compositions, and which one you get is decided by
-whether a capture exists.** The spectrum and harmonics panels say nothing until `CAPTURE` has been
-pressed, while the algorithm is legible the moment a patch loads — so the two panels that are empty most
-of the time were holding the space of the one that is always full.
+_(Retired by #54 and #58; the live rule is ADR-0007's.)_ Not a separate screen: **the main screen is
+two compositions of the same elements, and the two ranuras decide which one you get.** The glass
+column holds two ranuras, each of which holds one of the four live views or nothing; the composition
+is wide when both are empty or when the pin is down, and narrow otherwise (`composition.ts`).
+Whether a capture exists plays no part: a capture landing moves nothing, and there is a test that
+says so.
 
-- The algorithm panel expands to **1232 × 400** when nothing is measured, and returns to 700 px when
-  there is a capture. Same panel, same component, two sizes.
-- **Automatic**, not a mode and not a toggle. A capture brings the panels back over `--dur-settle`
-  (420 ms). **`KEEP IT BIG`** in the algorithm's own header pins the big composition and persists.
-- Sized by the worst case eight operators can produce (up to 6 depth levels, up to 4 parallel branches).
-  Tightening it needs the histogram over the 88 algorithms — `CONCERNS.md` §31.
+- The column has **three shapes** (`column-geometry.ts`): `ranuras` — the narrow composition, the
+  diagram at 700 px as the 3 × 3 grid; `rail` — both ranuras empty, the column collapsed to a 52 px
+  handle and the diagram at 1 016 px; `gone` — the pin down, no column at all and the diagram at
+  1 070 px of the 1 280. `wide()` is `shape() !== 'ranuras'`, never "no capture".
+- **`KEEP IT BIG` is a pin, not a mode.** It forces the wide composition without touching the stored
+  pair, and letting it up restores the pair exactly. It persists, as does the pair.
+- The column's move runs over `--dur-settle` (420 ms), and it is always a press — on a ranura's
+  chooser, a rail handle or the pin — that causes it. Nothing on this screen moves that the pianist
+  did not move.
+- The factory pair is `SCOPE` and empty, so the app opens **narrow**; the wide composition is the
+  one you ask for. The grid is described by ADR-0007.
+- Sized by the worst case eight operators can produce, now measured: `CONCERNS.md` §31, resolved,
+  and `DESIGN.md` §10 for the maxima.
 - In the big composition, **role reads from position**: carriers touch the output bus, every arrow points
   down, operators at zero are parked to the right on a dashed stub.
 
-Drawn in `8f`. Written up in `DESIGN.md` §10. The risk (the layout moves at the moment of the press) is
-`CONCERNS.md` §30.
+`8f` drew the retired rule. Written up in `DESIGN.md` §10. `CONCERNS.md` §30 is the risk the retired
+rule carried, marked retired there.
 
 ### 11. The player (`4c`) — a cross-cutting piece
 
@@ -929,8 +944,8 @@ it.)*
 **Animation.** Nothing animated competes with the signal — what really moves here is the signal. Only two
 exist: the `LIVE` heartbeat (`--dur-heartbeat` 1400 ms) and the tutor-write flash (2200 ms). State
 transitions ≤ 180 ms (`--dur-state`) with `--ease-instrument`; a new capture landing 420 ms
-(`--dur-settle`), which is also the algorithm surface's transition. **Forbidden**: a measured number that
-blinks on its own.
+(`--dur-settle`), which is also the glass column's move when a ranura or the pin is pressed (§10) —
+never a capture. **Forbidden**: a measured number that blinks on its own.
 
 **Frame budget.** No UI operation may cost more than **33 ms** (`--frame-live`, 30 fps). If a panel does
 not fit the budget, the panel is simplified.

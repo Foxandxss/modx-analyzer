@@ -77,7 +77,8 @@
   --text-section:  20px;
   --text-body:     15px;
   --text-label:    12px;
-  --text-micro:    10px;   /* piso absoluto; por debajo no se escribe nada  */
+  --text-micro:    10px;   /* piso de todo lo que se lee como cifra; las    */
+                           /* excepciones, DESIGN.md §20 regla 17 (#104)    */
   --text-readout-xl: 30px; /* cifra medida protagonista                     */
   --text-readout:    22px;
   --text-node:       25px; /* Level dentro del operador                     */

@@ -81,10 +81,8 @@
   --text-section:  20px;
   --text-body:     15px;
   --text-label:    12px;
-  --text-micro:    10px;   /* floor for anything a FIGURE is read from.     */
-                           /* Three labels sit at 8px on purpose and are    */
-                           /* the whole list: the node's role word, the     */
-                           /* mode's roadmap line, and HUSH's label.        */
+  --text-micro:    10px;   /* floor for anything a FIGURE is read from; the */
+                           /* exceptions, DESIGN.md §20 rule 17 (#104)      */
   --text-readout-xl: 30px; /* the headline measured figure                  */
   --text-readout:    22px;
   --text-node:       25px; /* Level inside the operator node                */
@@ -197,9 +195,10 @@
 
   /* --- Operator diagram geometry -------------------------------------------- */
   /* Size after the round-3 rebalance: the diagram takes 700 px. Round 8
-     expands it to 1232 x 400 when nothing is measured. See DESIGN.md,
-     "The main screen when there is no capture on it": in that drawing the
-     LAYOUT sizes the node from the room the depth leaves, not these two.  */
+     expands it to 1232 x 400 when both ranuras are empty or the pin is
+     down (ADR-0007). See DESIGN.md, "The main screen when there is no
+     capture on it": in that drawing the LAYOUT sizes the node from the
+     room the depth leaves, not these two.                                 */
   --op-node-w: 118px;  --op-node-h: 108px;  /* also a touch target          */
   --op-node-h-tall: 116px;                  /* node carrying a measured ratio */
   --op-col-gap: 82px;  --op-row-gap: 28px;
