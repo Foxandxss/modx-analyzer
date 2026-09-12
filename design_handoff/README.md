@@ -39,10 +39,12 @@ When two parts of this handoff disagree:
 `CONCERNS.md` (5 minutes, saves you from assumptions) → `DESIGN.md` (the "why" and the limits) →
 `design-tokens.css` → the system sheet open beside the code.
 
-## State of the package — 2026-09-09, after round 9
+## State of the package — 2026-09-12, after round 10
 
-Everything in `design/`, `design-tokens.css`, `DESIGN.md`, `GLOSSARY.md` and `CONCERNS.md` is
-identical to the working folder: the package is not behind.
+**The repository's `design_handoff/` is the only copy of the package**: there is no designer-side
+folder for it to be behind, and nothing is read from a second copy (`HANDOFF.md`, *What is
+deliberately not in here*). Brought up to date by #105 (2026-09-12), after ADR-0008; what changed
+since round 9 is under *Since round 9* below.
 
 **The whole handoff is in English**, and that was a naming pass rather than a translation. The reason
 was never internationalisation: after using the running app the owner still could not say what
@@ -96,15 +98,30 @@ temporary readout is **five blocks** (not three) — so round 7's stale threshol
 rule is stated once, the remaining documents were translated, and **no rule changed**. What folding
 cost is `CONCERNS.md` §36 — four decisions the owner should check.
 
-**Open: §17, §23.1, §29 and §31.** None blocks implementation. §32 (the 125 % viewport) is deferred by
+**Since round 9**, four things happened that an implementer has to know; everything else is pointed
+at. **Session 2** applied the token values round 9 had to leave marked (#26, precedence rule 3
+above) and corrected the handoff in the four places the build proved it wrong (#49). **Session 3**
+decided that the two ranuras choose the composición and a capture moves nothing (ADR-0007, #58),
+and gave the fill a track to measure against (#67). **Round 10** — specified in #73, landed as
+#74–#89 and #93, decided in ADR-0008 (#84) — turned the Level onto the axis its composición
+declares, made a drawing that cannot hold its facts fold its facts and never its positions, took
+parking out of the stack, gave the window a width floor and turned the fill's ink with the axis;
+its verification list and every verdict are ADR-0008 §8's, and this readme does not repeat them.
+**The documents** were brought into agreement with the drawing: this readme's own sweep in #97,
+`DESIGN.md`, `GLOSSARY.md` and `CONTEXT.md` in #87.
+
+**Open: §17 and §23.1.** None blocks implementation. §32 (the 125 % viewport) is deferred by
 the owner, which is not the same as open.
 
 | open | what is missing | whose it is |
 |---|---|---|
 | §17 · not designed | saving to the MODX's memory (today everything is the edit buffer) and the patch library / DX7 corpus. **Not holes: scope**, out by the owner's decision | later phase |
 | §23.1 · the anchor's blind spot | **the only real hole**: ~1.5 s per capture, during which the anchor cannot poll. Declared, not drawn, twice by decision | phase 1 |
-| §29 · five stale token values | the build's figures contradict five values in the token file. Marked, not changed, because round 9 could not change values. **Fix this first** | owner |
-| §31 · the worst-case algorithm | the depth/width histogram over the 88 FM-X algorithms would let the algorithm surface be tightened by ~80 px. Cheap, nobody's blocker | owner |
+
+Two rows left this table, each with a record. §29 was applied in session 2 (precedence rule 3
+above; `CONCERNS.md` §29, resolved). §31 was measured — the worst case is eight rows, reached by the
+66, and eight operators on one row, reached by the 1 (`DESIGN.md` §10; `CONCERNS.md` §31,
+resolved).
 
 ### The app has two first-class modes
 
@@ -1084,6 +1101,7 @@ In `design/`:
 | `Round6-screens.dc.html` | **round 6** — `6a` the anchor in the header · `6b` the moment the Performance changes · `6c` the four voided things · `6d` read-only · `6e` confidence grades |
 | `Round7-pieces.dc.html` | **round 7** — `7a` the rail that follows you · `7b` ALL EIGHT as a mirror. Two behaviour pieces, no new screen |
 | `Round8-pieces.dc.html` | **round 8** — `8a` the header and the naming pass · `8b` the stamps · `8c` the operator node · `8d` the unmeasured column · `8e` the scope contract · `8f` the algorithm surface · `8g` the bench drawer · `8h` checked against the running build |
+| `Round10-operator-diagram.dc.html` | **round 10** — `10a` what is on screen today, at 1:1 · `10b` question 1 — what form the ceiling reference takes · `10c` question 2 — the width stays, and the route's room comes out of the height · `10d` question 3 — fold the facts, never the positions · `10e` the two defects, as constraints on the gap and the gutter · `10f` three conditions on the rotation. Needs `support.js` beside it |
 | `System-sheet.dc.html` | system sheet: components, operator editor, theory vs measurement, tutor, unhappy states, finger/mouse interaction |
 | `support.js` | prototype runtime — **do not port** |
 
@@ -1153,6 +1171,14 @@ At the package root:
 | `DESIGN.md` | the chosen direction and why, the rules to respect, the provenance of every datum, and what was deliberately **not** done |
 | `design-tokens.css` | **source of truth** for values; phase 1 consumes it as-is |
 | `README.md` | this document |
+
+**Dated, not the specification.** Two more files sit at the package root and are the round-10
+delivery, not part of the handoff. `ROUND10-PROPOSAL.md` is the round-10 proposal (2026-09-10,
+`4cbf397`): landed as #74–#89 and #93 and decided by ADR-0008 (#84); **its figures are superseded
+by the ADR and its §6 is not the diff to build from** — the decision is read from ADR-0008 and the
+rules from `DESIGN.md`. `HANDOFF.md` is the delivery note that shipped with it and says the same
+(*What is agreed and what is not*). The runtime the round-10 sheet loads is the `support.js` listed
+in the `design/` table — do not port.
 
 **Start implementing here**, in this order, because each step unblocks the next:
 
