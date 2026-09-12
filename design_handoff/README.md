@@ -554,8 +554,10 @@ says so.
   one you ask for. The grid is described by ADR-0007.
 - Sized by the worst case eight operators can produce, now measured: `CONCERNS.md` §31, resolved,
   and `DESIGN.md` §10 for the maxima.
-- In the big composition, **role reads from position**: carriers touch the output bus, every arrow points
-  down, operators at zero are parked to the right on a dashed stub.
+- _(Retired by #83; the live rule is ADR-0008 §2.4's.)_ In the big composition, **role reads from
+  position**: carriers touch the output bus, every arrow points down, and who is at zero leaves the
+  depth stack — it has no depth in the chain — into a band above the deepest row at the origin end of
+  the Level axis, on the stub that ends nowhere (#83, ADR-0008 §2.4).
 
 `8f` drew the retired rule. Written up in `DESIGN.md` §10. `CONCERNS.md` §30 is the risk the retired
 rule carried, marked retired there.

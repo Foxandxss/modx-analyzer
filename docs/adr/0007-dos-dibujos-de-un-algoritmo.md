@@ -2,7 +2,8 @@
 
 Fecha: 2026-09-10 · Estado: aceptada · Contexto: #54, #42, #29 · Revisada en #63 contra lo que 3a
 (#58) y 3b (#62) dejaron efectivamente en la build · §3 ampliada con la leyenda en #65 · §3 enmendada
-en #96: el nodo, el pliegue y el eje del Level
+en #96: el nodo, el pliegue y el eje del Level · *El problema* anotado en #103: la dirección del
+aparcado, retirada en #83 (ADR-0008, §2.4)
 
 ## El problema
 
@@ -11,7 +12,9 @@ El mismo algoritmo se dibuja de dos maneras y las dos son correctas.
 En la **composición ancha** (`wide-layout.ts`) el rol se lee de la posición: las portadoras están
 sobre el bus, todas las flechas bajan, la profundidad de cadena es la altura, cada rama ocupa su
 banda y un operador a Level 0 está aparcado a la derecha sobre un cabo punteado que no llega a
-ninguna parte. Nada de eso está escrito: se ve.
+ninguna parte *(la dirección la retiró ADR-0008 §2.4 en #83: hoy sale de la pila a una banda sobre
+la fila más honda, en el extremo del origen del eje del Level; el principio del punto 1 queda
+entero)*. Nada de eso está escrito: se ve.
 
 En la **composición estrecha** (`layout.ts`) los mismos ocho operadores son una rejilla 3 × 3
 ordenada por profundidad. Es el dibujo verificado y con especificación propia, y no enseña el rol por

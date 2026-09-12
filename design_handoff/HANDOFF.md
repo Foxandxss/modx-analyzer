@@ -37,6 +37,11 @@ one. Same markup as its siblings, `#58c8f5` border, linking to `Round10-operator
 > instead of its rows. Every figure read out of the build or measured off the hardware.
 > `READ ROUND10-PROPOSAL.md ALONGSIDE IT · THE DIFF IS PROPOSED, NOT APPLIED`
 
+Applied as written in `4cbf397`, the commit that shipped this note. Once the round had landed, the
+card's chip and its last line stopped being true and were corrected in place (#103): the diff is
+decided — ADR-0008 — and landed as #74–#89, #93 and #87, and the card now says so. The quotation
+above is what was asked for, and it is left as asked.
+
 ## Read in this order
 
 1. The repository's `design_handoff/GLOSSARY.md`, then `DESIGN.md` §9, §10 and §20 — the vocabulary

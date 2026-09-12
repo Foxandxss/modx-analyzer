@@ -21,7 +21,10 @@ retira; la cabecera nombra las dos y §6 gana la entrada que faltaba · **Enmend
 #102**: la cola de §6 nombraba una copia viva de la dirección retirada y hay cinco; las lista con lo
 que cubre a cada una, y las tres que no tiene ningún ticket son #103 · **Enmendada el 2026-09-12 por
 #87**: los documentos están a la par del dibujo —`DESIGN.md` §9, §10 y §20, `GLOSSARY.md` §3, §3b,
-§4 y §6, `CONTEXT.md`—; §1, §4, §6 y §9 dejan de nombrar a #87 en futuro
+§4 y §6, `CONTEXT.md`—; §1, §4, §6 y §9 dejan de nombrar a #87 en futuro ·
+**Enmendada el 2026-09-12 por #103**: la cola de §6 nombraba tres copias sin ticket de la dirección
+retirada y las daba por decidir; están anotadas o reparadas, el registro lo dice con las líneas de
+0007 corregidas, y la narrativa y la especificación no se repararon igual
 
 Esta ADR es la **dueña de la lista de verificación** de la ronda (§8). `design_handoff/HANDOFF.md`
 y la hoja de sondas `Round10-operator-diagram.dc.html` apuntan aquí y no la repiten; #88 toma las
@@ -492,21 +495,28 @@ máximo solo; `STACK_H = 90` se re-gana por el margen de 1,33; `SQUAT_NODE_W_MAX
 **por valor y no por razón**: deja de ser consuelo por el alto perdido y pasa a ser el eje de la
 medida.
 
-Y **cinco copias vivas de la dirección retirada**, que la afirman como si fuera la de hoy. En todas,
-la build y el papel discrepan y la build gana:
+Y **cinco copias vivas de la dirección retirada** había, que la afirmaban como si fuera la de hoy.
+En todas, la build y el papel discrepaban y la build ganó:
 
 - **`DESIGN.md` §10** (`:474`), «aparcado a la derecha sobre un cabo punteado» — corregida en #87.
-- **`ADR-0007:88`**, el cuarto punto de su §4. Texto de decisión, retirado por nombre: §2.4 lo abre
+- **`ADR-0007:102`** (era `:88` cuando se escribió esta entrada; `72cc8bd` añadió once líneas encima
+  y #103 tres), el cuarto punto de su §4. Texto de decisión, retirado por nombre: §2.4 lo abre
   citándolo y la lista de arriba lo registra. Quien lea cualquiera de las dos ADR se encuentra la
-  retirada; quien lea sólo el 0007 se lo encuentra sin marcar.
-- **`ADR-0007:12`**, en *El problema*. Narrativa, y falsa como descripción y no sólo superada: dice
-  lo que enseña el dibujo ancho, y desde #83 (§2.4) lo que enseña es una banda sobre la fila más
-  honda. Misma clase que el primer punto de su §3, enmendado en #96.
-- **`design_handoff/README.md:524`** y **`design/Round8-pieces.dc.html:653`**, la misma frase en el
-  material que dice qué construir; la hoja de la ronda 10 afirma la retirada al lado de la de la 8.
+  retirada; quien lea sólo el 0007 se lo encuentra sin marcar, y así se queda.
+- **`ADR-0007:14`** (era `:12`), en *El problema*. Narrativa, y falsa como descripción y no sólo
+  superada. **Anotada en #103**: la frase queda como se escribió y gana entre paréntesis la retirada
+  y el puntero a §2.4; la cabecera de 0007 lo estampa. No se reescribió al dibujo nuevo, a
+  diferencia del primer punto de su §3 (#96), porque narra el momento en que se escribió.
+- **`design_handoff/README.md:557`** (era `:524`) y **`design/Round8-pieces.dc.html:656`** (era
+  `:653`), la misma frase en el material que dice qué construir. **Reparadas en #103**: el punto del
+  readme, reescrito a la regla viva con la etiqueta de retirada; la hoja de la ronda 8, que no se
+  redibuja, con una nota fechada al lado del panel en la forma de la nota de #78 de la hoja de la
+  ronda 10 — la que ya afirmaba la retirada al lado de la de la 8 —; la tarjeta de la ronda 8 en
+  `Index.dc.html`, con la retirada en su pie.
 
-Las tres últimas no las tiene ningún ticket: son **#103**, que decide primero si una narrativa y una
-especificación se reparan igual. No entra `ADR-0007:39`: ahí no hay palabra de dirección, es el
+Las tres últimas las tomó **#103**, que decidió que una narrativa y una especificación no se reparan
+igual: la narrativa se anota, la especificación se reescribe y se etiqueta, la hoja fechada se anota
+y no se redibuja. No entra `ADR-0007:43-44` (era `:39`): ahí no hay palabra de dirección, es el
 principio que §2.4 cita para conservarlo.
 
 ## 7 · El veredicto de #67, llevado aquí y no borrado
