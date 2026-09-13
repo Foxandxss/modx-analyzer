@@ -24,7 +24,10 @@ que cubre a cada una, y las tres que no tiene ningún ticket son #103 · **Enmen
 §4 y §6, `CONTEXT.md`—; §1, §4, §6 y §9 dejan de nombrar a #87 en futuro ·
 **Enmendada el 2026-09-12 por #103**: la cola de §6 nombraba tres copias sin ticket de la dirección
 retirada y las daba por decidir; están anotadas o reparadas, el registro lo dice con las líneas de
-0007 corregidas, y la narrativa y la especificación no se repararon igual
+0007 corregidas, y la narrativa y la especificación no se repararon igual ·
+**Enmendada el 2026-09-13 por #100**: el disparador de anchura se queda en la ventana de diseño por
+decisión del dueño; §4 deja de decir que sigue a la ventana y anota el margen de un píxel de la
+clase de siete columnas, §9 lo da por decidido y §10 gana el descarte del carril medido
 
 Esta ADR es la **dueña de la lista de verificación** de la ronda (§8). `design_handoff/HANDOFF.md`
 y la hoja de sondas `Round10-operator-diagram.dc.html` apuntan aquí y no la repiten; #88 toma las
@@ -297,8 +300,13 @@ dibujo **sin plegar** para que la decisión no se apoye en su propia consecuenci
   tipografía, **131 px** (`fittedCardWidth()`). Es una comparación y no un umbral, así que los dos
   lados se mueven juntos y ninguno se puede afinar hasta que un algoritmo pliegue. Por carril, porque
   el carril lo es: **164,7 unidades en el riel y 156,1 con el pin**, contra la tarjeta más estrecha de
-  142. Este disparador sí se mueve con la ventana, y la asimetría es deliberada: ahí la tarjeta de
-  verdad es más estrecha.
+  142. Ninguno de los dos disparadores sigue a la ventana viva: el de profundidad se juzga en el
+  suelo del cuerpo y este en la **ventana de diseño**, por forma (`canvasWidth(shape)` lee
+  `DESIGN_BODY_W`), y la asimetría —suelo contra ventana de diseño— es deliberada: el carril del
+  suelo es un número para las dos formas (§5), así que juzgado ahí la pulsación del pin dejaría de
+  cambiar el pliegue y la clase de siete columnas plegaría también con el pin; los 54 px entre las
+  dos formas son lo que leyó la mirada 6 (§8). Por encima de la ventana de diseño la tarjeta crece y
+  el pliegue no la sigue: decidido en #100 (§9, §10).
 
 Son un mecanismo porque son una frase —*este dibujo no puede sostener lo que se le pide que dibuje*—
 y porque lo que hacen es idéntico. Dos mecanismos serían dos cosas que aprender, dos interruptores y
@@ -386,6 +394,15 @@ pelean (afirmado). A cinco filas el hueco natural es 17,6.
   `ROW_GAP_MAX`**, ninguna de ellas obviamente sobre representación. `STACK_H = 90` se re-gana por
   esto y no se toca. Se afirma como margen en #85 —*tres filas superan `STACK_H` en al menos N*—,
   nunca como *tres filas dan un apilado*, que pasa a 90,01 y no dice nada.
+- **≈ 1 px en la clase de siete columnas, en el riel.** Seis algoritmos —**7, 8, 32, 54, 63 y 68**—
+  son dos filas y siete columnas: una tarjeta de `1200/7 − 8 = 163,4` unidades, **130,0 px** en el
+  riel contra los 131 de la comparación, **1,3 unidades por debajo, un píxel**, y pliegan; con el
+  pin miden 137,2 y quedan libres por 6. Es la segunda cifra más ajustada de la ronda después de las
+  0,06, y con el disparador fijado en la ventana de diseño (#100) ese píxel es el comportamiento
+  permanente de los seis y no un artefacto de la ventana. **Derivado, no afirmado y no mirado**
+  (#90, §4.2 del informe de la sesión 4): afirmarlo en un test sería afirmar que seis algoritmos
+  pliegan, que es la clasificación que la ronda no fija; lo que lo reabriría es una mirada
+  —*¿sostiene cinco hechos una tarjeta de siete columnas a 130 px?*—, no una decisión.
 
 ### Lo que el pliegue aún debe
 
@@ -839,8 +856,8 @@ con el MODX conectado; #90 la lista como debida.
   debajo de 1280 eso es lo que §5 quiere —el cuerpo se desplaza y la tarjeta no cambia—; por encima
   es una tarjeta plegando datos que ya le caben (el 1 a 1400 px con el pin mide 133 y sigue plegado
   contra un umbral de 131), y el comentario de `canvasWidth()` sólo es verdad en la ventana de
-  fábrica. Es un hallazgo y no una cifra: abierto como ticket (#100), sin decidir aquí si el disparador
-  debe medir.
+  fábrica. Es un hallazgo y no una cifra: abierto como ticket (#100) y **decidido ahí: el disparador
+  se queda en la ventana de diseño y no mide** (§4, §10).
 - La banda del aparcado **lee como una fila** cuando está sola encima de su propia cadena (#88,
   §8 · 8): mismo paso, misma columna, misma anchura, y lo que la saca de la cadena es la tinta —el
   contorno discontinuo, el `0`, el cabo y la flecha que sube— y no la posición. §4 ya decía que la
@@ -951,3 +968,19 @@ con el MODX conectado; #90 la lista como debida.
 - **Dejar de afirmar el eje para el dibujo entero en cuanto sale el primer origen** (#86, §5). Más
   simple y menos honesto: siete tarjetas con su cero en pantalla perderían la barra por el cero de
   una octava. El origen es de la columna; la tinta se va con el borde que se ha ido, y no antes.
+- **Medir el carril con un `ResizeObserver` para que el pliegue siga a la ventana** (#100, §4). Lo
+  que costaría: `Composition` ganaría una segunda caja reportada junto a `scrollLeft`, puesta desde
+  un observador sobre `.body` en `app.ts`; `canvasWidth(shape)` leería el cuerpo medido y no
+  `DESIGN_BODY_W`, y con él `fittedCard()`, `foldRule()` y el componente; `wide-layout.spec.ts`
+  seguiría verde sólo pasando 1280 como argumento, con lo que *sin medir nada* pasaría a ser una
+  afirmación sobre un parámetro; el `Composition` falso del spec del componente tendría que reportar
+  un ancho, porque jsdom no calcula cajas; y la ventana del banco pasaría a ser una entrada del
+  pliegue, que es lo que el disparador de profundidad rechazó (`folding.ts`: una ventana más alta
+  desplegaría el 37 y un arrastre lo plegaría otra vez). Sería el primer dato del dibujo apoyado en
+  una medida —la regla desde la sesión 1: ninguna afirmación de layout se apoya en una medida—;
+  `live-canvas.ts` lee `clientWidth` para dimensionar un bitmap y la cabecera lee un rectángulo para
+  una prueba de golpe, y ninguna de las dos es un dato del dibujo. Lo que compraría: los seis de
+  siete columnas se despliegan en el riel con ≈ 8 px más de cuerpo, y el 1 a 1 382 px con el pin y a
+  1 436 en el riel. Mucho principio para poco dibujo. La app abre maximizada (`tauri.conf.json`),
+  así que en un monitor más ancho ese caso es el estado de arranque y no un arrastre; aun así el
+  remedio, si llega, es la constante `DESIGN_BODY_W` que movería el 125 % diferido, no una medida.

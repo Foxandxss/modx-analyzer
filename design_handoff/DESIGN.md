@@ -489,8 +489,8 @@ plays no part: a capture landing moves nothing, and there is a test that says so
     arrowhead plus a visible segment (rule 20). The threshold is derived, `rowGapFloor()`, and
     evaluated at the body's floor, so the floor and the threshold cannot chase each other.
   - *too narrow for its five facts* — the card is narrower than the grid card the same five facts
-    are known to fit, `fittedCardWidth()`: a comparison and not a threshold, so both sides move
-    together and neither can be tuned until an algorithm folds.
+    are known to fit, `fittedCardWidth()`, judged at the design window: a comparison and not a
+    threshold, so both sides move together and neither can be tuned until an algorithm folds.
 
   Who folds, forced by number in `wide-layout.spec.ts`: `rows ≥ 6` is exactly {37, 66}; the **1**
   folds at the factory window in both lanes; and since #83 a parked operator counts as a row, so the

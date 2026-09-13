@@ -104,8 +104,15 @@ export const VISIBLE_SEGMENT = 6;
  * the app can be given. Evaluated at the *actual* height instead, a taller
  * window would unfold algorithm 37 and a drag would fold it again — the drawing
  * changing its facts with the height, which is a second thing to learn and one
- * nobody asked for. The width trigger does move with the window, and the
- * asymmetry is deliberate: there, the card really is narrower.
+ * nobody asked for. Neither trigger follows the live window: depth is judged
+ * at the body's floor, width at the design window per shape (`canvasWidth()`
+ * reads `DESIGN_BODY_W`), and the asymmetry — floor against design window —
+ * is deliberate. The width trigger is not at the floor because the floor's
+ * lane is one number for both shapes (ADR-0008 §5): judged there the pin
+ * press would stop changing the fold, and the seven-column class would fold
+ * pinned as well as in the rail. The 54 px between the shapes is what look 6
+ * of §8 read. Above the design window the card grows and the fold does not
+ * follow it — decided in #100, recorded at `canvasWidth()`.
  *
  * ```text
  * gap ≥ ARROWHEAD + VISIBLE_SEGMENT / yScale

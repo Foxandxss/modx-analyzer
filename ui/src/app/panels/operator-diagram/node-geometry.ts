@@ -424,8 +424,22 @@ export function originGone(x: number, scrollLeft: number): boolean {
  * at 1 400 px pinned draws a 133 px card, over the 131 that hold five facts,
  * and stays folded. The fold is a function of the algorithm and the shape and
  * never of a drag, which under the floor is what §5 wants and above the design
- * window is a card folding facts it has room for. Recorded there and ticketed (#100);
- * not decided here.
+ * window is a card folding facts it has room for. Decided in #100: the
+ * trigger stays here. A window wider than the design window is not a case
+ * the drawing designs for — and since the app opens maximized
+ * (`tauri.conf.json`), on a wider display that is the launch state and not a
+ * drag: at 1 920 px the 1 shows two facts on a ~190 px card in both shapes.
+ * A measured lane was declined (ADR-0008 §10): the no-measure rule is what
+ * makes the fold deterministic and testable in the harness, and an observer
+ * to win five facts on a card above the design width is a lot of principle
+ * for little drawing. `DESIGN_BODY_W` is the one constant the deferred 125 %
+ * target would move, and the fold would move with it.
+ *
+ * The margin under this decision is permanent and not a window artefact: in
+ * the rail the seven-column class — 7, 8, 32, 54, 63 and 68 — draws
+ * 130.0 px against the 131, about 1 px under, and folds; pinned it is
+ * 137.2 px and clear by 6. Derived, not asserted, not looked at (ADR-0008 §4,
+ * the margins; #90's sweep).
  */
 export function canvasWidth(shape: ColumnShape): number {
   return diagramLane(shape, DESIGN_BODY_W) - 2 * ZONE_PAD_X;
