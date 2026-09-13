@@ -27,7 +27,11 @@ retirada y las daba por decidir; están anotadas o reparadas, el registro lo dic
 0007 corregidas, y la narrativa y la especificación no se repararon igual ·
 **Enmendada el 2026-09-13 por #100**: el disparador de anchura se queda en la ventana de diseño por
 decisión del dueño; §4 deja de decir que sigue a la ventana y anota el margen de un píxel de la
-clase de siete columnas, §9 lo da por decidido y §10 gana el descarte del carril medido
+clase de siete columnas, §9 lo da por decidido y §10 gana el descarte del carril medido ·
+**Enmendada el 2026-09-13 por #107**: la ventana del sistema tiene un mínimo propio, 1280 × 740,
+desde el primer commit de la app, y §5 decía que no lo había a propósito; §5 lo anota por encima de
+los dos suelos, §10 dice por qué no reabre el descarte del `minWidth`, y §5 y §9 dan el
+desplazamiento bajo el suelo por cosa del banco
 
 Esta ADR es la **dueña de la lista de verificación** de la ronda (§8). `design_handoff/HANDOFF.md`
 y la hoja de sondas `Round10-operator-diagram.dc.html` apuntan aquí y no la repiten; #88 toma las
@@ -430,9 +434,14 @@ en el suelo no puede entrar en espiral. **El 360 sigue sin testigo**: #19, el ti
 «*Text collides at full size*» y no contiene ninguna medida de altura; #81 es una primera medida que
 no sustituye nada, y volver a tomar la mitad de las vistas es de nadie todavía.
 
-**El ancho.** *(Enmendado el 2026-09-11 por #86, que es el que lo pone.)* Tiene suelo desde #86, y
-`tauri.conf.json` sigue sin `minWidth` **a propósito**: el suelo es por forma y una sola constante en
-la ventana del sistema sobre-restringiría la forma del pin en 54 px. El suelo es el brazo de
+**El ancho.** *(Enmendado el 2026-09-11 por #86, que es el que lo pone,
+y el 2026-09-13 por #107, que anota la ventana.)* Tiene suelo desde #86, y no está en
+`tauri.conf.json` ni podría estar como una sola cifra: el suelo es por forma, y una constante
+puesta al riel sobre-restringiría la forma del pin en 54 px. **La ventana del sistema tiene un
+mínimo propio y distinto** (#107): `lib.rs` fija **1280 × 740 lógicos** desde `ddf53ad`, la medida
+del área útil del portátil y no una cifra del dibujo, y queda por encima de los dos suelos
+—1 263,04 en el riel, 1 209,04 con el pin—, así que en la app enviada el cuerpo nunca baja del
+suelo y lo que sigue sólo se alcanza en el banco. El suelo es el brazo de
 legibilidad —un punto de Level nunca menor que un píxel, `PIXELS_PER_POINT = 1` en
 `node-geometry.ts`, la única cifra elegida de toda la cadena— y se **deriva, de la misma fuente que
 el suelo del alto, y nunca como literal en una hoja**: 100 px de pista, 7 de hueco —en la forma *de
@@ -476,7 +485,8 @@ confirmarlo. Por tarjeta y no por dibujo, porque el origen es de una columna y l
 la izquierda lo pierde primero, así que lo que el pianista ve es la barra yéndose por donde se ha
 ido su borde. La otra respuesta —fijar la columna del origen y desplazar sólo la pista— se descarta
 en §10. El sitio del origen es aritmética y no medida: el cuerpo sólo se desplaza de lado por debajo
-del suelo, y entonces la primera pista está exactamente en su mínimo, así que el lienzo mide
+del suelo —y por debajo del suelo sólo llega el banco: la ventana del sistema no baja de 1280
+(#107)—, y entonces la primera pista está exactamente en su mínimo, así que el lienzo mide
 `floorCanvasWidth()` y la `x` de una tarjeta es una parte conocida de un ancho conocido —a 18 px
 de acolchado de la zona más 2 de borde, el primer origen del 1 está a unos 34 px del borde del
 cuerpo. Sigue siendo la mirada 7: lo que aquí hay es una respuesta, y si el relleno que se va lee
@@ -853,11 +863,12 @@ con el MODX conectado; #90 la lista como debida.
   esto, y #92 es su otra mitad. **Y no en un arrastre** (#88, §8 · 6): el disparador de anchura
   lee `canvasWidth(shape)`, que es el carril de la ventana de diseño y no el de la pantalla, así que
   el pliegue es función de *(algoritmo, forma)* y la ventana no lo mueve en ningún sentido. Por
-  debajo de 1280 eso es lo que §5 quiere —el cuerpo se desplaza y la tarjeta no cambia—; por encima
-  es una tarjeta plegando datos que ya le caben (el 1 a 1400 px con el pin mide 133 y sigue plegado
-  contra un umbral de 131), y el comentario de `canvasWidth()` sólo es verdad en la ventana de
-  fábrica. Es un hallazgo y no una cifra: abierto como ticket (#100) y **decidido ahí: el disparador
-  se queda en la ventana de diseño y no mide** (§4, §10).
+  debajo de 1280 eso es lo que §5 quiere —el cuerpo se desplaza y la tarjeta no cambia—
+  (en el banco: la ventana no baja de 1280, #107); por encima es una tarjeta plegando datos que ya
+  le caben (el 1 a 1400 px con el pin mide 133 y sigue plegado contra un umbral de 131), y el
+  comentario de `canvasWidth()` sólo es verdad en la ventana de fábrica. Es un hallazgo y no una
+  cifra: abierto como ticket (#100) y **decidido ahí: el disparador se queda en la ventana de diseño
+  y no mide** (§4, §10).
 - La banda del aparcado **lee como una fila** cuando está sola encima de su propia cadena (#88,
   §8 · 8): mismo paso, misma columna, misma anchura, y lo que la saca de la cadena es la tinta —el
   contorno discontinuo, el `0`, el cabo y la flecha que sube— y no la posición. §4 ya decía que la
@@ -965,6 +976,11 @@ con el MODX conectado; #90 la lista como debida.
 - **Un `minWidth` en la ventana de Tauri** (#86, §5). Una constante, y el suelo es dos: 1 263 con
   el riel y 1 209 con el pin. Puesta al riel sobre-restringe el pin en 54 px; puesta al pin deja al
   riel 54 px por debajo de lo legible. El mínimo va en la pista de la rejilla, que lo suma por forma.
+  Que la ventana tenga un mínimo desde `ddf53ad` —1280 × 740 lógicos en `lib.rs`, #107— **no reabre
+  esto**: esa cifra no está puesta al riel ni al pin sino a la medida del portátil, es un suelo de
+  la ventana y no del dibujo —el alto lo pone por las pantallas de Part, no por el Level—, y queda
+  por encima de los dos suelos, que siguen en la pista de la rejilla y son lo que el banco ejercita
+  (§5).
 - **Dejar de afirmar el eje para el dibujo entero en cuanto sale el primer origen** (#86, §5). Más
   simple y menos honesto: siete tarjetas con su cero en pantalla perderían la barra por el cero de
   una octava. El origen es de la columna; la tinta se va con el borde que se ha ido, y no antes.

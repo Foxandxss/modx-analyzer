@@ -263,8 +263,11 @@ export class App {
    * that draw the wide composición, and the grid turns it into a body minimum per
    * shape by adding what stands beside the lane in each — which is the same sum
    * `bodyWidthFloor()` writes down. A `min-width` literal in the sheet would be
-   * the second copy the filete used to have (#76), and one on the OS window would
-   * over-constrain the pinned shape by the width of the rail.
+   * the second copy the filete used to have (#76). The OS window has a minimum
+   * of its own — 1280 × 740 in `lib.rs`, the laptop's client area and not a
+   * figure of the drawing — above both floors, by 17 px in the rail and 71
+   * pinned: the body never reaches this one in the shipped app, and the
+   * scroll under it is the harness's case (#107).
    */
   protected readonly laneFloor = laneFloor();
 

@@ -110,9 +110,10 @@ export const DRAWER_GRAB = 52;
 /**
  * `tauri.conf.json`'s window `width`. The body gets all of it: the three lanes
  * divide the window, so this is what the design widths below are taken at.
- * There is no `minWidth` beside it, on purpose: the width's floor is per shape
- * and 54 px apart between the two wide shapes, so a single number on the OS
- * window would over-constrain one of them. It is on the body's grid instead —
+ * It is also the window's minimum: `lib.rs` sets 1280 × 740, the laptop's
+ * client area, so the shipped body is never narrower than the design body
+ * (#107). The width's floor is another thing — per shape, 54 px apart between
+ * the two wide shapes, and under this one — and it lives on the body's grid:
  * see {@link bodyWidthFor}, and `node-geometry.ts` for the lane it derives from.
  */
 export const DESIGN_BODY_W = 1280;

@@ -284,18 +284,18 @@ function narrowestCardShare(): number {
 }
 
 /**
- * The canvas's rendered width at the floor the window stops at, in CSS pixels:
- * **963.04**, the canvas at which the eight-column card is exactly
+ * The canvas's rendered width at the floor the body scrolls under, in CSS
+ * pixels: **963.04**, the canvas at which the eight-column card is exactly
  * {@link readableCard}.
  *
  * This is the width the height's floor already has: `BODY_FLOOR` is the body at
  * which the drawing stops giving way and the scroll starts, and this is the
  * canvas at the same point on the other axis. Until #86 it was the lane the rail
- * shape left at the *shipped* window — 980 px, and an honest number, because
- * `tauri.conf.json` has no `minWidth` and any drag made the drawing narrower
- * than anything here. It is derived now and not measured, and derived from the
- * criterion rather than from a window: {@link PIXELS_PER_POINT} is the one
- * chosen figure in it.
+ * shape left at the *shipped* window — 980 px, and written as an honest number
+ * because `tauri.conf.json` has no `minWidth`; the window had one all along,
+ * 1280 × 740 in `lib.rs` (#107), so no drag ever took the drawing under it.
+ * It is derived now and not measured, and derived from the criterion rather
+ * than from a window: {@link PIXELS_PER_POINT} is the one chosen figure in it.
  *
  * It is a **fraction of a pixel** and stays one. Rounding it up to 964 would be
  * a second declaration of the same floor, one pixel apart from the first, and
@@ -342,7 +342,9 @@ export function laneFloor(): number {
  * (#76); the build wins. Against the 1 280 px window the app ships in the slack
  * is **17 px in the rail**, which is the arm that binds, and 71 with the pin.
  * A single constant would over-constrain the pinned shape by exactly the
- * difference, which is why there is not one.
+ * difference, which is why the grid has none. The OS window's minimum —
+ * 1280 × 740 in `lib.rs`, the laptop's client area — is one number and sits
+ * above both floors (#107).
  */
 export function bodyWidthFloor(shape: ColumnShape): number | null {
   return bodyWidthFor(shape, laneFloor());
@@ -390,7 +392,9 @@ export function bodyWidthFloor(shape: ColumnShape): number | null {
  * drop their ink; they read as *cut cards*, which they are, and not as parked
  * or stale. What the look could not give is the reason — nothing on screen
  * says why the ink left, and a reader could take them for cards without a bar.
- * Accepted as the lesser lie against the sticky drawing §10 rejects.
+ * Accepted as the lesser lie against the sticky drawing §10 rejects. The
+ * harness reaches this; the shipped window, at 1280 and above both floors,
+ * does not (#107).
  */
 export function originOffset(x: number): number {
   return ZONE_PAD_X + x * (floorCanvasWidth() / WIDE_CANVAS_W) + NODE_BORDER;
@@ -411,7 +415,8 @@ export function originGone(x: number, scrollLeft: number): boolean {
  * **`DESIGN_BODY_W` and not a measured window, and that is a statement rather
  * than a shortcut.** Nothing in this app measures its own boxes — jsdom computes
  * none, so every claim here is arithmetic the sheets mirror — and `tauri.conf`
- * gives the body the whole 1 280 px with no `minWidth` under it. So this is the
+ * gives the body the whole 1 280 px, the window's minimum too (`lib.rs`,
+ * 1280 × 740, #107): the shipped body is never narrower. So this is the
  * lane the composición *claims*, per shape: **980 px in the rail and 1 034
  * pinned**, the 54 px between them being the filete the pinned shape halves.
  * Both are above {@link floorCanvasWidth} — by 17 and 71 px of lane — which is
@@ -518,7 +523,7 @@ export function narrowestGridCard(): number {
 /**
  * The smallest card the wide composición puts on screen, along the axis that
  * carries Level there: its **width**, in CSS pixels — and since #86 it is
- * {@link readableCard}, because the window stops where that card would get
+ * {@link readableCard}, because the body's floor is where that card would get
  * narrower.
  *
  * Written as the floor's card and not as the share of the floor's canvas, though
