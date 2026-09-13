@@ -57,12 +57,13 @@ are not any more: the geometry landed in #80–#83 and the decision is ADR-0008,
 is now checked against. The proposal remains the argument; where it and the build disagree on a
 figure, the build wins and the ADR says which way it went.
 
-What is still open on the owner or on the hardware rather than on the design is **the verification
-list, and it lives in one place: `docs/adr/0008-el-level-corre-por-el-eje-que-declara-su-composicion.md`
-§8.** This note does not repeat it, because a list kept in two places is the drift this round is named
-after — it grew from five items to nine between the proposal and the build. What this note can say
-is where the list stands: the horizontal bar was read on the sheet as a rejection test and did not
-reject (#78, `docs/results/2026-09-10-la-barra-horizontal.md`), so the confirmation in the app's own
-ink is look 1 there and is the ADR's kill condition; the two rotated daylights, rule 20's visible
-segment, the folded band, the drag and the scrolled origin are looks 2 to 7, derived and unlooked-at;
-and #66's second arm is no longer a measurement nobody has taken — it is a derived floor (#86).
+**The verification list lives in one place, and this note does not repeat it:**
+`docs/adr/0008-el-level-corre-por-el-eje-que-declara-su-composicion.md` §8. A list kept in two
+places is the drift this round is named after — it grew from five items to nine between the
+proposal and the ADR, and to ten with #93. What this note can say is where the list stands. The
+horizontal bar was read on the sheet as a rejection test and did not reject (#78,
+`docs/results/2026-09-10-la-barra-horizontal.md`); the confirmation in the app's own ink was look 1
+there, the ADR's kill condition, and it confirmed (§3). All ten looks were taken on the bench (#88)
+and each carries its verdict under its question in §8. What is still open on the hardware rather
+than on the design is the instrument check with the MODX attached, which §8 lists as owed. And
+#66's second arm is no longer a measurement nobody has taken — it is a derived floor (#86).
